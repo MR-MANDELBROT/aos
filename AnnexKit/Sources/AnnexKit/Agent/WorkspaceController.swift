@@ -167,10 +167,18 @@ public final class WorkspaceController {
                 return client
             } catch {
                 lastError = error
+                if Self.isLocalNetworkDenied(error) { throw WorkspaceError.localNetworkDenied }
                 try await Task.sleep(nanoseconds: 2_000_000_000)
             }
         }
         throw lastError
+    }
+
+    /// macOS' local network privacy: without the user's permission connections to the VM fail with ENETDOWN.
+    static func isLocalNetworkDenied(_ error: Error) -> Bool {
+        let ns = error as NSError
+        if ns.domain == "Network.NWError" || ns.domain == NSPOSIXErrorDomain { return ns.code == Int(ENETDOWN) }
+        return "\(error)".contains("Network is down") || "\(error)".contains("error 50")
     }
 
     private func requireLease() throws -> RFBClient {
@@ -292,7 +300,7 @@ public final class WorkspaceController {
 }
 
 public enum WorkspaceError: LocalizedError {
-    case notSetUp, needsPurpose, notOpen, screenUnavailable, helpUnavailable, approvalUnavailable, declined
+    case notSetUp, needsPurpose, notOpen, screenUnavailable, helpUnavailable, approvalUnavailable, declined, localNetworkDenied
     case missing(String)
     case unknownOperation(String)
 
@@ -304,6 +312,7 @@ public enum WorkspaceError: LocalizedError {
         case .screenUnavailable: return "Screen sharing in the workspace doesn't answer."
         case .approvalUnavailable: return "Nobody can approve opening the workspace right now (the \(Brand.name) app is not showing). Tell the user."
         case .declined: return "The user did not allow opening the workspace."
+        case .localNetworkDenied: return "macOS doesn't let \(Brand.name) reach its workspace yet. The user has to allow \(Brand.name) under System Settings > Privacy & Security > Local Network. Tell the user."
         case .helpUnavailable: return "Asking the user for help is not available right now. Tell the user in the chat what you need."
         case .missing(let p): return "Missing parameter \(p)."
         case .unknownOperation(let op): return "Unknown operation \(op)."
