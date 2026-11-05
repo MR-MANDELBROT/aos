@@ -119,6 +119,26 @@ public final class MCPServer {
         }
     }
 
+    /// Connects to the app; if it isn't running, starts it in the background and waits up to 20 s.
+    private func connectStartingApp() throws -> AgentClient {
+        do {
+            return try AgentClient(paths: paths)
+        } catch SocketError.notRunning(let path) {
+            guard paths.root == Paths.default.root else { throw SocketError.notRunning(path) }
+            let open = Process()
+            open.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            open.arguments = ["-g", "-b", Brand.bundleIdentifierPrefix]
+            try? open.run()
+            open.waitUntilExit()
+            let deadline = Date().addingTimeInterval(20)
+            while Date() < deadline {
+                usleep(500_000)
+                if let client = try? AgentClient(paths: paths) { return client }
+            }
+            throw SocketError.notRunning(path)
+        }
+    }
+
     private func result(_ id: Any, _ value: [String: Any]) -> [String: Any] {
         ["jsonrpc": "2.0", "id": id, "result": value]
     }
@@ -147,7 +167,7 @@ public final class MCPServer {
             }
         }
         do {
-            let client = try AgentClient(paths: paths)
+            let client = try connectStartingApp()
             let agentName = agentID.flatMap { AgentIntegration.byID($0)?.name } ?? clientName
             let response = try client.send { r in
                 r.op = op
