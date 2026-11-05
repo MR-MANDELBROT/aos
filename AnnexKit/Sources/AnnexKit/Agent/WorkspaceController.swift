@@ -19,6 +19,8 @@ public final class WorkspaceController {
     public var onChange: (() -> Void)?
     /// Shows the workspace to the user with the request and returns when they are done (the app sets this).
     public var onHelpRequest: ((String) async -> String)?
+    /// Asks the user on the Mac whether an agent may open the workspace (agent name, purpose, minutes).
+    public var onApprovalRequest: ((String, String, Int) async -> Bool)?
 
     public init(paths: Paths) {
         self.paths = paths
@@ -131,6 +133,12 @@ public final class WorkspaceController {
         let purpose = (request.purpose ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !purpose.isEmpty else { throw WorkspaceError.needsPurpose }
         let minutes = max(1, min(request.minutes ?? 30, 120))
+        // Approved by the agent or through it; otherwise (or from an unknown client) Annex asks on the Mac.
+        if request.approval != "agent" && request.approval != "elicited" {
+            guard let ask = onApprovalRequest else { throw WorkspaceError.approvalUnavailable }
+            log("asking the user: \(request.agent ?? "an agent") wants the workspace for \"\(purpose)\"")
+            guard await ask(request.agent ?? "An agent", purpose, minutes) else { throw WorkspaceError.declined }
+        }
         if !host.isRunning {
             log("starting the workspace for \"\(purpose)\"")
             try await host.start()
@@ -279,7 +287,7 @@ public final class WorkspaceController {
 }
 
 public enum WorkspaceError: LocalizedError {
-    case notSetUp, needsPurpose, notOpen, screenUnavailable, helpUnavailable
+    case notSetUp, needsPurpose, notOpen, screenUnavailable, helpUnavailable, approvalUnavailable, declined
     case missing(String)
     case unknownOperation(String)
 
@@ -289,6 +297,8 @@ public enum WorkspaceError: LocalizedError {
         case .needsPurpose: return "Say in one sentence what you need the workspace for (purpose)."
         case .notOpen: return "The workspace is not open. Call workspace_open first (the user approves it)."
         case .screenUnavailable: return "Screen sharing in the workspace doesn't answer."
+        case .approvalUnavailable: return "Nobody can approve opening the workspace right now (the \(Brand.name) app is not showing). Tell the user."
+        case .declined: return "The user did not allow opening the workspace."
         case .helpUnavailable: return "Asking the user for help is not available right now. Tell the user in the chat what you need."
         case .missing(let p): return "Missing parameter \(p)."
         case .unknownOperation(let op): return "Unknown operation \(op)."

@@ -23,6 +23,11 @@ public struct AgentRequest: Codable, Sendable {
     public var name: String?
     public var keep: Bool?
     public var region: [Double]?
+    /// How opening was approved: "agent" (the agent asked), "elicited" (the user said yes through the agent),
+    /// "mac" (Annex must ask on the Mac).
+    public var approval: String?
+    /// Which agent calls (ANNEX_AGENT, or the MCP client's name).
+    public var agent: String?
 
     public init(id: Int, op: String) { self.id = id; self.op = op }
 }

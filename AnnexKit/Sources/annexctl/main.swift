@@ -39,9 +39,10 @@ func runCommand() async {
             let info = try await RestoreImage.latestSupported()
             let dest = paths.restoreImages.appendingPathComponent("\(info.buildVersion).ipsw")
             print("downloading macOS \(info.osVersion) (\(info.buildVersion)) to \(dest.path)")
+            let lastPercent = Counter()
             let download = ResumableDownload(source: info.url, destination: dest) { got, total in
-                let pct = total > 0 ? Double(got) / Double(total) * 100 : 0
-                print(String(format: "  %.1f%%  %@ of %@", pct, bytes(got), bytes(total)))
+                let pct = total > 0 ? Int(Double(got) / Double(total) * 100) : 0
+                if lastPercent.swap(pct) != pct { print("  \(pct)%  \(bytes(got)) of \(bytes(total))") }
             }
             _ = try await download.run()
             print("done: \(dest.path)")
@@ -93,6 +94,15 @@ func runCommand() async {
             source.resume()
             keepAlive.append(source)
 
+        case "connect":
+            guard args.count >= 3, let agent = AgentIntegration.byID(args[1]) else {
+                fail("usage: annexctl connect AGENT MCP-BINARY (agents: \(AgentIntegration.all.map(\.id).joined(separator: ", ")))")
+            }
+            print("\(agent.name): installed \(agent.isInstalled), executable \(agent.executable ?? "-")")
+            try agent.configure(binary: URL(fileURLWithPath: args[2]), sessionFolder: nil)
+            print("connected")
+            exit(0)
+
         case "ip":
             let host = VMHost(bundle: bundle, paths: paths)
             print(try host.guestAddress() ?? "no address")
@@ -107,5 +117,11 @@ func runCommand() async {
 }
 
 @MainActor var keepAlive: [AnyObject] = []
+
+final class Counter: @unchecked Sendable {
+    private var value = -1
+    private let lock = NSLock()
+    func swap(_ v: Int) -> Int { lock.withLock { let old = value; value = v; return old } }
+}
 Task { @MainActor in await runCommand() }
 dispatchMain()

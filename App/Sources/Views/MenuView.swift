@@ -24,7 +24,9 @@ struct MenuView: View {
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 6) {
-                    statusRow("Session", sessionText, sessionColor)
+                    if model.settings.sessionEnabled && model.sessionAgentStatus == .enabled {
+                        statusRow("Session", sessionText, sessionColor)
+                    }
                     statusRow("Workspace", workspaceText, workspaceColor)
                     if let s = model.status, s.exchangeFiles > 0 {
                         statusRow("Exchange", "\(s.exchangeFiles) item(s)", .secondary)
@@ -35,7 +37,9 @@ struct MenuView: View {
 
             HStack {
                 Button("Workspace") { openWindow(id: WindowID.workspace); NSApp.activate() }
-                Button("Session") { openWindow(id: WindowID.session); NSApp.activate() }
+                if model.sessionAgentStatus == .enabled {
+                    Button("Session") { openWindow(id: WindowID.session); NSApp.activate() }
+                }
                 Button("Exchange") { NSWorkspace.shared.open(model.paths.exchange) }
             }
             if model.status?.leaseUntil != nil || model.vmPhase == .running {
@@ -95,7 +99,7 @@ struct MenuView: View {
             return String(localized: "open: \(purpose) (until \(until.formatted(date: .omitted, time: .shortened)))")
         }
         switch model.vmPhase {
-        case .stopped: return model.setup.isComplete ? String(localized: "off, starts when Claude needs it") : String(localized: "not set up")
+        case .stopped: return model.setup.isComplete ? String(localized: "off, starts when your agent needs it") : String(localized: "not set up")
         case .running: return String(localized: "running")
         case .installing: return String(localized: "installing macOS")
         case .error: return model.status?.lastError ?? String(localized: "error")

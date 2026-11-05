@@ -12,7 +12,7 @@ struct WorkspaceWindow: View {
                 HStack(spacing: 12) {
                     Image(systemName: "hand.raised.fill").foregroundStyle(.orange)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Claude asks for your help").font(.headline)
+                        Text("Your agent asks for your help").font(.headline)
                         Text(help.purpose).textSelection(.enabled)
                     }
                     Spacer()
@@ -43,7 +43,7 @@ struct WorkspaceWindow: View {
             } else {
                 VStack(spacing: 10) {
                     Image(systemName: "macwindow").font(.system(size: 44)).foregroundStyle(.secondary)
-                    Text("The workspace is off. It starts when Claude opens it.").foregroundStyle(.secondary)
+                    Text("The workspace is off. It starts when your agent opens it.").foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }

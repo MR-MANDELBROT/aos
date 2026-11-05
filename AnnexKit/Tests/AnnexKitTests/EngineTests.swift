@@ -154,3 +154,44 @@ final class RFBAuthTests: XCTestCase {
         XCTAssertEqual(p.prefix(6), Data("annex".utf8) + Data([0]))
     }
 }
+
+final class AgentIntegrationTests: XCTestCase {
+    func testPatchJSONKeepsOtherServers() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let path = dir.appendingPathComponent("mcp.json").path
+        try Data(#"{"mcpServers":{"other":{"command":"x"}},"theme":"dark"}"#.utf8).write(to: URL(fileURLWithPath: path))
+        try AgentIntegration.patchJSON(path: path, serversKey: "mcpServers", style: .mcpServers,
+                                       binary: URL(fileURLWithPath: "/Applications/Annex.app/Contents/MacOS/annex-mcp"),
+                                       env: ["ANNEX_APPROVAL": "auto"])
+        let obj = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path))) as! [String: Any]
+        let servers = obj["mcpServers"] as! [String: Any]
+        XCTAssertNotNil(servers["other"])
+        XCTAssertEqual((servers["annex"] as? [String: Any])?["command"] as? String, "/Applications/Annex.app/Contents/MacOS/annex-mcp")
+        XCTAssertEqual(obj["theme"] as? String, "dark")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path + ".annex-backup"))
+    }
+
+    func testPatchJSONRefusesComments() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let path = dir.appendingPathComponent("settings.json").path
+        try Data("// comment\n{\"a\":1}".utf8).write(to: URL(fileURLWithPath: path))
+        XCTAssertThrowsError(try AgentIntegration.patchJSON(path: path, serversKey: "mcpServers", style: .mcpServers,
+                                                            binary: URL(fileURLWithPath: "/x"), env: [:]))
+        XCTAssertEqual(try String(contentsOfFile: path, encoding: .utf8), "// comment\n{\"a\":1}")
+    }
+
+    func testElicitationDeclineBlocksOpen() {
+        // Client with elicitation that answers "decline": the call must not reach the app.
+        let server = MCPServer(paths: Paths(root: URL(fileURLWithPath: "/nonexistent")), version: "t",
+                               environment: ["ANNEX_APPROVAL": "agent"])
+        _ = server.handle(["jsonrpc": "2.0", "id": 1, "method": "initialize", "params": ["capabilities": [String: Any]()]])
+        // approval "agent": goes straight to the (missing) app and fails with the app error, not a decline
+        let r = server.call("workspace_open", ["purpose": "x"])
+        let text = ((r["content"] as? [[String: Any]])?.first?["text"] as? String) ?? ""
+        XCTAssertFalse(text.contains("did not allow"))
+    }
+}

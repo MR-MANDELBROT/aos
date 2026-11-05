@@ -23,7 +23,8 @@ struct SetupView: View {
         .onAppear {
             model.openWindow = { openWindow(id: $0) }
             if setup.step == .requirements { setup.checkRequirements() }
-            if setup.step == .claudeCode { setup.checkClaudeCode() }
+            if setup.step == .agents { setup.detectAgents() }
+            if setup.step == .session { setup.checkClaudeSignIn() }
         }
     }
 }
@@ -114,11 +115,12 @@ private struct StepContent: View {
             Text(setup.step.title).font(.title.bold())
             switch setup.step {
             case .requirements: requirements
-            case .claudeCode: claudeCode
+            case .agents: agents
             case .download: download
             case .install: install
             case .prepare: prepare
             case .screenSharing: screenSharing
+            case .connect: connect
             case .session: session
             case .done: done
             }
@@ -127,14 +129,14 @@ private struct StepContent: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(cmd.title).font(.headline)
                 CommandTerminal(command: cmd.command, directory: cmd.directory) { _ in
-                    setup.checkClaudeCode()
+                    setup.checkClaudeSignIn()
                 }
                 .frame(minWidth: 820, minHeight: 440)
                 HStack {
                     Text("This is Claude Code's own terminal. \(Brand.name) never sees what you type here.")
                         .font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    Button("Done") { terminalCommand = nil; setup.checkClaudeCode() }
+                    Button("Done") { terminalCommand = nil; setup.checkClaudeSignIn() }
                         .keyboardShortcut(.defaultAction)
                 }
             }
@@ -146,7 +148,7 @@ private struct StepContent: View {
 
     var requirements: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(Brand.name) gives Claude its own Mac: a virtual Mac with its own screen and browser, separate from yours. Claude uses it for tasks that need a website or an app, and you reach Claude from the Claude app on your phone at any time.")
+            Text("\(Brand.name) gives your coding agent its own Mac: a virtual Mac with its own screen and browser, separate from yours. Your agent uses it for tasks that need a website or an app; you approve every time it opens.")
             if setup.requirementProblems.isEmpty {
                 Text("Checking this Mac …").foregroundStyle(.secondary)
             } else {
@@ -158,29 +160,37 @@ private struct StepContent: View {
         }
     }
 
-    var claudeCode: some View {
+    var agents: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(Brand.name) runs Claude Code, Anthropic's own app, with your Claude subscription (Pro, Max or Team). You install it and sign in yourself; \(Brand.name) never sees your sign-in.")
-            row(done: setup.claudeInstalled,
-                title: setup.claudeInstalled ? String(localized: "Claude Code \(setup.claudeVersion ?? "") is installed") : String(localized: "Install Claude Code"),
-                detail: String(localized: "Uses Anthropic's installer: \(SetupController.installCommand)")) {
-                Button("Install") {
-                    terminalCommand = TerminalCommand(title: String(localized: "Install Claude Code"), command: SetupController.installCommand)
+            Text("Which agent should use the workspace? \(Brand.name) adds itself to the agent's settings as an MCP server. You can connect more than one.")
+            VStack(spacing: 6) {
+                ForEach(AgentIntegration.all) { agent in
+                    let installed = agent.id == "other" || setup.installedAgents.contains(agent.id)
+                    Toggle(isOn: Binding(get: { setup.selectedAgents.contains(agent.id) },
+                                         set: { _ in setup.toggle(agent.id) })) {
+                        HStack {
+                            Text(agent.name)
+                            if agent.supportsRemoteSession {
+                                Text("reachable from your phone").font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text(agent.id == "other" ? String(localized: "configure by hand")
+                                 : (installed ? String(localized: "found") : String(localized: "not found")))
+                                .font(.caption).foregroundStyle(installed ? .green : .secondary)
+                        }
+                    }
+                    .toggleStyle(.checkbox)
+                    .disabled(!installed)
                 }
             }
-            row(done: setup.claudeSignedIn, title: setup.claudeSignedIn ? String(localized: "Signed in") : String(localized: "Sign in to Claude"),
-                detail: String(localized: "Opens Claude's sign-in page in your browser.")) {
-                Button("Sign in") {
-                    terminalCommand = TerminalCommand(title: String(localized: "Sign in to Claude"), command: "claude auth login")
-                }
-                .disabled(!setup.claudeInstalled)
-            }
+            .padding(10)
+            .background(.background.secondary, in: RoundedRectangle(cornerRadius: 8))
             HStack {
-                Button("Check again") { setup.checkClaudeCode() }
+                Button("Search again") { setup.detectAgents() }
                 Spacer()
-                Button("Continue") { setup.continueAfterClaudeCode() }
+                Button("Continue") { setup.continueAfterAgents() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(!(setup.claudeInstalled && setup.claudeSignedIn))
+                    .disabled(setup.selectedAgents.isEmpty)
             }
         }
     }
@@ -189,7 +199,7 @@ private struct StepContent: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("The workspace runs macOS. \(Brand.name) downloads it directly from Apple.")
             if let info = setup.restoreInfo {
-                Text("macOS \(info.osVersion) (\(info.buildVersion)), about 18 GB. The download continues where it stopped if you quit \(Brand.name) or lose the connection.")
+                Text("macOS \(info.osVersion) (\(info.buildVersion)), about 26 GB. The download continues where it stopped if you quit \(Brand.name) or lose the connection.")
                     .foregroundStyle(.secondary)
                 HStack {
                     if case .progress = setup.activity {
@@ -237,20 +247,66 @@ private struct StepContent: View {
         }
     }
 
+    var connect: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("\(Brand.name) adds its tools to your agents. Opening the workspace always needs your approval: in the agent if it asks for tool permissions, otherwise here on your Mac.")
+            ForEach(AgentIntegration.all.filter { setup.selectedAgents.contains($0.id) }) { agent in
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text(agent.name).fontWeight(.medium)
+                        Spacer()
+                        switch setup.connectResults[agent.id] {
+                        case .connected?: Label("connected", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                        case .failed(let why)?: Label(why, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange).lineLimit(3)
+                        case .manual?: Text("add by hand:").foregroundStyle(.secondary)
+                        case nil: Text("waiting").foregroundStyle(.secondary)
+                        }
+                    }
+                    if setup.connectResults[agent.id] == .manual || { if case .failed = setup.connectResults[agent.id] { return true }; return false }() {
+                        let snippet = AgentIntegration.snippet(binary: setup.mcpBinary)
+                        Text(snippet).font(.caption.monospaced()).textSelection(.enabled)
+                            .padding(8).frame(maxWidth: .infinity, alignment: .leading)
+                            .background(.background, in: RoundedRectangle(cornerRadius: 6))
+                        Button("Copy") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(snippet, forType: .string)
+                        }
+                    }
+                }
+                .padding(10)
+                .background(.background.secondary, in: RoundedRectangle(cornerRadius: 8))
+            }
+            HStack {
+                Button("Connect again") { setup.connectAgents() }.disabled(busy)
+                Spacer()
+                Button("Continue") { setup.continueAfterConnect() }.keyboardShortcut(.defaultAction).disabled(busy)
+            }
+        }
+    }
+
     var session: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Last step: \(Brand.name) registers its tools with Claude Code and starts the session \"\(model.settings.sessionName)\". Start it once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then close the terminal.")
+            Text("Optional: \(Brand.name) can keep a Claude Code session running on this Mac that you reach from the Claude app on your phone (Remote Control). You approve opening the workspace right there.")
+            row(done: setup.claudeSignedIn, title: setup.claudeSignedIn ? String(localized: "Signed in to Claude Code") : String(localized: "Sign in to Claude Code"),
+                detail: String(localized: "Runs Claude Code's own sign-in; \(Brand.name) never sees it.")) {
+                Button("Sign in") {
+                    terminalCommand = TerminalCommand(title: String(localized: "Sign in to Claude"), command: "claude auth login")
+                }
+            }
+            Text("Start the session once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then click Done.")
+                .font(.callout)
             HStack {
-                Button("1. Register tools") { setup.configureSession() }.disabled(busy)
-                Button("2. Start once") {
+                Button("Start once") {
                     terminalCommand = TerminalCommand(
                         title: String(localized: "First start of the session"),
                         command: "claude --remote-control \(shellQuote(model.settings.sessionName))",
                         directory: model.paths.session)
                 }
+                .disabled(!setup.claudeSignedIn)
                 Spacer()
-                Button("3. Run in the background") { setup.enableSession() }
-                    .keyboardShortcut(.defaultAction).disabled(busy)
+                Button("Skip") { setup.skipSession() }
+                Button("Run in the background") { setup.enableSession() }
+                    .keyboardShortcut(.defaultAction).disabled(busy || !setup.claudeSignedIn)
             }
         }
     }
@@ -258,8 +314,11 @@ private struct StepContent: View {
     var done: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("\(Brand.name) is ready.", systemImage: "checkmark.seal.fill").font(.title3).foregroundStyle(.green)
-            Text("Open the Claude app on your phone or at claude.ai/code. The session \"\(model.settings.sessionName)\" appears with a computer icon. Ask Claude for something that needs a website: it asks for permission to open its workspace, and you approve it there.")
-            Text("\(Brand.name) lives in the menu bar. It starts with your Mac and keeps the session running.")
+            Text("Ask your agent for something that needs a website, for example \"look up the opening hours of the city library\". It asks to open its workspace; you approve, and you can watch in the workspace window.")
+            if model.settings.sessionEnabled && setup.wantsClaudeSession {
+                Text("On your phone: open the Claude app. The session \"\(model.settings.sessionName)\" appears with a computer icon.")
+            }
+            Text("\(Brand.name) lives in the menu bar and starts with your Mac.")
                 .foregroundStyle(.secondary)
         }
     }

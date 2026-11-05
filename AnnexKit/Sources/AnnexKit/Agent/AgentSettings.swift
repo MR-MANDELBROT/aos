@@ -11,14 +11,18 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     public var idleMinutes: Int = 20
     /// Name of the Claude Code session in the Claude app.
     public var sessionName: String = Brand.defaultSessionName
-    /// Keep the session running in the background.
+    /// Keep the Claude Code session running in the background (only once it was set up).
     public var sessionEnabled: Bool = true
     /// Keep the Mac from going to sleep while idle, so the session stays reachable (closing the lid of a laptop
     /// still puts it to sleep).
     public var keepAwake: Bool = true
+    /// Agents connected during setup (ids of AgentIntegration).
+    public var agents: [String] = []
+    /// The setup ran to the end once.
+    public var setupFinished: Bool = false
 
     private enum CodingKeys: String, CodingKey {
-        case expireSignIns, keepSignedIn, idleMinutes, sessionName, sessionEnabled, keepAwake
+        case expireSignIns, keepSignedIn, idleMinutes, sessionName, sessionEnabled, keepAwake, agents, setupFinished
     }
 
     public init(from decoder: Decoder) throws {
@@ -30,6 +34,8 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         sessionName = try c.decodeIfPresent(String.self, forKey: .sessionName) ?? d.sessionName
         sessionEnabled = try c.decodeIfPresent(Bool.self, forKey: .sessionEnabled) ?? d.sessionEnabled
         keepAwake = try c.decodeIfPresent(Bool.self, forKey: .keepAwake) ?? d.keepAwake
+        agents = try c.decodeIfPresent([String].self, forKey: .agents) ?? d.agents
+        setupFinished = try c.decodeIfPresent(Bool.self, forKey: .setupFinished) ?? d.setupFinished
     }
 
     public init() {}

@@ -52,6 +52,47 @@ final class AppModel: ObservableObject {
             return await self.askForHelp(purpose)
         }
         setup.log = { [weak self] line in self?.append(line) }
+        setup.settingsChanged = { [weak self] s in self?.save(s) }
+        workspace.onApprovalRequest = { [weak self] agent, purpose, minutes in
+            guard let self else { return false }
+            return await self.askApproval(agent: agent, purpose: purpose, minutes: minutes)
+        }
+    }
+
+    // MARK: Approval on the Mac
+
+    struct ApprovalRequest: Identifiable {
+        let id = UUID()
+        let agent: String
+        let purpose: String
+        let minutes: Int
+        let continuation: CheckedContinuation<Bool, Never>
+    }
+
+    @Published var approval: ApprovalRequest?
+
+    func askApproval(agent: String, purpose: String, minutes: Int) async -> Bool {
+        if approval != nil { return false }
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "\(agent) wants to open the workspace")
+        content.body = purpose
+        content.sound = .default
+        try? await UNUserNotificationCenter.current()
+            .add(UNNotificationRequest(identifier: "approval", content: content, trigger: nil))
+        openWindow?(WindowID.approval)
+        NSApp.activate()
+        return await withCheckedContinuation { cont in
+            let request = ApprovalRequest(agent: agent, purpose: purpose, minutes: minutes, continuation: cont)
+            approval = request
+            DispatchQueue.main.asyncAfter(deadline: .now() + 300) { [weak self] in self?.answerApproval(request.id, false) }
+        }
+    }
+
+    func answerApproval(_ id: UUID, _ allowed: Bool) {
+        guard let a = approval, a.id == id else { return }
+        approval = nil
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["approval"])
+        a.continuation.resume(returning: allowed)
     }
 
     func append(_ line: String) {
@@ -112,11 +153,11 @@ final class AppModel: ObservableObject {
         loginItemEnabled = SMAppService.mainApp.status == .enabled
         sessionAgentStatus = SessionAgent.service.status
         setup.refreshCompletion()
-        keepAwake.set(settings.keepAwake && settings.sessionEnabled && setup.isComplete)
+        keepAwake.set(settings.keepAwake && settings.sessionEnabled && sessionAgentStatus == .enabled)
     }
 
     var menuSymbol: String {
-        if help != nil { return "hand.raised.fill" }
+        if help != nil || approval != nil { return "hand.raised.fill" }
         switch session?.state {
         case .needsLogin, .needsAttention, .failed, .missingClaude: return "exclamationmark.triangle"
         default: break
@@ -148,7 +189,7 @@ final class AppModel: ObservableObject {
     func askForHelp(_ purpose: String) async -> String {
         if help != nil { return "Another request is already waiting for the user." }
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Claude needs your help")
+        content.title = String(localized: "Your agent needs your help")
         content.body = purpose
         content.sound = .default
         try? await UNUserNotificationCenter.current()

@@ -36,6 +36,13 @@ struct AnnexApp: App {
         }
         .defaultSize(width: 980, height: 640)
 
+        Window(Text("Approve"), id: WindowID.approval) {
+            ApprovalView()
+                .environmentObject(model)
+        }
+        .windowResizability(.contentSize)
+        .windowLevel(.floating)
+
         Settings {
             SettingsView()
                 .environmentObject(model)
@@ -47,6 +54,7 @@ enum WindowID {
     static let setup = "setup"
     static let workspace = "workspace"
     static let session = "session"
+    static let approval = "approval"
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {

@@ -23,7 +23,7 @@ DE = {
     '3. When macOS asks for a password, click "Enter the workspace password" in the window.':
         '3. Fragt macOS nach einem Passwort, klicke im Fenster auf „Passwort des Arbeitsplatzes eingeben“.',
     '4. Come back here and click Check.': '4. Komm hierher zurück und klicke auf „Prüfen“.',
-    'About 60 GB of free disk space are needed (%lld GB free).': 'Etwa 60 GB freier Speicher werden gebraucht (%lld GB frei).',
+    'About 75 GB of free disk space are needed (%lld GB free).': 'Etwa 75 GB freier Speicher werden gebraucht (%lld GB frei).',
     'Asking Apple for the newest macOS': 'Frage Apple nach dem neuesten macOS',
     'At least 8 GB of memory are required (this Mac has %llu GB).': 'Mindestens 8 GB Arbeitsspeicher sind nötig (dieser Mac hat %llu GB).',
     'Changes to sign-ins apply to the workspace at its next start.': 'Änderungen an den Anmeldungen gelten ab dem nächsten Start des Arbeitsplatzes.',
@@ -118,8 +118,8 @@ DE = {
     '[*.]google.com': '[*.]google.com',
     'error': 'Fehler',
     'installing macOS': 'installiert macOS',
-    'macOS %@ (%@), about 18 GB. The download continues where it stopped if you quit %@ or lose the connection.':
-        'macOS %@ (%@), etwa 18 GB. Der Download macht dort weiter, wo er aufgehört hat, wenn du %@ beendest oder die Verbindung abbricht.',
+    'macOS %@ (%@), about 26 GB. The download continues where it stopped if you quit %@ or lose the connection.':
+        'macOS %@ (%@), etwa 26 GB. Der Download macht dort weiter, wo er aufgehört hat, wenn du %@ beendest oder die Verbindung abbricht.',
     'macOS 27 or later is required.': 'macOS 27 oder neuer ist nötig.',
     'not set up': 'nicht eingerichtet',
     'not started': 'nicht gestartet',
@@ -132,3 +132,58 @@ DE = {
     'starting': 'startet',
     'waiting for the network': 'wartet aufs Netz',
 }
+
+DE.update({
+    '%@ adds its tools to your agents. Opening the workspace always needs your approval: in the agent if it asks for tool permissions, otherwise here on your Mac.':
+        '%@ trägt seine Werkzeuge in deine Agents ein. Das Öffnen des Arbeitsplatzes braucht immer dein Ja: im Agent, wenn er nach Werkzeug-Erlaubnissen fragt, sonst hier auf dem Mac.',
+    '%@ gives your coding agent its own Mac: a virtual Mac with its own screen and browser, separate from yours. Your agent uses it for tasks that need a website or an app; you approve every time it opens.':
+        '%@ gibt deinem Coding-Agent einen eigenen Mac: einen virtuellen Mac mit eigenem Bildschirm und Browser, getrennt von deinem. Dein Agent nutzt ihn für Aufgaben, die eine Website oder eine App brauchen; jedes Öffnen bestätigst du.',
+    '%@ lives in the menu bar and starts with your Mac.': '%@ wohnt in der Menüleiste und startet mit deinem Mac.',
+    '%@ wants to open its workspace': '%@ möchte seinen Arbeitsplatz öffnen',
+    '%@ wants to open the workspace': '%@ möchte den Arbeitsplatz öffnen',
+    'About 60 GB of free disk space are needed (%lld GB free).': 'Etwa 60 GB freier Speicher werden gebraucht (%lld GB frei).',
+    'Allow': 'Erlauben',
+    'Approve': 'Bestätigen',
+    'Ask your agent for something that needs a website, for example "look up the opening hours of the city library". It asks to open its workspace; you approve, and you can watch in the workspace window.':
+        'Bitte deinen Agent um etwas, das eine Website braucht, zum Beispiel „Schau nach, wann die Stadtbibliothek geöffnet hat“. Er fragt, ob er seinen Arbeitsplatz öffnen darf; du bestätigst und kannst im Fenster des Arbeitsplatzes zusehen.',
+    'Choose your agent': 'Agent wählen',
+    'Connect again': 'Erneut verbinden',
+    'Connect your agent': 'Agent verbinden',
+    'Connecting your agents': 'Verbinde deine Agents',
+    'Copy': 'Kopieren',
+    "Don't allow": 'Nicht erlauben',
+    'For up to %lld minutes. You can watch and close it any time.': 'Für höchstens %lld Minuten. Du kannst jederzeit zusehen und ihn schließen.',
+    'No request.': 'Keine Anfrage.',
+    'On your phone: open the Claude app. The session "%@" appears with a computer icon.':
+        'Auf dem Handy: Öffne die Claude-App. Die Sitzung „%@“ erscheint mit einem Computersymbol.',
+    'Optional: %@ can keep a Claude Code session running on this Mac that you reach from the Claude app on your phone (Remote Control). You approve opening the workspace right there.':
+        'Optional: %@ kann auf diesem Mac eine Claude-Code-Sitzung am Laufen halten, die du aus der Claude-App auf dem Handy erreichst (Remote Control). Das Öffnen des Arbeitsplatzes bestätigst du gleich dort.',
+    'Reach it from your phone': 'Vom Handy erreichen',
+    'Run in the background': 'Im Hintergrund laufen lassen',
+    "Runs Claude Code's own sign-in; %@ never sees it.": 'Startet die Anmeldung von Claude Code selbst; %@ sieht sie nie.',
+    'Search again': 'Erneut suchen',
+    'Sign in to Claude Code': 'Bei Claude Code anmelden',
+    'Signed in to Claude Code': 'Bei Claude Code angemeldet',
+    'Skip': 'Überspringen',
+    'Start once': 'Einmal starten',
+    'Start the session once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then click Done.':
+        'Starte die Sitzung hier einmal: Claude Code fragt, ob du dem Ordner vertraust und ob Remote Control an sein soll. Beantworte beides mit Ja und klicke dann auf „Fertig“.',
+    'The workspace is off. It starts when your agent opens it.': 'Der Arbeitsplatz ist aus. Er startet, wenn dein Agent ihn öffnet.',
+    "Which agent should use the workspace? %@ adds itself to the agent's settings as an MCP server. You can connect more than one.":
+        'Welcher Agent soll den Arbeitsplatz nutzen? %@ trägt sich in seinen Einstellungen als MCP-Server ein. Du kannst mehrere verbinden.',
+    'Your agent asks for your help': 'Dein Agent bittet dich um Hilfe',
+    'Your agent needs your help': 'Dein Agent braucht deine Hilfe',
+    'add by hand:': 'von Hand eintragen:',
+    'configure by hand': 'von Hand einrichten',
+    'connected': 'verbunden',
+    'found': 'gefunden',
+    'macOS %@ (%@), about 18 GB. The download continues where it stopped if you quit %@ or lose the connection.':
+        'macOS %@ (%@), etwa 18 GB. Der Download macht dort weiter, wo er aufgehört hat, wenn du %@ beendest oder die Verbindung abbricht.',
+    'macOS %@ (%@), about 26 GB. The download continues where it stopped if you quit %@ or lose the connection.':
+        'macOS %@ (%@), etwa 26 GB. Der Download macht dort weiter, wo er aufgehört hat, wenn du %@ beendest oder die Verbindung abbricht.',
+    'About 75 GB of free disk space are needed (%lld GB free).': 'Etwa 75 GB freier Speicher werden gebraucht (%lld GB frei).',
+    'not found': 'nicht gefunden',
+    'off, starts when your agent needs it': 'aus, startet bei Bedarf',
+    'reachable from your phone': 'vom Handy erreichbar',
+    'waiting': 'wartet',
+})

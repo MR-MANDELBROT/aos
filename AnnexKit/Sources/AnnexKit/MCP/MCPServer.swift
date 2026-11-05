@@ -6,18 +6,79 @@ public final class MCPServer {
     public static let supportedVersions = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]
     private let paths: Paths
     private let version: String
+    private let approval: ApprovalMode
+    private let agentID: String?
+    private var clientName = "agent"
+    private var clientCanElicit = false
+    /// Messages that arrived while waiting for an answer from the client.
+    private var queued: [[String: Any]] = []
+    private var nextRequestID = 1
 
-    public init(paths: Paths = .default, version: String) {
+    public init(paths: Paths = .default, version: String,
+                environment: [String: String] = ProcessInfo.processInfo.environment) {
         self.paths = paths
         self.version = version
+        self.approval = ApprovalMode(rawValue: environment["ANNEX_APPROVAL"] ?? "") ?? .auto
+        self.agentID = environment["ANNEX_AGENT"]
     }
 
     public func run() {
+        while let message = nextMessage() {
+            if let reply = handle(message) { write(reply) }
+        }
+    }
+
+    private func readMessage() -> [String: Any]? {
         while let line = readLine(strippingNewline: true) {
             guard !line.isEmpty, let data = line.data(using: .utf8),
                   let message = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
-            if let reply = handle(message) { write(reply) }
+            return message
         }
+        return nil
+    }
+
+    private func nextMessage() -> [String: Any]? {
+        if !queued.isEmpty { return queued.removeFirst() }
+        return readMessage()
+    }
+
+    /// Sends a request to the client and waits for its answer. Pings are answered meanwhile, everything else waits.
+    private func request(_ method: String, _ params: [String: Any]) -> [String: Any]? {
+        let id = "annex-\(nextRequestID)"
+        nextRequestID += 1
+        write(["jsonrpc": "2.0", "id": id, "method": method, "params": params])
+        while let message = readMessage() {
+            if message["method"] == nil, message["id"] as? String == id {
+                return message
+            }
+            if message["method"] as? String == "ping", let pid = message["id"] {
+                write(["jsonrpc": "2.0", "id": pid, "result": [String: Any]()])
+                continue
+            }
+            queued.append(message)
+        }
+        return nil
+    }
+
+    enum Consent { case yes, no, unavailable }
+
+    /// Asks the user through the agent (MCP elicitation) whether the workspace may open.
+    func elicitOpen(purpose: String, minutes: Int) -> Consent {
+        guard clientCanElicit else { return .unavailable }
+        let answer = request("elicitation/create", [
+            "message": "\(clientName) wants to open its \(Brand.name) workspace for \(minutes) min: \(purpose)",
+            "requestedSchema": [
+                "type": "object",
+                "properties": ["allow": ["type": "boolean", "title": "Allow", "default": false]],
+                "required": ["allow"],
+            ],
+        ])
+        guard let answer else { return .unavailable }
+        if answer["error"] != nil { return .unavailable }
+        let result = answer["result"] as? [String: Any] ?? [:]
+        guard result["action"] as? String == "accept" else { return .no }
+        let content = result["content"] as? [String: Any] ?? [:]
+        return (content["allow"] as? Bool ?? true) ? .yes : .no
     }
 
     private func write(_ object: [String: Any]) {
@@ -33,6 +94,11 @@ public final class MCPServer {
         switch method {
         case "initialize":
             let asked = params["protocolVersion"] as? String ?? ""
+            let caps = params["capabilities"] as? [String: Any] ?? [:]
+            clientCanElicit = caps["elicitation"] != nil
+            if let info = params["clientInfo"] as? [String: Any] {
+                clientName = (info["title"] as? String) ?? (info["name"] as? String) ?? clientName
+            }
             let version = Self.supportedVersions.contains(asked) ? asked : Self.supportedVersions[0]
             return result(id, [
                 "protocolVersion": version,
@@ -63,10 +129,30 @@ public final class MCPServer {
 
     func call(_ name: String, _ args: [String: Any]) -> [String: Any] {
         guard let op = MCPTools.operations[name] else { return text("Unknown tool \(name).", error: true) }
+        var approvedBy: String?
+        if op == "open" {
+            switch approval {
+            case .agent:
+                approvedBy = "agent"
+            case .auto:
+                let purpose = (args["purpose"] as? String) ?? ""
+                let minutes = (args["minutes"] as? NSNumber)?.intValue ?? 30
+                switch elicitOpen(purpose: purpose, minutes: minutes) {
+                case .yes: approvedBy = "elicited"
+                case .no: return text("The user did not allow opening the workspace.", error: true)
+                case .unavailable: approvedBy = "mac"
+                }
+            case .mac:
+                approvedBy = "mac"
+            }
+        }
         do {
             let client = try AgentClient(paths: paths)
+            let agentName = agentID.flatMap { AgentIntegration.byID($0)?.name } ?? clientName
             let response = try client.send { r in
                 r.op = op
+                r.approval = approvedBy
+                r.agent = agentName
                 r.purpose = args["purpose"] as? String
                 r.minutes = (args["minutes"] as? NSNumber)?.intValue
                 r.x = (args["x"] as? NSNumber)?.doubleValue

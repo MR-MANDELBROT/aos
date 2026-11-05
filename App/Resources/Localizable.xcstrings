@@ -21,6 +21,16 @@
         }
       }
     },
+    "%@ adds its tools to your agents. Opening the workspace always needs your approval: in the agent if it asks for tool permissions, otherwise here on your Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ trägt seine Werkzeuge in deine Agents ein. Das Öffnen des Arbeitsplatzes braucht immer dein Ja: im Agent, wenn er nach Werkzeug-Erlaubnissen fragt, sonst hier auf dem Mac."
+          }
+        }
+      }
+    },
     "%@ creates the virtual Mac and installs macOS into it. This takes about 10 minutes." : {
       "localizations" : {
         "de" : {
@@ -32,11 +42,22 @@
       }
     },
     "%@ gives Claude its own Mac: a virtual Mac with its own screen and browser, separate from yours. Claude uses it for tasks that need a website or an app, and you reach Claude from the Claude app on your phone at any time." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ gibt Claude einen eigenen Mac: einen virtuellen Mac mit eigenem Bildschirm und Browser, getrennt von deinem. Claude nutzt ihn für Aufgaben, die eine Website oder eine App brauchen, und du erreichst Claude jederzeit über die Claude-App auf deinem Handy."
+          }
+        }
+      }
+    },
+    "%@ gives your coding agent its own Mac: a virtual Mac with its own screen and browser, separate from yours. Your agent uses it for tasks that need a website or an app; you approve every time it opens." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ gibt deinem Coding-Agent einen eigenen Mac: einen virtuellen Mac mit eigenem Bildschirm und Browser, getrennt von deinem. Dein Agent nutzt ihn für Aufgaben, die eine Website oder eine App brauchen; jedes Öffnen bestätigst du."
           }
         }
       }
@@ -51,7 +72,18 @@
         }
       }
     },
+    "%@ lives in the menu bar and starts with your Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wohnt in der Menüleiste und startet mit deinem Mac."
+          }
+        }
+      }
+    },
     "%@ lives in the menu bar. It starts with your Mac and keeps the session running." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -62,6 +94,7 @@
       }
     },
     "%@ runs Claude Code, Anthropic's own app, with your Claude subscription (Pro, Max or Team). You install it and sign in yourself; %@ never sees your sign-in." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -77,6 +110,26 @@
         }
       }
     },
+    "%@ wants to open its workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ möchte seinen Arbeitsplatz öffnen"
+          }
+        }
+      }
+    },
+    "%@ wants to open the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ möchte den Arbeitsplatz öffnen"
+          }
+        }
+      }
+    },
     "1. Open the workspace window. System Settings is already open there at General > Sharing." : {
       "localizations" : {
         "de" : {
@@ -88,6 +141,7 @@
       }
     },
     "1. Register tools" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -98,6 +152,7 @@
       }
     },
     "2. Start once" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -118,6 +173,7 @@
       }
     },
     "3. Run in the background" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -148,11 +204,62 @@
       }
     },
     "About 60 GB of free disk space are needed (%lld GB free)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Etwa 60 GB freier Speicher werden gebraucht (%lld GB frei)."
+          }
+        }
+      }
+    },
+    "About 75 GB of free disk space are needed (%lld GB free)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwa 75 GB freier Speicher werden gebraucht (%lld GB frei)."
+          }
+        }
+      }
+    },
+    "add by hand:" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "von Hand eintragen:"
+          }
+        }
+      }
+    },
+    "Allow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlauben"
+          }
+        }
+      }
+    },
+    "Approve" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestätigen"
+          }
+        }
+      }
+    },
+    "Ask your agent for something that needs a website, for example \"look up the opening hours of the city library\". It asks to open its workspace; you approve, and you can watch in the workspace window." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte deinen Agent um etwas, das eine Website braucht, zum Beispiel „Schau nach, wann die Stadtbibliothek geöffnet hat“. Er fragt, ob er seinen Arbeitsplatz öffnen darf; du bestätigst und kannst im Fenster des Arbeitsplatzes zusehen."
           }
         }
       }
@@ -237,7 +344,18 @@
         }
       }
     },
+    "Choose your agent" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent wählen"
+          }
+        }
+      }
+    },
     "Claude asks for your help" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -248,6 +366,7 @@
       }
     },
     "Claude Code" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -258,6 +377,7 @@
       }
     },
     "Claude Code %@ is installed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -288,6 +408,7 @@
       }
     },
     "Claude needs your help" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -317,6 +438,56 @@
         }
       }
     },
+    "configure by hand" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "von Hand einrichten"
+          }
+        }
+      }
+    },
+    "Connect again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut verbinden"
+          }
+        }
+      }
+    },
+    "Connect your agent" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent verbinden"
+          }
+        }
+      }
+    },
+    "connected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "verbunden"
+          }
+        }
+      }
+    },
+    "Connecting your agents" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde deine Agents"
+          }
+        }
+      }
+    },
     "Continue" : {
       "localizations" : {
         "de" : {
@@ -333,6 +504,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einrichtung fortsetzen …"
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieren"
           }
         }
       }
@@ -363,6 +544,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details"
+          }
+        }
+      }
+    },
+    "Don't allow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht erlauben"
           }
         }
       }
@@ -457,6 +648,26 @@
         }
       }
     },
+    "For up to %lld minutes. You can watch and close it any time." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für höchstens %lld Minuten. Du kannst jederzeit zusehen und ihn schließen."
+          }
+        }
+      }
+    },
+    "found" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gefunden"
+          }
+        }
+      }
+    },
     "Help needed" : {
       "localizations" : {
         "de" : {
@@ -478,6 +689,7 @@
       }
     },
     "Install" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -488,6 +700,7 @@
       }
     },
     "Install Claude Code" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -538,6 +751,7 @@
       }
     },
     "Last step: %@ registers its tools with Claude Code and starts the session \"%@\". Start it once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then close the terminal." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -564,6 +778,7 @@
       }
     },
     "macOS %@ (%@), about 18 GB. The download continues where it stopped if you quit %@ or lose the connection." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -575,6 +790,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "macOS %1$@ (%2$@), about 18 GB. The download continues where it stopped if you quit %3$@ or lose the connection."
+          }
+        }
+      }
+    },
+    "macOS %@ (%@), about 26 GB. The download continues where it stopped if you quit %@ or lose the connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS %@ (%@), etwa 26 GB. Der Download macht dort weiter, wo er aufgehört hat, wenn du %@ beendest oder die Verbindung abbricht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "macOS %1$@ (%2$@), about 26 GB. The download continues where it stopped if you quit %3$@ or lose the connection."
           }
         }
       }
@@ -595,6 +826,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Name in der Claude-App"
+          }
+        }
+      }
+    },
+    "No request." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Anfrage."
+          }
+        }
+      }
+    },
+    "not found" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht gefunden"
           }
         }
       }
@@ -630,11 +881,32 @@
       }
     },
     "off, starts when Claude needs it" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "aus, startet bei Bedarf"
+          }
+        }
+      }
+    },
+    "off, starts when your agent needs it" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aus, startet bei Bedarf"
+          }
+        }
+      }
+    },
+    "On your phone: open the Claude app. The session \"%@\" appears with a computer icon." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf dem Handy: Öffne die Claude-App. Die Sitzung „%@“ erscheint mit einem Computersymbol."
           }
         }
       }
@@ -660,6 +932,7 @@
       }
     },
     "Open the Claude app on your phone or at claude.ai/code. The session \"%@\" appears with a computer icon. Ask Claude for something that needs a website: it asks for permission to open its workspace, and you approve it there." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -706,11 +979,22 @@
       }
     },
     "Opens Claude's sign-in page in your browser." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet die Anmeldeseite von Claude in deinem Browser."
+          }
+        }
+      }
+    },
+    "Optional: %@ can keep a Claude Code session running on this Mac that you reach from the Claude app on your phone (Remote Control). You approve opening the workspace right there." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional: %@ kann auf diesem Mac eine Claude-Code-Sitzung am Laufen halten, die du aus der Claude-App auf dem Handy erreichst (Remote Control). Das Öffnen des Arbeitsplatzes bestätigst du gleich dort."
           }
         }
       }
@@ -745,6 +1029,26 @@
         }
       }
     },
+    "Reach it from your phone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom Handy erreichen"
+          }
+        }
+      }
+    },
+    "reachable from your phone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vom Handy erreichbar"
+          }
+        }
+      }
+    },
     "Ready" : {
       "localizations" : {
         "de" : {
@@ -756,6 +1060,7 @@
       }
     },
     "Registering the workspace tools with Claude Code" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -785,12 +1090,32 @@
         }
       }
     },
+    "Run in the background" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Hintergrund laufen lassen"
+          }
+        }
+      }
+    },
     "running" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "läuft"
+          }
+        }
+      }
+    },
+    "Runs Claude Code's own sign-in; %@ never sees it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet die Anmeldung von Claude Code selbst; %@ sieht sie nie."
           }
         }
       }
@@ -821,6 +1146,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Bildschirmfreigabe ist im Arbeitsplatz noch aus."
+          }
+        }
+      }
+    },
+    "Search again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut suchen"
           }
         }
       }
@@ -895,6 +1230,16 @@
         }
       }
     },
+    "Sign in to Claude Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Claude Code anmelden"
+          }
+        }
+      }
+    },
     "sign in to Claude Code (open Session)" : {
       "localizations" : {
         "de" : {
@@ -916,11 +1261,32 @@
       }
     },
     "Signed in" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Angemeldet"
+          }
+        }
+      }
+    },
+    "Signed in to Claude Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Claude Code angemeldet"
+          }
+        }
+      }
+    },
+    "Skip" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überspringen"
           }
         }
       }
@@ -935,12 +1301,33 @@
         }
       }
     },
+    "Start once" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einmal starten"
+          }
+        }
+      }
+    },
     "Start the session" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sitzung starten"
+          }
+        }
+      }
+    },
+    "Start the session once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then click Done." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starte die Sitzung hier einmal: Claude Code fragt, ob du dem Ordner vertraust und ob Remote Control an sein soll. Beantworte beides mit Ja und klicke dann auf „Fertig“."
           }
         }
       }
@@ -1006,11 +1393,22 @@
       }
     },
     "The workspace is off. It starts when Claude opens it." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz ist aus. Er startet, wenn Claude ihn öffnet."
+          }
+        }
+      }
+    },
+    "The workspace is off. It starts when your agent opens it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist aus. Er startet, wenn dein Agent ihn öffnet."
           }
         }
       }
@@ -1096,11 +1494,22 @@
       }
     },
     "Uses Anthropic's installer: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit dem Installer von Anthropic: %@"
+          }
+        }
+      }
+    },
+    "waiting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wartet"
           }
         }
       }
@@ -1125,12 +1534,42 @@
         }
       }
     },
+    "Which agent should use the workspace? %@ adds itself to the agent's settings as an MCP server. You can connect more than one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcher Agent soll den Arbeitsplatz nutzen? %@ trägt sich in seinen Einstellungen als MCP-Server ein. Du kannst mehrere verbinden."
+          }
+        }
+      }
+    },
     "Workspace" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arbeitsplatz"
+          }
+        }
+      }
+    },
+    "Your agent asks for your help" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Agent bittet dich um Hilfe"
+          }
+        }
+      }
+    },
+    "Your agent needs your help" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Agent braucht deine Hilfe"
           }
         }
       }
