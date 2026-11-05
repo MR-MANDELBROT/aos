@@ -92,7 +92,7 @@ cat > "$OUT/appcast-item.xml" <<EOF
       <sparkle:version>$BUILD</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
-      <enclosure url="https://github.com/REPLACE_OWNER/annex/releases/download/v$VERSION/Annex-$VERSION.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
+      <enclosure url="https://github.com/MR-MANDELBROT/annex/releases/download/v$VERSION/Annex-$VERSION.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
     </item>
 EOF
 shasum -a 256 "$DMG" | tee "$OUT/SHA256SUMS"

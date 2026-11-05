@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>Annex</title>
-    <link>https://REPLACE_OWNER.github.io/annex/appcast.xml</link>
+    <link>https://mr-mandelbrot.github.io/annex/appcast.xml</link>
     <description>Updates for Annex</description>
     <language>en</language>
     <!-- Tools/release.sh writes build/release/<version>/appcast-item.xml; paste new items here, newest first. -->
