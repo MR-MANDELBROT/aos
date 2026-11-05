@@ -116,6 +116,12 @@ if ! codesign --verify --deep --strict -R="$CHROME_REQ" "/Applications/Google Ch
 fi
 codesign --verify --deep --strict -R="$CHROME_REQ" "/Applications/Google Chrome.app" || die "Chrome signature wrong"
 say "Chrome $(defaults read "/Applications/Google Chrome.app/Contents/Info" CFBundleShortVersionString)"
+# Chrome into the Dock (the agent is told it is there)
+if ! as_user defaults read com.apple.dock persistent-apps 2>/dev/null | grep -q "Google Chrome.app"; then
+  as_user defaults write com.apple.dock persistent-apps -array-add \
+    '<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>file:///Applications/Google%20Chrome.app/</string><key>_CFURLStringType</key><integer>15</integer></dict></dict></dict>'
+  as_user killall Dock 2>/dev/null || true
+fi
 
 # Guest service: puts the Chrome policies back after every login (macOS clears /Library/Managed Preferences without
 # MDM), moves old downloads to the Trash once per boot

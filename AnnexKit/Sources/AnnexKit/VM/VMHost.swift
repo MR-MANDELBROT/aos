@@ -29,8 +29,14 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
     public private(set) var phase: Phase = .stopped
     public private(set) var lastError: String?
     private var vm: VZVirtualMachine?
+    /// True while we stop the VM ourselves; a stop without it is the guest restarting or shutting down.
+    private var stopping = false
+    /// Restart the VM when the guest stops by itself (a restart inside the guest ends the VM on this framework).
+    public var restartsAfterGuestStop = true
     /// Called on the main actor whenever `phase` changes.
     public var onPhaseChange: ((Phase) -> Void)?
+    /// Called with each new VZVirtualMachine before it starts or restores (development hooks).
+    public var beforeStart: ((VZVirtualMachine) -> Void)?
 
     public init(bundle: VMBundle, paths: Paths) {
         self.bundle = bundle
@@ -143,6 +149,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
             let machine = VZVirtualMachine(configuration: config)
             machine.delegate = self
             vm = machine
+            beforeStart?(machine)
             if hasSavedState && provisioning == nil {
                 do {
                     try await machine.restoreMachineStateFrom(url: bundle.savedStateURL)
@@ -156,6 +163,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
                     let fresh = VZVirtualMachine(configuration: try makeConfiguration())
                     fresh.delegate = self
                     vm = fresh
+                    beforeStart?(fresh)
                 }
             }
             let options = VZMacOSVirtualMachineStartOptions()
@@ -177,6 +185,8 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
     public func suspend() async throws {
         guard let vm, vm.state == .running || vm.state == .paused else { throw VMHostError.notRunning }
         set(.suspending)
+        stopping = true
+        defer { stopping = false }
         if vm.state == .running { try await vm.pause() }
         try await vm.saveMachineStateTo(url: bundle.savedStateURL)
         try await vm.stop()
@@ -186,6 +196,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
 
     /// Waits for the guest to power off by itself (after a shutdown inside the guest).
     public func waitUntilStopped(timeout: TimeInterval) async -> Bool {
+        defer { stopping = false }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             if vm == nil || vm?.state == .stopped || vm?.state == .error { vm = nil; set(.stopped); return true }
@@ -197,6 +208,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
     /// Asks the guest to shut down (like pressing the power button).
     public func requestStop() throws {
         guard let vm else { throw VMHostError.notRunning }
+        stopping = true
         try vm.requestStop()
     }
 
@@ -204,6 +216,8 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
     public func forceStop() async throws {
         guard let vm else { return }
         set(.stopping)
+        stopping = true
+        defer { stopping = false }
         try await vm.stop()
         self.vm = nil
         set(.stopped)
@@ -216,9 +230,19 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
 
     nonisolated public func guestDidStop(_ virtualMachine: VZVirtualMachine) {
         Task { @MainActor in
-            if self.vm === virtualMachine { self.vm = nil; self.set(.stopped) }
+            guard self.vm === virtualMachine else { return }
+            self.vm = nil
+            self.set(.stopped)
+            if !self.stopping && self.restartsAfterGuestStop {
+                // A restart inside the guest: boot again.
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if self.vm == nil { try? await self.start() }
+            }
         }
     }
+
+    /// Marks the next guest stop as intended (orderly shutdown requested over SSH).
+    public func expectStop() { stopping = true }
 
     nonisolated public func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
         Task { @MainActor in

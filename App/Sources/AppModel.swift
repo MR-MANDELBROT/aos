@@ -154,6 +154,14 @@ final class AppModel: ObservableObject {
         sessionAgentStatus = SessionAgent.service.status
         setup.refreshCompletion()
         keepAwake.set(settings.keepAwake && settings.sessionEnabled && sessionAgentStatus == .enabled)
+        updateActivationPolicy()
+    }
+
+    /// A Dock icon (and an entry in the app switcher) while one of Annex's windows is open; menu bar only otherwise.
+    func updateActivationPolicy() {
+        let windowOpen = NSApp.windows.contains { $0.isVisible && $0.canBecomeMain && !($0.className.contains("MenuBarExtra")) }
+        let wanted: NSApplication.ActivationPolicy = windowOpen ? .regular : .accessory
+        if NSApp.activationPolicy() != wanted { NSApp.setActivationPolicy(wanted) }
     }
 
     var menuSymbol: String {

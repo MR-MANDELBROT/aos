@@ -68,6 +68,7 @@ targets:
         LSApplicationCategoryType: public.app-category.productivity
         LSMinimumSystemVersion: "27.0"
         LSUIElement: true
+        NSLocalNetworkUsageDescription: "Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network. Nothing else on your network is contacted."
         NSHumanReadableCopyright: "© 2026 Maximilian Marquart"
         SUFeedURL: https://marquart.dev/annex/appcast.xml
         SUPublicEDKey: REPLACE_WITH_SPARKLE_PUBLIC_KEY

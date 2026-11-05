@@ -12,6 +12,9 @@ public actor RFBClient {
     public let port: UInt16
     private let username: String
     private let password: String
+    /// Encodings to ask for (zlib for screensharingd). Empty: raw only, nothing sent (the hypervisor's VNC server
+    /// crashed the VM on encodings it doesn't know).
+    private let encodings: [Int32]
 
     private var stream: RFBStream?
     private var connectedAt = Date.distantPast
@@ -25,11 +28,12 @@ public actor RFBClient {
     /// Pressing input before this much time after connecting gets dropped by screensharingd.
     public static let inputGrace: TimeInterval = 2.2
 
-    public init(host: String, port: UInt16 = 5900, username: String, password: String) {
+    public init(host: String, port: UInt16 = 5900, username: String, password: String, encodings: [Int32] = [6]) {
         self.host = host
         self.port = port
         self.username = username
         self.password = password
+        self.encodings = encodings
     }
 
     deinit {
@@ -62,8 +66,13 @@ public actor RFBClient {
         buttons = 0
     }
 
+    private func dbg(_ m: @autoclosure () -> String) {
+        if ProcessInfo.processInfo.environment["ANNEX_RFB_DEBUG"] != nil { FileHandle.standardError.write(Data(("rfb: " + m() + "\n").utf8)) }
+    }
+
     private func handshake(_ s: RFBStream) async throws {
         let version = try await s.readLine()
+        dbg("version \(String(decoding: version, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines))")
         guard version.starts(with: Data("RFB ".utf8)) else { throw RFBError.protocolError("not a VNC server") }
         try await s.write(Data("RFB 003.008\n".utf8))
 
@@ -74,8 +83,9 @@ public actor RFBClient {
             throw RFBError.authFailed(reason)
         }
         let types = Set(try await s.read(count))
+        dbg("types \(types.sorted())")
         if types.contains(33) {
-            try await s.write(Data([33]))
+            // appleRSA sends the type byte together with its first request
             try await RFBAuth.appleRSA(stream: s, username: username, password: password)
         } else if types.contains(2) {
             try await s.write(Data([2]))
@@ -85,7 +95,9 @@ public actor RFBClient {
         } else {
             throw RFBError.protocolError("unsupported security types \(types.sorted())")
         }
+        dbg("auth sent")
         let result = try await s.u32()
+        dbg("result \(result)")
         if result != 0 {
             if result == 1 || result == 2 { throw RFBError.authFailed(result == 2 ? "too many attempts" : "rejected") }
             let reason = String(decoding: try await s.read(Int(min(result, 4096))), as: UTF8.self)
@@ -101,11 +113,13 @@ public actor RFBClient {
 
         // SetPixelFormat: 32 bpp, depth 24, little endian, true colour, R at bit 0, G at 8, B at 16 -> RGBX bytes
         try await s.write(Data([0, 0, 0, 0, 32, 24, 0, 1, 0, 255, 0, 255, 0, 255, 0, 8, 16, 0, 0, 0]))
-        // SetEncodings: zlib (raw is always allowed)
-        var enc = Data([2, 0])
-        enc.appendBE(UInt16(1))
-        enc.appendBE(Int32(6))
-        try await s.write(enc)
+        // SetEncodings (raw is always allowed)
+        if !encodings.isEmpty {
+            var enc = Data([2, 0])
+            enc.appendBE(UInt16(encodings.count))
+            for e in encodings { enc.appendBE(e) }
+            try await s.write(enc)
+        }
 
         framebuffer = [UInt8](repeating: 0, count: width * height * 4)
         zstream = z_stream()
@@ -345,8 +359,11 @@ public actor RFBClient {
         try await withReconnect { s in
             await waitForInputGrace()
             for k in keysyms {
+                let shift = Keysyms.needsShift(k)
+                if shift { try await sendKey(s, Keysyms.shift, down: true) }
                 try await sendKey(s, k, down: true)
                 try await sendKey(s, k, down: false)
+                if shift { try await sendKey(s, Keysyms.shift, down: false) }
                 try await Task.sleep(nanoseconds: 12_000_000)
             }
         }

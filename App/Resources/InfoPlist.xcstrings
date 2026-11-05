@@ -54,6 +54,24 @@
           }
         }
       }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annex verbindet sich mit seinem Arbeitsplatz, einem virtuellen Mac, den macOS als Gerät in deinem lokalen Netzwerk zählt. Sonst wird in deinem Netzwerk nichts angesprochen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network. Nothing else on your network is contacted."
+          }
+        }
+      }
     }
   },
   "version" : "1.3"

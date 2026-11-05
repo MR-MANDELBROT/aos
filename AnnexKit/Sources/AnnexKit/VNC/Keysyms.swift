@@ -66,6 +66,14 @@ public enum Keysyms {
         return nil
     }
 
+    /// Characters typed with Shift on a US (ABC) layout. Sent with an explicit Shift press, because not every VNC
+    /// server adds it (the hypervisor's server types "A" as "a").
+    public static func needsShift(_ keysym: UInt32) -> Bool {
+        guard keysym < 0x80, let scalar = Unicode.Scalar(keysym) else { return false }
+        let c = Character(scalar)
+        return c.isUppercase || "~!@#$%^&*()_+{}|:\"<>?".contains(c)
+    }
+
     /// Splits text into runs that can be typed key by key (ASCII) and runs that need the clipboard.
     public enum Run: Equatable { case keys([UInt32]), paste(String) }
 

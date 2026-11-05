@@ -224,6 +224,8 @@ private struct StepContent: View {
     var prepare: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("The workspace starts for the first time without the setup assistant: \(Brand.name) creates its account, locks remote access down to this Mac, installs Google Chrome and turns off sleep and updates.")
+            Label("macOS asks whether \(Brand.name) may connect to devices on your local network. Allow it: the workspace counts as such a device.", systemImage: "network")
+                .font(.callout).foregroundStyle(.secondary)
             if !busy { Button("Prepare the workspace") { setup.startPrepare() }.keyboardShortcut(.defaultAction) }
         }
     }

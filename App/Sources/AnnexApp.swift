@@ -23,6 +23,8 @@ struct AnnexApp: App {
                 .frame(minWidth: 640, minHeight: 520)
         }
         .windowResizability(.contentSize)
+        // Until the setup is done, it opens at launch.
+        .defaultLaunchBehavior(model.setup.isComplete ? .suppressed : .presented)
 
         Window(Text("Workspace"), id: WindowID.workspace) {
             WorkspaceWindow()

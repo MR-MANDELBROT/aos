@@ -14,6 +14,7 @@ public final class WorkspaceController {
     private var lastActivity = Date()
     private var idleTimer: Timer?
     private var busy = false
+    private var closing = false
     public var log: (String) -> Void = { _ in }
     /// Called whenever something the app shows changes.
     public var onChange: (() -> Void)?
@@ -44,7 +45,7 @@ public final class WorkspaceController {
     }
 
     private func idleCheck() async {
-        guard !busy else { return }
+        guard !busy, !closing else { return }
         if let lease, lease.until < Date() {
             log("lease for \"\(lease.purpose)\" expired, closing the workspace")
             _ = await close()
@@ -263,12 +264,16 @@ public final class WorkspaceController {
 
     /// Ends the lease and stops the VM: an orderly shutdown (sign-ins expire) or a suspend.
     public func close() async -> String {
+        if closing { return "Workspace is closing." }
+        closing = true
+        defer { closing = false }
         lease = nil
         await rfb?.disconnect()
         rfb = nil
         guard host.isRunning else { return "Workspace closed." }
         if settings.expireSignIns, let ip = try? host.guestAddress() {
             log("shutting the workspace down (sign-ins expire)")
+            host.expectStop()
             try? await provisioner.shutdown(host: ip)
             if await host.waitUntilStopped(timeout: 90) { return "Workspace closed and shut down." }
             log("guest did not power off in time, stopping it")

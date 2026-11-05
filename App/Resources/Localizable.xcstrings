@@ -820,6 +820,16 @@
         }
       }
     },
+    "macOS asks whether %@ may connect to devices on your local network. Allow it: the workspace counts as such a device." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS fragt, ob %@ sich mit Geräten im lokalen Netzwerk verbinden darf. Erlaube es: Der Arbeitsplatz zählt als solches Gerät."
+          }
+        }
+      }
+    },
     "Name in the Claude app" : {
       "localizations" : {
         "de" : {

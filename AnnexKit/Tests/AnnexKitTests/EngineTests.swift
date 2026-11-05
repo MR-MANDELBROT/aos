@@ -195,3 +195,13 @@ final class AgentIntegrationTests: XCTestCase {
         XCTAssertFalse(text.contains("did not allow"))
     }
 }
+
+final class ShiftTests: XCTestCase {
+    func testShiftedCharacters() {
+        XCTAssertTrue(Keysyms.needsShift(0x41))   // A
+        XCTAssertTrue(Keysyms.needsShift(0x21))   // !
+        XCTAssertFalse(Keysyms.needsShift(0x61))  // a
+        XCTAssertFalse(Keysyms.needsShift(0x31))  // 1
+        XCTAssertFalse(Keysyms.needsShift(Keysyms.returnKey))
+    }
+}

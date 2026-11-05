@@ -1,4 +1,6 @@
 import AnnexKit
+import AppKit
+import CoreGraphics
 import Foundation
 import Virtualization
 
@@ -78,7 +80,35 @@ func runCommand() async {
                 provisioning = p
             }
             host.onPhaseChange = { print("vm: \($0.rawValue)") }
+            var vnc: HypervisorVNC?
+            let vncPassword = String(UUID().uuidString.prefix(8))
+            if args.contains("--vnc") {
+                // Development only: hypervisor-level screen, attached before the VM starts.
+                host.beforeStart = { machine in
+                    let v = HypervisorVNC()
+                    _ = try? v.start(machine: machine, password: vncPassword)
+                    vnc = v
+                }
+            }
             try await host.start(provisioning: provisioning)
+            if args.contains("--window"), let machine = host.virtualMachine {
+                let w = VMWindow(machine: machine)
+                keepAlive.append(w)
+                let server = LineSocketServer(path: paths.run.appendingPathComponent("ctl.sock")) { line in
+                    let text = String(decoding: line, as: UTF8.self)
+                    return await MainActor.run { Data(w.command(text, paths: paths).utf8) }
+                }
+                try server.start()
+                keepAlive.append(server)
+                print("window and control socket ready")
+            }
+            if let vnc {
+                keepAlive.append(vnc)
+                var port: UInt16 = 0
+                for _ in 0..<100 where port == 0 { try await Task.sleep(nanoseconds: 100_000_000); port = vnc.port }
+                try Data("\(port) \(vncPassword)".utf8).write(to: paths.run.appendingPathComponent("hypervisor-vnc"))
+                print("hypervisor VNC on port \(port)")
+            }
             let ip = try await host.waitForAddress(timeout: 180)
             print("guest address: \(ip)")
             // Ctrl-C: suspend and quit.
@@ -117,16 +147,85 @@ func runCommand() async {
             print(r.text, terminator: ""); FileHandle.standardError.write(Data(r.stderr.utf8))
             exit(r.status)
 
-        case "shot":
-            guard args.count >= 2 else { fail("usage: annexctl shot FILE.jpg") }
+        case "shot", "hvclick", "hvtype", "hvkeys", "hvsharing", "hvprobe":
+            // shot FILE [--hv]: screenshot over screen sharing (or the hypervisor VNC with --hv);
+            // hvclick X Y / hvtype TEXT / hvkeys COMBO: input over the hypervisor VNC (development only)
+            let hv = args.first != "shot" || args.contains("--hv")
+            let client: RFBClient
+            if hv {
+                let info = try String(contentsOf: paths.run.appendingPathComponent("hypervisor-vnc"), encoding: .utf8)
+                    .split(separator: " ")
+                client = RFBClient(host: "127.0.0.1", port: UInt16(info[0])!, username: "", password: String(info[1]), encodings: [])
+            } else {
+                let host = VMHost(bundle: bundle, paths: paths)
+                guard let ip = try host.guestAddress() else { fail("no guest address") }
+                let password = try GuestSecrets(paths: paths).adminPassword(createIfMissing: false)
+                client = RFBClient(host: ip, username: Brand.guestUser, password: password)
+            }
+            try await client.connect()
+            switch args.first {
+            case "hvclick":
+                try await client.click(x: Int(args[1])!, y: Int(args[2])!)
+                try await Task.sleep(nanoseconds: 800_000_000)
+            case "hvtype":
+                // --guest-password types the VM account's own password (read here, never printed)
+                let text = args.contains("--guest-password")
+                    ? try GuestSecrets(paths: paths).adminPassword(createIfMissing: false) + "\n"
+                    : args.dropFirst().joined(separator: " ")
+                for run in Keysyms.runs(for: text) {
+                    if case .keys(let k) = run { try await client.type(k) }
+                }
+                try await Task.sleep(nanoseconds: 500_000_000)
+            case "hvsharing":
+                // One connection: wait for a real frame, click the switch, type the account password, picture.
+                for _ in 0..<6 {
+                    if !isBlack(try await client.screenshot()) { break }
+                    try await Task.sleep(nanoseconds: 700_000_000)
+                }
+                try await client.click(x: 984, y: 286)
+                try await Task.sleep(nanoseconds: 3_000_000_000)
+                // The hypervisor's server maps key symbols with the HOST's layout: on a German Mac y and z swap.
+                let pw = String(try GuestSecrets(paths: paths).adminPassword(createIfMissing: false).map { c -> Character in
+                    switch c { case "y": return "z"; case "z": return "y"; case "Y": return "Z"; case "Z": return "Y"; default: return c }
+                })
+                for run in Keysyms.runs(for: pw) { if case .keys(let k) = run { try await client.type(k) } }
+                try await Task.sleep(nanoseconds: 500_000_000)
+                try await client.press([Keysyms.returnKey])
+                try await Task.sleep(nanoseconds: 4_000_000_000)
+            case "hvprobe":
+                // One connection: cancel the dialog, type a probe string into the settings search field.
+                try await client.click(x: 640, y: 523)
+                try await Task.sleep(nanoseconds: 1_500_000_000)
+                try await client.click(x: 350, y: 139)
+                try await Task.sleep(nanoseconds: 500_000_000)
+                for run in Keysyms.runs(for: "ABCabc xyz 23456789 QZqz") { if case .keys(let k) = run { try await client.type(k) } }
+                try await Task.sleep(nanoseconds: 800_000_000)
+            case "hvkeys":
+                try await client.press(try Keysyms.combination(args[1]))
+                try await Task.sleep(nanoseconds: 800_000_000)
+            default: break
+            }
+            let out = args.first == "shot" ? args[1] : NSTemporaryDirectory() + "annex-hv.jpg"
+            try await client.connect()
+            var image = try await client.screenshot()
+            if hv {
+                // The hypervisor's server sends a placeholder first; ask a few more times.
+                for _ in 0..<4 {
+                    try await Task.sleep(nanoseconds: 700_000_000)
+                    image = try await client.screenshot()
+                    if !isBlack(image) { break }
+                }
+            }
+            try ScreenImage.encode(image).write(to: URL(fileURLWithPath: out))
+            print("\(image.width)x\(image.height) -> \(out)")
+            exit(0)
+
+        case "stop":
+            // Orderly shutdown through the stop key (Chrome quits first).
             let host = VMHost(bundle: bundle, paths: paths)
             guard let ip = try host.guestAddress() else { fail("no guest address") }
-            let password = try GuestSecrets(paths: paths).adminPassword(createIfMissing: false)
-            let client = RFBClient(host: ip, username: Brand.guestUser, password: password)
-            try await client.connect()
-            let image = try await client.screenshot()
-            try ScreenImage.encode(image).write(to: URL(fileURLWithPath: args[1]))
-            print("\(image.width)x\(image.height) -> \(args[1])")
+            try await Provisioner(paths: paths).shutdown(host: ip)
+            print("shutdown requested")
             exit(0)
 
         case "ip":
@@ -144,10 +243,115 @@ func runCommand() async {
 
 @MainActor var keepAlive: [AnyObject] = []
 
+func isBlack(_ image: CGImage) -> Bool {
+    guard let data = image.dataProvider?.data, let p = CFDataGetBytePtr(data) else { return true }
+    let n = CFDataGetLength(data)
+    var i = 0
+    while i < n { if p[i] > 8 || p[i + 1] > 8 || p[i + 2] > 8 { return false }; i += 4 * 101 }
+    return true
+}
+
 final class Counter: @unchecked Sendable {
     private var value = -1
     private let lock = NSLock()
     func swap(_ v: Int) -> Int { lock.withLock { let old = value; value = v; return old } }
 }
-Task { @MainActor in await runCommand() }
-dispatchMain()
+if args.contains("--window") {
+    NSApplication.shared.setActivationPolicy(.accessory)
+    Task { @MainActor in await runCommand() }
+    NSApplication.shared.run()
+} else {
+    Task { @MainActor in await runCommand() }
+    dispatchMain()
+}
+
+
+/// Development: the VM in a window, driven by synthesized events (what the app's VMDisplay does).
+@MainActor
+final class VMWindow: NSObject {
+    let window: NSWindow
+    let view: VZVirtualMachineView
+
+    init(machine: VZVirtualMachine) {
+        view = VZVirtualMachineView(frame: NSRect(x: 0, y: 0, width: 640, height: 400))
+        view.virtualMachine = machine
+        view.capturesSystemKeys = true
+        window = NSWindow(contentRect: NSRect(x: 80, y: 80, width: 640, height: 400), styleMask: [.titled],
+                          backing: .buffered, defer: false)
+        window.title = "annexctl VM"
+        window.contentView = view
+        super.init()
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(view)
+    }
+
+    /// Guest pixels (1280x800, origin top left) to window coordinates of the view.
+    private func mouse(_ type: NSEvent.EventType, _ x: Double, _ y: Double) {
+        let b = view.bounds
+        let local = NSPoint(x: x * b.width / 1280, y: b.height - y * b.height / 800)
+        let p = view.convert(local, to: nil)
+        guard let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                         windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1)
+        else { return }
+        window.sendEvent(e)
+    }
+
+    func command(_ line: String, paths: Paths) -> String {
+        let parts = line.split(separator: " ").map(String.init)
+        switch parts.first {
+        case "click":
+            guard parts.count == 3, let x = Double(parts[1]), let y = Double(parts[2]) else { return "bad" }
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            window.makeFirstResponder(view)
+            mouse(.mouseMoved, x, y)
+            mouse(.leftMouseDown, x, y)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { self.mouse(.leftMouseUp, x, y) }
+            return "clicked"
+        case "typepw":
+            guard let pw = try? GuestSecrets(paths: paths).adminPassword(createIfMissing: false) else { return "no password" }
+            KeyTyper.type(pw + "\n", into: view)
+            return "typed"
+        case "type":
+            KeyTyper.type(parts.dropFirst().joined(separator: " "), into: view)
+            return "typed"
+        default:
+            return "unknown"
+        }
+    }
+}
+
+/// Same key mapping as the app's VMDisplay (US/ABC key codes, Shift for capitals).
+@MainActor
+enum KeyTyper {
+    static let codes: [Character: UInt16] = [
+        "a": 0x00, "s": 0x01, "d": 0x02, "f": 0x03, "h": 0x04, "g": 0x05, "z": 0x06, "x": 0x07, "c": 0x08,
+        "v": 0x09, "b": 0x0B, "q": 0x0C, "w": 0x0D, "e": 0x0E, "r": 0x0F, "y": 0x10, "t": 0x11, "o": 0x1F,
+        "u": 0x20, "i": 0x22, "p": 0x23, "l": 0x25, "j": 0x26, "k": 0x28, "n": 0x2D, "m": 0x2E,
+        "1": 0x12, "2": 0x13, "3": 0x14, "4": 0x15, "6": 0x16, "5": 0x17, "9": 0x19, "7": 0x1A, "8": 0x1C, "0": 0x1D,
+        "\n": 0x24, " ": 0x31,
+    ]
+
+    static func type(_ text: String, into view: NSView) {
+        guard let window = view.window else { return }
+        window.makeFirstResponder(view)
+        var delay = 0.0
+        for ch in text {
+            let lower = Character(ch.lowercased())
+            guard let code = codes[ch] ?? codes[lower] else { continue }
+            let shift = ch.isUppercase
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                func key(_ t: NSEvent.EventType, _ c: UInt16, _ f: NSEvent.ModifierFlags) -> NSEvent? {
+                    NSEvent.keyEvent(with: t, location: .zero, modifierFlags: f, timestamp: ProcessInfo.processInfo.systemUptime,
+                                     windowNumber: window.windowNumber, context: nil, characters: "", charactersIgnoringModifiers: "",
+                                     isARepeat: false, keyCode: c)
+                }
+                if shift, let e = key(.flagsChanged, 0x38, .shift) { view.flagsChanged(with: e) }
+                if let e = key(.keyDown, code, shift ? .shift : []) { view.keyDown(with: e) }
+                if let e = key(.keyUp, code, shift ? .shift : []) { view.keyUp(with: e) }
+                if shift, let e = key(.flagsChanged, 0x38, []) { view.flagsChanged(with: e) }
+            }
+            delay += 0.06
+        }
+    }
+}

@@ -7,8 +7,9 @@ enum RFBAuth {
     /// Apple's RSA scheme (security type 33): user name and password, each 64 bytes (UTF-8, NUL, random padding),
     /// encrypted with a random AES-128 key in ECB mode; the AES key encrypted with the server's RSA key (PKCS#1 v1.5).
     static func appleRSA(stream: RFBStream, username: String, password: String) async throws {
-        // Ask for the host key
-        var request = Data([0x00, 0x00, 0x00, 0x0a, 0x01, 0x00])
+        // The chosen security type and the request for the host key must arrive in one packet: screensharingd
+        // closes the connection when they come separately (seen 2026-11-05).
+        var request = Data([33, 0x00, 0x00, 0x00, 0x0a, 0x01, 0x00])
         request.append(contentsOf: Array("RSA1".utf8))
         request.append(contentsOf: [0x00, 0x00, 0x00, 0x00])
         try await stream.write(request)
@@ -18,6 +19,9 @@ enum RFBAuth {
         guard keyLength > 0 && keyLength < 8192 else { throw RFBError.protocolError("host key length \(keyLength)") }
         let der = try await stream.read(keyLength)
         _ = try await stream.read(1)               // unknown
+        if ProcessInfo.processInfo.environment["ANNEX_RFB_DEBUG"] != nil {
+            FileHandle.standardError.write(Data("rfb: host key \(keyLength) bytes, first \(der.prefix(4).map { String($0, radix: 16) })\n".utf8))
+        }
 
         let hostKey = try rsaPublicKey(der: der)
         var aesKey = [UInt8](repeating: 0, count: 16)

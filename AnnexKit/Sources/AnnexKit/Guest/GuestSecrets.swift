@@ -24,7 +24,7 @@ public struct GuestSecrets: Sendable {
         }
         guard createIfMissing else { throw VMBundleError.missing("guest password") }
         let password = Self.randomPassword(length: 32)
-        try Data(password.utf8).write(to: adminPasswordURL, options: [.atomic, .withoutOverwriting])
+        try Data(password.utf8).write(to: adminPasswordURL, options: [.withoutOverwriting])
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: adminPasswordURL.path)
         return password
     }

@@ -187,3 +187,9 @@ DE.update({
     'reachable from your phone': 'vom Handy erreichbar',
     'waiting': 'wartet',
 })
+
+DE.update({
+    'macOS asks whether %@ may connect to devices on your local network. Allow it: the workspace counts as such a device.':
+        'macOS fragt, ob %@ sich mit Geräten im lokalen Netzwerk verbinden darf. Erlaube es: Der Arbeitsplatz zählt als solches Gerät.',
+    'NSLocalNetworkUsageDescription': 'Annex verbindet sich mit seinem Arbeitsplatz, einem virtuellen Mac, den macOS als Gerät in deinem lokalen Netzwerk zählt. Sonst wird in deinem Netzwerk nichts angesprochen.',
+})
