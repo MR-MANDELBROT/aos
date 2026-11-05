@@ -56,8 +56,22 @@ public struct Provisioner: Sendable {
         // Password logins must be gone now.
         let probe = try await user.run("true", timeout: 20, check: false, what: "password login probe")
         guard probe.status != 0 else { throw SSHError.failed("SSH lock-down", 1, "password login still works") }
-        try VMBundle(url: paths.vm).updateState { $0.bootstrapped = true }
+        let fingerprint = try? kit.fingerprint()
+        try VMBundle(url: paths.vm).updateState { $0.bootstrapped = true; $0.kitFingerprint = fingerprint }
         log("guest ready (maintenance over SSH with the host's key)")
+    }
+
+    /// Brings the scripts and Chrome policies of a set-up guest up to date (after an app update or a settings
+    /// change), if its kit fingerprint differs. Keys and accounts stay as they are.
+    public func updateIfNeeded(host: String, log: @Sendable (String) -> Void) async throws {
+        let bundle = VMBundle(url: paths.vm)
+        let current = try kit.fingerprint()
+        guard try bundle.loadState().kitFingerprint != current else { return }
+        log("updating the workspace's scripts and browser policies")
+        try await maintenance(host: host).waitUntilReachable(timeout: 180)
+        let script = GuestKit.bundleScript(files: try kit.updateFiles(), entry: "update.sh")
+        try await maintenance(host: host).run("/bin/zsh -f -s", input: Data(script.utf8), timeout: 120, what: "workspace update")
+        try bundle.updateState { $0.kitFingerprint = current }
     }
 
     /// Whether screen sharing is switched on in the guest.

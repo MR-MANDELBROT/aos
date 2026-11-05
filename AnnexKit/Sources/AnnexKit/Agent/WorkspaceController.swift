@@ -7,7 +7,7 @@ import Foundation
 public final class WorkspaceController {
     public let paths: Paths
     public let host: VMHost
-    public let provisioner: Provisioner
+    public private(set) var provisioner: Provisioner
     public private(set) var settings: AgentSettings
     private var rfb: RFBClient?
     private var lease: (until: Date, purpose: String)?
@@ -34,6 +34,8 @@ public final class WorkspaceController {
     public func updateSettings(_ s: AgentSettings) throws {
         try s.save(paths)
         settings = s
+        // New sign-in domains change the Chrome policies: the guest gets them at its next opening.
+        provisioner = Provisioner(paths: paths, kit: GuestKit(policies: ChromePolicies(keepSignedIn: s.keepSignedIn)))
         onChange?()
     }
 
@@ -145,6 +147,11 @@ public final class WorkspaceController {
             try await host.start()
         }
         let ip = try await host.waitForAddress(timeout: 120)
+        do {
+            try await provisioner.updateIfNeeded(host: ip) { [weak self] line in Task { @MainActor in self?.log(line) } }
+        } catch {
+            log("workspace update failed (continuing): \(error.localizedDescription)")
+        }
         let client = try await connectScreen(ip: ip, timeout: 120)
         lease = (Date().addingTimeInterval(Double(minutes * 60)), purpose)
         log("open for \"\(purpose)\", \(minutes) min")

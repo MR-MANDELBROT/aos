@@ -58,7 +58,19 @@ final class RFBStream: @unchecked Sendable {
 
     func close() { connection.cancel() }
 
+    /// A send or receive that takes longer than this cancels the connection (its completion then fails), so a
+    /// stalled screen sharing connection turns into an error and a reconnect instead of a hang.
+    static let ioTimeout: TimeInterval = 20
+
+    private func watchdog() -> DispatchWorkItem {
+        let item = DispatchWorkItem { [connection] in connection.cancel() }
+        queue.asyncAfter(deadline: .now() + Self.ioTimeout, execute: item)
+        return item
+    }
+
     func write(_ data: Data) async throws {
+        let dog = watchdog()
+        defer { dog.cancel() }
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             connection.send(content: data, completion: .contentProcessed { error in
                 if let error { cont.resume(throwing: error) } else { cont.resume() }
@@ -67,9 +79,14 @@ final class RFBStream: @unchecked Sendable {
     }
 
     private func receiveMore() async throws {
+        let dog = watchdog()
+        defer { dog.cancel() }
         let chunk: Data = try await withCheckedThrowingContinuation { cont in
             connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 20) { data, _, complete, error in
-                if let error { cont.resume(throwing: error); return }
+                if let error {
+                    cont.resume(throwing: { if case .posix(let code) = error, code == .ECANCELED { return RFBError.closed }; return error }())
+                    return
+                }
                 if let data, !data.isEmpty { cont.resume(returning: data); return }
                 if complete { cont.resume(throwing: RFBError.closed); return }
                 cont.resume(returning: Data())

@@ -147,10 +147,10 @@ func runCommand() async {
             print(r.text, terminator: ""); FileHandle.standardError.write(Data(r.stderr.utf8))
             exit(r.status)
 
-        case "shot", "hvclick", "hvtype", "hvkeys", "hvsharing", "hvprobe":
+        case "shot", "hvclick", "hvtype", "hvkeys", "hvsharing", "hvprobe", "sskeys":
             // shot FILE [--hv]: screenshot over screen sharing (or the hypervisor VNC with --hv);
             // hvclick X Y / hvtype TEXT / hvkeys COMBO: input over the hypervisor VNC (development only)
-            let hv = args.first != "shot" || args.contains("--hv")
+            let hv = (args.first != "shot" && args.first != "sskeys") || args.contains("--hv")
             let client: RFBClient
             if hv {
                 let info = try String(contentsOf: paths.run.appendingPathComponent("hypervisor-vnc"), encoding: .utf8)
@@ -200,6 +200,14 @@ func runCommand() async {
                 try await Task.sleep(nanoseconds: 500_000_000)
                 for run in Keysyms.runs(for: "ABCabc xyz 23456789 QZqz") { if case .keys(let k) = run { try await client.type(k) } }
                 try await Task.sleep(nanoseconds: 800_000_000)
+            case "sskeys":
+                // screen sharing (not hypervisor): wait the grace period, press a combination, type text
+                try await client.press(try Keysyms.combination(args[1]))
+                try await Task.sleep(nanoseconds: 1_200_000_000)
+                if args.count > 2 {
+                    for run in Keysyms.runs(for: args[2]) { if case .keys(let k) = run { try await client.type(k) } }
+                    try await Task.sleep(nanoseconds: 1_200_000_000)
+                }
             case "hvkeys":
                 try await client.press(try Keysyms.combination(args[1]))
                 try await Task.sleep(nanoseconds: 800_000_000)
@@ -228,6 +236,28 @@ func runCommand() async {
             print("shutdown requested")
             exit(0)
 
+        case "serve":
+            // The app's workspace engine without the app (development): agent socket, VM host, idle watch.
+            // --approve answers Mac-side approval requests with yes.
+            let controller = WorkspaceController(paths: paths)
+            controller.log = { print("workspace: \($0)") }
+            if args.contains("--approve") {
+                controller.onApprovalRequest = { agent, purpose, minutes in
+                    print("approval asked: \(agent) \(minutes) min: \(purpose) -> yes"); return true
+                }
+            }
+            controller.onHelpRequest = { purpose in print("help asked: \(purpose)"); return "The user is done. Continue with a screenshot." }
+            let server = LineSocketServer(path: paths.agentSocket) { line in
+                guard let request = try? JSONDecoder().decode(AgentRequest.self, from: line) else { return Data() }
+                let response = await controller.handle(request)
+                return (try? JSONEncoder().encode(response)) ?? Data()
+            }
+            try server.start()
+            controller.startIdleWatch()
+            keepAlive.append(server)
+            keepAliveController = controller
+            print("serving on \(paths.agentSocket.path)")
+
         case "ip":
             let host = VMHost(bundle: bundle, paths: paths)
             print(try host.guestAddress() ?? "no address")
@@ -242,6 +272,7 @@ func runCommand() async {
 }
 
 @MainActor var keepAlive: [AnyObject] = []
+@MainActor var keepAliveController: WorkspaceController?
 
 func isBlack(_ image: CGImage) -> Bool {
     guard let data = image.dataProvider?.data, let p = CFDataGetBytePtr(data) else { return true }
@@ -256,7 +287,7 @@ final class Counter: @unchecked Sendable {
     private let lock = NSLock()
     func swap(_ v: Int) -> Int { lock.withLock { let old = value; value = v; return old } }
 }
-if args.contains("--window") {
+if args.contains("--window") || args.first == "serve" {
     NSApplication.shared.setActivationPolicy(.accessory)
     Task { @MainActor in await runCommand() }
     NSApplication.shared.run()

@@ -26,7 +26,10 @@ public actor RFBClient {
     private var buttons: UInt8 = 0
     private var pointer = (x: 0, y: 0)
     /// Pressing input before this much time after connecting gets dropped by screensharingd.
-    public static let inputGrace: TimeInterval = 2.2
+    public static let inputGrace: TimeInterval =
+        // screensharingd drops input until about 2 s after a viewer timestamp that comes later than our connect:
+        // measured under macOS 27.2, 3 s too early, 4 s sometimes too early, 5 s reliable.
+        Double(ProcessInfo.processInfo.environment["ANNEX_INPUT_GRACE"] ?? "") ?? 5.0
 
     public init(host: String, port: UInt16 = 5900, username: String, password: String, encodings: [Int32] = [6]) {
         self.host = host
@@ -141,7 +144,8 @@ public actor RFBClient {
         } catch let error as RFBError where error.isConnectionLoss {
             disconnect()
             return try await body(try await live())
-        } catch let error as NSError where error.domain == NSPOSIXErrorDomain || error.domain == "Network.NWError" {
+        } catch let error as NSError where error.domain == NSPOSIXErrorDomain || error.domain == "Network.NWError"
+                    || error.domain == "NWErrorDomain" {
             disconnect()
             return try await body(try await live())
         }

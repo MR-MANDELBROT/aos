@@ -20,6 +20,16 @@ public struct ChromePolicies: Sendable, Equatable {
             "ClearBrowsingDataOnExitList": ["browsing_history", "download_history", "cached_images_and_files",
                                             "password_signin", "autofill", "site_settings", "hosted_app_data"],
             "RestoreOnStartup": 5,
+            // No first-run questions that block the page: search engine set, promotions and sandbox prompts off
+            "DefaultSearchProviderEnabled": true,
+            "DefaultSearchProviderName": "Google",
+            "DefaultSearchProviderSearchURL": "{google:baseURL}search?q={searchTerms}",
+            "DefaultSearchProviderSuggestURL": "{google:baseURL}complete/search?output=chrome&q={searchTerms}",
+            "PromotionsEnabled": false,
+            "PrivacySandboxPromptEnabled": false,
+            "PrivacySandboxAdTopicsEnabled": false,
+            "PrivacySandboxSiteEnabledAdsEnabled": false,
+            "PrivacySandboxAdMeasurementEnabled": false,
             "DefaultBrowserSettingEnabled": false,
             "MetricsReportingEnabled": false,
             "DeveloperToolsAvailability": 0,
@@ -74,8 +84,22 @@ public struct GuestKit: Sendable {
         return lines.joined(separator: "\n") + "\n"
     }
 
+    /// The package's resource bundle. Looked up by hand: SwiftPM's Bundle.module stops the process when it can't
+    /// find the bundle, which must never happen to the app.
+    static let resources: Bundle? = {
+        let name = "Annex_AnnexKit.bundle"
+        let exe = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath().deletingLastPathComponent()
+        let candidates = [Bundle.main.resourceURL, Bundle.main.bundleURL, exe, exe.appendingPathComponent("../Resources")]
+            .compactMap { $0?.appendingPathComponent(name) }
+        for url in candidates where FileManager.default.fileExists(atPath: url.path) {
+            if let b = Bundle(url: url) { return b }
+        }
+        return nil
+    }()
+
     static func resource(_ name: String) throws -> Data {
-        guard let url = Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Guest"),
+        let bundle = resources ?? Bundle.module
+        guard let url = bundle.url(forResource: name, withExtension: nil, subdirectory: "Guest"),
               let data = FileManager.default.contents(atPath: url.path) else {
             throw VMBundleError.missing("guest file \(name)")
         }
@@ -89,10 +113,37 @@ public struct GuestKit: Sendable {
             ("guest-service.sh", try Self.resource("guest-service.sh")),
             ("shutdown.sh", try Self.resource("shutdown.sh")),
             ("finish.sh", try Self.resource("finish.sh")),
+            ("update.sh", try Self.resource("update.sh")),
             ("chrome.plist", try policies.plist()),
             ("settings.env", Data(settingsEnv().utf8)),
             ("maintenance.pub", Data((maintenancePublicKey + "\n").utf8)),
             ("stop.pub", Data((stopPublicKey + "\n").utf8)),
+        ]
+    }
+
+    /// A fingerprint of everything the kit puts into the guest (without the keys): when it changes (an app update),
+    /// a set-up workspace gets the new files at its next opening.
+    public func fingerprint() throws -> String {
+        var data = Data()
+        for name in ["setup.sh", "guest-service.sh", "shutdown.sh", "finish.sh", "update.sh"] {
+            data.append(try Self.resource(name))
+        }
+        data.append(try policies.plist())
+        data.append(Data(settingsEnv().utf8))
+        var hash = 0xcbf29ce484222325 as UInt64
+        for b in data { hash = (hash ^ UInt64(b)) &* 0x100000001b3 }
+        return String(hash, radix: 16)
+    }
+
+    /// The files an update needs (no keys: those stay as they are).
+    public func updateFiles() throws -> [(String, Data)] {
+        [
+            ("update.sh", try Self.resource("update.sh")),
+            ("guest-service.sh", try Self.resource("guest-service.sh")),
+            ("shutdown.sh", try Self.resource("shutdown.sh")),
+            ("finish.sh", try Self.resource("finish.sh")),
+            ("chrome.plist", try policies.plist()),
+            ("settings.env", Data(settingsEnv().utf8)),
         ]
     }
 

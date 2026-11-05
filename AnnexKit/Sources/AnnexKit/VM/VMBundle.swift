@@ -31,6 +31,8 @@ public struct VMState: Codable, Sendable, Equatable {
     public var bootstrapped: Bool
     /// Set once screen sharing inside the guest delivers a picture.
     public var screenSharingReady: Bool
+    /// Fingerprint of the guest kit last installed (GuestKit.fingerprint).
+    public var kitFingerprint: String?
 }
 
 public enum VMBundleError: LocalizedError {
@@ -142,7 +144,7 @@ public struct VMBundle: Sendable {
 
         let state = VMState(settings: settings, macAddress: VZMACAddress.randomLocallyAdministered().string,
                             createdAt: Date(), guestBuild: nil, guestVersion: nil,
-                            provisioned: false, bootstrapped: false, screenSharingReady: false)
+                            provisioned: false, bootstrapped: false, screenSharingReady: false, kitFingerprint: nil)
         try bundle.saveState(state)
         return bundle
     }
