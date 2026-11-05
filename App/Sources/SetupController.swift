@@ -110,6 +110,21 @@ final class SetupController: ObservableObject {
         settingsChanged(s)
     }
 
+    /// Design review: shows a step with sample state (no work starts).
+    func previewStep(_ s: Step) {
+        step = s
+        requirementProblems = []
+        installedAgents = ["claude-code", "codex", "vscode"]
+        selectedAgents = ["claude-code", "codex"]
+        restoreInfo = RestoreImage.Info(url: URL(string: "https://updates.cdn-apple.com/")!, buildVersion: "26B123", osVersion: "27.2.0")
+        connectResults = ["claude-code": .connected, "codex": .connected]
+        switch s {
+        case .download: activity = .progress(String(localized: "Downloading macOS 27.2.0"), 0.42)
+        case .prepare: activity = .working(String(localized: "Setting up the workspace (installs Chrome, a few minutes)"))
+        default: activity = .idle
+        }
+    }
+
     // MARK: 1. Requirements
 
     func checkRequirements() {

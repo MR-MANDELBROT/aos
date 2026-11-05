@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
     "\"%@\" reachable in the Claude app" : {
       "localizations" : {
         "de" : {
@@ -31,7 +41,18 @@
         }
       }
     },
+    "%@ creates the virtual Mac and installs macOS into it. This takes about 10 minutes; you can keep working meanwhile." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ legt den virtuellen Mac an und installiert macOS darin. Das dauert etwa 10 Minuten; du kannst so lange weiterarbeiten."
+          }
+        }
+      }
+    },
     "%@ creates the virtual Mac and installs macOS into it. This takes about 10 minutes." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -63,6 +84,7 @@
       }
     },
     "%@ is ready." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -73,6 +95,7 @@
       }
     },
     "%@ lives in the menu bar and starts with your Mac." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -110,6 +133,16 @@
         }
       }
     },
+    "%@ starts with your Mac and shows what the workspace is doing." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ startet mit deinem Mac und zeigt, was der Arbeitsplatz gerade macht."
+          }
+        }
+      }
+    },
     "%@ wants to open its workspace" : {
       "localizations" : {
         "de" : {
@@ -130,7 +163,18 @@
         }
       }
     },
+    "%lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        }
+      }
+    },
     "1. Open the workspace window. System Settings is already open there at General > Sharing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -163,6 +207,7 @@
       }
     },
     "2. Switch on Screen Sharing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -184,6 +229,7 @@
       }
     },
     "3. When macOS asks for a password, click \"Enter the workspace password\" in the window." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -194,11 +240,22 @@
       }
     },
     "4. Come back here and click Check." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "4. Komm hierher zurück und klicke auf „Prüfen“."
+          }
+        }
+      }
+    },
+    "A few steps are left." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es fehlen noch ein paar Schritte."
           }
         }
       }
@@ -224,12 +281,33 @@
         }
       }
     },
+    "add by hand" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "von Hand eintragen"
+          }
+        }
+      }
+    },
     "add by hand:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "von Hand eintragen:"
+          }
+        }
+      }
+    },
+    "All set" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles bereit"
           }
         }
       }
@@ -240,6 +318,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erlauben"
+          }
+        }
+      }
+    },
+    "Also reachable from your phone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch vom Handy erreichbar"
           }
         }
       }
@@ -284,6 +372,22 @@
         }
       }
     },
+    "Build %@, about 26 GB. If you quit %@ or lose the connection, the download continues where it stopped." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build %@, etwa 26 GB. Beendest du %@ oder bricht die Verbindung ab, macht der Download dort weiter, wo er aufgehört hat."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Build %1$@, about 26 GB. If you quit %2$@ or lose the connection, the download continues where it stopped."
+          }
+        }
+      }
+    },
     "Changes to sign-ins apply to the workspace at its next start." : {
       "localizations" : {
         "de" : {
@@ -314,6 +418,16 @@
         }
       }
     },
+    "Check for Updates …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Updates suchen …"
+          }
+        }
+      }
+    },
     "Check this Mac" : {
       "localizations" : {
         "de" : {
@@ -335,6 +449,7 @@
       }
     },
     "Checking this Mac …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -428,12 +543,43 @@
         }
       }
     },
+    "Close now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt schließen"
+          }
+        }
+      }
+    },
     "Close the workspace now" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arbeitsplatz jetzt schließen"
+          }
+        }
+      }
+    },
+    "Close Workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz schließen"
+          }
+        }
+      }
+    },
+    "Come back here and click Check." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komm hierher zurück und klicke auf „Prüfen“."
           }
         }
       }
@@ -499,6 +645,7 @@
       }
     },
     "Continue setup …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -549,6 +696,17 @@
       }
     },
     "Don't allow" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht erlauben"
+          }
+        }
+      }
+    },
+    "Don't Allow" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -598,6 +756,16 @@
         }
       }
     },
+    "Downloading macOS 27.2.0" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade macOS 27.2.0"
+          }
+        }
+      }
+    },
     "Enter the workspace password" : {
       "localizations" : {
         "de" : {
@@ -624,6 +792,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Austausch"
+          }
+        }
+      }
+    },
+    "Exchange folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Austauschordner"
+          }
+        }
+      }
+    },
+    "Exchange Folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Austauschordner"
+          }
+        }
+      }
+    },
+    "Files go in and out of the workspace only through it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateien kommen nur über ihn in den Arbeitsplatz hinein und heraus."
           }
         }
       }
@@ -668,7 +866,18 @@
         }
       }
     },
+    "Fresh every time" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jedes Mal frisch"
+          }
+        }
+      }
+    },
     "Help needed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -684,6 +893,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geht nicht"
+          }
+        }
+      }
+    },
+    "In the menu bar" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Menüleiste"
           }
         }
       }
@@ -726,6 +945,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installiere macOS im Arbeitsplatz"
+          }
+        }
+      }
+    },
+    "It starts when your agent opens it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er startet, wenn dein Agent ihn öffnet."
           }
         }
       }
@@ -777,6 +1006,16 @@
         }
       }
     },
+    "macOS %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS %@"
+          }
+        }
+      }
+    },
     "macOS %@ (%@), about 18 GB. The download continues where it stopped if you quit %@ or lose the connection." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -795,6 +1034,7 @@
       }
     },
     "macOS %@ (%@), about 26 GB. The download continues where it stopped if you quit %@ or lose the connection." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -840,12 +1080,33 @@
         }
       }
     },
+    "No request waiting." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Anfrage offen."
+          }
+        }
+      }
+    },
     "No request." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Anfrage."
+          }
+        }
+      }
+    },
+    "None of your files, passwords or sign-ins are inside." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine deiner Dateien, Passwörter oder Anmeldungen ist darin."
           }
         }
       }
@@ -856,6 +1117,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "nicht gefunden"
+          }
+        }
+      }
+    },
+    "not running" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "läuft nicht"
           }
         }
       }
@@ -890,6 +1161,16 @@
         }
       }
     },
+    "Off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus"
+          }
+        }
+      }
+    },
     "off, starts when Claude needs it" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -911,7 +1192,18 @@
         }
       }
     },
+    "On your phone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf dem Handy"
+          }
+        }
+      }
+    },
     "On your phone: open the Claude app. The session \"%@\" appears with a computer icon." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -952,12 +1244,42 @@
         }
       }
     },
+    "Open the Claude app: the session \"%@\" appears with a computer icon." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne die Claude-App: Die Sitzung „%@“ erscheint mit einem Computersymbol."
+          }
+        }
+      }
+    },
     "Open the workspace window" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fenster des Arbeitsplatzes öffnen"
+          }
+        }
+      }
+    },
+    "Open the workspace window. System Settings is already open there at General > Sharing." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne das Fenster des Arbeitsplatzes. Dort sind die Systemeinstellungen schon bei Allgemein > Teilen geöffnet."
+          }
+        }
+      }
+    },
+    "Open: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offen: %@"
           }
         }
       }
@@ -1029,6 +1351,16 @@
         }
       }
     },
+    "Purpose" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweck"
+          }
+        }
+      }
+    },
     "Quit %@" : {
       "localizations" : {
         "de" : {
@@ -1050,6 +1382,7 @@
       }
     },
     "reachable from your phone" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1120,6 +1453,16 @@
         }
       }
     },
+    "Running" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läuft"
+          }
+        }
+      }
+    },
     "Runs Claude Code's own sign-in; %@ never sees it." : {
       "localizations" : {
         "de" : {
@@ -1170,6 +1513,16 @@
         }
       }
     },
+    "Separate from your Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getrennt von deinem Mac"
+          }
+        }
+      }
+    },
     "Session" : {
       "localizations" : {
         "de" : {
@@ -1200,12 +1553,53 @@
         }
       }
     },
+    "Settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen"
+          }
+        }
+      }
+    },
     "Settings …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einstellungen …"
+          }
+        }
+      }
+    },
+    "Setup" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung"
+          }
+        }
+      }
+    },
+    "Setup not finished" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung nicht fertig"
+          }
+        }
+      }
+    },
+    "Show" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigen"
           }
         }
       }
@@ -1382,12 +1776,49 @@
         }
       }
     },
+    "Step %lld of %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schritt %lld von %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Step %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Switch on Screen Sharing below" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte unten die Bildschirmfreigabe ein"
+          }
+        }
+      }
+    },
     "Switch on Screen Sharing in the System Settings below. When macOS asks for a password:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schalte unten in den Systemeinstellungen die Bildschirmfreigabe ein. Fragt macOS nach einem Passwort:"
+          }
+        }
+      }
+    },
+    "Switch on Screen Sharing." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte „Bildschirmfreigabe“ ein."
           }
         }
       }
@@ -1398,6 +1829,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac schläft nicht von selbst ein, solange die Sitzung läuft. Zuklappen schickt ein MacBook trotzdem in den Ruhezustand."
+          }
+        }
+      }
+    },
+    "The workspace is off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist aus"
           }
         }
       }
@@ -1414,6 +1855,7 @@
       }
     },
     "The workspace is off. It starts when your agent opens it." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1429,6 +1871,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz wird nach jeder Nutzung angehalten und macht genau dort weiter, überall angemeldet."
+          }
+        }
+      }
+    },
+    "The workspace only opens when you say yes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz öffnet sich nur, wenn du ja sagst."
           }
         }
       }
@@ -1454,11 +1906,22 @@
       }
     },
     "The workspace starts for the first time without the setup assistant: %@ creates its account, locks remote access down to this Mac, installs Google Chrome and turns off sleep and updates." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz startet zum ersten Mal ohne Einrichtungsassistent: %@ legt sein Konto an, erlaubt Fernzugriff nur von diesem Mac, installiert Google Chrome und schaltet Ruhezustand und Updates aus."
+          }
+        }
+      }
+    },
+    "The workspace starts for the first time, without the setup assistant. %@ creates its account, allows remote access only from this Mac, installs Google Chrome and turns off sleep and automatic updates." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz startet zum ersten Mal, ohne Einrichtungsassistent. %@ legt sein Konto an, erlaubt Fernzugriff nur von diesem Mac, installiert Google Chrome und schaltet Ruhezustand und automatische Updates aus."
           }
         }
       }
@@ -1494,6 +1957,7 @@
       }
     },
     "Updates …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1515,6 +1979,7 @@
       }
     },
     "waiting" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1534,12 +1999,42 @@
         }
       }
     },
+    "Websites forget their sign-ins when it closes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Websites vergessen ihre Anmeldungen, wenn er schließt."
+          }
+        }
+      }
+    },
     "Welcome to %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Willkommen bei %@"
+          }
+        }
+      }
+    },
+    "When macOS asks for a password, click \"Enter the workspace password\" in the window." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS nach einem Passwort, klicke im Fenster auf „Passwort des Arbeitsplatzes eingeben“."
+          }
+        }
+      }
+    },
+    "When macOS asks for a password, let %@ enter it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS nach einem Passwort, lass es %@ eingeben."
           }
         }
       }
@@ -1564,12 +2059,32 @@
         }
       }
     },
+    "You decide" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du entscheidest"
+          }
+        }
+      }
+    },
     "Your agent asks for your help" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Agent bittet dich um Hilfe"
+          }
+        }
+      }
+    },
+    "Your agent is working" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Agent arbeitet"
           }
         }
       }

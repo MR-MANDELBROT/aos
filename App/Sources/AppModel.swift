@@ -109,6 +109,24 @@ final class AppModel: ObservableObject {
 
     // MARK: Lifecycle
 
+    /// Design review without a workspace: ANNEX_PREVIEW=step:<n> | approval | help | done shows that state.
+    func applyPreview() {
+        guard let preview = ProcessInfo.processInfo.environment["ANNEX_PREVIEW"] else { return }
+        let parts = preview.split(separator: ":").map(String.init)
+        switch parts.first {
+        case "step":
+            if let n = Int(parts.dropFirst().first ?? ""), let step = SetupController.Step(rawValue: n) {
+                setup.previewStep(step)
+                openWindow?(WindowID.setup)
+            }
+        case "approval":
+            Task { _ = await askApproval(agent: "Codex CLI", purpose: "Look up the opening hours of the city library", minutes: 15) }
+        case "help":
+            Task { _ = await askForHelp("Sign in to the library website, then click Done.") }
+        default: break
+        }
+    }
+
     func launched() {
         do {
             let server = LineSocketServer(path: paths.agentSocket) { line in
@@ -130,6 +148,7 @@ final class AppModel: ObservableObject {
         }
         refresh()
         if !setup.isComplete { openWindow?(WindowID.setup) ; showSetupSoon() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in self?.applyPreview() }
     }
 
     private func showSetupSoon() {

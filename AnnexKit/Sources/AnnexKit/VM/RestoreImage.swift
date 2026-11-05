@@ -7,6 +7,12 @@ public enum RestoreImage {
         public let url: URL
         public let buildVersion: String
         public let osVersion: String
+
+        public init(url: URL, buildVersion: String, osVersion: String) {
+            self.url = url
+            self.buildVersion = buildVersion
+            self.osVersion = osVersion
+        }
     }
 
     /// The newest macOS that this Mac can virtualize, as Apple publishes it.

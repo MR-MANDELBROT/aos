@@ -6,3 +6,4 @@ DerivedData/
 .swiftpm/
 Annex.xcodeproj/
 .DS_Store
+.claude/

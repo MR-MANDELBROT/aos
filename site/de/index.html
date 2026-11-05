@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Annex: ein eigener Mac für deinen Coding-Agent</title>
+<meta name="description" content="Annex gibt deinem Coding-Agent einen eigenen Mac: einen virtuellen Arbeitsplatz mit eigenem Bildschirm und Browser, getrennt von deinem. Für Claude Code, Codex, Gemini CLI, VS Code, Cursor und jeden MCP-Agent.">
+<meta property="og:title" content="Annex: ein eigener Mac für deinen Coding-Agent">
+<meta property="og:description" content="Ein virtueller Mac für alles, was eine Website oder App braucht. Jedes Öffnen bestätigst du.">
+<meta property="og:image" content="img/icon.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" href="../img/favicon.png">
+<link rel="apple-touch-icon" href="../img/apple-touch-icon.png">
+<link rel="alternate" hreflang="en" href="../">
+</head>
+<body>
+<nav class="wrap">
+  <div class="bar glass">
+    <a class="brand" href="./"><img src="../img/icon.png" alt="">Annex</a>
+    <div class="links">
+      <a href="#how">So geht’s</a>
+      <a href="#trust">Vertrauen</a>
+      <a href="#faq">Fragen</a>
+      <a class="lang" href="../">English</a>
+      <a class="button small" href="https://github.com/REPLACE_OWNER/annex/releases/latest">Laden</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+  <header class="hero">
+    <div>
+      <h1>Ein eigener Mac<br>für <span class="accent">deinen Coding-Agent</span>.</h1>
+      <p class="lead">Annex gibt deinem Agent einen virtuellen Mac mit eigenem Bildschirm, eigener Tastatur und eigenem Browser, getrennt von deinem. Für alles, was eine Website oder eine App braucht. Jedes Öffnen bestätigst du.</p>
+      <div class="cta">
+        <a class="button" href="https://github.com/REPLACE_OWNER/annex/releases/latest">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+          Für Mac laden</a>
+        <a class="button ghost" href="#how">So geht’s</a>
+      </div>
+      <p class="note">Kostenlos · macOS 27 oder neuer · Apple Silicon</p>
+    </div>
+    <div class="visual" aria-hidden="true">
+      <img class="appicon" src="../img/icon.png" alt="">
+      <div class="dialog glass">
+        <img src="../img/icon.png" alt="">
+        <h3>Codex möchte seinen Arbeitsplatz öffnen</h3>
+        <p class="sub">Für höchstens 15 Minuten. Du kannst jederzeit zusehen und ihn schließen.</p>
+        <div class="purpose"><small>Zweck</small>Öffnungszeiten der Stadtbibliothek nachschauen</div>
+        <div class="buttons"><span class="no">Nicht erlauben</span><span class="yes">Erlauben</span></div>
+      </div>
+      <div class="status glass">
+        <div class="row"><div class="ico indigo">▢</div><div><b>Arbeitsplatz</b><span>offen: Öffnungszeiten, bis 14:30</span></div><div class="dot"></div></div>
+        <div class="row"><div class="ico mint">↗</div><div><b>Austausch</b><span>1 Datei für dich bereit</span></div></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="agents">
+    <p>Bring deinen eigenen Agent mit. Annex trägt sich als MCP-Server ein.</p>
+    <div class="chips">
+      <span class="chip glass">Claude Code</span><span class="chip glass">Codex CLI</span><span class="chip glass">Gemini CLI</span>
+      <span class="chip glass">VS Code</span><span class="chip glass">Cursor</span><span class="chip glass">Windsurf</span>
+      <span class="chip glass">opencode</span><span class="chip glass">jeder MCP-Agent</span>
+    </div>
+  </div>
+
+  <section id="trust">
+    <h2>Gebaut, damit du entscheidest.</h2>
+    <p class="section-lead">Dein Agent arbeitet auf einem Mac ohne deine Dateien, Passwörter und Anmeldungen, und nur, solange du es erlaubst.</p>
+    <div class="grid">
+      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a5 5 0 0 1 10 0v4"/><rect x="5" y="11" width="14" height="10" rx="2"/></svg></div>
+        <h3>Jedes Mal dein Ja</h3><p>Der Arbeitsplatz öffnet sich nur mit deiner Zustimmung: im Agent, in der Claude-App auf dem Handy oder auf dem Mac.</p></div>
+      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="13" rx="2"/><path d="M8 21h8"/></svg></div>
+        <h3>Getrennt von deinem Mac</h3><p>Ein echtes macOS in einer virtuellen Maschine. Es sieht deine Dateien nicht; Dateien wandern nur über einen Austauschordner.</p></div>
+      <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div>
+        <h3>Jedes Mal frisch</h3><p>Schließt der Arbeitsplatz, vergessen Websites ihre Anmeldungen, außer den wenigen, die du behalten willst.</p></div>
+      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0"/></svg></div>
+        <h3>Er fragt, du meldest an</h3><p>Dein Agent tippt nie Passwörter und löst keine Captchas. Er fragt dich, und du erledigst es im Fenster des Arbeitsplatzes.</p></div>
+      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Kein Server, kein Tracking</h3><p>Annex läuft nur auf deinem Mac. Es schickt keine Daten weg und fasst die Zugangsdaten deines Agents nie an.</p></div>
+      <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
+        <h3>Vom Handy erreichbar</h3><p>Mit Claude Code hält Annex eine Sitzung am Laufen, die du aus der Claude-App erreichst, wo immer du bist.</p></div>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2>Einmal einrichten. Dann einfach fragen.</h2>
+    <p class="section-lead">Die meiste Zeit wartest du auf den Download von macOS. Durch einen Einrichtungsassistenten klickst du dich nicht.</p>
+    <div class="steps">
+      <div class="step glass"><h3>Agent wählen</h3><p>Annex findet die Agents auf deinem Mac und trägt sich bei denen ein, die du auswählst.</p></div>
+      <div class="step glass"><h3>Annex baut den Arbeitsplatz</h3><p>Es lädt macOS von Apple, installiert es, ergänzt Google Chrome und erlaubt den Zugriff nur von deinem Mac.</p></div>
+      <div class="step glass"><h3>Etwas im Web erledigen lassen</h3><p>„Schau nach, wann die Stadtbibliothek geöffnet hat.“ Dein Agent fragt, ob er seinen Arbeitsplatz öffnen darf; du sagst ja und kannst zusehen.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="split">
+      <div class="panel glass">
+        <h3>Was dein Agent kann</h3>
+        <ul>
+          <li>Den Bildschirm sehen, klicken, tippen, scrollen und ziehen</li>
+          <li>Jede Website in Chrome nutzen, dazu Mac-Apps</li>
+          <li>Dateien über den Austauschordner hinein- und Ergebnisse herausbringen</li>
+          <li>Dich bei Anmeldungen und Captchas um Hilfe bitten</li>
+        </ul>
+      </div>
+      <div class="panel glass">
+        <h3>Was er nicht kann</h3>
+        <ul>
+          <li>Den Arbeitsplatz ohne dein Ja öffnen</li>
+          <li>Deinen Mac, deine Dateien oder Passwörter sehen</li>
+          <li>Anmeldungen nach dem Schließen behalten (außer du erlaubst es)</li>
+          <li>Einstellungen oder Browser-Regeln des Arbeitsplatzes ändern</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>Fragen</h2>
+    <details class="glass"><summary>Was brauche ich?</summary><p>Einen Mac mit Apple Silicon, macOS 27 oder neuer, 8 GB Arbeitsspeicher (16 GB empfohlen) und etwa 75 GB freien Speicher. Dazu einen Coding-Agent, der MCP-Server unterstützt.</p></details>
+    <details class="glass"><summary>Was kostet es?</summary><p>Annex ist kostenlos. Das Abo oder die API-Nutzung deines Agents läuft zwischen dir und seinem Anbieter.</p></details>
+    <details class="glass"><summary>Warum ein ganzer Mac und nicht nur ein Browser?</summary><p>Manche Aufgaben brauchen Apps, Downloads oder einen Schreibtisch. Ein echtes macOS verhält sich wie der Mac eines Menschen, das heißt auch: weniger Captchas.</p></details>
+    <details class="glass"><summary>Bremst der Arbeitsplatz meinen Mac?</summary><p>Er läuft nur, solange dein Agent arbeitet, und fährt danach herunter. Während er läuft, braucht er etwa 4 GB Arbeitsspeicher.</p></details>
+    <details class="glass"><summary>Gehört Annex zu Anthropic, OpenAI oder Google?</summary><p>Nein. Annex ist eine unabhängige App, die über MCP mit deren Agents arbeitet, dem offenen Standard für Agent-Werkzeuge.</p></details>
+  </section>
+
+  <div class="final glass">
+    <img src="../img/icon.png" alt="">
+    <h2>Gib deinem Agent einen eigenen Mac.</h2>
+    <p class="section-lead" style="margin: 0 auto 24px;">Kostenlos für macOS 27 auf Apple Silicon.</p>
+    <a class="button" href="https://github.com/REPLACE_OWNER/annex/releases/latest">Annex laden</a>
+  </div>
+</main>
+
+<footer class="wrap">
+  <div class="row"><a href="datenschutz.html">Datenschutz</a><a href="https://github.com/REPLACE_OWNER/annex">Quellcode und Versionen</a><a href="../">English</a></div>
+  <p>Annex stammt nicht von Apple, Anthropic, OpenAI, Google, Microsoft oder den Herstellern der unterstützten Agents und ist mit ihnen nicht verbunden. Die Namen der Agents sind Marken ihrer Inhaber.</p>
+</footer>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import AnnexKit
 import SwiftUI
 
+/// The menu bar window: what the workspace and the session are doing, and the few actions that matter.
 struct MenuView: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.openWindow) private var openWindow
@@ -8,66 +9,124 @@ struct MenuView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(Brand.name).font(.headline)
-                Spacer()
-                if let help = model.help {
-                    Button("Help needed") { openWindow(id: WindowID.workspace) }
-                        .help(help.purpose)
-                        .tint(.orange)
+            header
+
+            if let help = model.help {
+                attention(symbol: "hand.raised.fill", title: "Your agent asks for your help", detail: help.purpose) {
+                    openWindow(id: WindowID.workspace); NSApp.activate()
+                }
+            } else if let approval = model.approval {
+                attention(symbol: "macwindow.badge.plus", title: "\(approval.agent) wants to open its workspace", detail: approval.purpose) {
+                    openWindow(id: WindowID.approval); NSApp.activate()
+                }
+            } else if !model.setup.isComplete {
+                attention(symbol: "sparkles", title: "Finish setting up \(Brand.name)", detail: String(localized: "A few steps are left.")) {
+                    openWindow(id: WindowID.setup); NSApp.activate()
                 }
             }
 
-            if !model.setup.isComplete {
-                Button("Continue setup …") { openWindow(id: WindowID.setup); NSApp.activate() }
-            }
-
-            GroupBox {
-                VStack(alignment: .leading, spacing: 6) {
+            GlassEffectContainer(spacing: 10) {
+                VStack(spacing: 10) {
+                    statusCard(symbol: "macwindow", title: "Workspace", value: workspaceText, color: workspaceColor) {
+                        if model.status?.leaseUntil != nil || model.vmPhase == .running {
+                            Button("Close now") { Task { _ = await model.workspace.close() } }
+                                .buttonStyle(.glass).controlSize(.small)
+                        }
+                    }
                     if model.settings.sessionEnabled && model.sessionAgentStatus == .enabled {
-                        statusRow("Session", sessionText, sessionColor)
-                    }
-                    statusRow("Workspace", workspaceText, workspaceColor)
-                    if let s = model.status, s.exchangeFiles > 0 {
-                        statusRow("Exchange", "\(s.exchangeFiles) item(s)", .secondary)
+                        statusCard(symbol: "iphone.radiowaves.left.and.right", title: "Session", value: sessionText, color: sessionColor) {
+                            Button("Show") { openWindow(id: WindowID.session); NSApp.activate() }
+                                .buttonStyle(.glass).controlSize(.small)
+                        }
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            HStack {
-                Button("Workspace") { openWindow(id: WindowID.workspace); NSApp.activate() }
-                if model.sessionAgentStatus == .enabled {
-                    Button("Session") { openWindow(id: WindowID.session); NSApp.activate() }
-                }
-                Button("Exchange") { NSWorkspace.shared.open(model.paths.exchange) }
+            HStack(spacing: 8) {
+                quick("macwindow", "Workspace") { openWindow(id: WindowID.workspace); NSApp.activate() }
+                quick("folder", "Exchange") { NSWorkspace.shared.open(model.paths.exchange) }
+                quick("gearshape", "Settings") { openSettings(); NSApp.activate() }
             }
-            if model.status?.leaseUntil != nil || model.vmPhase == .running {
-                Button("Close the workspace now") {
-                    Task { _ = await model.workspace.close() }
-                }
-            }
-            Divider()
+
+            Divider().opacity(0.6)
             HStack {
-                Button("Settings …") { openSettings(); NSApp.activate() }
-                Button("Updates …") { model.updater.checkForUpdates(nil) }
+                Button("Check for Updates …") { model.updater.checkForUpdates(nil) }
                     .disabled(!model.updater.updater.canCheckForUpdates)
                 Spacer()
                 Button("Quit \(Brand.name)") { NSApp.terminate(nil) }
             }
+            .buttonStyle(.borderless)
+            .font(.callout)
+            .foregroundStyle(.secondary)
         }
-        .padding(14)
-        .frame(width: 330)
+        .padding(16)
+        .frame(width: 340)
         .onAppear { model.openWindow = { openWindow(id: $0) } }
     }
 
-    func statusRow(_ title: LocalizedStringKey, _ value: String, _ color: Color) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Circle().fill(color).frame(width: 8, height: 8)
-            Text(title).frame(width: 80, alignment: .leading)
-            Text(value).foregroundStyle(.secondary).lineLimit(2)
+    var header: some View {
+        HStack(spacing: 10) {
+            AppIconImage(size: 32)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(Brand.name).font(.headline)
+                Text(summary).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
         }
-        .font(.callout)
+    }
+
+    var summary: String {
+        if model.status?.leaseUntil != nil { return String(localized: "Your agent is working") }
+        if !model.setup.isComplete { return String(localized: "Setup not finished") }
+        return String(localized: "Ready")
+    }
+
+    func attention(symbol: String, title: String, detail: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: symbol).font(.title3).foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).fontWeight(.semibold).multilineTextAlignment(.leading)
+                    Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2).multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassEffect(.regular.tint(.orange.opacity(0.25)).interactive(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    func statusCard(symbol: String, title: LocalizedStringKey, value: String, color: Color,
+                    @ViewBuilder trailing: () -> some View) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbol).font(.title3).foregroundStyle(color).frame(width: 26)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(title).fontWeight(.semibold)
+                    StatusDot(color: color)
+                }
+                Text(value).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+            }
+            Spacer(minLength: 0)
+            trailing()
+        }
+        .padding(12)
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    func quick(_ symbol: String, _ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: symbol).font(.title3)
+                Text(title).font(.caption)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.glass)
     }
 
     var sessionText: String {
@@ -108,7 +167,7 @@ struct MenuView: View {
     }
 
     var workspaceColor: Color {
-        if model.status?.leaseUntil != nil { return .blue }
+        if model.status?.leaseUntil != nil { return BrandColor.indigo }
         switch model.vmPhase {
         case .running: return .green
         case .error: return .red
