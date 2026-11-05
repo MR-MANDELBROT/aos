@@ -20,9 +20,9 @@ struct AnnexApp: App {
             SetupView()
                 .environmentObject(model)
                 .environmentObject(model.setup)
-                .frame(minWidth: 640, minHeight: 520)
         }
-        .windowResizability(.contentSize)
+        .defaultSize(width: 920, height: 660)
+        .windowResizability(.contentMinSize)
         // Until the setup is done, it opens at launch.
         .defaultLaunchBehavior(model.setup.isComplete ? .suppressed : .presented)
 
@@ -42,6 +42,7 @@ struct AnnexApp: App {
             ApprovalView()
                 .environmentObject(model)
         }
+        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
         .windowLevel(.floating)
 

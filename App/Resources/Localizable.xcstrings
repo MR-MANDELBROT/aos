@@ -1937,11 +1937,22 @@
       }
     },
     "This Mac can't run virtual machines (Apple silicon is required)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Mac kann keine virtuellen Maschinen ausführen (Apple Silicon nötig)."
+          }
+        }
+      }
+    },
+    "This Mac can't run virtual machines. Annex needs a Mac with Apple silicon and can't run inside a virtual machine itself." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Mac kann keine virtuellen Maschinen ausführen. Annex braucht einen Mac mit Apple Silicon und kann nicht selbst in einer virtuellen Maschine laufen."
           }
         }
       }

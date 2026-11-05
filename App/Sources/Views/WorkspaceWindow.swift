@@ -20,6 +20,7 @@ struct WorkspaceWindow: View {
                 } description: {
                     Text("It starts when your agent opens it.")
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
             if let help = model.help {

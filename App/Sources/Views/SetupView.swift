@@ -14,7 +14,7 @@ struct SetupView: View {
             StepPage()
                 .navigationTitle("")
         }
-        .frame(minWidth: 820, minHeight: 600)
+        .frame(minWidth: 820, minHeight: 560)
         .onAppear {
             model.openWindow = { openWindow(id: $0) }
             if setup.step == .requirements { setup.checkRequirements() }
@@ -30,7 +30,7 @@ extension SetupController.Step {
         case .requirements: return "checkmark.shield"
         case .agents: return "apple.terminal"
         case .download: return "arrow.down.circle"
-        case .install: return "macbook.and.arrow.down"
+        case .install: return "laptopcomputer.and.arrow.down"
         case .prepare: return "gearshape.2"
         case .screenSharing: return "rectangle.on.rectangle"
         case .connect: return "link"
@@ -70,6 +70,11 @@ private struct StepList: View {
                     }
                     .listRowBackground(step == setup.step
                                        ? RoundedRectangle(cornerRadius: 8).fill(BrandColor.indigo.opacity(0.14)) : nil)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        // Design review only (ANNEX_PREVIEW): jump to any step.
+                        if ProcessInfo.processInfo.environment["ANNEX_PREVIEW"] != nil { setup.previewStep(step) }
+                    }
                 }
             }
         }

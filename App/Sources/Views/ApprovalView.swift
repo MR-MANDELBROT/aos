@@ -22,12 +22,14 @@ struct ApprovalView: View {
                     }
                 }
                 HStack(spacing: 10) {
-                    Button("Don't Allow") { model.answerApproval(a.id, false); dismissWindow(id: WindowID.approval) }
-                        .buttonStyle(.glass).keyboardShortcut(.cancelAction)
-                        .frame(maxWidth: .infinity)
-                    Button("Allow") { model.answerApproval(a.id, true); dismissWindow(id: WindowID.approval) }
-                        .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
-                        .frame(maxWidth: .infinity)
+                    Button { model.answerApproval(a.id, false); dismissWindow(id: WindowID.approval) } label: {
+                        Text("Don't Allow").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.glass).keyboardShortcut(.cancelAction)
+                    Button { model.answerApproval(a.id, true); dismissWindow(id: WindowID.approval) } label: {
+                        Text("Allow").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
                 }
                 .controlSize(.large)
             } else {
@@ -35,7 +37,9 @@ struct ApprovalView: View {
                 Text("No request waiting.").foregroundStyle(.secondary)
             }
         }
-        .padding(24)
+        .padding(.horizontal, 24)
+        .padding(.top, 8)
+        .padding(.bottom, 24)
         .frame(width: 380)
     }
 }

@@ -249,3 +249,8 @@ DE.update({
     'macOS %@': 'macOS %@',
     'not running': 'läuft nicht',
 })
+
+DE.update({
+    "This Mac can't run virtual machines. Annex needs a Mac with Apple silicon and can't run inside a virtual machine itself.":
+        "Dieser Mac kann keine virtuellen Maschinen ausführen. Annex braucht einen Mac mit Apple Silicon und kann nicht selbst in einer virtuellen Maschine laufen.",
+})

@@ -130,7 +130,7 @@ final class SetupController: ObservableObject {
     func checkRequirements() {
         var problems: [String] = []
         if !VZVirtualMachine.isSupported {
-            problems.append(String(localized: "This Mac can't run virtual machines (Apple silicon is required)."))
+            problems.append(String(localized: "This Mac can't run virtual machines. Annex needs a Mac with Apple silicon and can't run inside a virtual machine itself."))
         }
         let v = ProcessInfo.processInfo.operatingSystemVersion
         if v.majorVersion < 27 { problems.append(String(localized: "macOS 27 or later is required.")) }
