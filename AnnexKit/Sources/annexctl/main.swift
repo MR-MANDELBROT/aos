@@ -103,6 +103,32 @@ func runCommand() async {
             print("connected")
             exit(0)
 
+        case "bootstrap":
+            let host = VMHost(bundle: bundle, paths: paths)
+            guard let ip = try host.guestAddress() else { fail("no guest address") }
+            try await Provisioner(paths: paths).bootstrap(host: ip) { print("  " + $0) }
+            exit(0)
+
+        case "ssh":
+            let host = VMHost(bundle: bundle, paths: paths)
+            guard let ip = try host.guestAddress() else { fail("no guest address") }
+            let r = try await Provisioner(paths: paths).maintenance(host: ip)
+                .run(args.dropFirst().joined(separator: " "), timeout: 120, check: false)
+            print(r.text, terminator: ""); FileHandle.standardError.write(Data(r.stderr.utf8))
+            exit(r.status)
+
+        case "shot":
+            guard args.count >= 2 else { fail("usage: annexctl shot FILE.jpg") }
+            let host = VMHost(bundle: bundle, paths: paths)
+            guard let ip = try host.guestAddress() else { fail("no guest address") }
+            let password = try GuestSecrets(paths: paths).adminPassword(createIfMissing: false)
+            let client = RFBClient(host: ip, username: Brand.guestUser, password: password)
+            try await client.connect()
+            let image = try await client.screenshot()
+            try ScreenImage.encode(image).write(to: URL(fileURLWithPath: args[1]))
+            print("\(image.width)x\(image.height) -> \(args[1])")
+            exit(0)
+
         case "ip":
             let host = VMHost(bundle: bundle, paths: paths)
             print(try host.guestAddress() ?? "no address")

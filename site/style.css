@@ -1,0 +1,19 @@
+:root { --fg: #1d1d1f; --muted: #6e6e73; --bg: #fbfbfd; --card: #fff; --accent: #4a5bd4; }
+@media (prefers-color-scheme: dark) { :root { --fg: #f5f5f7; --muted: #a1a1a6; --bg: #111114; --card: #1c1c21; --accent: #8c9bff; } }
+* { box-sizing: border-box; }
+body { margin: 0; font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; color: var(--fg); background: var(--bg); }
+main { max-width: 860px; margin: 0 auto; padding: 56px 24px 80px; }
+header { display: flex; align-items: center; gap: 16px; }
+header img { width: 72px; height: 72px; }
+h1 { font-size: 44px; line-height: 1.1; margin: 0; letter-spacing: -0.02em; }
+h2 { font-size: 26px; margin: 48px 0 12px; letter-spacing: -0.01em; }
+.lead { font-size: 22px; color: var(--muted); margin: 18px 0 28px; }
+.button { display: inline-block; background: var(--accent); color: #fff; padding: 12px 22px; border-radius: 12px; text-decoration: none; font-weight: 600; }
+.small { color: var(--muted); font-size: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.card { background: var(--card); border-radius: 16px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.card h3 { margin: 0 0 6px; font-size: 18px; }
+ol li { margin-bottom: 6px; }
+code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; }
+footer { margin-top: 64px; color: var(--muted); font-size: 14px; }
+a { color: var(--accent); }

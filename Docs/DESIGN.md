@@ -1,10 +1,29 @@
 # Annex design
 
 Annex productizes a setup that ran by hand on one Mac (a Tart VM, a Python MCP server, shell installers and a launchd
-supervisor around Claude Code). Goals for version 1: one download, a setup that a non-developer finishes in about an
+supervisor around Claude Code). It is an extension for the user's own coding agent: Annex brings the workspace and an
+MCP server; the agent (Claude Code, Codex CLI, Gemini CLI, VS Code, Cursor, Windsurf, opencode, anything with MCP)
+brings the model and the account. Goals for version 1: one download, a setup that a non-developer finishes in about an
 hour (most of it waiting for the macOS download), no Terminal, no sudo, no server of our own.
 
-## Processes
+## Agents and approval
+
+`AgentIntegration` knows how each agent adds an MCP server: Claude Code (`claude mcp add --scope user` plus rules in
+`~/.claude/settings.json`: allow `mcp__annex__*`, ask `mcp__annex__workspace_open`), Codex (`codex mcp add`, then
+`tool_timeout_sec = 900` in `config.toml`, Codex waits only 60 s by default), Gemini CLI (`gemini mcp add --scope
+user --timeout`), VS Code (`code --add-mcp`), Cursor, Windsurf and opencode (their JSON files, merged, with a backup;
+files with comments are left alone and the user gets a snippet), anything else (snippet to copy). The server's
+environment carries `ANNEX_AGENT` and `ANNEX_APPROVAL`.
+
+Opening the workspace needs the user's yes, one of three ways (`ANNEX_APPROVAL`):
+- `agent`: the agent asks itself (Claude Code's ask rule, which Remote Control forwards to the phone; VS Code's tool
+  confirmation).
+- `auto`: the MCP server asks through the agent with MCP elicitation (`elicitation/create`, a yes/no form) if the
+  client declared the capability; otherwise the app asks on the Mac.
+- `mac`: the app always asks on the Mac (floating window plus notification, 5 minutes, then no).
+The app also asks on the Mac for any request that doesn't say how it was approved.
+
+## Processes (with the optional Claude Code session)
 
 ```
 Claude app (phone) ──Remote Control──▶ claude (pty) ◀── annex-session (LaunchAgent, KeepAlive)
