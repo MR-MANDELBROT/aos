@@ -1,0 +1,123 @@
+import Foundation
+import Network
+
+public enum RFBError: LocalizedError {
+    case closed
+    case protocolError(String)
+    case authFailed(String)
+    case timeout(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .closed: return "The screen connection closed."
+        case .protocolError(let s): return "Screen sharing protocol error: \(s)"
+        case .authFailed(let s): return "Screen sharing login failed: \(s)"
+        case .timeout(let s): return "Screen sharing timed out (\(s))."
+        }
+    }
+}
+
+/// A TCP byte stream with exact reads, on top of Network.framework.
+final class RFBStream: @unchecked Sendable {
+    private let connection: NWConnection
+    private let queue = DispatchQueue(label: "\(Brand.bundleIdentifierPrefix).rfb")
+    private var buffer = Data()
+    private let lock = NSLock()
+
+    init(host: String, port: UInt16) {
+        let tcp = NWProtocolTCP.Options()
+        tcp.noDelay = true
+        tcp.connectionTimeout = 10
+        connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port)!,
+                                  using: NWParameters(tls: nil, tcp: tcp))
+    }
+
+    func open(timeout: TimeInterval) async throws {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            var done = false
+            let finish: (Result<Void, Error>) -> Void = { result in
+                if done { return }
+                done = true
+                cont.resume(with: result)
+            }
+            connection.stateUpdateHandler = { state in
+                switch state {
+                case .ready: finish(.success(()))
+                case .failed(let e): finish(.failure(e))
+                case .cancelled: finish(.failure(RFBError.closed))
+                case .waiting(let e): finish(.failure(e))
+                default: break
+                }
+            }
+            connection.start(queue: queue)
+            queue.asyncAfter(deadline: .now() + timeout) {
+                finish(.failure(RFBError.timeout("connect")))
+            }
+        }
+    }
+
+    func close() { connection.cancel() }
+
+    func write(_ data: Data) async throws {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            connection.send(content: data, completion: .contentProcessed { error in
+                if let error { cont.resume(throwing: error) } else { cont.resume() }
+            })
+        }
+    }
+
+    private func receiveMore() async throws {
+        let chunk: Data = try await withCheckedThrowingContinuation { cont in
+            connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 20) { data, _, complete, error in
+                if let error { cont.resume(throwing: error); return }
+                if let data, !data.isEmpty { cont.resume(returning: data); return }
+                if complete { cont.resume(throwing: RFBError.closed); return }
+                cont.resume(returning: Data())
+            }
+        }
+        lock.withLock { buffer.append(chunk) }
+    }
+
+    func read(_ count: Int) async throws -> Data {
+        while true {
+            let out: Data? = lock.withLock {
+                guard buffer.count >= count else { return nil }
+                let out = Data(buffer.prefix(count))
+                buffer.removeFirst(count)
+                return out
+            }
+            if let out { return out }
+            try await receiveMore()
+        }
+    }
+
+    func readLine() async throws -> Data {
+        while true {
+            let (line, tooLong): (Data?, Bool) = lock.withLock {
+                if let nl = buffer.firstIndex(of: 0x0A) {
+                    let line = Data(buffer[buffer.startIndex...nl])
+                    buffer.removeSubrange(buffer.startIndex...nl)
+                    return (line, false)
+                }
+                return (nil, buffer.count > 64)
+            }
+            if let line { return line }
+            if tooLong { throw RFBError.protocolError("no version line") }
+            try await receiveMore()
+        }
+    }
+
+    func u8() async throws -> UInt8 { try await read(1)[0] }
+    func u16() async throws -> UInt16 { let d = try await read(2); return UInt16(d[0]) << 8 | UInt16(d[1]) }
+    func u32() async throws -> UInt32 {
+        let d = try await read(4)
+        return UInt32(d[0]) << 24 | UInt32(d[1]) << 16 | UInt32(d[2]) << 8 | UInt32(d[3])
+    }
+}
+
+extension Data {
+    mutating func appendBE<T: FixedWidthInteger>(_ value: T) {
+        var v = value.bigEndian
+        Swift.withUnsafeBytes(of: &v) { append(contentsOf: $0) }
+    }
+}

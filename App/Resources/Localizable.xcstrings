@@ -1,0 +1,1140 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "\"%@\" reachable in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
+    "[*.]google.com" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[*.]google.com"
+          }
+        }
+      }
+    },
+    "%@ creates the virtual Mac and installs macOS into it. This takes about 10 minutes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ legt den virtuellen Mac an und installiert macOS darin. Das dauert etwa 10 Minuten."
+          }
+        }
+      }
+    },
+    "%@ gives Claude its own Mac: a virtual Mac with its own screen and browser, separate from yours. Claude uses it for tasks that need a website or an app, and you reach Claude from the Claude app on your phone at any time." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ gibt Claude einen eigenen Mac: einen virtuellen Mac mit eigenem Bildschirm und Browser, getrennt von deinem. Claude nutzt ihn für Aufgaben, die eine Website oder eine App brauchen, und du erreichst Claude jederzeit über die Claude-App auf deinem Handy."
+          }
+        }
+      }
+    },
+    "%@ is ready." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist bereit."
+          }
+        }
+      }
+    },
+    "%@ lives in the menu bar. It starts with your Mac and keeps the session running." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wohnt in der Menüleiste. Es startet mit deinem Mac und hält die Sitzung am Laufen."
+          }
+        }
+      }
+    },
+    "%@ runs Claude Code, Anthropic's own app, with your Claude subscription (Pro, Max or Team). You install it and sign in yourself; %@ never sees your sign-in." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nutzt Claude Code, die App von Anthropic, mit deinem Claude-Abo (Pro, Max oder Team). Du installierst es und meldest dich selbst an; %@ sieht deine Anmeldung nie."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ runs Claude Code, Anthropic's own app, with your Claude subscription (Pro, Max or Team). You install it and sign in yourself; %2$@ never sees your sign-in."
+          }
+        }
+      }
+    },
+    "1. Open the workspace window. System Settings is already open there at General > Sharing." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Öffne das Fenster des Arbeitsplatzes. Dort sind die Systemeinstellungen schon bei Allgemein > Teilen geöffnet."
+          }
+        }
+      }
+    },
+    "1. Register tools" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Werkzeuge eintragen"
+          }
+        }
+      }
+    },
+    "2. Start once" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Einmal starten"
+          }
+        }
+      }
+    },
+    "2. Switch on Screen Sharing." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Schalte „Bildschirmfreigabe“ ein."
+          }
+        }
+      }
+    },
+    "3. Run in the background" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Im Hintergrund laufen lassen"
+          }
+        }
+      }
+    },
+    "3. When macOS asks for a password, click \"Enter the workspace password\" in the window." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Fragt macOS nach einem Passwort, klicke im Fenster auf „Passwort des Arbeitsplatzes eingeben“."
+          }
+        }
+      }
+    },
+    "4. Come back here and click Check." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4. Komm hierher zurück und klicke auf „Prüfen“."
+          }
+        }
+      }
+    },
+    "About 60 GB of free disk space are needed (%lld GB free)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwa 60 GB freier Speicher werden gebraucht (%lld GB frei)."
+          }
+        }
+      }
+    },
+    "Asking Apple for the newest macOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frage Apple nach dem neuesten macOS"
+          }
+        }
+      }
+    },
+    "At least 8 GB of memory are required (this Mac has %llu GB)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindestens 8 GB Arbeitsspeicher sind nötig (dieser Mac hat %llu GB)."
+          }
+        }
+      }
+    },
+    "Changes to sign-ins apply to the workspace at its next start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen an den Anmeldungen gelten ab dem nächsten Start des Arbeitsplatzes."
+          }
+        }
+      }
+    },
+    "Check" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen"
+          }
+        }
+      }
+    },
+    "Check again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut prüfen"
+          }
+        }
+      }
+    },
+    "Check this Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Mac prüfen"
+          }
+        }
+      }
+    },
+    "Checking screen sharing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfe die Bildschirmfreigabe"
+          }
+        }
+      }
+    },
+    "Checking this Mac …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfe diesen Mac …"
+          }
+        }
+      }
+    },
+    "Claude asks for your help" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude bittet dich um Hilfe"
+          }
+        }
+      }
+    },
+    "Claude Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code"
+          }
+        }
+      }
+    },
+    "Claude Code %@ is installed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code %@ ist installiert"
+          }
+        }
+      }
+    },
+    "Claude Code asks something (open Session)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code fragt etwas (Sitzung öffnen)"
+          }
+        }
+      }
+    },
+    "Claude Code is not installed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code ist nicht installiert"
+          }
+        }
+      }
+    },
+    "Claude needs your help" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude braucht deine Hilfe"
+          }
+        }
+      }
+    },
+    "Close after %lld min without activity" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach %lld Min. ohne Aktivität schließen"
+          }
+        }
+      }
+    },
+    "Close the workspace now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz jetzt schließen"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiter"
+          }
+        }
+      }
+    },
+    "Continue setup …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung fortsetzen …"
+          }
+        }
+      }
+    },
+    "Create the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz anlegen"
+          }
+        }
+      }
+    },
+    "Data" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daten"
+          }
+        }
+      }
+    },
+    "Details" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig"
+          }
+        }
+      }
+    },
+    "Download" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden"
+          }
+        }
+      }
+    },
+    "Download macOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS laden"
+          }
+        }
+      }
+    },
+    "Downloading macOS %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade macOS %@"
+          }
+        }
+      }
+    },
+    "Enter the workspace password" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort des Arbeitsplatzes eingeben"
+          }
+        }
+      }
+    },
+    "error" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler"
+          }
+        }
+      }
+    },
+    "Exchange" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Austausch"
+          }
+        }
+      }
+    },
+    "First start of the session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erster Start der Sitzung"
+          }
+        }
+      }
+    },
+    "Folders" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner"
+          }
+        }
+      }
+    },
+    "Help needed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hilfe gefragt"
+          }
+        }
+      }
+    },
+    "I can't do this" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geht nicht"
+          }
+        }
+      }
+    },
+    "Install" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installieren"
+          }
+        }
+      }
+    },
+    "Install Claude Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code installieren"
+          }
+        }
+      }
+    },
+    "installing macOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "installiert macOS"
+          }
+        }
+      }
+    },
+    "Installing macOS in the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installiere macOS im Arbeitsplatz"
+          }
+        }
+      }
+    },
+    "Keep the session running" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung am Laufen halten"
+          }
+        }
+      }
+    },
+    "Keep this Mac awake" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Mac wach halten"
+          }
+        }
+      }
+    },
+    "Last step: %@ registers its tools with Claude Code and starts the session \"%@\". Start it once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then close the terminal." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzter Schritt: %@ trägt seine Werkzeuge in Claude Code ein und startet die Sitzung „%@“. Starte sie hier einmal: Claude Code fragt, ob du dem Ordner vertraust und ob Remote Control an sein soll. Beantworte beides mit Ja und schließe dann das Terminal."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last step: %1$@ registers its tools with Claude Code and starts the session \"%2$@\". Start it once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then close the terminal."
+          }
+        }
+      }
+    },
+    "Look up the newest macOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuestes macOS suchen"
+          }
+        }
+      }
+    },
+    "macOS %@ (%@), about 18 GB. The download continues where it stopped if you quit %@ or lose the connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS %@ (%@), etwa 18 GB. Der Download macht dort weiter, wo er aufgehört hat, wenn du %@ beendest oder die Verbindung abbricht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "macOS %1$@ (%2$@), about 18 GB. The download continues where it stopped if you quit %3$@ or lose the connection."
+          }
+        }
+      }
+    },
+    "macOS 27 or later is required." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 27 oder neuer ist nötig."
+          }
+        }
+      }
+    },
+    "Name in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name in der Claude-App"
+          }
+        }
+      }
+    },
+    "not set up" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht eingerichtet"
+          }
+        }
+      }
+    },
+    "not started" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht gestartet"
+          }
+        }
+      }
+    },
+    "off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aus"
+          }
+        }
+      }
+    },
+    "off, starts when Claude needs it" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aus, startet bei Bedarf"
+          }
+        }
+      }
+    },
+    "One step needs you: macOS only lets a person switch on screen sharing. It stays inside the workspace; your own Mac is not shared." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einen Schritt musst du selbst machen: Die Bildschirmfreigabe darf nur ein Mensch einschalten. Sie gilt nur im Arbeitsplatz; dein eigener Mac wird nicht freigegeben."
+          }
+        }
+      }
+    },
+    "Open Sharing settings again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freigabe-Einstellungen erneut öffnen"
+          }
+        }
+      }
+    },
+    "Open the Claude app on your phone or at claude.ai/code. The session \"%@\" appears with a computer icon. Ask Claude for something that needs a website: it asks for permission to open its workspace, and you approve it there." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne die Claude-App auf dem Handy oder claude.ai/code. Die Sitzung „%@“ erscheint mit einem Computersymbol. Bitte Claude um etwas, das eine Website braucht: Claude fragt dort, ob es seinen Arbeitsplatz öffnen darf, und du bestätigst."
+          }
+        }
+      }
+    },
+    "Open the workspace window" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster des Arbeitsplatzes öffnen"
+          }
+        }
+      }
+    },
+    "open: %@ (until %@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "offen: %@ (bis %@)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "open: %1$@ (until %2$@)"
+          }
+        }
+      }
+    },
+    "Opening the Sharing settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne die Freigabe-Einstellungen"
+          }
+        }
+      }
+    },
+    "Opens Claude's sign-in page in your browser." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Anmeldeseite von Claude in deinem Browser."
+          }
+        }
+      }
+    },
+    "Pause" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausieren"
+          }
+        }
+      }
+    },
+    "Prepare the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz vorbereiten"
+          }
+        }
+      }
+    },
+    "Quit %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ beenden"
+          }
+        }
+      }
+    },
+    "Ready" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig"
+          }
+        }
+      }
+    },
+    "Registering the workspace tools with Claude Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trage die Werkzeuge in Claude Code ein"
+          }
+        }
+      }
+    },
+    "Restart" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu starten"
+          }
+        }
+      }
+    },
+    "restarting %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "startet neu %@"
+          }
+        }
+      }
+    },
+    "running" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "läuft"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichern"
+          }
+        }
+      }
+    },
+    "Screen sharing is on but shows no picture yet. Turn it off and on again in the workspace." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bildschirmfreigabe ist an, zeigt aber noch kein Bild. Schalte sie im Arbeitsplatz aus und wieder ein."
+          }
+        }
+      }
+    },
+    "Screen sharing is still off in the workspace." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bildschirmfreigabe ist im Arbeitsplatz noch aus."
+          }
+        }
+      }
+    },
+    "Session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung"
+          }
+        }
+      }
+    },
+    "Session \"%@\"" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung „%@“"
+          }
+        }
+      }
+    },
+    "Setting up the workspace (installs Chrome, a few minutes)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richte den Arbeitsplatz ein (installiert Chrome, einige Minuten)"
+          }
+        }
+      }
+    },
+    "Settings …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen …"
+          }
+        }
+      }
+    },
+    "Show in Finder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Finder zeigen"
+          }
+        }
+      }
+    },
+    "Sign in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmelden"
+          }
+        }
+      }
+    },
+    "Sign in to Claude" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Claude anmelden"
+          }
+        }
+      }
+    },
+    "sign in to Claude Code (open Session)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bei Claude Code anmelden (Sitzung öffnen)"
+          }
+        }
+      }
+    },
+    "Sign-ins expire when the workspace closes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldungen verfallen beim Schließen des Arbeitsplatzes"
+          }
+        }
+      }
+    },
+    "Signed in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angemeldet"
+          }
+        }
+      }
+    },
+    "Start %@ at login" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ beim Anmelden starten"
+          }
+        }
+      }
+    },
+    "Start the session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung starten"
+          }
+        }
+      }
+    },
+    "starting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "startet"
+          }
+        }
+      }
+    },
+    "Starting the session in the background" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starte die Sitzung im Hintergrund"
+          }
+        }
+      }
+    },
+    "Starting the workspace for the first time" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starte den Arbeitsplatz zum ersten Mal"
+          }
+        }
+      }
+    },
+    "Stay signed in on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angemeldet bleiben bei"
+          }
+        }
+      }
+    },
+    "Switch on Screen Sharing in the System Settings below. When macOS asks for a password:" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte unten in den Systemeinstellungen die Bildschirmfreigabe ein. Fragt macOS nach einem Passwort:"
+          }
+        }
+      }
+    },
+    "The Mac doesn't go to sleep by itself while the session runs. Closing a laptop's lid still puts it to sleep." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac schläft nicht von selbst ein, solange die Sitzung läuft. Zuklappen schickt ein MacBook trotzdem in den Ruhezustand."
+          }
+        }
+      }
+    },
+    "The workspace is off. It starts when Claude opens it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist aus. Er startet, wenn Claude ihn öffnet."
+          }
+        }
+      }
+    },
+    "The workspace is suspended after each use and continues exactly where it was, signed in everywhere." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz wird nach jeder Nutzung angehalten und macht genau dort weiter, überall angemeldet."
+          }
+        }
+      }
+    },
+    "The workspace runs macOS. %@ downloads it directly from Apple." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Arbeitsplatz läuft macOS. %@ lädt es direkt von Apple."
+          }
+        }
+      }
+    },
+    "The workspace shuts down after each use; websites forget sign-ins, except the domains below (fewer captchas there)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz fährt nach jeder Nutzung herunter; Websites vergessen Anmeldungen, außer bei den Domains unten (dort gibt es weniger Captchas)."
+          }
+        }
+      }
+    },
+    "The workspace starts for the first time without the setup assistant: %@ creates its account, locks remote access down to this Mac, installs Google Chrome and turns off sleep and updates." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz startet zum ersten Mal ohne Einrichtungsassistent: %@ legt sein Konto an, erlaubt Fernzugriff nur von diesem Mac, installiert Google Chrome und schaltet Ruhezustand und Updates aus."
+          }
+        }
+      }
+    },
+    "This is Claude Code's own terminal. %@ never sees what you type here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist das Terminal von Claude Code. %@ sieht nie, was du hier tippst."
+          }
+        }
+      }
+    },
+    "This Mac can't run virtual machines (Apple silicon is required)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Mac kann keine virtuellen Maschinen ausführen (Apple Silicon nötig)."
+          }
+        }
+      }
+    },
+    "Turn on screen sharing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmfreigabe einschalten"
+          }
+        }
+      }
+    },
+    "Updates …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates …"
+          }
+        }
+      }
+    },
+    "Uses Anthropic's installer: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit dem Installer von Anthropic: %@"
+          }
+        }
+      }
+    },
+    "waiting for the network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wartet aufs Netz"
+          }
+        }
+      }
+    },
+    "Welcome to %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommen bei %@"
+          }
+        }
+      }
+    },
+    "Workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.3"
+}
