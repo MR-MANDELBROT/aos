@@ -14,7 +14,7 @@ import Foundation
 // Requests: {"op":"status"} {"op":"focus"} {"op":"fill","host":"...","kind":"username|password|code",
 // "username":"...","password":"...","code":"..."}. Answers never contain what was typed.
 
-let helperVersion = "6"
+let helperVersion = "7"
 let guestUser = "annex"
 
 func socketPath(home: String) -> String { "\(home)/Library/Application Support/AnnexHelper/helper.sock" }
@@ -314,6 +314,43 @@ func fill(_ r: [String: Any]) -> [String: Any] {
     }
 }
 
+/// Closes the notifications on screen (macOS shows "background activity" alerts after every start that cover the top
+/// right of the screen): runs each notification's own "close" action through accessibility. Returns how many it
+/// closed and the actions it found.
+func dismissNotifications() -> [String: Any] {
+    guard AXIsProcessTrusted() else { return ["ok": false, "error": "the helper is not allowed to use accessibility"] }
+    var closed = 0
+    var actionsSeen = Set<String>()
+    for nc in NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.notificationcenterui") {
+        let app = AXUIElementCreateApplication(nc.processIdentifier)
+        var stack: [AXUIElement] = ((AX.attribute(app, kAXWindowsAttribute) as? [AXUIElement]) ?? []) + AX.children(app)
+        var visited = 0
+        var notifications: [AXUIElement] = []
+        while let e = stack.popLast(), visited < 3000 {
+            visited += 1
+            // Notification items have an identifier that is a UUID (widgets have "widget-local:...")
+            if AX.string(e, kAXRoleAttribute) == "AXGroup", let id = AX.string(e, kAXIdentifierAttribute),
+               UUID(uuidString: id) != nil {
+                notifications.append(e)
+                continue
+            }
+            stack.append(contentsOf: AX.children(e))
+        }
+        for n in notifications {
+            var names: CFArray?
+            guard AXUIElementCopyActionNames(n, &names) == .success, let list = names as? [String] else { continue }
+            for name in list { actionsSeen.insert(String(name.prefix(60))) }
+            if let close = list.first(where: { a in
+                let l = a.lowercased()
+                return l.contains("schließen") || l.contains("close") || l.contains("clear") || l.contains("löschen")
+            }), AXUIElementPerformAction(n, close as CFString) == .success {
+                closed += 1
+            }
+        }
+    }
+    return ["ok": true, "closed": closed, "actions": Array(actionsSeen).sorted()]
+}
+
 func handle(_ line: Data) -> Data {
     guard let r = try? JSONSerialization.jsonObject(with: line) as? [String: Any], let op = r["op"] as? String else {
         return reply(["ok": false, "error": "bad request"])
@@ -325,6 +362,10 @@ func handle(_ line: Data) -> Data {
         // Accessibility calls and key events belong on the main thread.
         var out: [String: Any] = [:]
         DispatchQueue.main.sync { out = fill(r) }
+        return reply(out)
+    case "dismiss-notifications":
+        var out: [String: Any] = [:]
+        DispatchQueue.main.sync { out = dismissNotifications() }
         return reply(out)
     case "prompt":
         // Puts the helper into the Accessibility list in System Settings (macOS shows its own question too).

@@ -356,4 +356,6 @@ DE.update({
     'on %@. Approve on your iPhone or here on the Mac.': 'bei %@. Gib auf deinem iPhone oder hier am Mac frei.',
     'on %@. Approve on your iPhone or here.': 'bei %@. Gib auf deinem iPhone oder hier frei.',
     '·': '·',
+    'Click Open System Settings if macOS asks, then switch on Annex Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once.': 'Fragt macOS, klicke auf „Systemeinstellungen öffnen“, dann schalte „Annex Helper“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie vorher mit ihrem x. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig.',
+    'Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x.': 'Schalte „Bildschirmfreigabe“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie mit ihrem x.',
 })

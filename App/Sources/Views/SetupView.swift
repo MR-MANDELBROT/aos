@@ -261,7 +261,7 @@ private struct StepPage: View {
             GlassCard {
                 VStack(alignment: .leading, spacing: 10) {
                     numbered(1, "Open the workspace window. System Settings is already open there at General > Sharing.")
-                    numbered(2, "Switch on Screen Sharing.")
+                    numbered(2, "Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x.")
                     numbered(3, "When macOS asks for a password, click \"Enter the workspace password\" in the window.")
                     numbered(4, "Come back here and click Check.")
                     numbered(5, "Right after, the workspace asks once more: switch on Annex Helper. \(Brand.name) enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password.")

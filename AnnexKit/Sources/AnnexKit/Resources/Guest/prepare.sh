@@ -43,4 +43,7 @@ if (( ${#pids} )); then
   (( ${#rest} )) && kill -TERM "${rest[@]}" 2>/dev/null
   note "Chrome reopened at login without its policies, quit (${pids[*]})"
 fi
+# The "background activity" notices macOS shows after every start cover the top right of the screen: the helper
+# closes them (if it is allowed to; otherwise nothing happens).
+echo '{"op":"dismiss-notifications"}' | "$LIBEXEC/AnnexHelper.app/Contents/MacOS/AnnexHelper" client >/dev/null 2>&1 || true
 print ok

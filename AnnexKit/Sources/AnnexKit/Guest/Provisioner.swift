@@ -131,6 +131,9 @@ public struct Provisioner: Sendable {
                                what: "standard user again")
         }
         _ = try? await root.run("pkill -x 'System Settings'", timeout: 15, check: false, what: "close System Settings")
+        // Allowed now: the helper closes the notices that covered the screen
+        let _: GuestHelper.FillResult? = try? await GuestHelper(provisioner: self, host: host)
+            .call(["op": "dismiss-notifications"], timeout: 20)
     }
 
     /// Whether screen sharing is switched on in the guest.

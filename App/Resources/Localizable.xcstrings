@@ -783,11 +783,22 @@
       }
     },
     "Click Open System Settings if macOS asks, then switch on Annex Helper under Accessibility. When macOS asks for a password, let %@ enter it. This happens only once." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fragt macOS, klicke auf „Systemeinstellungen öffnen“ und schalte „Annex Helper“ ein. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig."
+          }
+        }
+      }
+    },
+    "Click Open System Settings if macOS asks, then switch on Annex Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS, klicke auf „Systemeinstellungen öffnen“, dann schalte „Annex Helper“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie vorher mit ihrem x. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig."
           }
         }
       }
@@ -2655,11 +2666,22 @@
       }
     },
     "Switch on Screen Sharing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schalte „Bildschirmfreigabe“ ein."
+          }
+        }
+      }
+    },
+    "Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte „Bildschirmfreigabe“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie mit ihrem x."
           }
         }
       }
