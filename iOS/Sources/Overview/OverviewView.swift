@@ -10,7 +10,7 @@ struct OverviewView: View {
                 VStack(spacing: 16) {
                     if let connection = model.connection {
                         MacCard(connection: connection)
-                        if !model.signIns.isEmpty || !model.helpRequests.isEmpty {
+                        if model.waitingCount > 0 {
                             RequestsCard()
                         }
                         WorkspaceCard(connection: connection)
@@ -72,7 +72,16 @@ struct MacCard: View {
                     }
                     .buttonStyle(.glass)
                 case .connected:
-                    if case .unavailable(let message) = connection.companionState {
+                    if let problem = connection.macAppProblem {
+                        Label {
+                            Text(problem.isEmpty
+                                 ? String(localized: "Annex on the Mac isn't answering right now. It keeps trying.")
+                                 : String(localized: "Annex on the Mac isn't answering right now (\(problem)). It keeps trying."))
+                                .font(.footnote).foregroundStyle(.secondary)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
+                        }
+                    } else if case .unavailable(let message) = connection.companionState {
                         Label {
                             Text(message).font(.footnote).foregroundStyle(.secondary)
                         } icon: {
@@ -91,7 +100,9 @@ struct MacCard: View {
 
     private var tint: Color {
         switch connection.state {
-        case .connected: connection.companionState == .ready || connection.companionState == .starting ? .green : .orange
+        case .connected:
+            connection.macAppProblem == nil
+                && (connection.companionState == .ready || connection.companionState == .starting) ? .green : .orange
         case .connecting, .idle: .gray
         case .unreachable: .orange
         case .needsAttention: .red
@@ -127,12 +138,21 @@ struct RequestsCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 Label("Waiting for you", systemImage: "hand.raised.fill")
                     .font(.headline).foregroundStyle(BrandColor.attention)
-                ForEach(model.signIns) { request in
+                ForEach(model.questions) { question in
                     Button {
-                        model.presentedSignIn = request
+                        model.present(question)
                     } label: {
-                        RequestRow(symbol: "person.badge.key", title: request.host,
-                                   detail: String(localized: "\(request.agent) asks for a sign-in"))
+                        switch question {
+                        case .signIn(let request):
+                            RequestRow(symbol: request.field == .code ? "number.square" : "person.badge.key", title: request.host,
+                                       detail: request.field == .code
+                                           ? String(localized: "\(request.agent) asks for a one-time code")
+                                           : String(localized: "\(request.agent) asks for a sign-in"))
+                        case .approval(let request):
+                            RequestRow(symbol: "macwindow.badge.plus",
+                                       title: request.purpose.isEmpty ? String(localized: "Open the workspace") : request.purpose,
+                                       detail: String(localized: "\(request.agent) wants to open the workspace"))
+                        }
                     }
                     .buttonStyle(.plain)
                 }

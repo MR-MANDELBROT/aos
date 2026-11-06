@@ -18,6 +18,8 @@ SHOTS=(
   "requests|-AnnexDemoTab overview -AnnexDemoSheet requests"
   "signin|-AnnexDemoTab overview -AnnexDemoSheet signin"
   "signin-nomatch|-AnnexDemoTab overview -AnnexDemoSheet signin-none"
+  "signin-code|-AnnexDemoTab overview -AnnexDemoSheet signin-code"
+  "approval|-AnnexDemoTab overview -AnnexDemoSheet approval"
   "pairing|-AnnexDemoTab overview -AnnexDemoSheet pairing"
   "settings|-AnnexDemoTab overview -AnnexDemoSheet settings"
   "lock|-AnnexDemoTab overview -AnnexDemoSheet lock"

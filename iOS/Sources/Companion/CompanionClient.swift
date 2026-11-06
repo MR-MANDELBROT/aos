@@ -96,8 +96,22 @@ actor CompanionClient {
         _ = try await request(.signInDecline(request: id))
     }
 
+    /// A one-time code for a request whose field is `code`.
+    func answerSignInCode(request id: String, code: String) async throws {
+        _ = try await request(.signInCode(request: id, totp: code))
+    }
+
     func helpDone(request id: String) async throws {
         _ = try await request(.helpDone(request: id))
+    }
+
+    func answerApproval(request id: String, allowed: Bool) async throws {
+        _ = try await request(.approvalAnswer(request: id, allowed: allowed))
+    }
+
+    /// Types text into the running workspace.
+    func type(_ text: String) async throws {
+        _ = try await request(.type(text: text), timeout: .seconds(60))
     }
 
     /// Sends a request and waits for the answer with its id.

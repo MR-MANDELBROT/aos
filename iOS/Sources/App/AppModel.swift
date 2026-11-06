@@ -24,15 +24,43 @@ final class AppModel {
 
     var tab: Tab = .overview
 
+    /// Something the agent asks the person to decide: a sign-in or opening the workspace.
+    enum Question: Identifiable, Equatable {
+        case signIn(SignInRequest)
+        case approval(ApprovalRequest)
+
+        var id: String {
+            switch self {
+            case .signIn(let r): r.id
+            case .approval(let a): a.id
+            }
+        }
+
+        var expires: Date? {
+            switch self {
+            case .signIn(let r): r.expires
+            case .approval(let a): a.expires
+            }
+        }
+    }
+
     // Requests from the agent
-    private(set) var signIns: [SignInRequest] = []
-    /// The request the sign-in sheet shows. Set it to open one; closing goes through `closeSignInSheet()`.
-    var presentedSignIn: SignInRequest?
-    /// Requests the person closed with "Later": they wait in the overview and don't pop up again.
-    private var deferredSignIns: Set<String> = []
-    /// How finished sign-in requests ended, for the sheet that is still open.
+    /// Open questions in the order they came.
+    private(set) var questions: [Question] = []
+    /// The question the sheet shows. Open one with `present(_:)`; closing goes through `closeQuestionSheet()`.
+    var presentedQuestion: Question?
+    /// Questions the person closed with "Later": they wait in the overview and don't pop up again.
+    private var deferredQuestions: Set<String> = []
+    /// How finished requests ended, for the sheet that is still open.
     private(set) var signInResults: [String: SignInResult] = [:]
+    private(set) var approvalResults: [String: ApprovalResult] = [:]
     private(set) var helpRequests: [HelpRequest] = []
+
+    var signIns: [SignInRequest] { questions.compactMap { if case .signIn(let r) = $0 { r } else { nil } } }
+    var approvals: [ApprovalRequest] { questions.compactMap { if case .approval(let a) = $0 { a } else { nil } } }
+    var presentedSignIn: SignInRequest? { if case .signIn(let r) = presentedQuestion { r } else { nil } }
+    /// Everything that waits for the person (for the badge).
+    var waitingCount: Int { questions.count + helpRequests.count }
     /// The help request the screen tab shows (on the workspace).
     var activeHelp: HelpRequest?
 
@@ -197,10 +225,10 @@ final class AppModel {
         workspaceScreen.stop()
         terminals[.mac(mac.id)]?.disconnect()
         terminals[.mac(mac.id)] = nil
-        signIns = []
-        deferredSignIns = []
+        questions = []
+        deferredQuestions = []
         helpRequests = []
-        presentedSignIn = nil
+        presentedQuestion = nil
         activeHelp = nil
         makeConnection()
     }
@@ -280,21 +308,15 @@ final class AppModel {
     func handle(_ event: CompanionEvent) {
         switch event {
         case .signIn(let request):
-            guard !signIns.contains(where: { $0.id == request.id }) else { return }
-            signIns.append(request)
-            if presentedSignIn == nil { presentedSignIn = request }
-            schedulePruning()
+            ask(.signIn(request))
         case .signInClosed(let id, let result):
             signInResults[id] = result
-            signIns.removeAll { $0.id == id }
-            deferredSignIns.remove(id)
-            if presentedSignIn?.id == id {
-                // The sheet shows the result for a moment, then closes.
-                Task {
-                    try? await Task.sleep(for: .seconds(1.6))
-                    if self.presentedSignIn?.id == id { self.closeSignInSheet() }
-                }
-            }
+            settled(id)
+        case .approval(let request):
+            ask(.approval(request))
+        case .approvalClosed(let id, let result):
+            approvalResults[id] = result
+            settled(id)
         case .help(let request):
             guard !helpRequests.contains(where: { $0.id == request.id }) else { return }
             helpRequests.append(request)
@@ -302,9 +324,36 @@ final class AppModel {
         case .helpClosed(let id):
             helpRequests.removeAll { $0.id == id }
             if activeHelp?.id == id { activeHelp = helpRequests.last }
-        case .workspace:
+        case .workspace, .mac:
             break
         }
+    }
+
+    /// A new question: queued, and shown unless another one is open.
+    private func ask(_ question: Question) {
+        // A phone that subscribes again gets the open questions again: once is enough.
+        guard !questions.contains(where: { $0.id == question.id }) else { return }
+        questions.append(question)
+        if presentedQuestion == nil { presentedQuestion = question }
+        schedulePruning()
+    }
+
+    /// The Mac closed a question (answered here, elsewhere, or expired).
+    private func settled(_ id: String) {
+        questions.removeAll { $0.id == id }
+        deferredQuestions.remove(id)
+        guard presentedQuestion?.id == id else { return }
+        // The sheet shows the result for a moment, then closes.
+        Task {
+            try? await Task.sleep(for: .seconds(1.6))
+            if self.presentedQuestion?.id == id { self.closeQuestionSheet() }
+        }
+    }
+
+    /// Opens a question from the overview.
+    func present(_ question: Question) {
+        deferredQuestions.remove(question.id)
+        presentedQuestion = question
     }
 
     func showHelp(_ request: HelpRequest) {
@@ -313,34 +362,36 @@ final class AppModel {
         tab = .screen
     }
 
-    /// The sign-in sheet closed (answered, declined, "Later" or swiped away). A request that is still open stays in
+    /// The question sheet closed (answered, declined, "Later" or swiped away). A question that is still open stays in
     /// the overview without popping up again; the next new one comes up.
-    func closeSignInSheet() {
-        if let id = presentedSignIn?.id, signIns.contains(where: { $0.id == id }) { deferredSignIns.insert(id) }
-        presentedSignIn = nil
-        guard let next = signIns.first(where: { !deferredSignIns.contains($0.id) && !isExpired($0) }) else { return }
+    func closeQuestionSheet() {
+        if let id = presentedQuestion?.id, questions.contains(where: { $0.id == id }) { deferredQuestions.insert(id) }
+        presentedQuestion = nil
+        guard let next = questions.first(where: { !deferredQuestions.contains($0.id) && !isExpired($0) }) else { return }
         Task {
             try? await Task.sleep(for: .milliseconds(450))
-            if self.presentedSignIn == nil, self.signIns.contains(where: { $0.id == next.id }) { self.presentedSignIn = next }
+            if self.presentedQuestion == nil, self.questions.contains(where: { $0.id == next.id }) {
+                self.presentedQuestion = next
+            }
         }
     }
 
-    func isExpired(_ request: SignInRequest) -> Bool {
-        guard let expires = request.expires else { return false }
+    func isExpired(_ question: Question) -> Bool {
+        guard let expires = question.expires else { return false }
         return expires <= Date()
     }
 
-    /// Forgets expired requests now and then (the Mac closes them too, with `signin.closed`).
+    /// Forgets expired questions now and then (the Mac closes them too, with `signin.closed` or `approval.closed`).
     private func schedulePruning() {
         guard pruneTask == nil else { return }
         pruneTask = Task { [weak self] in
-            while let self, !self.signIns.isEmpty {
+            while let self, !self.questions.isEmpty {
                 try? await Task.sleep(for: .seconds(5))
-                self.signIns.removeAll { request in
-                    guard let expires = request.expires else { return false }
-                    return expires.addingTimeInterval(30) < Date() && self.presentedSignIn?.id != request.id
+                self.questions.removeAll { question in
+                    guard let expires = question.expires else { return false }
+                    return expires.addingTimeInterval(30) < Date() && self.presentedQuestion?.id != question.id
                 }
-                self.deferredSignIns.formIntersection(self.signIns.map(\.id))
+                self.deferredQuestions.formIntersection(self.questions.map(\.id))
             }
             self?.pruneTask = nil
         }

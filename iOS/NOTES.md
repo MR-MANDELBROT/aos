@@ -66,9 +66,23 @@ Pairing (`Sources/Core/PairingLink.swift`, tests in `Tests/PairingTests.swift`):
 
 Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/CompanionClient.swift`):
 
-- Exec command: `'<companion path>' serve` (single-quoted for the login shell sshd runs it with).
-- Order after connecting: `hello`, `subscribe`, `status` (subscribe before status, so no event falls between).
-  `status` is asked again after every `workspace` event (for `purpose` and `until`).
+- Exec command: `'<companion path>' serve` (single-quoted for the login shell sshd runs it with), the path from the
+  pairing answer.
+- Order after connecting: `hello`, `subscribe`, `status` (subscribe first: the Mac then replays the open questions;
+  the app shows each request id once). `status` is asked again after every `workspace` event (for `purpose` and
+  `until`) and every 25 s as a heartbeat (the Mac counts a phone as connected while it asked within 45 s); a heartbeat
+  that times out closes the exec channel and the companion starts again.
+- `signin` with `field`: `code` gets a code entry (text content type one-time code, or "Fill in from <login>" with
+  Face ID when a vault login for the host has a TOTP secret; the code sent is recomputed at sending time) and the
+  answer carries `totp` only. `username`/`password` answer with user name, password and the current TOTP if the
+  login has one. A missing or unknown `field` counts as `password`.
+- `approval` events get a sheet (who, why, for how long, countdown) with Allow / Don't Allow ->
+  `{"op":"approval.answer","request":"…","allowed":true|false}`; `approval.closed` shows the result. Sign-ins and
+  approvals share one queue and one sheet, in the order they came; "Later" keeps one waiting in the overview.
+- `{"event":"mac","state":"unavailable","detail":"…"}` shows "Annex on the Mac isn't answering right now (…). It
+  keeps trying." on the Mac card; any other `mac` state, or a successful heartbeat, clears it.
+- Typing into the workspace screen: text with characters beyond ASCII goes as `{"op":"type","text":"…"}` (all of
+  the inserted text), through the same queue as the keys so the order holds; ASCII stays key events over RFB.
 - Lines that aren't JSON are skipped (a shell's login message, for example); lines up to 1 MiB; unknown fields and
   unknown events are ignored. Request timeout 20 s.
 - `signin.answer` carries `totp` only when the login has a TOTP secret. `help.done` when the person taps Done.
@@ -94,8 +108,8 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
 4. Input readiness: input waits `inputGrace` (5 s) after connecting; the iPhone shows "input works in a moment".
    Exposing the connect time (or an `isInputReady`) would let it show this exactly.
 5. Cursor: no cursor pseudo-encoding; in trackpad mode the iPhone draws its own pointer.
-6. Typing beyond ASCII into the workspace: the iPhone has no path (on the Mac's own screen it uses `pbcopy` over
-   SSH, then cmd+v). A companion op such as `{"op":"paste","target":"workspace","text":"…"}` would close the gap.
+6. Typing beyond ASCII into the workspace: done on the Mac side as the companion op `type` and used (on the Mac's
+   own screen the iPhone uses `pbcopy` over SSH, then cmd+v).
 
 ## What was learned about the libraries
 

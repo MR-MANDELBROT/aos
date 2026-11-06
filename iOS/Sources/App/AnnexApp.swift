@@ -34,7 +34,7 @@ struct RootView: View {
             Tab("Overview", systemImage: "square.grid.2x2", value: AppModel.Tab.overview) {
                 OverviewView()
             }
-            .badge(model.signIns.count + model.helpRequests.count)
+            .badge(model.waitingCount)
             Tab("Terminal", systemImage: "apple.terminal", value: AppModel.Tab.terminal) {
                 TerminalTab()
             }
@@ -47,12 +47,16 @@ struct RootView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         // No requests and no pairing above the lock screen
-        // The sheet goes away while the app is locked and comes back after unlocking; that isn't "Later".
-        .sheet(item: Binding(get: { model.lock.isLocked ? nil : model.presentedSignIn },
-                             set: { request in
-                                 if let request { model.presentedSignIn = request } else if !model.lock.isLocked { model.closeSignInSheet() }
-                             })) { request in
-            SignInSheet(request: request)
+        // Questions from the agent. The sheet goes away while the app is locked and comes back after unlocking;
+        // that isn't "Later".
+        .sheet(item: Binding(get: { model.lock.isLocked ? nil : model.presentedQuestion },
+                             set: { question in
+                                 if let question { model.present(question) } else if !model.lock.isLocked { model.closeQuestionSheet() }
+                             })) { question in
+            switch question {
+            case .signIn(let request): SignInSheet(request: request)
+            case .approval(let request): ApprovalSheet(request: request)
+            }
         }
         .sheet(isPresented: unlockedBinding($model.isPairingPresented)) {
             PairingView(initialLink: model.incomingPairingLink)

@@ -53,6 +53,11 @@ struct ScreenTab: View {
             }
         }
         .task(id: model.screenTarget) { await start() }
+        // The Mac is back (after a network change, for example): pick the screen up again.
+        .onChange(of: model.connection?.isConnected) { _, connected in
+            guard connected == true else { return }
+            if case .failed = session.phase { Task { await start() } }
+        }
         .onChange(of: model.activeHelp, initial: true) { _, help in
             if let region = help?.region {
                 focus = .init(region: CGRect(x: region.x, y: region.y, width: region.width, height: region.height))

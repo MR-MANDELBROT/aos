@@ -14,6 +14,11 @@ struct SignInSheet: View {
     @State private var showOtherApp = false
     @State private var otherUser = ""
     @State private var otherPassword = ""
+    // A one-time code request
+    @State private var code = ""
+    /// The vault login's TOTP while the sheet is open (filled in with Face ID), so the code sent is the current one.
+    @State private var codeSource: TOTP?
+    @State private var filledCode: String?
 
     private var matches: [VaultEntry] { model.vault.logins(for: request.host) }
     private var result: SignInResult? { model.signInResults[request.id] }
@@ -31,7 +36,8 @@ struct SignInSheet: View {
                             notice(symbol: "clock.badge.xmark", text: "This request has expired.", tint: .secondary)
                         } else {
                             switch phase {
-                            case .choosing, .failed: chooser
+                            case .choosing, .failed:
+                                if request.field == .code { codeChooser } else { chooser }
                             case .sending: ProgressView("Sending …").frame(maxWidth: .infinity)
                             case .sent:
                                 notice(symbol: "paperplane.fill", text: "Sent. Annex fills it into the workspace.", tint: BrandColor.mint)
@@ -68,9 +74,10 @@ struct SignInSheet: View {
     private func header(now: Date, expired: Bool) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Label {
-                Text("\(request.agent.isEmpty ? String(localized: "Your agent") : request.agent) asks to sign in")
+                let agent = request.agent.isEmpty ? String(localized: "Your agent") : request.agent
+                Text(request.field == .code ? "\(agent) asks for a one-time code" : "\(agent) asks to sign in")
             } icon: {
-                Image(systemName: "person.badge.key.fill")
+                Image(systemName: request.field == .code ? "number.square.fill" : "person.badge.key.fill")
             }
             .font(.subheadline.weight(.medium))
             .foregroundStyle(BrandColor.attention)
@@ -85,6 +92,11 @@ struct SignInSheet: View {
                 Text("\u{201E}\(request.purpose)\u{201C}")
                     .font(.title3)
                     .foregroundStyle(.primary.opacity(0.85))
+            }
+
+            if request.field != .code {
+                Text(request.field == .username ? "The page asks for the user name." : "The page asks for the password.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
 
             if let expires = request.expires, result == nil {
@@ -228,6 +240,92 @@ struct SignInSheet: View {
             closeSoon()
         } catch Biometrics.Failure.cancelled {
             phase = .choosing
+        } catch {
+            phase = .failed(error.localizedDescription)
+        }
+    }
+
+    // MARK: One-time code
+
+    private var codeLogins: [VaultEntry] { matches.filter(\.hasTOTP) }
+
+    private var codeChooser: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("One-time code").font(.headline)
+            HStack {
+                TextField(text: $code, prompt: Text(verbatim: "123456")) { Text("One-time code") }
+                    .textContentType(.oneTimeCode)
+                    .keyboardType(.numberPad)
+                    .autocorrectionDisabled()
+                    .font(.system(.title, design: .monospaced).weight(.semibold))
+                if let codeSource, code == filledCode {
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        Text("\(codeSource.secondsRemaining(at: context.date)) s")
+                            .font(.footnote.monospacedDigit()).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(14)
+            .glassEffect(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+            ForEach(codeLogins) { entry in
+                Button {
+                    Task { await fillCode(from: entry) }
+                } label: {
+                    Label("Fill in from \(entry.title)", systemImage: Biometrics.symbol).frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glass)
+                .controlSize(.large)
+            }
+
+            Button {
+                Task { await sendCode() }
+            } label: {
+                Label("Send the code", systemImage: "paperplane").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glassProminent)
+            .controlSize(.large)
+            .disabled(code.trimmingCharacters(in: .whitespaces).isEmpty || phase == .sending)
+
+            Button(role: .destructive) {
+                Task { await decline() }
+            } label: {
+                Label("Decline", systemImage: "hand.raised").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glass)
+            .controlSize(.large)
+
+            FactRow(symbol: "number.square", text: "The agent gets only this code. Annex types it into the field it chose, only on this site.")
+        }
+    }
+
+    /// The current code of a vault login, after Face ID.
+    private func fillCode(from entry: VaultEntry) async {
+        do {
+            let context = try await model.vault.authenticate(reason: String(localized: "Fill in the code for \(request.host)"))
+            defer { context?.invalidate() }
+            let totp = try TOTP(parsing: model.vault.secret(for: entry, context: context).totp)
+            codeSource = totp
+            filledCode = totp.code()
+            code = filledCode ?? ""
+        } catch Biometrics.Failure.cancelled {
+        } catch {
+            phase = .failed(error.localizedDescription)
+        }
+    }
+
+    private func sendCode() async {
+        guard let connection = model.connection else { return }
+        // Filled in from the vault and not changed since: send the code that is current now.
+        let value = (code == filledCode ? codeSource?.code() : nil) ?? code.trimmingCharacters(in: .whitespaces)
+        phase = .sending
+        do {
+            try await connection.answerSignInCode(request: request.id, code: value)
+            code = ""
+            filledCode = nil
+            codeSource = nil
+            phase = .sent
+            closeSoon()
         } catch {
             phase = .failed(error.localizedDescription)
         }

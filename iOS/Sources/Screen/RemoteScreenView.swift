@@ -342,8 +342,16 @@ final class KeyCaptureView: UIView, UIKeyInput {
     var onText: ((String) -> Void)?
     var onBackspace: (() -> Void)?
     var onKey: ((UInt32, [UInt32]) -> Void)?
+    /// The keyboard went away (also when the person closed it).
+    var onResign: (() -> Void)?
 
     override var canBecomeFirstResponder: Bool { true }
+
+    override func resignFirstResponder() -> Bool {
+        let resigned = super.resignFirstResponder()
+        if resigned { onResign?() }
+        return resigned
+    }
     var hasText: Bool { true }
     func insertText(_ text: String) { onText?(text) }
     func deleteBackward() { onBackspace?() }
@@ -403,9 +411,10 @@ struct KeyCapture: UIViewRepresentable {
         view.onText = { [session] text in session.type(text) }
         view.onBackspace = { [session] in session.backspace() }
         view.onKey = { [session] keysym, modifiers in session.press(keysym, modifiers: modifiers) }
+        view.onResign = { [isActive = $isActive] in if isActive.wrappedValue { isActive.wrappedValue = false } }
         DispatchQueue.main.async {
             if isActive, !view.isFirstResponder { view.becomeFirstResponder() }
-            if !isActive, view.isFirstResponder { view.resignFirstResponder() }
+            if !isActive, view.isFirstResponder { _ = view.resignFirstResponder() }
         }
     }
 }

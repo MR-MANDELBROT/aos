@@ -32,6 +32,8 @@ final class MacConnection {
     private(set) var companionState: CompanionState = .notStarted
     private(set) var hello: HelloResult?
     private(set) var workspace: WorkspaceStatus?
+    /// Set while `annex-companion` can't reach the Annex app on the Mac (it keeps trying): what it said.
+    private(set) var macAppProblem: String?
     private(set) var ssh: SSHConnection?
     private(set) var companion: CompanionClient?
     /// When the next attempt runs, while unreachable.
@@ -116,9 +118,25 @@ final class MacConnection {
         try await companion.declineSignIn(request: request)
     }
 
+    func answerSignInCode(request: String, code: String) async throws {
+        guard let companion else { throw CompanionError.closed }
+        try await companion.answerSignInCode(request: request, code: code)
+    }
+
     func helpDone(request: String) async throws {
         guard let companion else { throw CompanionError.closed }
         try await companion.helpDone(request: request)
+    }
+
+    func answerApproval(request: String, allowed: Bool) async throws {
+        guard let companion else { throw CompanionError.closed }
+        try await companion.answerApproval(request: request, allowed: allowed)
+    }
+
+    /// Types text into the running workspace (for characters screen sharing can't type as keys).
+    func typeInWorkspace(_ text: String) async throws {
+        guard let companion else { throw CompanionError.closed }
+        try await companion.type(text)
     }
 
     func refreshStatus() async {
@@ -141,7 +159,7 @@ final class MacConnection {
                 if Task.isCancelled { await connection.close(); return }
                 ssh = connection
                 state = .connected(host: connection.host)
-                delay = 1
+                let connectedAt = Date()
                 if mac.lastHost != connection.host {
                     mac.lastHost = connection.host
                     onMacChanged?(mac)
@@ -151,7 +169,12 @@ final class MacConnection {
                 companion = nil
                 if Task.isCancelled { return }
                 log.info("Connection to the Mac ended; reconnecting")
-                continue
+                // A connection that lived a while: reconnect right away. One that ended at once: back off.
+                if Date().timeIntervalSince(connectedAt) > 10 {
+                    delay = 1
+                    continue
+                }
+                state = .unreachable(String(localized: "The connection to the Mac ended."))
             } catch is CancellationError {
                 return
             } catch let error as SSHConnectError {
@@ -191,13 +214,17 @@ final class MacConnection {
                 await client.start()
                 companion = client
                 hello = try await client.hello(app: Self.appVersion, device: deviceName)
+                // Subscribe first: the Mac then sends the questions that are still open, then everything new.
                 try await client.subscribe()
                 workspace = try await client.status()
                 companionState = .ready
+                let heartbeat = Task { [weak self] in await self?.beat(client) }
                 for await event in client.events {
                     handle(event)
                 }
+                heartbeat.cancel()
                 companion = nil
+                macAppProblem = nil
                 if connection.isActive { companionState = .unavailable(String(localized: "Annex on the Mac stopped answering.")) }
             } catch {
                 companion = nil
@@ -212,11 +239,37 @@ final class MacConnection {
     }
 
     private func handle(_ event: CompanionEvent) {
-        if case .workspace(let state) = event {
+        switch event {
+        case .workspace(let state):
             if workspace != nil { workspace?.state = state } else { workspace = WorkspaceStatus(state: state) }
             Task { await refreshStatus() }
+        case .mac(let state, let detail):
+            macAppProblem = state == "unavailable" ? detail : nil
+        default:
+            break
         }
         onEvent?(event)
+    }
+
+    /// Every 25 s a `status`: the Mac counts the phone as connected while it asked within 45 s, the workspace line
+    /// stays fresh, and a companion that stopped answering is noticed (its channel is closed and started again).
+    private func beat(_ client: CompanionClient) async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(25))
+            if Task.isCancelled { return }
+            do {
+                workspace = try await client.status()
+                macAppProblem = nil
+            } catch CompanionError.timeout {
+                log.notice("Companion didn't answer the heartbeat; restarting it")
+                await client.close()
+                return
+            } catch CompanionError.refused(let message) {
+                macAppProblem = message
+            } catch {
+                return
+            }
+        }
     }
 
     private func watchNetwork() {

@@ -66,6 +66,14 @@ enum Demo {
                 server.emit(.signIn(SignInRequest(id: "demo-1", agent: "Claude Code", host: "www.amazon.de",
                                                   purpose: "Die Rechnung vom Oktober herunterladen",
                                                   expires: Date().addingTimeInterval(4 * 60 + 32))))
+            case "signin-code":
+                server.emit(.signIn(SignInRequest(id: "demo-3", agent: "Claude Code", host: "github.com",
+                                                  purpose: "Mit dem Code aus der App anmelden",
+                                                  expires: Date().addingTimeInterval(2 * 60 + 10), field: .code)))
+            case "approval":
+                server.emit(.approval(ApprovalRequest(id: "demo-4", agent: "Codex",
+                                                      purpose: "Die Rechnungen vom Oktober herunterladen",
+                                                      minutes: 30, expires: Date().addingTimeInterval(4 * 60 + 50))))
             case "signin-none":
                 server.emit(.signIn(SignInRequest(id: "demo-2", agent: "Codex", host: "portal.example-energie.de",
                                                   purpose: "Zählerstand eintragen",
@@ -81,7 +89,7 @@ enum Demo {
                                                   purpose: "Die Rechnung vom Oktober herunterladen",
                                                   expires: Date().addingTimeInterval(4 * 60 + 32))))
                 try? await Task.sleep(for: .milliseconds(300))
-                model.closeSignInSheet()
+                model.closeQuestionSheet()
             default: break
             }
         }

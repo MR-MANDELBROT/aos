@@ -36,31 +36,27 @@ enum PairingClient {
     static func send(_ request: PairingRequest, link: PairingLink, timeout: TimeInterval = 8) async throws
         -> (response: PairingResponse, host: String) {
         let line = try request.line()
-        var sawDenial = false
-        for host in link.hosts {
-            let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: link.pairingPort)!)
-            switch await exchange(line, with: endpoint, timeout: timeout) {
-            case .answer(let data):
-                return (try decode(data), host)
-            case .closedWithoutAnswer:
-                throw Failure.noAnswer
-            case .localNetworkDenied:
-                sawDenial = true
-            case .unreachable:
-                continue
-            }
+        let port = NWEndpoint.Port(rawValue: link.pairingPort)!
+        // All addresses at once (a little apart), the first that opens wins. The Mac's listener takes one pairing
+        // only, so the request goes out on that one connection; the others are cancelled before sending anything.
+        let endpoints = link.hosts.map { NWEndpoint.hostPort(host: NWEndpoint.Host($0), port: port) }
+        var outcome = await ConnectRace.first(of: endpoints, timeout: timeout)
+        var host = outcome.index.map { link.hosts[$0] } ?? link.hosts[0]
+        if outcome.connection == nil, !outcome.denied,
+           let endpoint = await browse(name: link.macName, timeout: 3) {
+            // The pairing listener is also advertised over Bonjour; the addresses in the code may have changed.
+            outcome = await ConnectRace.first(of: [endpoint], timeout: timeout)
+            host = link.hosts[0]
         }
-        if sawDenial { throw Failure.localNetworkDenied }
-        // The pairing listener is also advertised over Bonjour; the addresses in the code may have changed.
-        if let endpoint = await browse(name: link.macName, timeout: 3) {
-            switch await exchange(line, with: endpoint, timeout: timeout) {
-            case .answer(let data): return (try decode(data), link.hosts[0])
-            case .closedWithoutAnswer: throw Failure.noAnswer
-            case .localNetworkDenied: throw Failure.localNetworkDenied
-            case .unreachable: break
-            }
+        guard let connection = outcome.connection else {
+            throw outcome.denied ? Failure.localNetworkDenied : Failure.unreachable
         }
-        throw Failure.unreachable
+        switch await exchange(line, on: connection, timeout: timeout) {
+        case .answer(let data): return (try decode(data), host)
+        case .closedWithoutAnswer: throw Failure.noAnswer
+        case .localNetworkDenied: throw Failure.localNetworkDenied
+        case .unreachable: throw Failure.unreachable
+        }
     }
 
     private static func decode(_ data: Data) throws -> PairingResponse {
@@ -71,14 +67,10 @@ enum PairingClient {
 
     private enum Exchange { case answer(Data), closedWithoutAnswer, unreachable, localNetworkDenied }
 
-    /// Connects, sends the line, reads up to the first newline.
-    private static func exchange(_ line: Data, with endpoint: NWEndpoint, timeout: TimeInterval) async -> Exchange {
-        let tcp = NWProtocolTCP.Options()
-        tcp.connectionTimeout = Int(timeout.rounded(.up))
-        let connection = NWConnection(to: endpoint, using: NWParameters(tls: nil, tcp: tcp))
-        let queue = DispatchQueue(label: "dev.marquart.annex.pairing")
+    /// Sends the line on an open connection and reads up to the first newline.
+    private static func exchange(_ line: Data, on connection: NWConnection, timeout: TimeInterval) async -> Exchange {
         defer { connection.cancel() }
-
+        let queue = connection.queue ?? DispatchQueue(label: "dev.marquart.annex.pairing")
         return await withCheckedContinuation { (continuation: CheckedContinuation<Exchange, Never>) in
             let once = Once()
             let finish: @Sendable (Exchange) -> Void = { result in once.run { continuation.resume(returning: result) } }
@@ -101,24 +93,14 @@ enum PairingClient {
 
             connection.stateUpdateHandler = { state in
                 switch state {
-                case .ready:
-                    connection.send(content: line, completion: .contentProcessed { error in
-                        if error != nil { finish(.unreachable) } else { read() }
-                    })
-                case .waiting(let error), .failed(let error):
-                    if connection.currentPath?.unsatisfiedReason == .localNetworkDenied {
-                        finish(.localNetworkDenied)
-                    } else {
-                        log.info("Pairing host \(String(describing: endpoint), privacy: .public): \(error.localizedDescription, privacy: .public)")
-                        finish(.unreachable)
-                    }
-                case .cancelled:
-                    finish(.unreachable)
-                default:
-                    break
+                case .failed, .cancelled: finish(.unreachable)
+                default: break
                 }
             }
-            connection.start(queue: queue)
+            connection.send(content: line, completion: .contentProcessed { error in
+                if error != nil { finish(.unreachable) } else { read() }
+            })
+            // The Mac answers right away; a listener that keeps quiet must not keep the person waiting.
             queue.asyncAfter(deadline: .now() + timeout + 2) { finish(.unreachable) }
         }
     }
@@ -143,6 +125,96 @@ enum PairingClient {
                 once.run { continuation.resume(returning: found.onlyOne) }
             }
         }
+    }
+}
+
+/// Opens TCP connections to several endpoints, `stagger` apart, and keeps the first one that is ready; the others
+/// are cancelled without having sent anything.
+private final class ConnectRace: @unchecked Sendable {
+    struct Outcome {
+        var connection: NWConnection?
+        var index: Int?
+        /// Some endpoint was refused because Annex may not use the local network.
+        var denied = false
+    }
+
+    private let lock = NSLock()
+    private var connections: [NWConnection] = []
+    private var failures = 0
+    private var denied = false
+    private var finished = false
+    private var continuation: CheckedContinuation<Outcome, Never>?
+
+    static func first(of endpoints: [NWEndpoint], timeout: TimeInterval, stagger: TimeInterval = 0.3) async -> Outcome {
+        guard !endpoints.isEmpty else { return Outcome() }
+        let race = ConnectRace()
+        let queue = DispatchQueue(label: "dev.marquart.annex.pairing.connect")
+        return await withCheckedContinuation { continuation in
+            race.lock.withLock { race.continuation = continuation }
+            for (index, endpoint) in endpoints.enumerated() {
+                let tcp = NWProtocolTCP.Options()
+                tcp.connectionTimeout = Int(timeout.rounded(.up))
+                let connection = NWConnection(to: endpoint, using: NWParameters(tls: nil, tcp: tcp))
+                race.lock.withLock { race.connections.append(connection) }
+                connection.stateUpdateHandler = { state in
+                    switch state {
+                    case .ready:
+                        race.won(connection, index: index)
+                    case .waiting(let error), .failed(let error):
+                        let isDenied = connection.currentPath?.unsatisfiedReason == .localNetworkDenied
+                        log.info("Pairing host \(String(describing: endpoint), privacy: .public): \(error.localizedDescription, privacy: .public)")
+                        race.lost(connection, denied: isDenied, total: endpoints.count)
+                    default:
+                        break
+                    }
+                }
+                queue.asyncAfter(deadline: .now() + stagger * Double(index)) {
+                    if race.isFinished { connection.cancel() } else { connection.start(queue: queue) }
+                }
+            }
+            queue.asyncAfter(deadline: .now() + timeout + stagger * Double(endpoints.count)) { race.timeUp() }
+        }
+    }
+
+    private var isFinished: Bool { lock.withLock { finished } }
+
+    private func won(_ connection: NWConnection, index: Int) {
+        let (continuation, losers): (CheckedContinuation<Outcome, Never>?, [NWConnection]) = lock.withLock {
+            guard !finished else { return (nil, []) }
+            finished = true
+            defer { self.continuation = nil }
+            return (self.continuation, connections.filter { $0 !== connection })
+        }
+        guard let continuation else { connection.cancel(); return }
+        // From here on the winner's state changes belong to the exchange.
+        connection.stateUpdateHandler = nil
+        losers.forEach { $0.cancel() }
+        continuation.resume(returning: Outcome(connection: connection, index: index, denied: false))
+    }
+
+    private func lost(_ connection: NWConnection, denied isDenied: Bool, total: Int) {
+        connection.stateUpdateHandler = nil
+        connection.cancel()
+        let continuation: CheckedContinuation<Outcome, Never>? = lock.withLock {
+            failures += 1
+            denied = denied || isDenied
+            guard !finished, failures == total else { return nil }
+            finished = true
+            defer { self.continuation = nil }
+            return self.continuation
+        }
+        continuation?.resume(returning: Outcome(denied: lock.withLock { denied }))
+    }
+
+    private func timeUp() {
+        let (continuation, all): (CheckedContinuation<Outcome, Never>?, [NWConnection]) = lock.withLock {
+            guard !finished else { return (nil, []) }
+            finished = true
+            defer { self.continuation = nil }
+            return (self.continuation, connections)
+        }
+        all.forEach { $0.cancel() }
+        continuation?.resume(returning: Outcome(denied: lock.withLock { denied }))
     }
 }
 

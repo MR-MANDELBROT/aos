@@ -128,7 +128,7 @@ final class MockCompanionServer: @unchecked Sendable {
             body["sessions"] = .array(state.workspace.sessions.map {
                 .object(["title": .string($0.title), "state": .string($0.state)])
             })
-        case "subscribe", "signin.answer", "help.done":
+        case "subscribe", "signin.answer", "help.done", "approval.answer", "type":
             break
         case "screen":
             guard let target = object["target"]?.string.flatMap(ScreenTarget.init(rawValue:)),
@@ -154,6 +154,7 @@ final class MockCompanionServer: @unchecked Sendable {
                                                "agent": .string(r.agent), "host": .string(r.host),
                                                "purpose": .string(r.purpose)]
             if let expires = r.expires { object["expires"] = .string(ISO8601.format(expires)) }
+            object["field"] = .string(r.field.rawValue)
             return encode(object)
         case .signInClosed(let request, let result):
             return encode(["event": .string("signin.closed"), "request": .string(request),
@@ -168,6 +169,17 @@ final class MockCompanionServer: @unchecked Sendable {
             return encode(object)
         case .helpClosed(let request):
             return encode(["event": .string("help.closed"), "request": .string(request)])
+        case .approval(let a):
+            var object: [String: JSONValue] = ["event": .string("approval"), "request": .string(a.id),
+                                               "agent": .string(a.agent), "purpose": .string(a.purpose)]
+            if let minutes = a.minutes { object["minutes"] = .number(Double(minutes)) }
+            if let expires = a.expires { object["expires"] = .string(ISO8601.format(expires)) }
+            return encode(object)
+        case .approvalClosed(let request, let result):
+            return encode(["event": .string("approval.closed"), "request": .string(request),
+                           "result": .string(result.rawValue)])
+        case .mac(let state, let detail):
+            return encode(["event": .string("mac"), "state": .string(state), "detail": .string(detail)])
         case .workspace(let state):
             return encode(["event": .string("workspace"), "state": .string(raw(state))])
         }

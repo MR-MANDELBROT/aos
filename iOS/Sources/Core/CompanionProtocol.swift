@@ -62,7 +62,13 @@ enum CompanionRequest: Sendable, Equatable {
     /// The sign-in for a request. Never logged, never stored.
     case signInAnswer(request: String, username: String, password: String, totp: String?)
     case signInDecline(request: String)
+    /// A one-time code, for a request whose field is `code` (only `totp` goes out).
+    case signInCode(request: String, totp: String)
     case helpDone(request: String)
+    /// Whether the agent may open the workspace.
+    case approvalAnswer(request: String, allowed: Bool)
+    /// Types text into the running workspace (ASCII as keys, the rest through the guest's clipboard).
+    case type(text: String)
 
     var op: String {
         switch self {
@@ -70,8 +76,10 @@ enum CompanionRequest: Sendable, Equatable {
         case .status: "status"
         case .subscribe: "subscribe"
         case .screen: "screen"
-        case .signInAnswer, .signInDecline: "signin.answer"
+        case .signInAnswer, .signInDecline, .signInCode: "signin.answer"
         case .helpDone: "help.done"
+        case .approvalAnswer: "approval.answer"
+        case .type: "type"
         }
     }
 
@@ -94,8 +102,16 @@ enum CompanionRequest: Sendable, Equatable {
         case .signInDecline(let request):
             object["request"] = .string(request)
             object["decline"] = .bool(true)
+        case .signInCode(let request, let totp):
+            object["request"] = .string(request)
+            object["totp"] = .string(totp)
         case .helpDone(let request):
             object["request"] = .string(request)
+        case .approvalAnswer(let request, let allowed):
+            object["request"] = .string(request)
+            object["allowed"] = .bool(allowed)
+        case .type(let text):
+            object["text"] = .string(text)
         }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
@@ -130,11 +146,19 @@ enum WorkspaceState: Equatable, Sendable {
 
 /// A sign-in the agent asks for. Shown to the person, who approves or declines it.
 struct SignInRequest: Identifiable, Equatable, Sendable {
+    /// Where the agent clicked on the page.
+    enum Field: String, Sendable {
+        case username, password
+        /// A one-time code: the answer carries the code only.
+        case code
+    }
+
     var id: String
     var agent: String
     var host: String
     var purpose: String
     var expires: Date?
+    var field: Field = .password
 }
 
 enum SignInResult: String, Sendable, Equatable {
@@ -156,11 +180,30 @@ struct HelpRequest: Identifiable, Equatable, Sendable {
     var region: Region?
 }
 
+/// An agent that can't ask by itself wants to open the workspace.
+struct ApprovalRequest: Identifiable, Equatable, Sendable {
+    var id: String
+    var agent: String
+    var purpose: String
+    /// How long the workspace would stay open.
+    var minutes: Int?
+    var expires: Date?
+}
+
+enum ApprovalResult: String, Sendable, Equatable {
+    case allowed, declined
+    case unknown
+}
+
 enum CompanionEvent: Equatable, Sendable {
     case signIn(SignInRequest)
     case signInClosed(request: String, result: SignInResult)
     case help(HelpRequest)
     case helpClosed(request: String)
+    case approval(ApprovalRequest)
+    case approvalClosed(request: String, result: ApprovalResult)
+    /// `annex-companion` can't reach the Mac app (`unavailable`, it keeps trying), or can again.
+    case mac(state: String, detail: String)
     case workspace(WorkspaceState)
 }
 
@@ -190,7 +233,8 @@ enum CompanionMessage: Equatable, Sendable {
             return .event(.signIn(SignInRequest(
                 id: request, agent: object["agent"]?.string ?? "", host: host,
                 purpose: object["purpose"]?.string ?? "",
-                expires: object["expires"]?.string.flatMap(ISO8601.parse))))
+                expires: object["expires"]?.string.flatMap(ISO8601.parse),
+                field: SignInRequest.Field(rawValue: object["field"]?.string ?? "") ?? .password)))
         case "signin.closed":
             guard !request.isEmpty else { return .ignored }
             return .event(.signInClosed(request: request,
@@ -208,6 +252,18 @@ enum CompanionMessage: Equatable, Sendable {
         case "help.closed":
             guard !request.isEmpty else { return .ignored }
             return .event(.helpClosed(request: request))
+        case "approval":
+            guard !request.isEmpty else { return .ignored }
+            return .event(.approval(ApprovalRequest(
+                id: request, agent: object["agent"]?.string ?? "", purpose: object["purpose"]?.string ?? "",
+                minutes: object["minutes"]?.int, expires: object["expires"]?.string.flatMap(ISO8601.parse))))
+        case "approval.closed":
+            guard !request.isEmpty else { return .ignored }
+            return .event(.approvalClosed(request: request,
+                                          result: ApprovalResult(rawValue: object["result"]?.string ?? "") ?? .unknown))
+        case "mac":
+            guard let state = object["state"]?.string else { return .ignored }
+            return .event(.mac(state: state, detail: object["detail"]?.string ?? ""))
         case "workspace":
             guard let state = object["state"]?.string else { return .ignored }
             return .event(.workspace(WorkspaceState(state)))

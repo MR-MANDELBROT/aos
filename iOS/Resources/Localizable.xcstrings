@@ -57,6 +57,16 @@
         }
       }
     },
+    "%@ asks for a one-time code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ bittet um einen Einmalcode"
+          }
+        }
+      }
+    },
     "%@ asks for a sign-in" : {
       "localizations" : {
         "de" : {
@@ -169,6 +179,16 @@
         }
       }
     },
+    "%@ wants to open the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ möchte den Arbeitsplatz öffnen"
+          }
+        }
+      }
+    },
     "%@@%@" : {
       "localizations" : {
         "de" : {
@@ -191,6 +211,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld"
+          }
+        }
+      }
+    },
+    "%lld s" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld s"
           }
         }
       }
@@ -351,6 +381,26 @@
         }
       }
     },
+    "Allow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlauben"
+          }
+        }
+      }
+    },
+    "Allowed. The workspace opens." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaubt. Der Arbeitsplatz öffnet sich."
+          }
+        }
+      }
+    },
     "Already in the vault: %lld" : {
       "localizations" : {
         "de" : {
@@ -471,6 +521,26 @@
         }
       }
     },
+    "Annex on the Mac isn't answering right now (%@). It keeps trying." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annex auf dem Mac antwortet gerade nicht (%@). Es versucht es weiter."
+          }
+        }
+      }
+    },
+    "Annex on the Mac isn't answering right now. It keeps trying." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annex auf dem Mac antwortet gerade nicht. Es versucht es weiter."
+          }
+        }
+      }
+    },
     "Annex on the Mac isn't ready: %@" : {
       "localizations" : {
         "de" : {
@@ -537,17 +607,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Annex merkt sich den Schlüssel und warnt dich, falls er sich je ändert."
-          }
-        }
-      }
-    },
-    "annex-pair://v1?…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "annex-pair://v1?…"
           }
         }
       }
@@ -628,16 +687,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldung ändern"
-          }
-        }
-      }
-    },
-    "Characters like „%@“ can't be typed into the workspace from the iPhone yet." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeichen wie „%@“ lassen sich vom iPhone aus noch nicht im Arbeitsplatz tippen."
           }
         }
       }
@@ -932,6 +981,16 @@
         }
       }
     },
+    "Don't Allow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht erlauben"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "de" : {
@@ -1022,6 +1081,26 @@
         }
       }
     },
+    "Fill in from %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus %@ einsetzen"
+          }
+        }
+      }
+    },
+    "Fill in the code for %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code für %@ einsetzen"
+          }
+        }
+      }
+    },
     "Fingerprint" : {
       "localizations" : {
         "de" : {
@@ -1048,6 +1127,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einpassen"
+          }
+        }
+      }
+    },
+    "For %lld minutes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für %lld Minuten"
           }
         }
       }
@@ -1148,17 +1237,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "So erreicht ihn das iPhone"
-          }
-        }
-      }
-    },
-    "https://example.com" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "https://example.com"
           }
         }
       }
@@ -1583,6 +1661,16 @@
         }
       }
     },
+    "Not allowed. The workspace stays closed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht erlaubt. Der Arbeitsplatz bleibt geschlossen."
+          }
+        }
+      }
+    },
     "Not connected" : {
       "localizations" : {
         "de" : {
@@ -1729,6 +1817,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffne Annex auf deinem Mac und wähle „iPhone verbinden“. Scanne dann den Code, den es zeigt."
+          }
+        }
+      }
+    },
+    "Open the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz öffnen"
           }
         }
       }
@@ -2103,6 +2201,16 @@
         }
       }
     },
+    "Send the code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code senden"
+          }
+        }
+      }
+    },
     "Send the sign-in for %@" : {
       "localizations" : {
         "de" : {
@@ -2443,6 +2551,16 @@
         }
       }
     },
+    "The agent gets only this code. Annex types it into the field it chose, only on this site." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Agent bekommt nur diesen Code. Annex tippt ihn in das Feld, das er gewählt hat, nur auf dieser Website."
+          }
+        }
+      }
+    },
     "The agent never sees the password. Annex types it into the sign-in page in the workspace, only on this site." : {
       "localizations" : {
         "de" : {
@@ -2479,6 +2597,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Verbindung zu Annex auf dem Mac ist beendet."
+          }
+        }
+      }
+    },
+    "The connection to the Mac ended." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindung zum Mac ist beendet."
           }
         }
       }
@@ -2723,6 +2851,26 @@
         }
       }
     },
+    "The page asks for the password." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Seite fragt nach dem Passwort."
+          }
+        }
+      }
+    },
+    "The page asks for the user name." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Seite fragt nach dem Benutzernamen."
+          }
+        }
+      }
+    },
     "The password stays on this iPhone, behind Face ID." : {
       "localizations" : {
         "de" : {
@@ -2819,6 +2967,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz hat die Anmeldung der Bildschirmfreigabe nicht angenommen."
+          }
+        }
+      }
+    },
+    "The workspace is a Mac of its own in a virtual machine, separate from yours. It closes again when the time is up." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist ein eigener Mac in einer virtuellen Maschine, getrennt von deinem. Er schließt sich wieder, wenn die Zeit um ist."
           }
         }
       }
@@ -3299,6 +3457,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arbeitsplatz"
+          }
+        }
+      }
+    },
+    "Workspace request" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfrage für den Arbeitsplatz"
           }
         }
       }

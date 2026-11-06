@@ -67,7 +67,11 @@ final class ScreenSession {
             self.forwarder = forwarder
             self.client = client
             self.connection = ssh
-            sender = InputSender(client: client)
+            let sender = InputSender(client: client, typeText: Self.textTyper(for: target, mac: mac, ssh: ssh, client: client))
+            sender.onTextFailed = { [weak self] text in
+                self?.notice = String(localized: "Couldn't type \u{201E}\(text)\u{201C}.")
+            }
+            self.sender = sender
             startedAt = Date()
             inputReady = false
             liveTask = Task { [weak self] in await self?.receive(client.liveFrames(minimumInterval: interval)) }
@@ -220,7 +224,13 @@ final class ScreenSession {
 
     /// Text from the on-screen keyboard.
     func type(_ text: String) {
-        for step in KeyInput.steps(for: text) {
+        let steps = KeyInput.steps(for: text)
+        // The workspace types text with characters beyond ASCII itself (companion `type`), all of it, in order.
+        if target == .workspace, stickyModifiers.isEmpty, steps.contains(where: { if case .paste = $0 { true } else { false } }) {
+            sender?.send(.text(text))
+            return
+        }
+        for step in steps {
             switch step {
             case .keys(let strokes):
                 for stroke in strokes {
@@ -242,25 +252,31 @@ final class ScreenSession {
 
     func backspace() { press(KeyInput.backspace) }
 
-    /// Characters without a key symbol go through the Mac's clipboard (over SSH, as the Mac's own user), then cmd+v.
-    /// The workspace has no such path from the iPhone yet.
+    /// Characters without a key symbol, in order with the keys around them (see `textTyper`).
     private func paste(_ text: String) {
-        guard target == .mac, let connection, let sender else {
-            notice = String(localized: "Characters like \u{201E}\(text)\u{201C} can't be typed into the workspace from the iPhone yet.")
-            return
-        }
-        Task {
-            do {
-                let channel = try await connection.exec("LC_ALL=en_US.UTF-8 /usr/bin/pbcopy")
+        sender?.send(.text(text))
+    }
+
+    /// How text that can't be typed as keys gets there. On the Mac: its clipboard (pbcopy over SSH, as the Mac's own
+    /// user), then cmd+v. In the workspace: the companion's `type`, which does the same inside the guest.
+    private static func textTyper(for target: ScreenTarget, mac: MacConnection, ssh: SSHConnection,
+                                  client: RFBClient) -> InputSender.TextTyper {
+        switch target {
+        case .workspace:
+            return { [weak mac] text in
+                guard let mac else { throw CompanionError.closed }
+                try await mac.typeInWorkspace(text)
+            }
+        case .mac:
+            return { text in
+                let channel = try await ssh.exec("LC_ALL=en_US.UTF-8 /usr/bin/pbcopy")
                 try await channel.write(Data(text.utf8))
                 await channel.closeInput()
                 for try await _ in channel.output {}
-                sender.send(.key(Keysyms.command, down: true))
-                sender.send(.key(0x76, down: true))
-                sender.send(.key(0x76, down: false))
-                sender.send(.key(Keysyms.command, down: false))
-            } catch {
-                notice = String(localized: "Couldn't type \u{201E}\(text)\u{201C}.")
+                try await client.key(Keysyms.command, down: true)
+                try await client.key(0x76, down: true)
+                try await client.key(0x76, down: false)
+                try await client.key(Keysyms.command, down: false)
             }
         }
     }
@@ -281,14 +297,24 @@ final class InputSender: @unchecked Sendable {
         case pointer(x: Int, y: Int, buttons: Set<RFBClient.Button>)
         case key(UInt32, down: Bool)
         case scroll(x: Int, y: Int, direction: RFBClient.ScrollDirection, steps: Int)
+        /// Text that can't be typed as keys (see `ScreenSession.textTyper`).
+        case text(String)
     }
+
+    typealias TextTyper = @Sendable @MainActor (String) async throws -> Void
+    private let typeText: TextTyper?
+    /// Called (on the main actor) when text couldn't be typed.
+    var onTextFailed: (@Sendable @MainActor (String) -> Void)?
 
     private let client: RFBClient
     private let lock = NSLock()
     private var queue: [Event] = []
     private var running = false
 
-    init(client: RFBClient) { self.client = client }
+    init(client: RFBClient, typeText: TextTyper? = nil) {
+        self.client = client
+        self.typeText = typeText
+    }
 
     func send(_ event: Event) {
         let start: Bool = lock.withLock {
@@ -319,6 +345,13 @@ final class InputSender: @unchecked Sendable {
                 case .key(let keysym, let down): try await client.key(keysym, down: down)
                 case .scroll(let x, let y, let direction, let steps):
                     try await client.scroll(x: x, y: y, direction: direction, steps: steps)
+                case .text(let text):
+                    do {
+                        try await typeText?(text)
+                    } catch {
+                        let report = onTextFailed
+                        await MainActor.run { report?(text) }
+                    }
                 }
             } catch {
                 log.notice("Input not sent: \(String(describing: error), privacy: .public)")

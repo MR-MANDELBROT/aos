@@ -96,7 +96,7 @@ struct RequestQueueTests {
         let model = AppModel(isDemo: true)
         model.handle(.signIn(request("r1")))
         #expect(model.presentedSignIn?.id == "r1")
-        model.closeSignInSheet()  // "Later"
+        model.closeQuestionSheet()  // "Later"
         try await Task.sleep(for: .milliseconds(700))
         #expect(model.presentedSignIn == nil)
         #expect(model.signIns.map(\.id) == ["r1"])
