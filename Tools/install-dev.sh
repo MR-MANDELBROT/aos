@@ -16,8 +16,12 @@ osascript -e 'tell application id "dev.marquart.annex" to quit' >/dev/null 2>&1 
 for _ in $(seq 1 120); do pgrep -f "Annex.app/Contents/MacOS/Annex$" >/dev/null || break; sleep 1; done
 
 if [ -d /Applications/Annex.app ]; then
-  OLD="$HOME/.Trash/Annex-$(date +%Y%m%d-%H%M%S).app"
+  # Not named .app in the Trash: LaunchServices registers apps there again, and every registered copy confuses the
+  # Local Network permission (it follows the executable's UUID)
+  OLD="$HOME/.Trash/Annex-$(date +%Y%m%d-%H%M%S).app-alt"
+  "$LSR" -u /Applications/Annex.app 2>/dev/null || true
   mv /Applications/Annex.app "$OLD"
+  "$LSR" -u "$OLD" 2>/dev/null || true
 fi
 ditto "$NEW" /Applications/Annex.app
 codesign --verify --deep --strict /Applications/Annex.app
