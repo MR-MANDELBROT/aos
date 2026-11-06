@@ -100,7 +100,9 @@ struct EndToEndTests {
 
         // The workspace screen through the SSH connection, and a click on it
         let screen = model.workspaceScreen
-        await screen.start(mac: connection, login: nil, interval: 0.02)
+        var options = ScreenOptions()
+        options.interval = 0.02
+        await screen.start(mac: connection, login: nil, options: options)
         try await waitUntil { screen.phase == .live }
         #expect(screen.size == CGSize(width: 80, height: 50))
         screen.click(at: CGPoint(x: 30, y: 20))

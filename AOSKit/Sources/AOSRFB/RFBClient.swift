@@ -535,8 +535,6 @@ public actor RFBClient {
             lastHeard = Date()
             var lastRequest = Date.distantPast
             var full = true
-            framebuffer.commit()
-            if framebuffer.hasChanges { out.yield(.frame) }
             keeper = Task { [weak self] in
                 while !Task.isCancelled {
                     try? await Task.sleep(nanoseconds: 4_000_000_000)

@@ -61,14 +61,16 @@ struct LiveMacTests {
 
         // The workspace screen through the SSH connection (direct-tcpip to the workspace's screen sharing)
         let screen = model.workspaceScreen
-        await screen.start(mac: connection, login: nil, interval: 0.2)
-        try await waitUntil(timeout: .seconds(40)) { screen.phase == .live && screen.frame != nil }
+        var options = ScreenOptions()
+        options.interval = 0.2
+        await screen.start(mac: connection, login: nil, options: options)
+        try await waitUntil(timeout: .seconds(40)) { screen.phase == .live && screen.framebuffer?.makeImage() != nil }
         print("LIVE workspace screen: \(Int(screen.size.width))x\(Int(screen.size.height))")
-        if let out = env["AOS_LIVE_OUT"], let frame = screen.frame {
+        if let out = env["AOS_LIVE_OUT"], let frame = screen.framebuffer?.makeImage() {
             try await Task.sleep(for: .seconds(2))
             let url = URL(fileURLWithPath: out).appendingPathComponent("live-workspace.png")
             if let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) {
-                CGImageDestinationAddImage(dest, screen.frame ?? frame, nil)
+                CGImageDestinationAddImage(dest, screen.framebuffer?.makeImage() ?? frame, nil)
                 print("LIVE picture saved: \(CGImageDestinationFinalize(dest))")
             }
         }

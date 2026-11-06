@@ -1,62 +1,83 @@
 import AOSRFB
 import SwiftUI
 
+/// The Screen tab: a full-screen viewer of the workspace or the Mac while connected, with a compact toolbar that
+/// hides by itself; the tab's own page (connect, log in, what went wrong) otherwise.
 struct ScreenTab: View {
     @Environment(AppModel.self) private var model
     @State private var keyboard = false
     @State private var focus = RemoteScreen.FocusRequest()
+    @State private var toolbarVisible = true
+    @State private var hideToolbar: Task<Void, Never>?
     @State private var showGestures = false
+    @State private var showSettings = false
+    /// The options the running session was started with; a change restarts it.
+    @State private var startedOptions: ScreenOptions?
 
     private var session: ScreenSession { model.screen(for: model.screenTarget) }
+    /// Viewing: everything else gives way (tab bar, status bar).
+    private var fullScreen: Bool { session.isRunning }
 
     var body: some View {
         @Bindable var model = model
         NavigationStack {
             ZStack {
-                Color.black.opacity(session.frame == nil ? 0 : 1).ignoresSafeArea()
-                if session.frame != nil, session.phase == .live || session.phase == .connecting {
-                    RemoteScreen(session: session, mode: model.settings.inputMode, focus: focus)
-                        .ignoresSafeArea(edges: .horizontal)
+                (fullScreen ? Color.black : Color.clear).ignoresSafeArea()
+                if fullScreen {
+                    RemoteScreen(session: session, options: viewerOptions, focus: focus) { touched() }
+                        .ignoresSafeArea()
+                        .accessibilityAddTraits(.isImage)
                 }
                 stateOverlay
                 KeyCapture(isActive: $keyboard, session: session).frame(width: 1, height: 1).allowsHitTesting(false)
             }
             .aosBackground()
-            .safeAreaInset(edge: .top, spacing: 0) {
-                if let help = model.activeHelp, model.screenTarget == .workspace {
-                    HelpBanner(request: help) { Task { await model.finishHelp(help) } }
-                        .padding(.horizontal)
-                        .padding(.top, 6)
-                }
+            .overlay(alignment: .top) {
+                if fullScreen { topControls }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if session.phase == .live { controls.padding(.horizontal).padding(.bottom, 8) }
+            .overlay(alignment: .bottom) {
+                if fullScreen { bottomControls }
             }
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Picker("Screen", selection: $model.screenTarget) {
-                        Text("Workspace").tag(ScreenTarget.workspace)
-                        Text("Mac").tag(ScreenTarget.mac)
+                if !fullScreen {
+                    ToolbarItem(placement: .principal) { targetPicker.frame(width: 220) }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Gestures", systemImage: "hand.tap") { showGestures = true }
                     }
-                    .pickerStyle(.segmented)
-                    .frame(width: 220)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Gestures", systemImage: "hand.tap") { showGestures = true }
                 }
             }
+            .toolbar(fullScreen ? .hidden : .visible, for: .navigationBar)
+            .toolbar(fullScreen ? .hidden : .visible, for: .tabBar)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(session.frame != nil ? .dark : nil, for: .navigationBar)
+            .statusBarHidden(fullScreen)
+            .persistentSystemOverlays(fullScreen ? .hidden : .automatic)
+            .defersSystemGestures(on: fullScreen ? .vertical : [])
             .sheet(isPresented: $showGestures) { GestureHelp().presentationDetents([.medium, .large]) }
+            .sheet(isPresented: $showSettings) {
+                NavigationStack {
+                    ScreenSettingsForm(target: model.screenTarget)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showSettings = false } } }
+                }
+                .presentationDetents([.medium, .large])
+            }
             .alert(session.notice ?? "", isPresented: Binding(get: { session.notice != nil }, set: { if !$0 { session.notice = nil } })) {
                 Button("OK") { session.notice = nil }
             }
         }
-        .task(id: model.screenTarget) { await start() }
+        .task(id: model.screenTarget) {
+            // One screen at a time: the other one lets go (the workspace gets its own size back).
+            model.screen(for: model.screenTarget == .mac ? .workspace : .mac).stop()
+            await start()
+        }
         // The Mac is back (after a network change, for example): pick the screen up again.
         .onChange(of: model.connection?.isConnected) { _, connected in
             guard connected == true else { return }
             if case .failed = session.phase { Task { await start() } }
+        }
+        // A setting that needs a new connection (quality, pace, pointer, shape).
+        .onChange(of: currentOptions) { _, options in
+            guard session.isRunning, let started = startedOptions, started != options else { return }
+            Task { await start() }
         }
         .onChange(of: model.activeHelp, initial: true) { _, help in
             if let region = help?.region {
@@ -67,11 +88,111 @@ struct ScreenTab: View {
             if phase == .live, let region = model.activeHelp?.region, model.screenTarget == .workspace {
                 focus = .init(region: CGRect(x: region.x, y: region.y, width: region.width, height: region.height))
             }
+            if phase == .live { showToolbar() }
         }
         .onDisappear {
             keyboard = false
             if !model.isDemo { session.stop() }
         }
+    }
+
+    private var currentOptions: ScreenOptions {
+        ScreenOptions(settings: model.settings, cellular: NetworkKind.shared.isCellular)
+    }
+
+    private var viewerOptions: ViewerOptions {
+        let s = model.settings
+        return ViewerOptions(inputMode: s.inputMode,
+                             scaling: model.screenTarget == .mac ? s.macScaling : .fit,
+                             naturalScrolling: s.naturalScrolling, pointerSpeed: CGFloat(s.pointerSpeed),
+                             haptics: s.haptics, localCursor: s.pointerStyle == .local)
+    }
+
+    private var targetPicker: some View {
+        @Bindable var model = model
+        return Picker("Screen", selection: $model.screenTarget) {
+            Text("Workspace").tag(ScreenTarget.workspace)
+            Text("Mac").tag(ScreenTarget.mac)
+        }
+        .pickerStyle(.segmented)
+    }
+
+    // MARK: Toolbar
+
+    private func touched() {
+        // Working on the screen: the toolbar makes room sooner.
+        if toolbarVisible, model.settings.autoHideToolbar { scheduleHide(after: 1.2) }
+    }
+
+    private func showToolbar() {
+        withAnimation(.snappy) { toolbarVisible = true }
+        scheduleHide(after: 4)
+    }
+
+    private func scheduleHide(after seconds: Double) {
+        hideToolbar?.cancel()
+        guard model.settings.autoHideToolbar else { return }
+        hideToolbar = Task {
+            try? await Task.sleep(for: .seconds(seconds))
+            guard !Task.isCancelled else { return }
+            withAnimation(.snappy) { toolbarVisible = false }
+        }
+    }
+
+    @ViewBuilder private var topControls: some View {
+        VStack(spacing: 8) {
+            if toolbarVisible {
+                ScreenToolbar(session: session, keyboard: $keyboard, showSettings: $showSettings,
+                              showGestures: $showGestures, focus: $focus, interacted: { showToolbar() },
+                              close: { close() }, picker: AnyView(targetPicker.frame(width: 200)))
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            } else {
+                Button {
+                    showToolbar()
+                } label: {
+                    Capsule().fill(.white.opacity(0.55)).frame(width: 44, height: 5)
+                        .padding(.horizontal, 14).padding(.vertical, 9)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Show the screen's toolbar"))
+                .transition(.opacity)
+            }
+            if let status = statusText {
+                Label(status, systemImage: "hourglass")
+                    .font(.footnote.weight(.medium))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .glassEffect()
+            }
+            if let help = model.activeHelp, model.screenTarget == .workspace {
+                HelpBanner(request: help) { Task { await model.finishHelp(help) } }
+                    .padding(.horizontal)
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private var statusText: LocalizedStringKey? {
+        switch session.phase {
+        case .connecting where session.hasPicture: "Connecting again …"
+        case .live where !session.inputReady: "Input works in a moment …"
+        default: nil
+        }
+    }
+
+    @ViewBuilder private var bottomControls: some View {
+        VStack(spacing: 8) {
+            if model.settings.showsScreenStats, session.phase == .live {
+                StatsBadge(stats: session.stats).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal)
+            }
+            if keyboard, model.settings.showsKeyBar { KeyBar(session: session).padding(.horizontal, 8) }
+        }
+        .padding(.bottom, keyboard ? 6 : 10)
+    }
+
+    private func close() {
+        keyboard = false
+        session.stop()
     }
 
     // MARK: States
@@ -89,7 +210,9 @@ struct ScreenTab: View {
                     Button("Try anyway") { Task { await start() } }.buttonStyle(.glass)
                 }
             } else {
-                Placeholder(symbol: "display", title: "Screen", text: "") {
+                Placeholder(symbol: model.screenTarget == .mac ? "laptopcomputer" : "macwindow",
+                            title: model.screenTarget == .mac ? "Your Mac's screen" : "The workspace",
+                            text: "Full screen, with the trackpad or touch.") {
                     Button("Connect") { Task { await start() } }.buttonStyle(.glassProminent)
                 }
             }
@@ -98,8 +221,11 @@ struct ScreenTab: View {
                 MacScreenLoginForm(mac: mac) { Task { await start() } }
             }
         case .connecting:
-            if session.frame == nil {
-                ProgressView("Connecting to the screen …").padding(20).glassEffect(in: RoundedRectangle(cornerRadius: 20))
+            if !session.hasPicture {
+                ProgressView("Connecting to the screen …")
+                    .padding(20)
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+                    .environment(\.colorScheme, .dark)
             }
         case .failed(let message):
             Placeholder(symbol: "exclamationmark.triangle", title: "No picture", text: LocalizedStringKey(message)) {
@@ -115,14 +241,7 @@ struct ScreenTab: View {
                 }
             }
         case .live:
-            if !session.inputReady {
-                Text("Input works in a moment …")
-                    .font(.footnote.weight(.medium))
-                    .padding(.horizontal, 12).padding(.vertical, 6)
-                    .glassEffect()
-                    .frame(maxHeight: .infinity, alignment: .top)
-                    .padding(.top, 8)
-            }
+            EmptyView()
         }
     }
 
@@ -135,8 +254,10 @@ struct ScreenTab: View {
             session.stop()
             return
         }
+        let options = currentOptions
+        startedOptions = options
         if model.screenTarget == .workspace {
-            await session.start(mac: connection, login: nil, interval: model.settings.frameRate.interval)
+            await session.start(mac: connection, login: nil, options: options)
             return
         }
         guard let mac = model.activeMac else { return }
@@ -148,95 +269,12 @@ struct ScreenTab: View {
             let context = try await Biometrics.authenticate(reason: String(localized: "Show the screen of \(mac.name)"))
             defer { context.invalidate() }
             let login = try SecretStore.screenLogin(for: mac, context: context)
-            await session.start(mac: connection, login: login, interval: model.settings.frameRate.interval)
+            await session.start(mac: connection, login: login, options: options)
         } catch Biometrics.Failure.cancelled {
             session.stop()
         } catch {
             session.showNeedsLogin()
         }
-    }
-
-    // MARK: Controls
-
-    private var controls: some View {
-        VStack(spacing: 10) {
-            if keyboard { KeyBar(session: session) }
-            GlassEffectContainer(spacing: 12) {
-                HStack(spacing: 12) {
-                    Button {
-                        model.settings.inputMode = model.settings.inputMode == .trackpad ? .direct : .trackpad
-                    } label: {
-                        Label(model.settings.inputMode == .trackpad ? "Trackpad" : "Direct",
-                              systemImage: model.settings.inputMode == .trackpad ? "rectangle.and.hand.point.up.left" : "hand.point.up.left")
-                    }
-                    .buttonStyle(.glass)
-                    .accessibilityHint(Text("Switches how one finger works on the screen"))
-                    Spacer(minLength: 0)
-                    Button("Fit", systemImage: "arrow.down.right.and.arrow.up.left") { focus = .init(region: nil) }
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.glass)
-                    Button(keyboard ? "Hide keyboard" : "Keyboard", systemImage: keyboard ? "keyboard.chevron.compact.down" : "keyboard") {
-                        keyboard.toggle()
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.glass)
-                }
-            }
-        }
-    }
-}
-
-/// Esc, Tab, Return, arrows and the modifier keys (they stay on for the next key).
-struct KeyBar: View {
-    let session: ScreenSession
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    key("esc") { session.press(KeyInput.escape) }
-                    key("tab", symbol: "arrow.right.to.line") { session.press(Keysyms.tab) }
-                    key("return", symbol: "return") { session.press(Keysyms.returnKey) }
-                    modifier("⌘", Keysyms.command, name: "Command")
-                    modifier("⌥", Keysyms.option, name: "Option")
-                    modifier("⌃", Keysyms.control, name: "Control")
-                    modifier("⇧", Keysyms.shift, name: "Shift")
-                    key("left", symbol: "arrow.left") { session.press(KeyInput.left) }
-                    key("down", symbol: "arrow.down") { session.press(KeyInput.down) }
-                    key("up", symbol: "arrow.up") { session.press(KeyInput.up) }
-                    key("right", symbol: "arrow.right") { session.press(KeyInput.right) }
-                    key("delete", symbol: "delete.right") { session.press(KeyInput.forwardDelete) }
-                }
-                .padding(.horizontal, 2)
-            }
-        }
-    }
-
-    private func key(_ title: String, symbol: String? = nil, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Group {
-                if let symbol { Image(systemName: symbol) } else { Text(verbatim: title).font(.callout.weight(.medium)) }
-            }
-            .frame(minWidth: 26, minHeight: 22)
-        }
-        .buttonStyle(.glass)
-        .accessibilityLabel(Text(title))
-    }
-
-    private func modifier(_ glyph: String, _ keysym: UInt32, name: String) -> some View {
-        let on = session.stickyModifiers.contains(keysym)
-        return Button {
-            session.toggleSticky(keysym)
-        } label: {
-            Text(verbatim: glyph).font(.title3.weight(.medium)).frame(minWidth: 26, minHeight: 22)
-        }
-        .buttonStyle(.glass)
-        .tint(on ? BrandColor.indigo : nil)
-        .overlay {
-            if on { Capsule().stroke(BrandColor.indigo, lineWidth: 2) }
-        }
-        .accessibilityLabel(Text(verbatim: name))
-        .accessibilityAddTraits(on ? .isSelected : [])
     }
 }
 
@@ -336,38 +374,5 @@ struct MacScreenLoginForm: View {
         } catch {
             self.error = error.localizedDescription
         }
-    }
-}
-
-struct GestureHelp: View {
-    var body: some View {
-        NavigationStack {
-            List {
-                Section("Trackpad (one finger moves the pointer)") {
-                    GestureRow(symbol: "hand.tap", text: "Tap: click where the pointer is")
-                    GestureRow(symbol: "hand.draw", text: "Drag one finger: move the pointer")
-                }
-                Section("Direct (one finger touches the screen)") {
-                    GestureRow(symbol: "hand.point.up.left", text: "Tap: click where you tap")
-                    GestureRow(symbol: "hand.draw", text: "Drag one finger: drag (select, move windows)")
-                }
-                Section("Always") {
-                    GestureRow(symbol: "hand.tap", text: "Two-finger tap or long press: right click")
-                    GestureRow(symbol: "arrow.up.and.down", text: "Two fingers: scroll")
-                    GestureRow(symbol: "arrow.up.left.and.arrow.down.right", text: "Pinch: zoom. Three fingers: move the zoomed picture")
-                    GestureRow(symbol: "keyboard", text: "Keyboard: type; ⌘ ⌥ ⌃ ⇧ in the key bar apply to the next key")
-                }
-            }
-            .navigationTitle("Gestures")
-            .navigationBarTitleDisplayMode(.inline)
-        }
-    }
-}
-
-private struct GestureRow: View {
-    let symbol: String
-    let text: LocalizedStringKey
-    var body: some View {
-        Label(text, systemImage: symbol)
     }
 }

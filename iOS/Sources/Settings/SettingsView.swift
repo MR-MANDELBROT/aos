@@ -57,15 +57,11 @@ struct SettingsView: View {
                     Text("Approving a sign-in always needs Face ID, whether or not the app itself is locked.")
                 }
 
-                Section("Screen") {
-                    Picker("Picture rate", selection: $settings.frameRate) {
-                        Text("Smooth").tag(AppSettings.FrameRate.smooth)
-                        Text("Balanced").tag(AppSettings.FrameRate.balanced)
-                        Text("Saves data").tag(AppSettings.FrameRate.saver)
-                    }
-                    Picker("One finger", selection: $settings.inputMode) {
-                        Text("Moves the pointer (trackpad)").tag(AppSettings.InputMode.trackpad)
-                        Text("Touches directly").tag(AppSettings.InputMode.direct)
+                Section {
+                    NavigationLink {
+                        ScreenSettingsForm()
+                    } label: {
+                        Label("Screen", systemImage: "display")
                     }
                 }
 
