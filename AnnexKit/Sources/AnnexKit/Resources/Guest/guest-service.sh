@@ -3,6 +3,8 @@
 #   - puts the Chrome policies for the account back: macOS removes them at every login (without MDM nothing stays
 #     there). The policies make sign-ins expire: cookies and site data only for the session except the allowed
 #     domains, history, cache and download list cleared when Chrome quits, no session restore,
+#   - keeps macOS' list of apps to reopen at login empty and locked: loginwindow writes it at shutdown from its memory
+#     (even with "reopen windows" off), so it would reopen Chrome at every login, before its policies are back,
 #   - once per boot moves the content of ~/Downloads into a folder in the account's Trash (the Finder empties it after
 #     30 days). At boot no Chrome is running yet.
 set -u
@@ -15,6 +17,21 @@ note() { print -r -- "$(date '+%Y-%m-%d %H:%M:%S') service: $*" >> "$LOG"; }
 cd /
 id -u "$GUEST_USER" >/dev/null 2>&1 || exit 0
 [ -f "$LIBEXEC/chrome.plist" ] || { note "chrome.plist missing"; exit 1; }
+
+zmodload zsh/parameter
+TALD="${userdirs[$GUEST_USER]:-/nonexistent}/Library/Group Containers/group.com.apple.loginwindow.persistent-apps"
+TAL="$TALD/persistantApps"   # sic
+# Only root can change the locked file (owner root, flag uchg). The new one is written in a root-only place and moved
+# in: a link planted in the account's folder is replaced, not followed.
+if [ -d "$TALD" ] && [ ! -L "$TALD" ] && [ ! -d "$TAL" ] && [ "$(stat -f '%u %Sf' "$TAL" 2>/dev/null)" != "0 uchg" ]; then
+  t="$(mktemp /var/db/annex-tal.XXXXXX)" && print -r -- '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict><key>PersistentApps</key><array/></dict></plist>' > "$t" && chmod 644 "$t" && {
+    chflags nouchg "$TAL" 2>/dev/null
+    mv -f "$t" "$TAL" && chflags uchg "$TAL" && note "list of apps to reopen at login locked empty"
+  }
+  rm -f "$t" 2>/dev/null
+fi
 
 f="$MANAGED/$GUEST_USER/com.google.Chrome.plist"
 if ! { [ -f "$f" ] && [ ! -L "$f" ] && cmp -s "$LIBEXEC/chrome.plist" "$f"; }; then

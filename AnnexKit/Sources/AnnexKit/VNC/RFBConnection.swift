@@ -6,6 +6,8 @@ public enum RFBError: LocalizedError {
     case protocolError(String)
     case authFailed(String)
     case timeout(String)
+    /// macOS' local network privacy blocks the connection (the user hasn't allowed the app, or a new build of it).
+    case localNetworkDenied
 
     public var errorDescription: String? {
         switch self {
@@ -13,6 +15,7 @@ public enum RFBError: LocalizedError {
         case .protocolError(let s): return "Screen sharing protocol error: \(s)"
         case .authFailed(let s): return "Screen sharing login failed: \(s)"
         case .timeout(let s): return "Screen sharing timed out (\(s))."
+        case .localNetworkDenied: return "macOS doesn't allow connections to the local network."
         }
     }
 }
@@ -40,12 +43,15 @@ final class RFBStream: @unchecked Sendable {
                 done = true
                 cont.resume(with: result)
             }
-            connection.stateUpdateHandler = { state in
+            connection.stateUpdateHandler = { [connection] state in
+                // Network.framework names the real reason: a "network is down" can also just mean the VM's network
+                // bridge is still coming up.
+                let denied = connection.currentPath?.unsatisfiedReason == .localNetworkDenied
                 switch state {
                 case .ready: finish(.success(()))
-                case .failed(let e): finish(.failure(e))
+                case .failed(let e): finish(.failure(denied ? RFBError.localNetworkDenied : e))
                 case .cancelled: finish(.failure(RFBError.closed))
-                case .waiting(let e): finish(.failure(e))
+                case .waiting(let e): finish(.failure(denied ? RFBError.localNetworkDenied : e))
                 default: break
                 }
             }

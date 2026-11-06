@@ -50,8 +50,9 @@ public actor RFBClient {
     public func connect() async throws {
         if stream != nil { return }
         let s = RFBStream(host: host, port: port)
-        try await s.open(timeout: 10)
         do {
+            // A connection that is still "waiting" keeps retrying on its own unless it is cancelled.
+            try await s.open(timeout: 10)
             try await handshake(s)
             stream = s
             connectedAt = Date()

@@ -136,6 +136,9 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
 
     // MARK: Start, stop, suspend
 
+    /// Counts cold boots (not resumes from a saved state) since the app started: after one the guest logs in afresh.
+    public private(set) var bootCount = 0
+
     /// Starts the VM: resumes a saved state if there is one, otherwise boots. On the very first boot
     /// `provisioning` creates the account, turns on auto login and SSH (macOS 27 guests).
     public func start(provisioning: VZMacGuestProvisioningOptions? = nil) async throws {
@@ -172,6 +175,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
             }
             try await vm!.start(options: options)
             if provisioning != nil { try bundle.updateState { $0.provisioned = true } }
+            bootCount += 1
             set(.running)
         } catch {
             vm = nil

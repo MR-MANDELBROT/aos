@@ -74,6 +74,14 @@ public struct Provisioner: Sendable {
         try bundle.updateState { $0.kitFingerprint = current }
     }
 
+    /// After a cold boot, before the agent gets the screen: waits for the login, puts the browser policies in place
+    /// and quits a Chrome that macOS reopened without them (see Resources/Guest/prepare.sh).
+    public func prepareSession(host: String) async throws {
+        let root = maintenance(host: host)
+        try await root.waitUntilReachable(timeout: 180)
+        try await root.run("/bin/zsh -f \(GuestKit.libexec)/prepare.sh", timeout: 180, what: "workspace preparation")
+    }
+
     /// Whether screen sharing is switched on in the guest.
     public func screenSharingEnabled(host: String) async throws -> Bool {
         let r = try await maintenance(host: host).run(

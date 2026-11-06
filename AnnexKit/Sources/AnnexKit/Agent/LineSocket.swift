@@ -56,14 +56,22 @@ public final class LineSocketServer: @unchecked Sendable {
         chmod(path, 0o600)
         guard listen(fd, 8) == 0 else { throw SocketError.system("listen", errno) }
         let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: .global())
+        let listening = fd
         src.setEventHandler { [weak self] in self?.acceptOne() }
+        // The descriptor may only be closed once the source is cancelled (libdispatch requires it).
+        src.setCancelHandler { close(listening) }
         src.resume()
         source = src
     }
 
     public func stop() {
-        source?.cancel()
-        if fd >= 0 { close(fd); fd = -1 }
+        if let source {
+            source.cancel()
+            self.source = nil
+        } else if fd >= 0 {
+            close(fd)
+        }
+        fd = -1
         unlink(path)
     }
 

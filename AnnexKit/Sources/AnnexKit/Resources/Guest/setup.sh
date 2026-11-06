@@ -13,7 +13,7 @@
 #     delivers a picture when a person switched it on in System Settings.
 # The account stays an administrator until screen sharing works; `finish.sh` then makes it a standard user.
 #
-# Kit folder ($1): maintenance.pub, stop.pub, chrome.plist, settings.env, guest-service.sh, shutdown.sh, finish.sh,
+# Kit folder ($1): maintenance.pub, stop.pub, chrome.plist, settings.env, guest-service.sh, shutdown.sh, finish.sh, prepare.sh,
 # update.sh
 set -eu
 setopt NULL_GLOB
@@ -27,7 +27,7 @@ say() { print -r -- "==> $*"; }
 die() { print -r -- "ERROR: $*" >&2; exit 1; }
 
 [ "$(id -u)" = 0 ] || die "must run as root"
-for f in maintenance.pub stop.pub chrome.plist settings.env guest-service.sh shutdown.sh finish.sh update.sh; do
+for f in maintenance.pub stop.pub chrome.plist settings.env guest-service.sh shutdown.sh finish.sh prepare.sh update.sh; do
   [ -s "$K/$f" ] || die "$f missing"
 done
 id "$GUEST_USER" >/dev/null 2>&1 || die "account $GUEST_USER missing (first boot without provisioning?)"
@@ -36,7 +36,7 @@ as_user() { launchctl asuser "$UID_G" sudo -u "$GUEST_USER" -H "$@"; }
 
 # Scripts
 install -d -m 755 -o root -g wheel "$LIBEXEC"
-for f in guest-service.sh shutdown.sh finish.sh update.sh; do
+for f in guest-service.sh shutdown.sh finish.sh prepare.sh update.sh; do
   zsh -n "$K/$f" || die "$f has a syntax error"
   install -m 755 -o root -g wheel "$K/$f" "$LIBEXEC/$f"
 done

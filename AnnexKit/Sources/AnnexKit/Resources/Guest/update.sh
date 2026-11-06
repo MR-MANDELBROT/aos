@@ -7,7 +7,7 @@ K="${1:?kit folder missing}"
 LIBEXEC=/usr/local/libexec/annex
 die() { print -r -- "ERROR: $*" >&2; exit 1; }
 [ "$(id -u)" = 0 ] || die "must run as root"
-for f in guest-service.sh shutdown.sh finish.sh update.sh; do
+for f in guest-service.sh shutdown.sh finish.sh prepare.sh update.sh; do
   [ -s "$K/$f" ] || die "$f missing"
   zsh -n "$K/$f" || die "$f has a syntax error"
   install -m 755 -o root -g wheel "$K/$f" "$LIBEXEC/$f"

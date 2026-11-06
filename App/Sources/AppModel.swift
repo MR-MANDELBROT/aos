@@ -143,8 +143,14 @@ final class AppModel: ObservableObject {
             append("agent socket: \(error.localizedDescription)")
         }
         workspace.startIdleWatch()
+        // Cheap state every 2 s; the login item status means two XPC calls to macOS, so only every 30 s
+        // (and whenever a view asks with refresh()).
         statusTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refresh() }
+            Task { @MainActor in
+                guard let self else { return }
+                self.ticks += 1
+                self.refresh(loginItems: self.ticks % 15 == 0)
+            }
         }
         refresh()
         if !setup.isComplete { openWindow?(WindowID.setup) ; showSetupSoon() }
@@ -165,12 +171,16 @@ final class AppModel: ObservableObject {
         server?.stop()
     }
 
-    func refresh() {
+    private var ticks = 0
+
+    func refresh(loginItems: Bool = true) {
         vmPhase = workspace.host.phase
         status = workspace.status()
         session = SessionStatus.read(paths)
-        loginItemEnabled = SMAppService.mainApp.status == .enabled
-        sessionAgentStatus = SessionAgent.service.status
+        if loginItems {
+            loginItemEnabled = SMAppService.mainApp.status == .enabled
+            sessionAgentStatus = SessionAgent.service.status
+        }
         setup.refreshCompletion()
         keepAwake.set(settings.keepAwake && settings.sessionEnabled && sessionAgentStatus == .enabled)
         updateActivationPolicy()

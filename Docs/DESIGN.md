@@ -86,8 +86,39 @@ binary with their own subscription is allowed, including where a platform hosts 
 - **Closing**: with "sign-ins expire" (default) the stop key runs `shutdown.sh`: every Chrome quits through the "quit"
   Apple event (only then does it clear site data per its policies), then `shutdown -h now`. Otherwise the VM is paused
   and its state saved (`saveMachineStateTo`), resumed in seconds next time.
+- **Session preparation** (`prepare.sh`, once per cold boot, before the agent gets the screen): macOS removes
+  `/Library/Managed Preferences` at every login, and right after it the guest is so busy that the guest service needs
+  up to half a minute (a single `id` took 14 s) to put the Chrome policies back. Annex waits for the login over the
+  maintenance key, has the policies put back, checks them and quits a Chrome that is already running.
+- **Reopen at login**: loginwindow keeps its list of apps to reopen
+  (`~/Library/Group Containers/group.com.apple.loginwindow.persistent-apps/persistantApps`) up to date while running
+  and writes it at shutdown from memory, ignoring `TALLogoutSavesState` and `LoginwindowLaunchesRelaunchApps`
+  (`TALBlockSavingAndLaunch` is no preference either). It reopened Chrome at every login, before its policies were
+  back. The guest service keeps an empty list there, owned by root and locked (`uchg`); loginwindow then reports
+  `previouslyRunningApps count:0`.
+- **Chrome policies on a Mac without MDM**: Chrome blocks "sensitive" policies unless the Mac is MDM-enrolled or bound
+  to a directory (`base::IsManagedOrEnterpriseDevice`). The sign-in policies are not sensitive and apply
+  (`DefaultCookiesSetting`, `CookiesAllowedForUrls`, `ClearBrowsingDataOnExitList`); `DefaultSearchProvider*` and
+  `RestoreOnStartup` are, so the search engine choice appears once per workspace. The agent answers it (the MCP
+  instructions say so) and Chrome keeps the answer in the profile, which survives the clearing on quit. While that
+  modal choice is open Chrome ignores the "quit" Apple event, so `shutdown.sh` had to SIGTERM it and site data stayed.
+  Known leftover: Chrome marks every profile exit as "Crashed" (Local State says `exited_cleanly`), so a "Restore
+  pages?" bubble appears; it doesn't cover the page and cookies are gone anyway.
 - **Idle**: a lease (`workspace_open(purpose, minutes)`) ends after its minutes; without a lease the workspace closes
   after `idleMinutes` (default 20) without tool calls.
+
+## Local network permission
+
+macOS counts the VM's NAT network (`bridge100`) as local network, so the app needs the Local Network permission
+(`NSLocalNetworkUsageDescription`); SSH, started by the app, counts as the app. Network.framework reports the denial
+as path `unsatisfied (Local network prohibited)`, `RFBStream` turns that into `RFBError.localNetworkDenied`. A plain
+ENETDOWN is not a denial: right after a VM start the connection first takes the Wi-Fi route (the bridge doesn't exist
+yet) and fails when the bridge appears. `workspace_open` probes port 22 first so a missing permission is reported in
+seconds instead of after the SSH timeouts.
+macOS identifies the app by its main executable's UUID. After an update (new UUID) the first connection is refused
+once ("allowed by preference ... but received prompt", nehelper then caches the new UUID), so the probe tolerates a
+denial for a few seconds. Several copies of the app with different UUIDs (debug builds) confuse that cache
+(FB15568200): during development, keep one copy registered with LaunchServices.
 
 ## Screen and input
 

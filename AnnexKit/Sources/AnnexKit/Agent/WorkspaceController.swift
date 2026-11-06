@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import Network
 
 /// The workspace as the MCP tools see it: a lease ("open for N minutes"), the VM behind it, the screen
 /// connection and the exchange folder. Every request comes through `handle`.
@@ -15,6 +16,8 @@ public final class WorkspaceController {
     private var idleTimer: Timer?
     private var busy = false
     private var closing = false
+    /// The cold boot (VMHost.bootCount) whose session was prepared last.
+    private var preparedBoot = 0
     public var log: (String) -> Void = { _ in }
     /// Called whenever something the app shows changes.
     public var onChange: (() -> Void)?
@@ -147,16 +150,55 @@ public final class WorkspaceController {
             try await host.start()
         }
         let ip = try await host.waitForAddress(timeout: 120)
+        try await checkLocalNetwork(ip: ip)
         do {
             try await provisioner.updateIfNeeded(host: ip) { [weak self] line in Task { @MainActor in self?.log(line) } }
         } catch {
             log("workspace update failed (continuing): \(error.localizedDescription)")
+        }
+        // After a cold boot the guest logs in afresh and macOS has just removed the browser policies: put them back
+        // before the agent can start Chrome (once per boot; a resumed workspace keeps its session).
+        if preparedBoot != host.bootCount {
+            preparedBoot = host.bootCount
+            log("preparing the workspace session")
+            do {
+                try await provisioner.prepareSession(host: ip)
+            } catch {
+                log("workspace preparation failed (continuing): \(error.localizedDescription)")
+            }
         }
         let client = try await connectScreen(ip: ip, timeout: 120)
         lease = (Date().addingTimeInterval(Double(minutes * 60)), purpose)
         log("open for \"\(purpose)\", \(minutes) min")
         let image = try await client.screenshot()
         return try picture(request.id, "Workspace open for \(minutes) min. Screen \(image.width)x\(image.height) pixels; coordinates are pixels in this picture.", image)
+    }
+
+    /// Fails fast without the local network permission: otherwise SSH and screen sharing would only time out after
+    /// minutes. Right after a start the VM's bridge is not up yet (connections then go nowhere), so this tries for a
+    /// few seconds; anything but Network.framework's explicit denial counts as "allowed".
+    private func checkLocalNetwork(ip: String) async throws {
+        let deadline = Date().addingTimeInterval(15)
+        // Right after an app update macOS refuses the first connections once while it learns the new build
+        // (nehelper: "allowed by preference ... but received prompt"); only a denial that lasts counts.
+        var deniedSince: Date?
+        while Date() < deadline {
+            let probe = RFBStream(host: ip, port: 22)
+            defer { probe.close() }
+            do {
+                try await probe.open(timeout: 3)
+                return
+            } catch RFBError.localNetworkDenied {
+                let since = deniedSince ?? Date()
+                deniedSince = since
+                if Date().timeIntervalSince(since) > 6 { throw WorkspaceError.localNetworkDenied }
+            } catch {
+                if case .posix(let code) = error as? NWError, code == .ECONNREFUSED { return }
+                deniedSince = nil
+            }
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+        }
+        if deniedSince != nil { throw WorkspaceError.localNetworkDenied }
     }
 
     /// Connects to screen sharing in the guest; right after a boot it takes a while until it answers.
@@ -166,23 +208,29 @@ public final class WorkspaceController {
         let client = RFBClient(host: ip, username: Brand.guestUser, password: try guestPassword())
         let deadline = Date().addingTimeInterval(timeout)
         var lastError: Error = WorkspaceError.screenUnavailable
+        // Right after the VM starts its network bridge isn't up yet, and connections fail with "network is down"
+        // for a moment. Only Network.framework's own verdict (or a "network is down" that never ends) means the
+        // local network permission is missing.
+        var networkDown = false
         while Date() < deadline {
             do {
                 try await client.connect()
-                // A picture that is all black means screen sharing is on but not allowed to capture.
                 rfb = client
                 return client
+            } catch RFBError.localNetworkDenied {
+                throw WorkspaceError.localNetworkDenied
             } catch {
                 lastError = error
-                if Self.isLocalNetworkDenied(error) { throw WorkspaceError.localNetworkDenied }
+                networkDown = Self.isNetworkDown(error)
                 try await Task.sleep(nanoseconds: 2_000_000_000)
             }
         }
+        if networkDown { throw WorkspaceError.localNetworkDenied }
         throw lastError
     }
 
-    /// macOS' local network privacy: without the user's permission connections to the VM fail with ENETDOWN.
-    static func isLocalNetworkDenied(_ error: Error) -> Bool {
+    /// ENETDOWN: what a connection to the VM fails with while its bridge comes up, or without the permission.
+    static func isNetworkDown(_ error: Error) -> Bool {
         let ns = error as NSError
         if ns.domain == "Network.NWError" || ns.domain == NSPOSIXErrorDomain { return ns.code == Int(ENETDOWN) }
         return "\(error)".contains("Network is down") || "\(error)".contains("error 50")

@@ -19,13 +19,11 @@ public struct ChromePolicies: Sendable, Equatable {
             "CookiesAllowedForUrls": keepSignedIn,      // ... except these
             "ClearBrowsingDataOnExitList": ["browsing_history", "download_history", "cached_images_and_files",
                                             "password_signin", "autofill", "site_settings", "hosted_app_data"],
-            "RestoreOnStartup": 5,
-            // No first-run questions that block the page: search engine set, promotions and sandbox prompts off
-            "DefaultSearchProviderEnabled": true,
-            "DefaultSearchProviderName": "Google",
-            "DefaultSearchProviderSearchURL": "{google:baseURL}search?q={searchTerms}",
-            "DefaultSearchProviderSuggestURL": "{google:baseURL}complete/search?output=chrome&q={searchTerms}",
+            // No prompts that cover the page: promotions, translation and sandbox prompts off. Chrome ignores
+            // "sensitive" policies on Macs without MDM (DefaultSearchProvider*, RestoreOnStartup), so the search
+            // engine choice appears once per workspace; the agent answers it and Chrome keeps the answer.
             "PromotionsEnabled": false,
+            "TranslateEnabled": false,
             "PrivacySandboxPromptEnabled": false,
             "PrivacySandboxAdTopicsEnabled": false,
             "PrivacySandboxSiteEnabledAdsEnabled": false,
@@ -113,6 +111,7 @@ public struct GuestKit: Sendable {
             ("guest-service.sh", try Self.resource("guest-service.sh")),
             ("shutdown.sh", try Self.resource("shutdown.sh")),
             ("finish.sh", try Self.resource("finish.sh")),
+            ("prepare.sh", try Self.resource("prepare.sh")),
             ("update.sh", try Self.resource("update.sh")),
             ("chrome.plist", try policies.plist()),
             ("settings.env", Data(settingsEnv().utf8)),
@@ -142,6 +141,7 @@ public struct GuestKit: Sendable {
             ("guest-service.sh", try Self.resource("guest-service.sh")),
             ("shutdown.sh", try Self.resource("shutdown.sh")),
             ("finish.sh", try Self.resource("finish.sh")),
+            ("prepare.sh", try Self.resource("prepare.sh")),
             ("chrome.plist", try policies.plist()),
             ("settings.env", Data(settingsEnv().utf8)),
         ]
