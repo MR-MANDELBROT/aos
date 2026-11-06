@@ -123,6 +123,11 @@ while let line = readLine(strippingNewline: true) {
                 q.device = device
             }
             answer(id, ok: response.ok, error: response.ok ? nil : response.text)
+        case "type":
+            let response = try requests.call { q in
+                q.op = "companion.type"; q.text = r["text"] as? String; q.device = device
+            }
+            answer(id, ok: response.ok, error: response.ok ? nil : response.text)
         case "help.done":
             let response = try requests.call { q in
                 q.op = "help.done"; q.request = r["request"] as? String; q.device = device

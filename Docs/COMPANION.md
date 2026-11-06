@@ -78,6 +78,8 @@ Requests:
 - `{"id":5,"op":"signin.answer","request":"<request id>","username":"...","password":"...","totp":"123456"}` or
   `{"id":5,"op":"signin.answer","request":"<id>","decline":true}` -> `{"id":5,"ok":true}`
 - `{"id":6,"op":"help.done","request":"<id>"}` -> `{"id":6,"ok":true}`
+- `{"id":8,"op":"type","text":"Grüße 😀"}` -> `{"id":8,"ok":true}` (types into the workspace; text beyond ASCII goes
+  through the guest's clipboard, as for the agent)
 - `{"id":7,"op":"approval.answer","request":"<id>","allowed":true}` -> `{"id":7,"ok":true}` (an agent that can't ask
   itself wants to open the workspace)
 

@@ -207,6 +207,20 @@ extension WorkspaceController {
             answerSignIn(id, SignInAnswer(username: r.username, password: r.password, code: r.totp,
                                           declined: r.decline ?? false, from: r.device ?? "iPhone"))
             return AgentResponse(id: r.id, ok: true, text: "ok")
+        case "companion.type":
+            // The user types into the workspace from the phone (umlauts and emoji go through the guest's clipboard,
+            // as for the agent). Not while the agent signs in.
+            guard host.isRunning, let ip = try? host.guestAddress() else { return .failure(r.id, "The workspace is not running.") }
+            guard !signingIn else { return .failure(r.id, "A sign-in is in progress.") }
+            let text = r.text ?? ""
+            guard !text.isEmpty, text.count <= 4000 else { return .failure(r.id, "Nothing to type.") }
+            do {
+                let client = try await screenClient(ip: ip)
+                try await typeRuns(text, client: client)
+                return AgentResponse(id: r.id, ok: true, text: "ok")
+            } catch {
+                return .failure(r.id, error.localizedDescription)
+            }
         case "help.done", "approval.answer":
             if let error = onCompanionAnswer?(r) { return .failure(r.id, error) }
             return AgentResponse(id: r.id, ok: true, text: "ok")

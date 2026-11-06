@@ -199,6 +199,21 @@ public final class WorkspaceController {
         return ip
     }
 
+    /// Types text: ASCII as key events, everything else through the guest's clipboard.
+    func typeRuns(_ text: String, client: RFBClient) async throws {
+        for run in Keysyms.runs(for: text) {
+            switch run {
+            case .keys(let keys): try await client.type(keys)
+            case .paste(let s): try await paste(s, client: client)
+            }
+        }
+    }
+
+    /// The screen connection (for the phone's typing; the agent's tools use the lease's).
+    func screenClient(ip: String) async throws -> RFBClient {
+        try await connectScreen(ip: ip, timeout: 60)
+    }
+
     /// Types the workspace account's password into whatever has the focus in the guest (macOS's own password dialog
     /// during setup steps), then Return. Never goes through the clipboard.
     public func typeGuestPasswordForSetup() async throws {
@@ -332,12 +347,7 @@ public final class WorkspaceController {
         case "type":
             let text = request.text ?? ""
             guard !text.isEmpty else { throw WorkspaceError.missing("text") }
-            for run in Keysyms.runs(for: text) {
-                switch run {
-                case .keys(let keys): try await client.type(keys)
-                case .paste(let s): try await paste(s, client: client)
-                }
-            }
+            try await typeRuns(text, client: client)
             done = "Typed \(text.count) character(s)."
         case "keys":
             let combo = try Keysyms.combination(request.keys ?? "")
