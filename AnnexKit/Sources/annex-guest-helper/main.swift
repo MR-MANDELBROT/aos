@@ -15,7 +15,7 @@ import Security
 // Requests: {"op":"status"} {"op":"focus"} {"op":"fill","host":"...","kind":"username|password|code",
 // "username":"...","password":"...","code":"..."}. Answers never contain what was typed.
 
-let helperVersion = "8"
+let helperVersion = "9"
 let guestUser = "annex"
 
 func socketPath(home: String) -> String { "\(home)/Library/Application Support/AnnexHelper/helper.sock" }
@@ -276,6 +276,25 @@ enum Signature {
         guard let args = arguments(of: pid) else { return "Chrome's start options can't be checked" }
         if args.contains(where: { !$0.hasPrefix("-psn_") }) {
             return "Chrome was started with extra options; quit it and open it from the Dock"
+        }
+        return scriptingProblem()
+    }
+
+    /// A Chrome profile that allows JavaScript from Apple Events (View > Developer) lets any app run script in the
+    /// sign-in page. Chrome has no policy for it, so the helper looks into the profiles before every sign-in.
+    static func scriptingProblem() -> String? {
+        let chromeDir = URL(fileURLWithPath: NSHomeDirectory())
+            .appendingPathComponent("Library/Application Support/Google/Chrome", isDirectory: true)
+        let profiles = (try? FileManager.default.contentsOfDirectory(at: chromeDir, includingPropertiesForKeys: nil)) ?? []
+        for profile in profiles {
+            for file in ["Preferences", "Secure Preferences"] {
+                guard let data = try? Data(contentsOf: profile.appendingPathComponent(file)),
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let browser = json["browser"] as? [String: Any] else { continue }
+                if (browser["allow_javascript_apple_events"] as? Bool) == true {
+                    return "Chrome allows JavaScript from Apple Events (View > Developer); turn it off, then try again"
+                }
+            }
         }
         return nil
     }

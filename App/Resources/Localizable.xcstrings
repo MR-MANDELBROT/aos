@@ -607,6 +607,16 @@
         }
       }
     },
+    "Click Open System Settings if macOS asks, then switch on Annex Helper. When macOS asks for the password to allow Annex Helper, click Enter the workspace password. Only then: if another window asks, click Not Now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicke auf „Systemeinstellungen öffnen“, falls macOS fragt, und schalte dann „Annex Helper“ ein. Fragt macOS nach dem Passwort, um Annex Helper zu erlauben, klicke auf „Passwort des Arbeitsplatzes eingeben“. Nur dann: Fragt ein anderes Fenster, klicke auf „Nicht jetzt“."
+          }
+        }
+      }
+    },
     "Close after %lld min without activity" : {
       "localizations" : {
         "de" : {
