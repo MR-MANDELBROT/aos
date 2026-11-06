@@ -1168,6 +1168,16 @@
         }
       }
     },
+    "Checked when the workspace runs next" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird geprüft, wenn der Arbeitsplatz das nächste Mal läuft"
+          }
+        }
+      }
+    },
     "Checking …" : {
       "localizations" : {
         "de" : {
@@ -1901,6 +1911,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einsetzen"
+          }
+        }
+      }
+    },
+    "Filling in sign-ins in the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldungen im Arbeitsplatz eintragen"
           }
         }
       }
@@ -3061,6 +3081,7 @@
       }
     },
     "Once: allow %@'s helper in the workspace to see the sign-in field and type into it. Your agent never sees passwords." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3330,6 +3351,9 @@
           }
         }
       }
+    },
+    "Pair it again to approve from it" : {
+
     },
     "Pair your iPhone" : {
       "localizations" : {
@@ -3833,6 +3857,7 @@
       }
     },
     "Set Up …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4070,6 +4095,7 @@
       }
     },
     "Sign-ins for your agent" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5201,6 +5227,7 @@
       }
     },
     "When a website needs a sign-in, your agent asks; you approve on your iPhone or Mac and %@ fills it in." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5306,6 +5333,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schließt die Claude-App oder ein Terminal eine Unterhaltung, führt %@ sie weiter, damit sie in der Claude-App auf deinem Handy bleibt."
+          }
+        }
+      }
+    },
+    "When you approve a sign-in, aOS's helper in the workspace types it into the website. For that it needs the macOS permission Accessibility in the workspace, once. Without it, sign-ins can't be filled in." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gibst du eine Anmeldung frei, trägt der Helfer von aOS sie im Arbeitsplatz in die Website ein. Dafür braucht er dort einmal die macOS-Erlaubnis „Bedienungshilfen“. Ohne sie können Anmeldungen nicht eingetragen werden."
+          }
+        }
+      }
+    },
+    "When you approve a sign-in, aOS's helper in the workspace types it into the website. It has the macOS permission it needs for that (Accessibility, given in the setup). Your agent never sees the password." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gibst du eine Anmeldung frei, trägt der Helfer von aOS sie im Arbeitsplatz in die Website ein. Die macOS-Erlaubnis dafür (Bedienungshilfen, in der Einrichtung erteilt) hat er. Dein Agent sieht das Passwort dabei nie."
+          }
+        }
+      }
+    },
+    "When you approve a sign-in, aOS's helper in the workspace types it into the website. It needs the macOS permission Accessibility there (given in the setup); aOS checks it the next time the workspace runs." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gibst du eine Anmeldung frei, trägt der Helfer von aOS sie im Arbeitsplatz in die Website ein. Dafür braucht er dort die macOS-Erlaubnis „Bedienungshilfen“ (in der Einrichtung erteilt). aOS prüft sie, wenn der Arbeitsplatz das nächste Mal läuft."
           }
         }
       }

@@ -671,4 +671,9 @@ DE.update({
     "active %@": "aktiv %@",
     "macOS doesn't let aOS into the local network yet. Under Local Network, switch aOS off and on once (after every update), then click Check.": "macOS lässt aOS noch nicht ins lokale Netzwerk. Schalte aOS unter „Lokales Netzwerk“ einmal aus und wieder ein (nach jedem Update), dann klicke „Prüfen“.",
     "Open Local Network": "Lokales Netzwerk öffnen",
+    "Filling in sign-ins in the workspace": "Anmeldungen im Arbeitsplatz eintragen",
+    "Checked when the workspace runs next": "Wird geprüft, wenn der Arbeitsplatz das nächste Mal läuft",
+    "When you approve a sign-in, aOS's helper in the workspace types it into the website. It has the macOS permission it needs for that (Accessibility, given in the setup). Your agent never sees the password.": "Gibst du eine Anmeldung frei, trägt der Helfer von aOS sie im Arbeitsplatz in die Website ein. Die macOS-Erlaubnis dafür (Bedienungshilfen, in der Einrichtung erteilt) hat er. Dein Agent sieht das Passwort dabei nie.",
+    "When you approve a sign-in, aOS's helper in the workspace types it into the website. For that it needs the macOS permission Accessibility in the workspace, once. Without it, sign-ins can't be filled in.": "Gibst du eine Anmeldung frei, trägt der Helfer von aOS sie im Arbeitsplatz in die Website ein. Dafür braucht er dort einmal die macOS-Erlaubnis „Bedienungshilfen“. Ohne sie können Anmeldungen nicht eingetragen werden.",
+    "When you approve a sign-in, aOS's helper in the workspace types it into the website. It needs the macOS permission Accessibility there (given in the setup); aOS checks it the next time the workspace runs.": "Gibst du eine Anmeldung frei, trägt der Helfer von aOS sie im Arbeitsplatz in die Website ein. Dafür braucht er dort die macOS-Erlaubnis „Bedienungshilfen“ (in der Einrichtung erteilt). aOS prüft sie, wenn der Arbeitsplatz das nächste Mal läuft.",
 })

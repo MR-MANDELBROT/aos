@@ -74,14 +74,16 @@ struct GeneralSettings: View {
                             Text(model.helperState == .checking ? "The workspace starts (about a minute)" : "In the workspace window")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
-                    default:
-                        Button("Set Up …") { Task { await model.allowHelper() } }
+                    case .notAllowed, .unavailable:
+                        Button("Allow …") { Task { await model.allowHelper() } }
                             .buttonStyle(.glass)
                             .disabled(!model.setup.isComplete)
+                    case .unknown:
+                        Text("Checked when the workspace runs next").font(.caption).foregroundStyle(.secondary)
                     }
                 } label: {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Sign-ins for your agent")
+                        Text("Filling in sign-ins in the workspace")
                         Text(helperText).font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -121,11 +123,13 @@ struct GeneralSettings: View {
     var helperText: String {
         switch model.helperState {
         case .allowed:
-            return String(localized: "When a website needs a sign-in, your agent asks; you approve on your iPhone or Mac and \(Brand.name) fills it in.")
+            return String(localized: "When you approve a sign-in, aOS's helper in the workspace types it into the website. It has the macOS permission it needs for that (Accessibility, given in the setup). Your agent never sees the password.")
         case .unavailable(let reason): return reason
         case .allowing: return String(localized: "Switch on aOS Helper in the workspace window.")
+        case .notAllowed:
+            return String(localized: "When you approve a sign-in, aOS's helper in the workspace types it into the website. For that it needs the macOS permission Accessibility in the workspace, once. Without it, sign-ins can't be filled in.")
         default:
-            return String(localized: "Once: allow \(Brand.name)'s helper in the workspace to see the sign-in field and type into it. Your agent never sees passwords.")
+            return String(localized: "When you approve a sign-in, aOS's helper in the workspace types it into the website. It needs the macOS permission Accessibility there (given in the setup); aOS checks it the next time the workspace runs.")
         }
     }
 
