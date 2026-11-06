@@ -78,13 +78,23 @@ Requests:
 - `{"id":5,"op":"signin.answer","request":"<request id>","username":"...","password":"...","totp":"123456"}` or
   `{"id":5,"op":"signin.answer","request":"<id>","decline":true}` -> `{"id":5,"ok":true}`
 - `{"id":6,"op":"help.done","request":"<id>"}` -> `{"id":6,"ok":true}`
+- `{"id":7,"op":"approval.answer","request":"<id>","allowed":true}` -> `{"id":7,"ok":true}` (an agent that can't ask
+  itself wants to open the workspace)
 
 Events:
-- `{"event":"signin","request":"<id>","agent":"Claude Code","host":"www.example.com","purpose":"...","expires":"<ISO>"}`
+- `{"event":"signin","request":"<id>","agent":"Claude Code","host":"www.example.com","field":"username|password|code","purpose":"...","expires":"<ISO>"}`
+  (`field`: where the agent clicked. For `code` the answer carries `totp` only; for `password` the user name is filled
+  too if the page has an empty user name field before it.)
 - `{"event":"signin.closed","request":"<id>","result":"filled|declined|expired|failed"}`
 - `{"event":"help","request":"<id>","agent":"...","purpose":"...","region":{"x":0,"y":0,"w":0,"h":0}}`
 - `{"event":"help.closed","request":"<id>"}`
+- `{"event":"approval","request":"<id>","agent":"...","purpose":"...","minutes":15,"expires":"<ISO>"}`
+- `{"event":"approval.closed","request":"<id>","result":"allowed|declined"}`
+- `{"event":"mac","state":"unavailable","detail":"..."}` (annex-companion can't reach the app; it retries)
 - `{"event":"workspace","state":"..."}`
+
+A phone that subscribes first gets the questions still open, then everything new. `annex-companion` runs as long as
+the exec channel is open; the Mac counts a phone as connected while it polled within the last 45 s.
 
 ## Matching logins
 
