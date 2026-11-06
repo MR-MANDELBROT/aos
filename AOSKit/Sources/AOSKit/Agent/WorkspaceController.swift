@@ -37,9 +37,12 @@ public final class WorkspaceController {
     public let bitwarden: BitwardenVault
     /// While a sign-in runs, the agent's other tools wait (nothing may move the focus).
     var signingIn = false
+    /// The paired phones' signing keys and the checks on every request from a phone.
+    public let phones: CompanionGate
 
-    public init(paths: Paths, bitwarden: BitwardenVault? = nil) {
+    public init(paths: Paths, bitwarden: BitwardenVault? = nil, phoneKeys: PhoneKeyStore = KeychainPhoneKeys()) {
         self.paths = paths
+        self.phones = CompanionGate(store: phoneKeys)
         self.settings = AgentSettings.load(paths)
         self.host = VMHost(bundle: VMBundle(url: paths.vm), paths: paths)
         self.provisioner = Provisioner(paths: paths, kit: GuestKit(policies: settings.chromePolicies))
@@ -108,9 +111,11 @@ public final class WorkspaceController {
     // MARK: Requests
 
     public func handle(_ request: AgentRequest) async -> AgentResponse {
-        // The iPhone app's requests are not the agent's activity: they must not keep the workspace open.
-        if request.op.hasPrefix("companion.") || ["signin.answer", "help.done", "approval.answer"].contains(request.op) {
-            return await handleCompanion(request)
+        // The iPhone app's requests are not the agent's activity: they must not keep the workspace open. Each one
+        // must come from a paired phone, signed with its key (Companion/CompanionAuth.swift); the agent's own
+        // operations stay unsigned.
+        if Self.isCompanion(request.op) {
+            return await admitCompanion(request)
         }
         if signingIn && request.op != "status" {
             return AgentResponse.failure(request.id, "A sign-in is in progress. Wait for the result of sign_in, then continue.")

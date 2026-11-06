@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import NIOCore
 import NIOPosix
@@ -208,8 +209,14 @@ private final class PairingSession: ChannelInboundHandler, @unchecked Sendable {
             return
         }
         received.add(request)
-        // Constant-time comparison isn't needed in a test; the Mac must use one.
-        let expected = PairingRequest.proof(code: code, key: request.key, device: request.device)
+        // Like the Mac: version 2 only, with a P-256 signing key, the proof over both keys. (Constant-time comparison
+        // isn't needed in a test; the Mac uses one.)
+        guard request.v == 2, let sign = Data(base64Encoded: request.sign), sign.count == 65,
+              (try? P256.Signing.PublicKey(x963Representation: sign)) != nil else {
+            reply(context, #"{"ok":false,"error":"unsupported signing key"}"#)
+            return
+        }
+        let expected = PairingRequest.proof(code: code, key: request.key, device: request.device, sign: request.sign)
         let answer: String
         switch behavior {
         case .accept(let user, let companion) where expected == request.proof:

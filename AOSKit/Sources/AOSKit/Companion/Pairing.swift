@@ -161,8 +161,19 @@ public enum MacSSH {
     }
 }
 
-/// Pairs one phone (Docs/COMPANION.md, "Pairing"): listens on a random port for 3 minutes, takes the phone's key when
-/// its proof of the QR code's secret is right, and puts the key into authorized_keys.
+/// The phones paired with this Mac: their SSH keys (authorized_keys) and their signing keys (keychain) together.
+public enum PairedPhones {
+    /// Unpairs a phone: its line in authorized_keys and its signing key go.
+    public static func remove(id: String, keys: AuthorizedKeys = AuthorizedKeys(),
+                              phones: PhoneKeyStore = KeychainPhoneKeys()) throws {
+        try phones.remove(id: id)
+        try keys.remove(id: id)
+    }
+}
+
+/// Pairs one phone (Docs/COMPANION.md, "Pairing"): listens on a random port for 3 minutes, takes the phone's keys when
+/// its proof of the QR code's secret is right, puts the SSH key into authorized_keys and the signing key into the
+/// keychain.
 @MainActor
 public final class PairingSession {
     public enum State: Equatable {
@@ -177,6 +188,7 @@ public final class PairingSession {
     private var listener: NWListener?
     private let code: Data
     private let keys: AuthorizedKeys
+    private let phones: PhoneKeyStore
     private let sshPort: UInt16
     private let fixedFingerprint: String?
     private var failures = 0
@@ -193,14 +205,15 @@ public final class PairingSession {
         return "/Applications/\(Brand.name).app/Contents/MacOS/aos-companion"
     }
 
-    /// Tests pass another key file, SSH port and host key fingerprint (an sshd of their own), and may name the hosts
-    /// and the companion program.
-    public init(keys: AuthorizedKeys = AuthorizedKeys(), sshPort: UInt16 = 22, hostKeyFingerprint: String? = nil,
-                hosts: [String]? = nil, companion: String? = nil) {
+    /// Tests pass another key file, key store, SSH port and host key fingerprint (an sshd of their own), and may name
+    /// the hosts and the companion program.
+    public init(keys: AuthorizedKeys = AuthorizedKeys(), phones: PhoneKeyStore = KeychainPhoneKeys(), sshPort: UInt16 = 22,
+                hostKeyFingerprint: String? = nil, hosts: [String]? = nil, companion: String? = nil) {
         var bytes = [UInt8](repeating: 0, count: 16)
         _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         code = Data(bytes)
         self.keys = keys
+        self.phones = phones
         self.sshPort = sshPort
         self.fixedFingerprint = hostKeyFingerprint
         self.hosts = hosts
@@ -327,10 +340,8 @@ public final class PairingSession {
             if failures >= 5 { stop(); state = .failed("too many wrong attempts") }
         case .success(let request):
             do {
-                try keys.add(key: request.key, id: request.id, name: request.device)
-                let user = NSUserName()
-                let mac = Self.answerAuthentication(code: code, user: user, companion: companion).base64EncodedString()
-                respond(["ok": true, "user": user, "companion": companion, "mac": mac]) { [weak self] in
+                let answer = try register(request)
+                respond(answer) { [weak self] in
                     self?.stop()
                     self?.state = .paired(request.device)
                 }
@@ -340,10 +351,34 @@ public final class PairingSession {
             }
         }
     }
+
+    /// Keeps a verified phone: its signing key in the keychain (what lets it approve), its SSH key in
+    /// authorized_keys. Returns the answer for the phone.
+    func register(_ request: PairingRequest) throws -> [String: Any] {
+        try phones.save(TrustedPhone(id: request.id, name: request.device, signingKey: request.signingKey))
+        do {
+            try keys.add(key: request.key, id: request.id, name: request.device)
+        } catch {
+            try? phones.remove(id: request.id)
+            throw error
+        }
+        let user = NSUserName()
+        let mac = Self.answerAuthentication(code: code, user: user, companion: companion).base64EncodedString()
+        return ["ok": true, "user": user, "companion": companion, "mac": mac]
+    }
+
+    /// For tests: a session with a known code.
+    init(code: Data, keys: AuthorizedKeys, phones: PhoneKeyStore, companion: String) {
+        self.code = code
+        self.keys = keys
+        self.phones = phones
+        self.sshPort = 22
+        self.fixedFingerprint = nil
+        self.hosts = nil
+        self.companion = companion
+    }
 }
 
-/// A phone's pairing request: `{"v":1,"device":"...","key":"ecdsa-sha2-nistp256 AAAA...","proof":"<base64>"}` with
-/// proof = HMAC-SHA256(code, key + "\n" + device).
 /// The key type at the start of an SSH public key blob (a 4-byte big-endian length, then the name).
 func blobType(_ blob: Data) -> String? {
     guard blob.count >= 4 else { return nil }
@@ -353,23 +388,42 @@ func blobType(_ blob: Data) -> String? {
     return String(bytes: bytes[4..<(4 + length)], encoding: .ascii)
 }
 
+/// A phone's pairing request (version 2):
+/// `{"v":2,"device":"...","key":"ecdsa-sha2-nistp256 AAAA...","sign":"<base64 X9.63 P-256 key>","proof":"<base64>"}`
+/// with proof = HMAC-SHA256(code, "aos-pair-request\n" + key + "\n" + device + "\n" + sign). `key` is the SSH key,
+/// `sign` the key the phone signs its requests with; the proof covers both, so nobody without the code can swap one.
 public struct PairingRequest: Sendable {
     public var device: String
     public var key: String
     /// First 12 hex characters of the SHA-256 of the key blob.
     public var id: String
+    /// The phone's P-256 signing key, X9.63 (65 bytes).
+    public var signingKey: Data
 
     public enum Result { case success(PairingRequest), failure(String) }
 
+    public static func proofMessage(key: String, device: String, sign: String) -> Data {
+        Data(("aos-pair-request\n" + key + "\n" + device + "\n" + sign).utf8)
+    }
+
     public static func verify(_ line: Data, code: Data) -> Result {
-        guard let o = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
-              (o["v"] as? Int) == 1, let device = o["device"] as? String, let key = o["key"] as? String,
-              let proofText = o["proof"] as? String, let proof = Data(base64Encoded: proofText) else {
+        guard let o = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { return .failure("bad request") }
+        // Version 1 had no signing key: such a phone could never approve anything here.
+        if (o["v"] as? Int) == 1 {
+            return .failure("This aOS on the iPhone is too old for this Mac. Update it, then pair again.")
+        }
+        guard (o["v"] as? Int) == 2, let device = o["device"] as? String, let key = o["key"] as? String,
+              let sign = o["sign"] as? String, let proofText = o["proof"] as? String,
+              let proof = Data(base64Encoded: proofText) else {
             return .failure("bad request")
         }
-        let message = Data((key + "\n" + device).utf8)
+        let message = proofMessage(key: key, device: device, sign: sign)
         guard HMAC<SHA256>.isValidAuthenticationCode(proof, authenticating: message, using: SymmetricKey(data: code)) else {
             return .failure("wrong code")
+        }
+        guard let signingKey = Data(base64Encoded: sign), signingKey.count == 65,
+              (try? P256.Signing.PublicKey(x963Representation: signingKey)) != nil else {
+            return .failure("unsupported signing key")
         }
         // Exactly "<type> <base64>", and the blob says the same type: nothing else can reach authorized_keys
         let parts = key.split(separator: " ", omittingEmptySubsequences: false)
@@ -380,6 +434,7 @@ public struct PairingRequest: Sendable {
         }
         let id = SHA256.hash(data: blob).map { String(format: "%02x", $0) }.joined().prefix(12)
         let name = device.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .success(PairingRequest(device: name.isEmpty ? "iPhone" : String(name.prefix(60)), key: key, id: String(id)))
+        return .success(PairingRequest(device: name.isEmpty ? "iPhone" : String(name.prefix(60)), key: key, id: String(id),
+                                       signingKey: signingKey))
     }
 }

@@ -20,6 +20,8 @@ final class AppModel {
     private(set) var connection: MacConnection?
     private(set) var deviceKey: DeviceKey?
     private(set) var deviceKeyError: String?
+    /// The key this iPhone signs its requests to the Mac with (made with the device key, given to the Mac at pairing).
+    private(set) var companionKey: CompanionKey?
 
     var tab: Tab = .overview
 
@@ -93,6 +95,7 @@ final class AppModel {
             macs = Demo.unpaired ? [] : [demo.mac]
             hosts = Demo.unpaired ? [] : demo.hosts
             deviceKey = DeviceKey.ephemeral()
+            companionKey = CompanionKey.ephemeral()
             #else
             fatalError("The demo exists in debug builds only")
             #endif
@@ -120,15 +123,18 @@ final class AppModel {
 
     // MARK: Device key
 
+    /// The SSH key and the signing key, created on first use.
     @discardableResult
     func loadDeviceKey() -> DeviceKey? {
-        if let deviceKey { return deviceKey }
+        if deviceKey != nil, companionKey != nil { return deviceKey }
         do {
-            deviceKey = try DeviceKey.loadOrCreate()
+            if deviceKey == nil { deviceKey = try DeviceKey.loadOrCreate() }
+            if companionKey == nil { companionKey = try CompanionKey.loadOrCreate() }
             deviceKeyError = nil
         } catch {
             deviceKeyError = error.localizedDescription
             log.error("Device key: \(String(describing: error), privacy: .public)")
+            return nil
         }
         return deviceKey
     }
@@ -139,7 +145,8 @@ final class AppModel {
         connection?.stop()
         connection = nil
         guard let mac = activeMac, let key = deviceKey else { return }
-        let connection = MacConnection(mac: mac, key: key, deviceName: deviceName)
+        let signer = companionKey.map { CompanionSigner(phoneID: key.phoneID, key: $0) }
+        let connection = MacConnection(mac: mac, key: key, signer: signer, deviceName: deviceName)
         connection.onEvent = { [weak self] event in self?.handle(event) }
         connection.onMacChanged = { [weak self] mac in self?.update(mac) }
         self.connection = connection
@@ -185,12 +192,12 @@ final class AppModel {
 
     /// Pairs with the Mac in `link` (Docs/COMPANION.md, "Pairing"). Reports its steps for the progress view.
     func pair(with link: PairingLink, progress: @escaping @MainActor (PairingStep) -> Void) async throws -> PairedMac {
-        guard let key = loadDeviceKey() else {
+        guard let key = loadDeviceKey(), let signingKey = companionKey else {
             throw PairingError.noKey(deviceKeyError ?? "")
         }
         let name = PairingRequest.sanitizedDeviceName(deviceName)
         progress(.contactingMac)
-        let request = PairingRequest(device: name, key: key.publicKey, code: link.code)
+        let request = PairingRequest(device: name, key: key.publicKey, signingKey: signingKey.publicKey, code: link.code)
         let (response, host) = try await PairingClient.send(request, link: link)
 
         progress(.checkingKey)
@@ -327,7 +334,7 @@ final class AppModel {
         case .helpClosed(let id):
             helpRequests.removeAll { $0.id == id }
             if activeHelp?.id == id { activeHelp = helpRequests.last }
-        case .workspace, .mac:
+        case .workspace, .mac, .subscriptionEnded:
             break
         }
     }

@@ -5,15 +5,19 @@ import XCTest
 final class PairingTests: XCTestCase {
     let code = Data((0..<16).map { UInt8($0) })
     let key = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEZ2ad7Xe3RTt8RWyZXZXSRjmFHWU3HbKQ+ZKAyzzSs0+4WNOVPPDqcZ3pfMjxNi3b1A8bYFw3ODJjbXzhBRsqU="
+    let signingKey = P256.Signing.PrivateKey().publicKey.x963Representation
 
-    func proof(_ key: String, _ device: String, code: Data) -> String {
-        let mac = HMAC<SHA256>.authenticationCode(for: Data((key + "\n" + device).utf8), using: SymmetricKey(data: code))
+    func proof(_ key: String, _ device: String, sign: String, code: Data) -> String {
+        let mac = HMAC<SHA256>.authenticationCode(for: PairingRequest.proofMessage(key: key, device: device, sign: sign),
+                                                  using: SymmetricKey(data: code))
         return Data(mac).base64EncodedString()
     }
 
-    func request(device: String = "Max’ iPhone", key: String? = nil, proof p: String? = nil) -> Data {
+    func request(device: String = "Max’ iPhone", key: String? = nil, sign: Data? = nil, proof p: String? = nil) -> Data {
         let k = key ?? self.key
-        let o: [String: Any] = ["v": 1, "device": device, "key": k, "proof": p ?? proof(k, device, code: code)]
+        let s = (sign ?? signingKey).base64EncodedString()
+        let o: [String: Any] = ["v": 2, "device": device, "key": k, "sign": s,
+                                "proof": p ?? proof(k, device, sign: s, code: code)]
         return try! JSONSerialization.data(withJSONObject: o)
     }
 
@@ -22,17 +26,75 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(r.device, "Max’ iPhone")
         XCTAssertEqual(r.id.count, 12)
         XCTAssertEqual(r.key, key)
+        XCTAssertEqual(r.signingKey, signingKey)
     }
 
     func testWrongCodeAndTampering() {
         var wrong = code; wrong[0] ^= 1
-        guard case .failure(let reason) = PairingRequest.verify(request(proof: proof(key, "Max’ iPhone", code: wrong)), code: code)
+        let s = signingKey.base64EncodedString()
+        guard case .failure(let reason) = PairingRequest.verify(request(proof: proof(key, "Max’ iPhone", sign: s, code: wrong)),
+                                                                code: code)
         else { return XCTFail() }
         XCTAssertEqual(reason, "wrong code")
         // The device name is covered by the proof
-        let tampered = try! JSONSerialization.data(withJSONObject: ["v": 1, "device": "Other", "key": key,
-                                                                    "proof": proof(key, "Max’ iPhone", code: code)])
+        let tampered = try! JSONSerialization.data(withJSONObject: ["v": 2, "device": "Other", "key": key, "sign": s,
+                                                                    "proof": proof(key, "Max’ iPhone", sign: s, code: code)])
         guard case .failure = PairingRequest.verify(tampered, code: code) else { return XCTFail() }
+    }
+
+    func testASwappedSigningKeyIsRejected() {
+        // Someone between the phone and the Mac puts their own signing key in: without the code the proof can't match
+        let mine = signingKey.base64EncodedString()
+        let theirs = P256.Signing.PrivateKey().publicKey.x963Representation
+        let swapped = try! JSONSerialization.data(withJSONObject: [
+            "v": 2, "device": "Max’ iPhone", "key": key, "sign": theirs.base64EncodedString(),
+            "proof": proof(key, "Max’ iPhone", sign: mine, code: code)])
+        guard case .failure(let reason) = PairingRequest.verify(swapped, code: code) else { return XCTFail() }
+        XCTAssertEqual(reason, "wrong code")
+        // Nor can the SSH key be swapped while the signing key stays
+        let other = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGsX0fLhLEJH+Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT+NC4v4af5uO5+tKfA+eFivOM1drMV7Oy7ZAaDe/UfU="
+        guard case .failure = PairingRequest.verify(request(key: other, proof: proof(key, "Max’ iPhone", sign: mine, code: code)),
+                                                    code: code) else { return XCTFail() }
+    }
+
+    func testOldPhonesAndBadSigningKeys() {
+        // Version 1 (no signing key): such a phone could never approve, so it isn't paired
+        let v1 = try! JSONSerialization.data(withJSONObject: ["v": 1, "device": "iPhone", "key": key, "proof": "AAAA"])
+        guard case .failure(let reason) = PairingRequest.verify(v1, code: code) else { return XCTFail() }
+        XCTAssertTrue(reason.contains("Update it"), reason)
+        // Not a point on the curve, or the compressed form
+        var notOnCurve = signingKey; notOnCurve[40] ^= 0x55
+        guard case .failure(let r1) = PairingRequest.verify(request(sign: notOnCurve), code: code) else { return XCTFail() }
+        XCTAssertEqual(r1, "unsupported signing key")
+        let compressed = P256.Signing.PrivateKey().publicKey.compressedRepresentation
+        guard case .failure = PairingRequest.verify(request(sign: compressed), code: code) else { return XCTFail() }
+        // A request without a signing key at all
+        let missing = try! JSONSerialization.data(withJSONObject: ["v": 2, "device": "iPhone", "key": key, "proof": "AAAA"])
+        guard case .failure(let r2) = PairingRequest.verify(missing, code: code) else { return XCTFail() }
+        XCTAssertEqual(r2, "bad request")
+    }
+
+    @MainActor
+    func testPairingKeepsBothKeysAndRemovingTakesBoth() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("aos-pair-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let keys = AuthorizedKeys(url: dir.appendingPathComponent("authorized_keys"))
+        let phones = MemoryPhoneKeys()
+        let companion = "/Applications/aOS.app/Contents/MacOS/aos-companion"
+        let session = PairingSession(code: code, keys: keys, phones: phones, companion: companion)
+        guard case .success(let r) = PairingRequest.verify(request(), code: code) else { return XCTFail() }
+        let answer = try session.register(r)
+        XCTAssertEqual(answer["ok"] as? Bool, true)
+        let mac = PairingSession.answerAuthentication(code: code, user: NSUserName(), companion: companion)
+        XCTAssertEqual(answer["mac"] as? String, mac.base64EncodedString(), "the answer's format is unchanged")
+        XCTAssertEqual(keys.devices().map(\.id), [r.id])
+        XCTAssertEqual(phones.phone(id: r.id)?.signingKey, signingKey)
+        XCTAssertEqual(phones.phone(id: r.id)?.name, "Max’ iPhone")
+
+        try PairedPhones.remove(id: r.id, keys: keys, phones: phones)
+        XCTAssertTrue(keys.devices().isEmpty)
+        XCTAssertNil(phones.phone(id: r.id))
+        XCTAssertTrue(phones.ids().isEmpty)
     }
 
     func testKeyBlobMustMatchItsType() {
@@ -46,10 +108,17 @@ final class PairingTests: XCTestCase {
     }
 
     func testProofReferenceVectorFromThePhone() {
-        // The iPhone app's reference vector (iOS/NOTES.md): same proof on both sides
+        // The iPhone app's reference vector (iOS/Tests/PairingTests.swift, computed with Python's hmac): same proof on
+        // both sides. The SSH key and the signing key are both the P-256 generator point here.
         let c = Data((0..<16).map { UInt8($0) })
         let k = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGsX0fLhLEJH+Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT+NC4v4af5uO5+tKfA+eFivOM1drMV7Oy7ZAaDe/UfU="
-        XCTAssertEqual(proof(k, "Max’s iPhone", code: c), "mrui6J5uTrdDd7yaEdlJQU6kWIO77PVkB04oYtW2SAQ=")
+        let s = "BGsX0fLhLEJH+Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT+NC4v4af5uO5+tKfA+eFivOM1drMV7Oy7ZAaDe/UfU="
+        let expected = "qkMRU/RXYOf3oLpMFcJHxT4LgNMUgtN2zEmhiHPFPoc="
+        XCTAssertEqual(proof(k, "Max’s iPhone", sign: s, code: c), expected)
+        let line = try! JSONSerialization.data(withJSONObject: ["v": 2, "device": "Max’s iPhone", "key": k, "sign": s,
+                                                                "proof": expected])
+        guard case .success(let r) = PairingRequest.verify(line, code: c) else { return XCTFail() }
+        XCTAssertEqual(r.id, "4853150ceae1", "the phone id the phone computes too (Python: sha256 of the blob)")
     }
 
     func testUnsupportedKey() {

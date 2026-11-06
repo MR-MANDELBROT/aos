@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// The Mac's side of the companion API in memory: answers requests the way `aos-companion serve` does
@@ -15,6 +16,16 @@ final class MockCompanionServer: @unchecked Sendable {
         ]
         /// Requests the server answers with `ok: false` and this message.
         var refuse: [String: String] = [:]
+        /// The phone the Mac knows: with it set, every request must be signed by that phone, as aOS on the Mac
+        /// checks it (refused with "pair-again" without, "invalid" for a bad signature or a nonce seen before).
+        var trustedPhone: TrustedSigner?
+    }
+
+    /// A phone's signing key as the Mac keeps it.
+    struct TrustedSigner: Sendable, Equatable {
+        var phoneID: String
+        /// P-256, X9.63.
+        var publicKey: Data
     }
 
     /// A request as the server received it.
@@ -26,6 +37,7 @@ final class MockCompanionServer: @unchecked Sendable {
     private let lock = NSLock()
     private var state: State
     private var subscribed = false
+    private var nonces: Set<String> = []
     private var log: [Received] = []
     private let keepsSecrets: Bool
     /// Where lines to the client go.
@@ -109,9 +121,13 @@ final class MockCompanionServer: @unchecked Sendable {
         if !keepsSecrets, fields["password"] != nil { fields["password"] = .string("•••") }
         let state: State = lock.withLock {
             log.append(Received(op: op, fields: fields))
-            if op == "subscribe" { subscribed = true }
             return self.state
         }
+        if let trusted = state.trustedPhone, let refusal = check(op: op, object: object, trusted: trusted) {
+            return Self.encode(["id": .number(Double(id)), "ok": .bool(false), "error": .string(refusal.message),
+                                "code": .string(refusal.code)])
+        }
+        if op == "subscribe" { lock.withLock { subscribed = true } }
         if let message = state.refuse[op] {
             return Self.encode(["id": .number(Double(id)), "ok": .bool(false), "error": .string(message)])
         }
@@ -143,6 +159,62 @@ final class MockCompanionServer: @unchecked Sendable {
             return Self.encode(["id": .number(Double(id)), "ok": .bool(false), "error": .string("unknown op \(op)")])
         }
         return Self.encode(body)
+    }
+
+    // MARK: Signatures (as aOS on the Mac checks them)
+
+    /// Why the Mac would refuse this request, or nil if the trusted phone signed it.
+    private func check(op: String, object: [String: JSONValue], trusted: TrustedSigner) -> (code: String, message: String)? {
+        guard let auth = CompanionAuth(object["auth"]), auth.key == trusted.phoneID else {
+            return ("pair-again", "This iPhone can't approve on this Mac until it is paired again.")
+        }
+        guard abs(Double(auth.ts) - Date().timeIntervalSince1970) <= 120 else {
+            return ("clock", "The iPhone's clock and the Mac's differ by more than 2 minutes.")
+        }
+        guard let message = CompanionSignature.message(Self.signatureFields(op: op, object: object, auth: auth)),
+              let raw = Data(base64Encoded: auth.sig), raw.count == 64,
+              let signature = try? P256.Signing.ECDSASignature(rawRepresentation: raw),
+              let key = try? P256.Signing.PublicKey(x963Representation: trusted.publicKey),
+              key.isValidSignature(signature, for: message) else {
+            return ("invalid", "The request's signature doesn't check out.")
+        }
+        guard lock.withLock({ nonces.insert(auth.nonce).inserted }) else {
+            return ("invalid", "This request was sent before.")
+        }
+        return nil
+    }
+
+    /// What the Mac signs over, read from the line the way the Mac reads it: `aos-companion` passes on only the fields
+    /// each operation has, the app derives the decision from them (AOSKit `CompanionSignature.fields(for:auth:)`).
+    static func signatureFields(op: String, object: [String: JSONValue], auth: CompanionAuth) -> CompanionSignature.Fields {
+        let macOp = ["hello", "status", "subscribe", "screen", "type"].contains(op) ? "companion." + op : op
+        var f = CompanionSignature.Fields(op: macOp, key: auth.key, ts: auth.ts, nonce: auth.nonce)
+        func text(_ name: String) -> String? { object[name]?.string }
+        switch op {
+        case "screen":
+            f.target = text("target") == "workspace" ? "workspace" : "mac"
+        case "signin.answer":
+            f.request = text("request") ?? ""
+            f.host = text("host") ?? ""
+            f.login = text("login") ?? ""
+            if object["decline"]?.bool == true { f.decision = "decline" }
+            else if text("login") != nil { f.decision = "login" }
+            else if text("username") != nil || text("password") != nil { f.decision = "fill" }
+            else if text("totp") != nil { f.decision = "code" }
+            f.data = CompanionSignature.dataDigest(username: text("username"), password: text("password"),
+                                                   totp: text("totp"))
+        case "type":
+            f.data = CompanionSignature.dataDigest(text: text("text"))
+        case "help.done":
+            f.request = text("request") ?? ""
+            f.decision = "done"
+        case "approval.answer":
+            f.request = text("request") ?? ""
+            f.decision = object["allowed"]?.bool == true ? "allow" : "deny"
+        default:
+            break
+        }
+        return f
     }
 
     // MARK: Encoding
@@ -187,6 +259,8 @@ final class MockCompanionServer: @unchecked Sendable {
             return encode(["event": .string("mac"), "state": .string(state), "detail": .string(detail)])
         case .workspace(let state):
             return encode(["event": .string("workspace"), "state": .string(raw(state))])
+        case .subscriptionEnded:
+            return encode(["event": .string("subscription"), "state": .string("ended")])
         }
     }
 

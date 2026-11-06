@@ -45,6 +45,12 @@ public struct AgentRequest: Codable, Sendable {
     public var target: String?
     /// The companion device's name (hello).
     public var device: String?
+    /// signin.answer: the website of the sign-in the user approved (the phone signs it).
+    public var host: String?
+    /// The phone's signature (Docs/COMPANION.md, "Signed requests"); the agent's own requests have none.
+    public var auth: CompanionAuth?
+    /// companion.events: the subscription the app gave for a signed companion.subscribe.
+    public var subscription: String?
 
     public init(id: Int, op: String) { self.id = id; self.op = op }
 }
@@ -57,13 +63,16 @@ public struct AgentResponse: Codable, Sendable {
     /// Base64 image, if the operation returns a screenshot.
     public var image: String?
     public var mimeType: String?
+    /// Why a phone request was refused, for the phone ("pair-again", "clock", "invalid", "subscription-ended").
+    public var code: String?
 
-    public init(id: Int, ok: Bool, text: String, image: Data? = nil, mimeType: String? = nil) {
+    public init(id: Int, ok: Bool, text: String, image: Data? = nil, mimeType: String? = nil, code: String? = nil) {
         self.id = id
         self.ok = ok
         self.text = text
         self.image = image?.base64EncodedString()
         self.mimeType = mimeType
+        self.code = code
     }
 
     public static func failure(_ id: Int, _ message: String) -> AgentResponse {

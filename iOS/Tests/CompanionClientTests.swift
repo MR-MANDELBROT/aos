@@ -55,8 +55,8 @@ struct CompanionClientTests {
 
     @Test func signInAnswersAndDeclines() async throws {
         let (client, server) = await connected()
-        try await client.answerSignIn(request: "r1", username: "max", password: "geheim", totp: "123456")
-        try await client.declineSignIn(request: "r2")
+        try await client.answerSignIn(request: "r1", host: "a.de", username: "max", password: "geheim", totp: "123456")
+        try await client.declineSignIn(request: "r2", host: "a.de")
         try await client.helpDone(request: "h1")
         let answers = server.received
         #expect(answers[0].fields["op"] == .string("signin.answer"))
@@ -69,7 +69,7 @@ struct CompanionClientTests {
 
     @Test func theDemoServerNeverKeepsPasswords() async throws {
         let (client, server) = await connected(MockCompanionServer(keepsSecrets: false))
-        try await client.answerSignIn(request: "r1", username: "max", password: "geheim", totp: nil)
+        try await client.answerSignIn(request: "r1", host: "a.de", username: "max", password: "geheim", totp: nil)
         #expect(server.received[0].fields["password"] == .string("•••"))
     }
 

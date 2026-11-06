@@ -46,6 +46,7 @@ struct OverviewView: View {
 // MARK: - Mac
 
 struct MacCard: View {
+    @Environment(AppModel.self) private var model
     let connection: MacConnection
 
     var body: some View {
@@ -72,7 +73,25 @@ struct MacCard: View {
                     }
                     .buttonStyle(.glass)
                 case .connected:
-                    if let problem = connection.macAppProblem {
+                    if connection.companionState == .needsPairing {
+                        // Paired before requests were signed (or removed on the Mac): the Mac refuses its answers.
+                        Label {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Pair again to keep approving from this iPhone.").font(.footnote.weight(.semibold))
+                                Text("aOS on the Mac now takes requests only when this iPhone signs them, with a key it gets when you pair. Show the pairing code on the Mac (Settings > iPhone) and scan it.")
+                                    .font(.footnote).foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
+                        }
+                        Button {
+                            model.isPairingPresented = true
+                        } label: {
+                            Label("Pair Again", systemImage: "qrcode.viewfinder")
+                        }
+                        .buttonStyle(.glassProminent)
+                    } else if let problem = connection.macAppProblem {
                         Label {
                             Text(problem.isEmpty
                                  ? String(localized: "aOS on the Mac isn't answering right now. It keeps trying.")

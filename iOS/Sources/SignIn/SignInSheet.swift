@@ -328,7 +328,7 @@ struct SignInSheet: View {
                 ? String(localized: "Fill in the code for \(request.host)")
                 : String(localized: "Approve the sign-in for \(request.host)"))
             phase = .sending
-            try await connection.answerSignIn(request: request.id, login: login)
+            try await connection.answerSignIn(request: request.id, host: request.host, login: login)
             phase = .sent(fromBitwarden: true)
             closeSoon()
         } catch Biometrics.Failure.cancelled {
@@ -345,7 +345,7 @@ struct SignInSheet: View {
         let value = code.trimmingCharacters(in: .whitespaces)
         phase = .sending
         do {
-            try await connection.answerSignInCode(request: request.id, code: value)
+            try await connection.answerSignInCode(request: request.id, host: request.host, code: value)
             code = ""
             phase = .sent(fromBitwarden: false)
             closeSoon()
@@ -358,7 +358,7 @@ struct SignInSheet: View {
         guard let connection = model.connection else { return }
         phase = .sending
         do {
-            try await connection.answerSignIn(request: request.id, username: otherUser, password: otherPassword, totp: nil)
+            try await connection.answerSignIn(request: request.id, host: request.host, username: otherUser, password: otherPassword, totp: nil)
             otherPassword = ""
             phase = .sent(fromBitwarden: false)
             closeSoon()
@@ -370,7 +370,7 @@ struct SignInSheet: View {
     private func decline() async {
         phase = .sending
         do {
-            try await model.connection?.declineSignIn(request: request.id)
+            try await model.connection?.declineSignIn(request: request.id, host: request.host)
             phase = .declined
             closeSoon()
         } catch {

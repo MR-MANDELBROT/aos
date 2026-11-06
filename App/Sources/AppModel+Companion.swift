@@ -84,6 +84,8 @@ extension AppModel {
 
     func refreshPhone() {
         pairedDevices = AuthorizedKeys().devices()
+        // Phones paired before signing keys can't approve anything until they pair again.
+        devicesWithSigningKey = Set(KeychainPhoneKeys().ids())
         let check = Task.detached(priority: .utility) { MacSSH.remoteLoginOn() }
         Task { remoteLoginOn = await check.value }
     }
@@ -110,7 +112,8 @@ extension AppModel {
 
     func removeDevice(_ device: AuthorizedKeys.Device) {
         do {
-            try AuthorizedKeys().remove(id: device.id)
+            // Its SSH key and its signing key: it can neither log in nor approve anything any more.
+            try PairedPhones.remove(id: device.id)
             append("removed \(device.name)")
         } catch { append("could not remove \(device.name): \(error.localizedDescription)") }
         refreshPhone()

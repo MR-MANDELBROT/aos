@@ -46,10 +46,16 @@ struct PhoneSettings: View {
                         Image(systemName: "iphone").foregroundStyle(.secondary).frame(width: 20)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(device.name)
-                            HStack(spacing: 6) {
-                                StatusDot(color: connected(device) ? .green : .secondary)
-                                Text(connected(device) ? String(localized: "Connected now") : String(localized: "Not connected"))
-                                    .font(.caption).foregroundStyle(.secondary)
+                            if model.devicesWithSigningKey.contains(device.id) {
+                                HStack(spacing: 6) {
+                                    StatusDot(color: connected(device) ? .green : .secondary)
+                                    Text(connected(device) ? String(localized: "Connected now") : String(localized: "Not connected"))
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                            } else {
+                                // Paired before requests were signed: the Mac refuses its answers.
+                                Label("Pair it again to approve from it", systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption).foregroundStyle(.orange)
                             }
                         }
                         Spacer()

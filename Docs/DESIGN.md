@@ -186,12 +186,16 @@ See Docs/COMPANION.md for the protocol. On the Mac:
 
 - **Pairing** (`PairingSession`): a TCP listener on a random port with Bonjour `_aos-pair._tcp`, 3 minutes, one
   pairing, five wrong proofs end it. The QR code carries the Mac's addresses, the SHA-256 fingerprint of its ed25519
-  host key and a 16-byte code; the phone proves the code with HMAC-SHA256 over its key and name, the Mac appends the
-  key to `~/.ssh/authorized_keys` (`no-agent-forwarding,no-X11-forwarding`, marked `aos-companion:<id>`). Remote
-  Login must be on; Settings > iPhone checks it and lists and removes paired phones.
+  host key and a 16-byte code; the phone proves the code with HMAC-SHA256 over its SSH key, its name and its signing
+  key, the Mac keeps the signing key in its keychain and appends the SSH key to `~/.ssh/authorized_keys`
+  (`no-agent-forwarding,no-X11-forwarding`, marked `aos-companion:<id>`). Remote Login must be on; Settings > iPhone
+  checks it and lists and removes paired phones (both keys go).
 - **aos-companion serve** is what the phone runs over SSH: JSON lines, relayed to the app's agent socket; a second
   connection long-polls `companion.events`. Companion requests are not agent activity (they don't keep the workspace
-  open).
+  open). Neither aos-companion nor authorized_keys vouches for anything (any program of the user can run the one
+  and edit the other): every phone request is signed with the phone's key, and `CompanionGate` in the app checks
+  key, signature, time (2 minutes) and nonce before anything happens; event polls carry a subscription the app gave
+  for a signed `subscribe` (Docs/COMPANION.md, "Signed requests").
 - **CompanionHub** collects the events (sign-in, help, approval requests and their end); a phone that connects gets
   the open questions first. The menu shows whether a phone is connected (it asked within 45 s).
 
@@ -299,7 +303,15 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   runs as the user with a shell (a coding agent): the workspace's keys (`aOS/Keys`: the maintenance SSH key, the
   workspace account's password) are files of the user, so such a program could take over the workspace and watch
   a login that the person approved being typed there; moving them into the helper is the next step. The vault as a
-  whole, other logins and the master password stay out of its reach.
+  whole, other logins and the master password stay out of its reach. Approvals from the iPhone: only requests signed with the paired phone's key count, so a
+  program on the Mac (a coding agent with a shell, as the same user) can't approve a sign-in, finish a help or
+  approval request, read the open requests or get the workspace's screen sharing login through the agent socket.
+  It can still stop the phone's requests (delete the keychain item, rewrite authorized_keys, replace what the phone
+  runs over SSH) and, by putting its own program in place of aos-companion, read what the Mac sends the phone (the
+  open requests, the workspace's screen login when the phone asks for it) and drop answers; it can't change or replay
+  them. Replies encrypted to the phone's key would close that. Open hardening steps: a key only the signed helper
+  can use, so the request is encrypted to it (instead of trusting the socket's peer), and a check of Chrome's profile
+  settings before each sign-in.
 
 ## New chats from the Claude app (server mode)
 

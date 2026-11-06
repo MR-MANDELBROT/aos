@@ -31,8 +31,12 @@ struct EndToEndTests {
                                sshPort: UInt16(server.port), user: "max", hostKeyFingerprint: server.hostKeyFingerprint,
                                code: code)
         let model = AppModel()
+        // The Mac checks every companion request against the signing key it got at pairing
+        let signingKey = try #require(model.companionKey)
+        companion.update { $0.trustedPhone = .init(phoneID: key.phoneID, publicKey: signingKey.publicKey) }
         let steps = Steps()
         let mac = try await model.pair(with: link) { steps.all.append($0) }
+        #expect(listener.requests.first?.sign == signingKey.publicKey.base64EncodedString())
         // The dead first address (TEST-NET) doesn't hold pairing up: the addresses are tried at once.
         #expect(ContinuousClock.now - started < .seconds(4))
 
@@ -56,7 +60,7 @@ struct EndToEndTests {
         companion.emit(.signIn(SignInRequest(id: "e2e", agent: "Claude Code", host: "github.com", purpose: "Push",
                                              expires: Date().addingTimeInterval(120))))
         try await waitUntil { model.presentedSignIn?.id == "e2e" }
-        try await connection.answerSignIn(request: "e2e", username: "max", password: "geheim", totp: "123456")
+        try await connection.answerSignIn(request: "e2e", host: "github.com", username: "max", password: "geheim", totp: "123456")
         #expect(companion.received.last?.fields["password"] == .string("geheim"))
         #expect(companion.received.last?.fields["totp"] == .string("123456"))
         companion.emit(.signInClosed(request: "e2e", result: .filled))
@@ -68,7 +72,7 @@ struct EndToEndTests {
                                              logins: [BitwardenLogin(id: "b1", name: "GitHub", username: "max", hasCode: true)],
                                              bitwarden: .unlocked)))
         try await waitUntil { model.signIns.contains { $0.id == "e2e-bw" && $0.logins.count == 1 } }
-        try await connection.answerSignIn(request: "e2e-bw", login: "b1")
+        try await connection.answerSignIn(request: "e2e-bw", host: "github.com", login: "b1")
         #expect(companion.received.last?.fields["login"] == .string("b1"))
         #expect(companion.received.last?.fields["password"] == nil)
 
@@ -76,7 +80,7 @@ struct EndToEndTests {
         companion.emit(.signIn(SignInRequest(id: "e2e-code", agent: "Claude Code", host: "github.com", purpose: "2FA",
                                              expires: nil, field: .code)))
         try await waitUntil { model.signIns.contains { $0.id == "e2e-code" && $0.field == .code } }
-        try await connection.answerSignInCode(request: "e2e-code", code: "246810")
+        try await connection.answerSignInCode(request: "e2e-code", host: "github.com", code: "246810")
         #expect(companion.received.last?.fields["totp"] == .string("246810"))
         #expect(companion.received.last?.fields["password"] == nil)
 
@@ -109,6 +113,12 @@ struct EndToEndTests {
         #expect(companion.received.last?.fields["text"] == .string("Grüße"))
         #expect(rfb.log.keyEvents.filter(\.down).count == 3)
         screen.stop()
+
+        // The Mac no longer has this iPhone's key (removed there, or paired before signing keys): when the
+        // subscription ends, subscribing again gets "pair again", and the Mac card says so
+        companion.update { $0.trustedPhone = .init(phoneID: "000000000000", publicKey: signingKey.publicKey) }
+        companion.emit(.subscriptionEnded)
+        try await waitUntil { connection.companionState == .needsPairing }
 
         // Unpairing forgets the Mac
         model.unpair(mac)

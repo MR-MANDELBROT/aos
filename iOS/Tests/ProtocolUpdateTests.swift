@@ -10,8 +10,8 @@ struct ProtocolUpdateTests {
     }
 
     @Test func newRequestLines() throws {
-        #expect(try text(.signInCode(request: "r3", totp: "123456"), id: 1)
-                == "{\"id\":1,\"op\":\"signin.answer\",\"request\":\"r3\",\"totp\":\"123456\"}\n")
+        #expect(try text(.signInCode(request: "r3", host: "a.de", totp: "123456"), id: 1)
+                == "{\"host\":\"a.de\",\"id\":1,\"op\":\"signin.answer\",\"request\":\"r3\",\"totp\":\"123456\"}\n")
         #expect(try text(.approvalAnswer(request: "a1", allowed: true), id: 2)
                 == "{\"allowed\":true,\"id\":2,\"op\":\"approval.answer\",\"request\":\"a1\"}\n")
         #expect(try text(.approvalAnswer(request: "a1", allowed: false), id: 3)
@@ -61,7 +61,7 @@ struct ProtocolUpdateTests {
         let server = MockCompanionServer(keepsSecrets: true)
         let client = CompanionClient(transport: server.makeTransport())
         await client.start()
-        try await client.answerSignInCode(request: "r3", code: "654321")
+        try await client.answerSignInCode(request: "r3", host: "a.de", code: "654321")
         try await client.answerApproval(request: "a1", allowed: true)
         try await client.type("Grüße")
         let received = server.received

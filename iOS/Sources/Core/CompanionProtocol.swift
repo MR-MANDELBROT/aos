@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 // The companion API between the iPhone and `aos-companion serve` on the Mac (Docs/COMPANION.md, "Companion API"):
@@ -60,13 +61,13 @@ enum CompanionRequest: Sendable, Equatable {
     case subscribe
     case screen(target: ScreenTarget)
     /// A Bitwarden login the person approved (its id): the Mac gets it from Bitwarden and fills it (for a code
-    /// request: its current one-time code).
-    case signInLogin(request: String, login: String)
+    /// request: its current one-time code). `host`: the request's website, as the person saw it (signed).
+    case signInLogin(request: String, host: String, login: String)
     /// A sign-in from another password app (AutoFill). Never logged, never stored.
-    case signInAnswer(request: String, username: String, password: String, totp: String?)
-    case signInDecline(request: String)
+    case signInAnswer(request: String, host: String, username: String, password: String, totp: String?)
+    case signInDecline(request: String, host: String)
     /// A one-time code, for a request whose field is `code` (only `totp` goes out).
-    case signInCode(request: String, totp: String)
+    case signInCode(request: String, host: String, totp: String)
     case helpDone(request: String)
     /// Whether the agent may open the workspace.
     case approvalAnswer(request: String, allowed: Bool)
@@ -86,8 +87,61 @@ enum CompanionRequest: Sendable, Equatable {
         }
     }
 
-    /// The request as one JSON line (with its terminating "\n").
-    func line(id: Int) throws -> Data {
+    /// The operation as aOS on the Mac gets it from `aos-companion` (what the signature names).
+    var signedOp: String {
+        switch self {
+        case .hello, .status, .subscribe, .screen, .type: "companion." + op
+        default: op
+        }
+    }
+
+    /// The totp that goes out with an AutoFill answer (an empty one doesn't).
+    private static func sentTOTP(_ totp: String?) -> String? {
+        guard let totp, !totp.isEmpty else { return nil }
+        return totp
+    }
+
+    /// What the Mac reads from this request to check its signature (Docs/COMPANION.md, "Signed requests").
+    func signatureFields(key: String, ts: Int, nonce: String) -> CompanionSignature.Fields {
+        var f = CompanionSignature.Fields(op: signedOp, key: key, ts: ts, nonce: nonce)
+        switch self {
+        case .hello, .status, .subscribe:
+            break
+        case .screen(let target):
+            f.target = target.rawValue
+        case .signInLogin(let request, let host, let login):
+            f.request = request
+            f.host = host
+            f.decision = "login"
+            f.login = login
+        case .signInAnswer(let request, let host, let username, let password, let totp):
+            f.request = request
+            f.host = host
+            f.decision = "fill"
+            f.data = CompanionSignature.dataDigest(username: username, password: password, totp: Self.sentTOTP(totp))
+        case .signInDecline(let request, let host):
+            f.request = request
+            f.host = host
+            f.decision = "decline"
+        case .signInCode(let request, let host, let totp):
+            f.request = request
+            f.host = host
+            f.decision = "code"
+            f.data = CompanionSignature.dataDigest(totp: totp)
+        case .helpDone(let request):
+            f.request = request
+            f.decision = "done"
+        case .approvalAnswer(let request, let allowed):
+            f.request = request
+            f.decision = allowed ? "allow" : "deny"
+        case .type(let text):
+            f.data = CompanionSignature.dataDigest(text: text)
+        }
+        return f
+    }
+
+    /// The request as one JSON line (with its terminating "\n"), with the phone's signature if given.
+    func line(id: Int, auth: CompanionAuth? = nil) throws -> Data {
         var object: [String: JSONValue] = ["id": .number(Double(id)), "op": .string(op)]
         switch self {
         case .hello(let app, let device):
@@ -97,19 +151,23 @@ enum CompanionRequest: Sendable, Equatable {
             break
         case .screen(let target):
             object["target"] = .string(target.rawValue)
-        case .signInLogin(let request, let login):
+        case .signInLogin(let request, let host, let login):
             object["request"] = .string(request)
+            object["host"] = .string(host)
             object["login"] = .string(login)
-        case .signInAnswer(let request, let username, let password, let totp):
+        case .signInAnswer(let request, let host, let username, let password, let totp):
             object["request"] = .string(request)
+            object["host"] = .string(host)
             object["username"] = .string(username)
             object["password"] = .string(password)
-            if let totp, !totp.isEmpty { object["totp"] = .string(totp) }
-        case .signInDecline(let request):
+            if let totp = Self.sentTOTP(totp) { object["totp"] = .string(totp) }
+        case .signInDecline(let request, let host):
             object["request"] = .string(request)
+            object["host"] = .string(host)
             object["decline"] = .bool(true)
-        case .signInCode(let request, let totp):
+        case .signInCode(let request, let host, let totp):
             object["request"] = .string(request)
+            object["host"] = .string(host)
             object["totp"] = .string(totp)
         case .helpDone(let request):
             object["request"] = .string(request)
@@ -119,11 +177,94 @@ enum CompanionRequest: Sendable, Equatable {
         case .type(let text):
             object["text"] = .string(text)
         }
+        if let auth { object["auth"] = auth.json }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         var data = try encoder.encode(JSONValue.object(object))
         data.append(0x0A)
         return data
+    }
+}
+
+/// The signature on a request (`"auth"` in its line). The Mac checks it before it does anything.
+struct CompanionAuth: Sendable, Equatable {
+    /// This iPhone's id on the Mac: first 12 hex characters of the SHA-256 of its SSH key blob.
+    var key: String
+    /// Unix time in seconds; the Mac takes it within 2 minutes of its own clock.
+    var ts: Int
+    /// 16 random bytes, base64url without padding; never the same twice.
+    var nonce: String
+    /// ECDSA P-256 with SHA-256 over `CompanionSignature.message`: r and s (64 bytes), base64.
+    var sig: String
+
+    var json: JSONValue {
+        .object(["key": .string(key), "ts": .number(Double(ts)), "nonce": .string(nonce), "sig": .string(sig)])
+    }
+
+    init(key: String, ts: Int, nonce: String, sig: String) {
+        self.key = key
+        self.ts = ts
+        self.nonce = nonce
+        self.sig = sig
+    }
+
+    init?(_ value: JSONValue?) {
+        guard let o = value?.object, let key = o["key"]?.string, let ts = o["ts"]?.int, let nonce = o["nonce"]?.string,
+              let sig = o["sig"]?.string else { return nil }
+        self.init(key: key, ts: ts, nonce: nonce, sig: sig)
+    }
+}
+
+/// What the iPhone signs, the same text the Mac rebuilds (AOSKit `CompanionSignature`): these lines, UTF-8, joined with
+/// "\n" and no newline at the end. No value may contain a line break.
+///
+///     aos-companion-v1
+///     op=<companion.hello|companion.status|companion.subscribe|companion.screen|companion.type|signin.answer|help.done|approval.answer>
+///     key=<phone id>
+///     ts=<seconds>
+///     nonce=<nonce>
+///     request=<request id or empty>
+///     decision=<login|fill|code|decline, allow|deny, done, or empty>
+///     login=<Bitwarden item id or empty>
+///     host=<the sign-in's website or empty>
+///     target=<mac|workspace or empty>
+///     data=<dataDigest of user name, password, code, typed text>
+enum CompanionSignature {
+    static let version = "aos-companion-v1"
+
+    struct Fields: Equatable, Sendable {
+        var op: String
+        var key: String
+        var ts: Int
+        var nonce: String
+        var request = ""
+        var decision = ""
+        var login = ""
+        var host = ""
+        var target = ""
+        var data = CompanionSignature.dataDigest()
+    }
+
+    static func message(_ f: Fields) -> Data? {
+        let values = [f.op, f.key, String(f.ts), f.nonce, f.request, f.decision, f.login, f.host, f.target, f.data]
+        guard !values.contains(where: { $0.unicodeScalars.contains { $0 == "\n" || $0 == "\r" } }) else { return nil }
+        let lines = [version, "op=\(f.op)", "key=\(f.key)", "ts=\(f.ts)", "nonce=\(f.nonce)", "request=\(f.request)",
+                     "decision=\(f.decision)", "login=\(f.login)", "host=\(f.host)", "target=\(f.target)",
+                     "data=\(f.data)"]
+        return Data(lines.joined(separator: "\n").utf8)
+    }
+
+    /// For each field present, in this order: `<name>:<UTF-8 byte count>:<value>\n`; SHA-256 of that, lowercase hex.
+    static func dataDigest(username: String? = nil, password: String? = nil, totp: String? = nil,
+                           text: String? = nil) -> String {
+        var data = Data()
+        for (name, value) in [("username", username), ("password", password), ("totp", totp), ("text", text)] {
+            guard let value else { continue }
+            data.append(Data("\(name):\(value.utf8.count):".utf8))
+            data.append(Data(value.utf8))
+            data.append(0x0A)
+        }
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -133,6 +274,9 @@ struct CompanionResponse: Sendable, Equatable {
     var ok: Bool
     var error: String?
     var body: [String: JSONValue]
+
+    /// Why the Mac refused: "pair-again" (it has no signing key for this iPhone), "clock", "invalid".
+    var code: String? { body["code"]?.string }
 }
 
 enum WorkspaceState: Equatable, Sendable {
@@ -239,6 +383,8 @@ enum CompanionEvent: Equatable, Sendable {
     /// `aos-companion` can't reach the Mac app (`unavailable`, it keeps trying), or can again.
     case mac(state: String, detail: String)
     case workspace(WorkspaceState)
+    /// The Mac ended the event subscription (aOS restarted, or it ran out): the iPhone subscribes again, signed.
+    case subscriptionEnded
 }
 
 /// One decoded line from the Mac.
@@ -308,6 +454,8 @@ enum CompanionMessage: Equatable, Sendable {
         case "workspace":
             guard let state = object["state"]?.string else { return .ignored }
             return .event(.workspace(WorkspaceState(state)))
+        case "subscription":
+            return object["state"]?.string == "ended" ? .event(.subscriptionEnded) : .ignored
         default:
             return .ignored
         }

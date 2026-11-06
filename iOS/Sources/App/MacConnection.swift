@@ -25,6 +25,8 @@ final class MacConnection {
         case ready
         /// SSH works, but aOS on the Mac doesn't answer (not installed, too old, not running).
         case unavailable(String)
+        /// The Mac has no signing key for this iPhone and refuses its requests: pair again.
+        case needsPairing
     }
 
     private(set) var mac: PairedMac
@@ -45,14 +47,17 @@ final class MacConnection {
     var onMacChanged: ((PairedMac) -> Void)?
 
     private let key: DeviceKey
+    /// Signs every companion request (the Mac refuses unsigned ones); nil only in tests of old behavior.
+    private let signer: CompanionSigner?
     private let deviceName: String
     private var loop: Task<Void, Never>?
     private var wake: AsyncStream<Void>.Continuation?
     private var pathMonitor: NWPathMonitor?
 
-    init(mac: PairedMac, key: DeviceKey, deviceName: String) {
+    init(mac: PairedMac, key: DeviceKey, signer: CompanionSigner?, deviceName: String) {
         self.mac = mac
         self.key = key
+        self.signer = signer
         self.deviceName = deviceName
     }
 
@@ -108,24 +113,26 @@ final class MacConnection {
         return try await companion.screen(target)
     }
 
-    func answerSignIn(request: String, login: String) async throws {
+    // Sign-in answers name the request's website too: the signature covers it and the Mac checks it.
+
+    func answerSignIn(request: String, host: String, login: String) async throws {
         guard let companion else { throw CompanionError.closed }
-        try await companion.answerSignIn(request: request, login: login)
+        try await companion.answerSignIn(request: request, host: host, login: login)
     }
 
-    func answerSignIn(request: String, username: String, password: String, totp: String?) async throws {
+    func answerSignIn(request: String, host: String, username: String, password: String, totp: String?) async throws {
         guard let companion else { throw CompanionError.closed }
-        try await companion.answerSignIn(request: request, username: username, password: password, totp: totp)
+        try await companion.answerSignIn(request: request, host: host, username: username, password: password, totp: totp)
     }
 
-    func declineSignIn(request: String) async throws {
+    func declineSignIn(request: String, host: String) async throws {
         guard let companion else { throw CompanionError.closed }
-        try await companion.declineSignIn(request: request)
+        try await companion.declineSignIn(request: request, host: host)
     }
 
-    func answerSignInCode(request: String, code: String) async throws {
+    func answerSignInCode(request: String, host: String, code: String) async throws {
         guard let companion else { throw CompanionError.closed }
-        try await companion.answerSignInCode(request: request, code: code)
+        try await companion.answerSignInCode(request: request, host: host, code: code)
     }
 
     func helpDone(request: String) async throws {
@@ -213,9 +220,11 @@ final class MacConnection {
     private func serve(_ connection: SSHConnection) async {
         while connection.isActive && !Task.isCancelled {
             companionState = .starting
+            var started: CompanionClient?
             do {
                 let channel = try await connection.exec(CompanionCommand.serve(path: mac.companionPath))
-                let client = CompanionClient(transport: channel)
+                let client = CompanionClient(transport: channel, signer: signer)
+                started = client
                 await client.start()
                 companion = client
                 hello = try await client.hello(app: Self.appVersion, device: deviceName)
@@ -230,14 +239,25 @@ final class MacConnection {
                 heartbeat.cancel()
                 companion = nil
                 macAppProblem = nil
-                if connection.isActive { companionState = .unavailable(String(localized: "aOS on the Mac stopped answering.")) }
+                if connection.isActive, companionState != .needsPairing {
+                    companionState = .unavailable(String(localized: "aOS on the Mac stopped answering."))
+                }
+            } catch CompanionError.pairAgain {
+                // The Mac has no signing key for this iPhone: nothing works until it is paired again.
+                companion = nil
+                await started?.close()
+                companionState = .needsPairing
+                log.notice("The Mac wants this iPhone paired again")
             } catch {
                 companion = nil
+                await started?.close()
                 companionState = .unavailable(Self.companionMessage(for: error))
                 log.notice("Companion not available: \(String(describing: error), privacy: .public)")
             }
-            // Try the companion again after a while (aOS on the Mac may be starting or updating).
-            for _ in 0..<15 where connection.isActive && !Task.isCancelled {
+            // Try the companion again after a while (aOS on the Mac may be starting or updating; without a key on
+            // the Mac only pairing helps, so not so often).
+            let pause = companionState == .needsPairing ? 60 : 15
+            for _ in 0..<pause where connection.isActive && !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
             }
         }
@@ -250,10 +270,26 @@ final class MacConnection {
             Task { await refreshStatus() }
         case .mac(let state, let detail):
             macAppProblem = state == "unavailable" ? detail : nil
+        case .subscriptionEnded:
+            Task { await resubscribe() }
         default:
             break
         }
         onEvent?(event)
+    }
+
+    /// The Mac ended the event subscription (it restarted, or a day went by): a new signed subscribe; the Mac then
+    /// sends the open questions again.
+    private func resubscribe() async {
+        guard let companion else { return }
+        do {
+            try await companion.subscribe()
+        } catch CompanionError.pairAgain {
+            companionState = .needsPairing
+            await companion.close()
+        } catch {
+            log.notice("Subscribing again failed: \(String(describing: error), privacy: .public)")
+        }
     }
 
     /// Every 25 s a `status`: the Mac counts the phone as connected while it asked within 45 s, the workspace line
@@ -271,6 +307,11 @@ final class MacConnection {
                 return
             } catch CompanionError.refused(let message) {
                 macAppProblem = message
+            } catch CompanionError.pairAgain {
+                // Removed on the Mac meanwhile.
+                companionState = .needsPairing
+                await client.close()
+                return
             } catch {
                 return
             }
@@ -299,7 +340,7 @@ final class MacConnection {
     /// The demo: shown as connected, the companion is the mock in memory.
     func runDemo(_ server: MockCompanionServer) async {
         state = .connected(host: mac.lastHost ?? mac.hosts.first ?? "")
-        let client = CompanionClient(transport: server.makeTransport())
+        let client = CompanionClient(transport: server.makeTransport(), signer: signer)
         await client.start()
         companion = client
         hello = try? await client.hello(app: Self.appVersion, device: deviceName)

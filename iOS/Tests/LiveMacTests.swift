@@ -53,7 +53,7 @@ struct LiveMacTests {
             try await waitUntil(timeout: .seconds(240)) { model.presentedSignIn != nil }
             let request = try #require(model.presentedSignIn)
             print("LIVE sign-in request: agent=\(request.agent) host=\(request.host) field=\(request.field.rawValue) purpose=\(request.purpose)")
-            try await connection.answerSignIn(request: request.id, username: user, password: password, totp: nil)
+            try await connection.answerSignIn(request: request.id, host: request.host, username: user, password: password, totp: nil)
             try await waitUntil(timeout: .seconds(90)) { model.signInResults[request.id] != nil }
             print("LIVE sign-in result: \(String(describing: model.signInResults[request.id]))")
             #expect(model.signInResults[request.id] == .filled)

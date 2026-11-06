@@ -37,7 +37,9 @@ user, wherever they are:
   to the workspace VM). No new server, no listening port beyond OpenSSH, strong crypto, pinned host key. Outside the
   home network the user needs a way to reach the Mac (Tailscale or another VPN); the app shows this plainly.
 - **Keys**: the iPhone's SSH key is a P-256 key in the Secure Enclave (software key in the keychain on the simulator).
-  It never leaves the device.
+  It never leaves the device. A second key of the same kind signs every companion request; the Mac got its public
+  half at pairing and acts only on requests signed with it ("Signed requests", 2026-11-06, after a security review:
+  any program of the Mac's user could otherwise answer sign-ins in the iPhone's name).
 - **Pairing without typing a password** (below): the Mac shows a QR code, the iPhone scans it, done.
 - **Notifications** (sign-in and help requests while the app is closed): phase 2, through CloudKit (free, no server of
   ours, end-to-end with the user's iCloud). Until then the app shows requests while it is open and connected.
@@ -54,10 +56,15 @@ user, wherever they are:
    - `k`: the SHA-256 fingerprint of the Mac's ed25519 SSH host key in OpenSSH form without padding
      (`SHA256:...`, as `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` prints it).
    - `c`: 16 random bytes, base64url without padding. Only in the QR code, never sent.
-3. The iPhone creates its key, connects to one of `h` on port `p` and sends one JSON line:
-   `{"v":1,"device":"<device name>","key":"ecdsa-sha2-nistp256 AAAA...","proof":"<base64 HMAC-SHA256(c, key + "\n" + device)>"}`
-   (`c` as the raw 16 bytes; `key` exactly as sent).
-4. The Mac checks the proof (constant-time), appends
+3. The iPhone creates its keys (or reuses them): the SSH key, and a second P-256 key it signs its companion requests
+   with (Secure Enclave on a device, keychain on the simulator). It connects to one of `h` on port `p` and sends one
+   JSON line:
+   `{"v":2,"device":"<device name>","key":"ecdsa-sha2-nistp256 AAAA...","sign":"<base64 X9.63 P-256 signing key>","proof":"<base64>"}`
+   with proof = HMAC-SHA256(c, `"aos-pair-request\n" + key + "\n" + device + "\n" + sign`) (`c` as the raw 16 bytes;
+   `key` and `sign` exactly as sent). The proof covers both keys: whoever sits between phone and Mac without the
+   code can swap neither. Version 1 (no `sign`) is refused: "update aOS on the iPhone, then pair again".
+4. The Mac checks the proof (constant-time) and the signing key (a point on P-256), keeps the signing key in its
+   keychain (below, "Signed requests"), appends
    `no-agent-forwarding,no-X11-forwarding ecdsa-sha2-nistp256 AAAA... aos-companion:<id> <device name>`
    to `~/.ssh/authorized_keys` (folder 0700, file 0600, `<id>` = first 12 hex characters of the key's SHA-256) and
    answers one line: `{"ok":true,"user":"<user>","companion":"/Applications/aOS.app/Contents/MacOS/aos-companion","mac":"<base64>"}`
@@ -69,28 +76,77 @@ user, wherever they are:
    on the host key is pinned.
 
 Unpairing: the iPhone forgets the host; aOS on the Mac lists paired devices and removes their line from
-`authorized_keys`.
+`authorized_keys` and their signing key from the keychain. A phone listed in `authorized_keys` without a signing key
+(paired before version 2) shows "Pair it again to approve from it".
+
+## Signed requests
+
+Any program of the same macOS user can connect to the app's agent socket and run `aos-companion`, and
+`~/.ssh/authorized_keys` is the user's to edit: neither proves that a request comes from the paired iPhone. So every
+request of the iPhone carries a signature with its signing key, and the app checks it before it does anything. The
+agent's own (MCP) operations stay unsigned.
+
+- **Where the Mac keeps the keys**: one generic password item per phone in the login keychain (service
+  `dev.marquart.aos.phonekeys`, account = phone id, data = id, name, signing key, pairing date; not synchronizable;
+  `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, which only the data protection keychain honors, and that needs
+  an entitlement aOS doesn't have). An item another program writes there, even with aOS on its access list or for
+  "any application", carries that program's partition, so macOS would ask the person before aOS reads it. aOS reads
+  these items with the keychain's dialogs switched off (`SecKeychainSetUserInteractionAllowed(false)`, the only
+  switch that works for this dialog; LAContext's `interactionNotAllowed` doesn't): such an item doesn't count. Tested
+  on macOS 27 with `security add-generic-password -A` and `-T`.
+- **The signature**: `"auth":{"key":"<phone id>","ts":<Unix seconds>,"nonce":"<16 random bytes, base64url>","sig":"<base64 r||s>"}`
+  in the request line, ECDSA P-256 with SHA-256 over these lines (UTF-8, joined with `\n`, no newline at the end):
+
+      aos-companion-v1
+      op=<the app's op: companion.hello|companion.status|companion.subscribe|companion.screen|companion.type|signin.answer|help.done|approval.answer>
+      key=<phone id>
+      ts=<seconds>
+      nonce=<nonce>
+      request=<request id or empty>
+      decision=<login|fill|code|decline for signin.answer, allow|deny for approval.answer, done for help.done, else empty>
+      login=<Bitwarden item id or empty>
+      host=<signin.answer: the request's website, or empty>
+      target=<companion.screen: mac|workspace, or empty>
+      data=<lowercase hex SHA-256 over "<name>:<UTF-8 byte count>:<value>\n" for each of username, password, totp, text that is present>
+
+  No value may contain a line break (refused). The app derives `decision` and `data` from the request's fields the
+  way it acts on them, so a changed field breaks the signature.
+- **The checks** (`CompanionGate` in AOSKit): a known phone id, a valid signature with that phone's key, `ts` within
+  120 s of the Mac's clock, a nonce not seen before (kept in memory while its time is in the window, at most 4096).
+  For `signin.answer` the signed `host` must be the website of the open request. Refusals are logged by reason (no
+  values) and answered with `ok: false`, the message and a `code`: `pair-again` (not signed, or no key for this phone
+  id), `clock`, `invalid`. The iPhone shows `pair-again` as "Pair again to keep approving from this iPhone." with a
+  Pair Again button.
+- **Events**: `aos-companion` polls them by itself, so the iPhone signs `subscribe` and the app answers it with a
+  random subscription (32 bytes) that only that `aos-companion` keeps, in memory. It polls `companion.events` with it.
+  A subscription ends when unused for 5 minutes, after 24 hours, when the phone is removed, or when the app restarts;
+  `aos-companion` then sends `{"event":"subscription","state":"ended"}` and the iPhone subscribes again, signed.
+- Reference vectors for both sides: AOSKit `CompanionSignatureTests` and iOS `SignedRequestTests` (the text above for
+  a `login` answer, a signature over it with the private key 01..20, the `data` digests).
 
 ## Companion API (over SSH)
 
 The iPhone runs `"<companion>" serve` in an exec channel. Both directions speak JSON lines (UTF-8, one object per
-line). Requests carry an `id`; answers repeat it with `ok` and either a result or `error`. The Mac sends events without
-`id` at any time after `subscribe`.
+line). Requests carry an `id`; answers repeat it with `ok` and either a result or `error` (and `code` when the Mac
+refused a signature, see above). Every request carries `auth` (left out below). The Mac sends events without `id` at
+any time after `subscribe`.
 
 Requests:
 - `{"id":1,"op":"hello","app":"<version>","device":"<name>"}` -> `{"id":1,"ok":true,"mac":"<name>","aos":"<version>"}`
+  (the Mac shows the name it has from pairing, not this one)
 - `{"id":2,"op":"status"}` -> `{"id":2,"ok":true,"workspace":{"state":"stopped|starting|open|closing","purpose":"...","until":"<ISO date>"},"sessions":[{"title":"...","state":"..."}]}`
 - `{"id":3,"op":"subscribe"}` -> `{"id":3,"ok":true}`, then events.
 - `{"id":4,"op":"screen","target":"mac"|"workspace"}` -> `{"id":4,"ok":true,"host":"127.0.0.1","port":5900,"username":"...","password":"..."}`
   (for `workspace`: the VM's address and its screen sharing account; the iPhone opens a direct-tcpip channel to
   host:port through the same SSH connection. For `mac` there are no credentials: the user types their Mac account
   name and password once, the app keeps them in its keychain.)
-- `{"id":5,"op":"signin.answer","request":"<request id>","login":"<Bitwarden item id>"}` (the user approved one of
-  the request's `logins`; the Mac gets it from Bitwarden), or
-  `{"id":5,"op":"signin.answer","request":"<id>","username":"...","password":"...","totp":"123456"}` (another
-  password app's AutoFill), or `{"id":5,"op":"signin.answer","request":"<id>","totp":"123456"}` (a code typed by
-  hand), or `{"id":5,"op":"signin.answer","request":"<id>","decline":true}` -> `{"id":5,"ok":true}`. A `login`
-  that wasn't offered with the request, or one without `totp` for a `code` request, is refused (`ok: false`).
+- `{"id":5,"op":"signin.answer","request":"<request id>","host":"<the request's host>","login":"<Bitwarden item id>"}`
+  (the user approved one of the request's `logins`; the Mac gets it from Bitwarden), or
+  `{"id":5,"op":"signin.answer","request":"<id>","host":"...","username":"...","password":"...","totp":"123456"}`
+  (another password app's AutoFill), or `{"id":5,"op":"signin.answer","request":"<id>","host":"...","totp":"123456"}`
+  (a code typed by hand), or `{"id":5,"op":"signin.answer","request":"<id>","host":"...","decline":true}` ->
+  `{"id":5,"ok":true}`. A `login` that wasn't offered with the request, one without `totp` for a `code` request, or
+  a `host` other than the request's is refused (`ok: false`).
 - `{"id":6,"op":"help.done","request":"<id>"}` -> `{"id":6,"ok":true}`
 - `{"id":8,"op":"type","text":"Grüße 😀"}` -> `{"id":8,"ok":true}` (types into the workspace; text beyond ASCII goes
   through the guest's clipboard, as for the agent)
@@ -115,6 +171,8 @@ Events:
 - `{"event":"approval.closed","request":"<id>","result":"allowed|declined"}`
 - `{"event":"mac","state":"unavailable","detail":"..."}` (aos-companion can't reach the app; it retries)
 - `{"event":"workspace","state":"..."}`
+- `{"event":"subscription","state":"ended"}` (the app ended the subscription; the iPhone sends a new signed
+  `subscribe`)
 
 A phone that subscribes first gets the questions still open, then everything new. `aos-companion` runs as long as
 the exec channel is open; the Mac counts a phone as connected while it polled within the last 45 s.

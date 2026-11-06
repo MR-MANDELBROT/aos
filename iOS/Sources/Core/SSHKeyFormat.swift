@@ -39,6 +39,12 @@ enum SSHKeyFormat {
         blob(ofOpenSSHKey: line).map(fingerprint(blob:))
     }
 
+    /// The id aOS on the Mac gives a paired phone: the first 12 hex characters (lowercase) of the SHA-256 of its key
+    /// blob, as in `aos-companion:<id>` in authorized_keys. Signed requests name it.
+    static func phoneID(openSSHKey line: String) -> String? {
+        blob(ofOpenSSHKey: line).map { String(SHA256.hash(data: $0).map { String(format: "%02x", $0) }.joined().prefix(12)) }
+    }
+
     /// Accepts `SHA256:<base64>` with or without padding; returns the canonical form or nil if it isn't 32 bytes.
     static func normalizedFingerprint(_ text: String) -> String? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)

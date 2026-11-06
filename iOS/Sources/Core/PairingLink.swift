@@ -131,24 +131,30 @@ struct PairingLink: Equatable, Sendable {
     }
 }
 
-/// The one JSON line the iPhone sends to the Mac's pairing listener, and the proof in it.
+/// The one JSON line the iPhone sends to the Mac's pairing listener, and the proof in it (version 2: with the key the
+/// iPhone signs its requests with).
 struct PairingRequest: Codable, Equatable, Sendable {
-    var v: Int = 1
+    var v: Int = 2
     var device: String
     /// The device's public key exactly as it goes into `authorized_keys`: `ecdsa-sha2-nistp256 AAAA...`
     var key: String
+    /// The signing key (`CompanionKey`): P-256 in X9.63 form, standard base64. The Mac keeps it in its keychain and
+    /// takes only requests signed with it.
+    var sign: String
     var proof: String
 
-    init(device: String, key: String, code: Data) {
+    init(device: String, key: String, signingKey: Data, code: Data) {
         self.device = device
         self.key = key
-        self.proof = Self.proof(code: code, key: key, device: device)
+        self.sign = signingKey.base64EncodedString()
+        self.proof = Self.proof(code: code, key: key, device: device, sign: sign)
     }
 
-    /// `base64(HMAC-SHA256(c, key + "\n" + device))`, with `c` as its raw 16 bytes, the message as UTF-8 and the result
-    /// in standard base64 with padding.
-    static func proof(code: Data, key: String, device: String) -> String {
-        let message = Data((key + "\n" + device).utf8)
+    /// `base64(HMAC-SHA256(c, "aos-pair-request\n" + key + "\n" + device + "\n" + sign))`, with `c` as its raw 16
+    /// bytes, the message as UTF-8 and the result in standard base64 with padding. It covers both keys: nobody without
+    /// the code can put another key in.
+    static func proof(code: Data, key: String, device: String, sign: String) -> String {
+        let message = Data(("aos-pair-request\n" + key + "\n" + device + "\n" + sign).utf8)
         let mac = HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: code))
         return Data(mac).base64EncodedString()
     }

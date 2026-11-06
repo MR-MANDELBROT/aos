@@ -49,6 +49,8 @@ final class AppModel: ObservableObject {
     @Published var pairing: PairingSession?
     @Published var pairingTick = 0
     @Published var pairedDevices: [AuthorizedKeys.Device] = []
+    /// Ids of the paired phones whose signing key is in the keychain (only they can approve).
+    @Published var devicesWithSigningKey: Set<String> = []
     @Published var remoteLoginOn = false
     @Published var helperState: HelperState = .unknown
     var helperWasAdmin: Bool?

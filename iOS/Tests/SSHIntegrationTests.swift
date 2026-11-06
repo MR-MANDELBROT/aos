@@ -102,8 +102,13 @@ struct SSHIntegrationTests {
                                                          login: SSHLogin(username: "max", key: key),
                                                          hostKey: .pinned(server.hostKeyLine))
         defer { Task { await connection.close() } }
+        // The Mac knows this iPhone's signing key and checks every request, through the exec channel
+        let signer = CompanionSigner(phoneID: key.phoneID, key: CompanionKey.ephemeral())
+        server.companion.update {
+            $0.trustedPhone = .init(phoneID: signer.phoneID, publicKey: signer.key.publicKey)
+        }
         let channel = try await connection.exec(CompanionCommand.serve(path: TestSSHServer.companionPath))
-        let client = CompanionClient(transport: channel)
+        let client = CompanionClient(transport: channel, signer: signer)
         await client.start()
         #expect(try await client.hello(app: "0.1.0", device: "Test").mac == "Max’s MacBook Pro")
         #expect(try await client.status().state == .open)
@@ -112,9 +117,11 @@ struct SSHIntegrationTests {
         server.companion.emit(.signIn(request))
         var events = client.events.makeAsyncIterator()
         #expect(await events.next() == .signIn(request))
-        try await client.answerSignIn(request: "r9", username: "max", password: "p@ss \"w\" ü", totp: "000111")
+        try await client.answerSignIn(request: "r9", host: "github.com", username: "max", password: "p@ss \"w\" ü",
+                                      totp: "000111")
         let answer = server.companion.received.last
         #expect(answer?.fields["password"] == .string("p@ss \"w\" ü"))
+        #expect(answer?.fields["auth"]?["key"] == .string(key.phoneID))
         #expect(server.events == ["exec '/Applications/aOS.app/Contents/MacOS/aos-companion' serve"])
         await client.close()
     }
@@ -208,7 +215,7 @@ struct PairingClientTests {
         let listener = try await FakePairingListener.start(code: Vectors.code,
                                                            behavior: .accept(user: "max", companion: "/x/aos-companion"))
         defer { Task { await listener.stop() } }
-        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, code: Vectors.code)
+        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, signingKey: Vectors.generatorX963, code: Vectors.code)
         let (response, host) = try await PairingClient.send(request, link: link(listener.port))
         #expect(response.ok)
         #expect(response.user == "max")
@@ -221,7 +228,7 @@ struct PairingClientTests {
         let listener = try await FakePairingListener.start(code: Data(repeating: 7, count: 16),
                                                            behavior: .accept(user: "max", companion: "/x"))
         defer { Task { await listener.stop() } }
-        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, code: Vectors.code)
+        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, signingKey: Vectors.generatorX963, code: Vectors.code)
         await #expect(throws: PairingClient.Failure.refused("wrong proof")) {
             _ = try await PairingClient.send(request, link: link(listener.port))
         }
@@ -231,7 +238,7 @@ struct PairingClientTests {
         let listener = try await FakePairingListener.start(code: Vectors.code,
                                                            behavior: .tampered(user: "max", companion: "/x/aos-companion"))
         defer { Task { await listener.stop() } }
-        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, code: Vectors.code)
+        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, signingKey: Vectors.generatorX963, code: Vectors.code)
         await #expect(throws: PairingClient.Failure.notAuthentic) {
             _ = try await PairingClient.send(request, link: link(listener.port))
         }
@@ -256,7 +263,7 @@ struct PairingClientTests {
     @Test func aClosedListenerAndAHangUp() async throws {
         let hangUp = try await FakePairingListener.start(code: Vectors.code, behavior: .hangUp)
         defer { Task { await hangUp.stop() } }
-        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, code: Vectors.code)
+        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, signingKey: Vectors.generatorX963, code: Vectors.code)
         await #expect(throws: PairingClient.Failure.noAnswer) {
             _ = try await PairingClient.send(request, link: link(hangUp.port))
         }

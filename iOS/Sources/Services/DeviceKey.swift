@@ -17,6 +17,8 @@ struct DeviceKey: Sendable {
     /// `ecdsa-sha2-nistp256 AAAA...`: what the Mac puts into `authorized_keys`.
     let publicKey: String
     let fingerprint: String
+    /// What aOS on the Mac calls this iPhone (`SSHKeyFormat.phoneID`); signed requests name it.
+    var phoneID: String { SSHKeyFormat.phoneID(openSSHKey: publicKey) ?? "" }
 
     private static let service = "dev.marquart.aos.devicekey"
     private static let account = "ssh-p256"

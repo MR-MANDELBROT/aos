@@ -22,6 +22,10 @@ enum CompanionError: LocalizedError, Equatable {
     /// The Mac answered with `ok: false`.
     case refused(String)
     case invalidAnswer
+    /// The Mac has no signing key for this iPhone (paired before requests were signed, or removed on the Mac).
+    case pairAgain
+    /// The request has a value that can't be signed (a line break where none may be).
+    case unsignable
 
     var errorDescription: String? {
         switch self {
@@ -29,13 +33,17 @@ enum CompanionError: LocalizedError, Equatable {
         case .timeout: String(localized: "aOS on the Mac didn't answer in time.")
         case .refused(let message): message
         case .invalidAnswer: String(localized: "aOS on the Mac sent an answer this app doesn't understand.")
+        case .pairAgain: String(localized: "Pair again to keep approving from this iPhone.")
+        case .unsignable: String(localized: "This request couldn't be signed.")
         }
     }
 }
 
-/// The iPhone's side of the companion API: requests with ids, answers matched to them, events as a stream.
+/// The iPhone's side of the companion API: requests with ids, answers matched to them, events as a stream. With a
+/// signer every request carries this iPhone's signature (the Mac refuses requests without one).
 actor CompanionClient {
     private let transport: CompanionTransport
+    private let signer: CompanionSigner?
     private var nextID = 1
     private var pending: [Int: CheckedContinuation<CompanionResponse, Error>] = [:]
     private var timers: [Int: Task<Void, Never>] = [:]
@@ -46,8 +54,9 @@ actor CompanionClient {
     nonisolated let events: AsyncStream<CompanionEvent>
     private let eventSink: AsyncStream<CompanionEvent>.Continuation
 
-    init(transport: CompanionTransport) {
+    init(transport: CompanionTransport, signer: CompanionSigner? = nil) {
         self.transport = transport
+        self.signer = signer
         (events, eventSink) = AsyncStream<CompanionEvent>.makeStream(bufferingPolicy: .unbounded)
     }
 
@@ -87,23 +96,24 @@ actor CompanionClient {
         return endpoint
     }
 
-    /// Approves one of the request's Bitwarden logins: the Mac gets it from Bitwarden.
-    func answerSignIn(request id: String, login: String) async throws {
-        _ = try await request(.signInLogin(request: id, login: login))
+    /// Approves one of the request's Bitwarden logins: the Mac gets it from Bitwarden. `host` is the request's
+    /// website (the signature names it; the Mac checks it is the one it asked about).
+    func answerSignIn(request id: String, host: String, login: String) async throws {
+        _ = try await request(.signInLogin(request: id, host: host, login: login))
     }
 
     /// Sends a sign-in from another password app. The values only pass through; nothing here keeps or logs them.
-    func answerSignIn(request id: String, username: String, password: String, totp: String?) async throws {
-        _ = try await request(.signInAnswer(request: id, username: username, password: password, totp: totp))
+    func answerSignIn(request id: String, host: String, username: String, password: String, totp: String?) async throws {
+        _ = try await request(.signInAnswer(request: id, host: host, username: username, password: password, totp: totp))
     }
 
-    func declineSignIn(request id: String) async throws {
-        _ = try await request(.signInDecline(request: id))
+    func declineSignIn(request id: String, host: String) async throws {
+        _ = try await request(.signInDecline(request: id, host: host))
     }
 
     /// A one-time code for a request whose field is `code`.
-    func answerSignInCode(request id: String, code: String) async throws {
-        _ = try await request(.signInCode(request: id, totp: code))
+    func answerSignInCode(request id: String, host: String, code: String) async throws {
+        _ = try await request(.signInCode(request: id, host: host, totp: code))
     }
 
     func helpDone(request id: String) async throws {
@@ -124,7 +134,7 @@ actor CompanionClient {
         if let finished { throw finished }
         let id = nextID
         nextID += 1
-        let line = try request.line(id: id)
+        let line = try request.line(id: id, auth: signer?.auth(for: request))
         let op = request.op
         let response: CompanionResponse = try await withCheckedThrowingContinuation { continuation in
             pending[id] = continuation
@@ -141,7 +151,8 @@ actor CompanionClient {
             }
         }
         guard response.ok else {
-            log.notice("Companion \(op, privacy: .public) refused: \(response.error ?? "", privacy: .public)")
+            log.notice("Companion \(op, privacy: .public) refused (\(response.code ?? "", privacy: .public)): \(response.error ?? "", privacy: .public)")
+            if response.code == "pair-again" { throw CompanionError.pairAgain }
             throw CompanionError.refused(response.error ?? String(localized: "aOS on the Mac said no."))
         }
         return response

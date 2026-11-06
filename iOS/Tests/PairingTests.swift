@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Testing
 @testable import aOS
@@ -10,7 +11,13 @@ enum Vectors {
     static let p256Key = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGsX0fLhLEJH+Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT+NC4v4af5uO5+tKfA+eFivOM1drMV7Oy7ZAaDe/UfU="
     static let p256Fingerprint = "SHA256:SFMVDOrhOSBssOVH9hIcK/Z2XVf1oSVMjNCL8u2aICY"
     static let device = "Max\u{2019}s iPhone"
-    static let proof = "mrui6J5uTrdDd7yaEdlJQU6kWIO77PVkB04oYtW2SAQ="
+    /// Pairing version 2: HMAC-SHA256(code, "aos-pair-request\n" + key + "\n" + device + "\n" + sign), with the
+    /// generator point as the SSH key and as the signing key (`sign` = base64 of `generatorX963`). Python's hmac, and
+    /// the Mac's test (AOSKit PairingTests.testProofReferenceVectorFromThePhone).
+    static let proof = "qkMRU/RXYOf3oLpMFcJHxT4LgNMUgtN2zEmhiHPFPoc="
+    static let signBase64 = "BGsX0fLhLEJH+Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT+NC4v4af5uO5+tKfA+eFivOM1drMV7Oy7ZAaDe/UfU="
+    /// The Mac's id for a phone with `p256Key` (Python: sha256 of the key blob, 12 hex characters).
+    static let p256PhoneID = "4853150ceae1"
     /// A throwaway ed25519 key and what `ssh-keygen -lf` printed for it.
     static let ed25519Key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN8Rl2qwv75VjkzLHaW5OyZu4CaxGsZU2+cYoDrSFSrY"
     static let ed25519Fingerprint = "SHA256:IKIpT5qrBHciGB6LMk+7fuTQHDnNluSkoLBSGY4SWMQ"
@@ -86,18 +93,32 @@ struct PairingLinkTests {
 
 struct PairingProofTests {
     @Test func proofMatchesTheReference() {
-        #expect(PairingRequest.proof(code: Vectors.code, key: Vectors.p256Key, device: Vectors.device) == Vectors.proof)
+        #expect(Vectors.generatorX963.base64EncodedString() == Vectors.signBase64)
+        #expect(PairingRequest.proof(code: Vectors.code, key: Vectors.p256Key, device: Vectors.device,
+                                     sign: Vectors.signBase64) == Vectors.proof)
     }
 
     @Test func requestLineIsOneJSONObject() throws {
-        let request = PairingRequest(device: Vectors.device, key: Vectors.p256Key, code: Vectors.code)
+        let request = PairingRequest(device: Vectors.device, key: Vectors.p256Key, signingKey: Vectors.generatorX963,
+                                     code: Vectors.code)
         let line = try request.line()
         #expect(line.last == 0x0A)
         #expect(line.dropLast().contains(0x0A) == false)
         let text = String(decoding: line, as: UTF8.self)
-        #expect(text == "{\"device\":\"Max\u{2019}s iPhone\",\"key\":\"\(Vectors.p256Key)\",\"proof\":\"\(Vectors.proof)\",\"v\":1}\n")
+        #expect(text == "{\"device\":\"Max\u{2019}s iPhone\",\"key\":\"\(Vectors.p256Key)\",\"proof\":\"\(Vectors.proof)\",\"sign\":\"\(Vectors.signBase64)\",\"v\":2}\n")
         let decoded = try JSONDecoder().decode(PairingRequest.self, from: line)
         #expect(decoded == request)
+    }
+
+    @Test func theProofCoversTheSigningKey() {
+        // Another signing key (someone between the iPhone and the Mac swapping it) gives another proof
+        let other = P256.Signing.PrivateKey().publicKey.x963Representation.base64EncodedString()
+        #expect(PairingRequest.proof(code: Vectors.code, key: Vectors.p256Key, device: Vectors.device, sign: other)
+                != Vectors.proof)
+    }
+
+    @Test func phoneIDLikeTheMac() {
+        #expect(SSHKeyFormat.phoneID(openSSHKey: Vectors.p256Key) == Vectors.p256PhoneID)
     }
 
     @Test func deviceNamesAreOneLine() {

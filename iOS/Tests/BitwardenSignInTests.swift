@@ -12,8 +12,8 @@ struct BitwardenProtocolTests {
     }
 
     @Test func theAnswerNamesTheLoginOnly() throws {
-        #expect(try text(.signInLogin(request: "r1", login: "2c1f3b9e-58a0-4b8e-9a4b-b0e1a2c3d4e5"), id: 9)
-                == "{\"id\":9,\"login\":\"2c1f3b9e-58a0-4b8e-9a4b-b0e1a2c3d4e5\",\"op\":\"signin.answer\",\"request\":\"r1\"}\n")
+        #expect(try text(.signInLogin(request: "r1", host: "www.amazon.de", login: "2c1f3b9e-58a0-4b8e-9a4b-b0e1a2c3d4e5"), id: 9)
+                == "{\"host\":\"www.amazon.de\",\"id\":9,\"login\":\"2c1f3b9e-58a0-4b8e-9a4b-b0e1a2c3d4e5\",\"op\":\"signin.answer\",\"request\":\"r1\"}\n")
     }
 
     @Test func signInEventsCarryLogins() throws {
@@ -54,7 +54,7 @@ struct BitwardenProtocolTests {
         let server = MockCompanionServer(keepsSecrets: true)
         let client = CompanionClient(transport: server.makeTransport())
         await client.start()
-        try await client.answerSignIn(request: "r1", login: "a2")
+        try await client.answerSignIn(request: "r1", host: "www.amazon.de", login: "a2")
         let received = try #require(server.received.last)
         #expect(received.op == "signin.answer")
         #expect(received.fields["login"] == .string("a2"))
@@ -100,6 +100,6 @@ struct SignInSheetTests {
         let model = AppModel(isDemo: true)
         let connection = try #require(model.connection)
         try await waitUntil { connection.companionState == .ready }
-        try await connection.answerSignIn(request: "demo-1", login: amazon.id)
+        try await connection.answerSignIn(request: "demo-1", host: "www.amazon.de", login: amazon.id)
     }
 }

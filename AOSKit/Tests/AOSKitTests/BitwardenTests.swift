@@ -575,17 +575,18 @@ final class SignInAnswerTests: XCTestCase {
         }
         while controller.pendingSignIns["r1"] == nil { await Task.yield() }
 
+        // What follows the check of the phone's signature (CompanionAuthTests test that check).
         var request = AgentRequest(id: 1, op: "signin.answer")
         request.request = "r1"
         request.login = "99999999-9999-4999-8999-999999999999"
-        var response = await controller.handle(request)
+        var response = await controller.handleCompanion(request)
         XCTAssertFalse(response.ok)
         XCTAssertEqual(response.text, "This login wasn't offered for this sign-in.")
         request.login = withoutCode
-        response = await controller.handle(request)
+        response = await controller.handleCompanion(request)
         XCTAssertFalse(response.ok)  // a code request needs a login with an authenticator key
         request.login = withCode
-        response = await controller.handle(request)
+        response = await controller.handleCompanion(request)
         XCTAssertTrue(response.ok)
         let given = await answer.value
         XCTAssertEqual(given?.login, withCode)
