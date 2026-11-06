@@ -47,8 +47,9 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     public var newChatsFolder: String = ""
 
     /// Bitwarden locks again this many hours after it was unlocked in aOS (earlier when the Mac sleeps or restarts).
-    public var bitwardenLockHours: Int = 8
-    public static let bitwardenLockChoices = [1, 4, 8, 24]
+    /// 0: Bitwarden stays unlocked until the user locks it or signs out (the default: sign-ins always work).
+    public var bitwardenLockHours: Int = 0
+    public static let bitwardenLockChoices = [0, 1, 4, 8, 24]
 
     // The workspace
     /// Which websites forget their sign-in when the workspace closes.
@@ -107,7 +108,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         signOutWebsites = try c.decodeIfPresent(SignOutWebsites.self, forKey: .signOutWebsites)
             ?? (expireSignIns ? .allExcept : .none)
         shareApplications = try c.decodeIfPresent(Bool.self, forKey: .shareApplications) ?? d.shareApplications
-        bitwardenLockHours = min(max(try c.decodeIfPresent(Int.self, forKey: .bitwardenLockHours) ?? d.bitwardenLockHours, 1), 24)
+        bitwardenLockHours = min(max(try c.decodeIfPresent(Int.self, forKey: .bitwardenLockHours) ?? d.bitwardenLockHours, 0), 24)
     }
 
     /// The folder new chats from the Claude app start in.
@@ -141,5 +142,33 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(self).write(to: paths.root.appendingPathComponent("settings.json"), options: .atomic)
+    }
+}
+
+/// The websites that stay signed in when the workspace closes, as Chrome's cookie patterns ("[*.]github.com": the
+/// domain and its subdomains). The user types a domain or a whole address; this makes the pattern of it.
+public enum StaySignedIn {
+    public static let recommended = ["[*.]google.com"]
+
+    /// "github.com", "https://www.github.com/login", "*.github.com" → "[*.]github.com"; nil if it isn't a domain.
+    public static func pattern(from input: String) -> String? {
+        var s = input.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        for prefix in ["[*.]", "*.", "https://", "http://"] where s.hasPrefix(prefix) { s.removeFirst(prefix.count) }
+        if let cut = s.firstIndex(where: { "/?#".contains($0) }) { s = String(s[..<cut]) }
+        if let colon = s.lastIndex(of: ":") { s = String(s[..<colon]) }
+        if s.hasPrefix("www.") { s.removeFirst(4) }
+        if s.hasSuffix(".") { s.removeLast() }
+        let labels = s.split(separator: ".", omittingEmptySubsequences: false)
+        guard s.count <= 253, labels.count >= 2,
+              labels.allSatisfy({ l in !l.isEmpty && l.count <= 63 && !l.hasPrefix("-") && !l.hasSuffix("-")
+                  && l.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") } }),
+              let tld = labels.last, tld.count >= 2, tld.allSatisfy({ $0.isLetter })
+        else { return nil }
+        return "[*.]" + s
+    }
+
+    /// The domain to show for a pattern.
+    public static func domain(of pattern: String) -> String {
+        pattern.hasPrefix("[*.]") ? String(pattern.dropFirst(4)) : pattern
     }
 }

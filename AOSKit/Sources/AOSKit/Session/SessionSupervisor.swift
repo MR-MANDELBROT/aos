@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 /// What the session is doing, for the app (written to run/session.json).
-public struct SessionStatus: Codable, Sendable {
+public struct SessionStatus: Codable, Sendable, Equatable {
     public enum State: String, Codable, Sendable {
         case starting, running, waitingForNetwork, needsLogin, needsAttention, missingClaude, restarting, stopped, failed
     }

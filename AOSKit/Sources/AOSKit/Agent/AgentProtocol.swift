@@ -72,7 +72,7 @@ public struct AgentResponse: Codable, Sendable {
 }
 
 /// Status for the app's menu and the status tool.
-public struct AgentStatus: Codable, Sendable {
+public struct AgentStatus: Codable, Sendable, Equatable {
     public var vmPhase: String
     public var installed: Bool
     public var setupComplete: Bool

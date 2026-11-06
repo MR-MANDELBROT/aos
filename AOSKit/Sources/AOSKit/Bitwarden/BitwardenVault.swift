@@ -5,9 +5,10 @@ import Foundation
 /// exactly the login the user approves, right before filling, and keeps nothing but the session key (in the
 /// keychain, until the vault locks again).
 ///
-/// When it locks again: `lockHours` after it was unlocked (a setting, default 8), when the Mac goes to sleep or
-/// restarts (also while aOS wasn't running: the kernel's sleep and boot times are checked), and when the user locks
-/// it. Quitting aOS alone doesn't lock it (an update or a restart of aOS shouldn't need the master password again).
+/// When it locks again: never by itself (the default, `lockHours` 0: until the user locks or signs out), or
+/// `lockHours` after it was unlocked and then also when the Mac goes to sleep or restarts (also while aOS wasn't
+/// running: the kernel's sleep and boot times are checked). Quitting aOS alone doesn't lock it (an update or a restart
+/// of aOS shouldn't need the master password again). Every login still needs the user's approval.
 @MainActor
 public final class BitwardenVault {
     public enum Phase: Equatable, Sendable {
@@ -63,9 +64,19 @@ public final class BitwardenVault {
     public private(set) var problem: Error?
     /// When the vault locks again by itself (while unlocked).
     public var lockedAt: Date? { session?.until }
-    /// Hours after unlocking until the vault locks again (AgentSettings.bitwardenLockHours).
-    public var lockHours: Int = 8 {
-        didSet { if var s = session { s.until = s.unlocked.addingTimeInterval(Double(lockHours) * 3600); keep(s) } }
+    /// Hours after unlocking until the vault locks again (AgentSettings.bitwardenLockHours); 0: never by itself.
+    public var lockHours: Int = 0 {
+        didSet { if var s = session { s.until = Self.until(unlocked: s.unlocked, hours: lockHours); keep(s) } }
+    }
+
+    nonisolated static func until(unlocked: Date, hours: Int) -> Date {
+        hours <= 0 ? .distantFuture : unlocked.addingTimeInterval(Double(hours) * 3600)
+    }
+
+    /// Locks for the Mac going to sleep, unless it stays unlocked.
+    public func lockForSleep() async {
+        guard session?.staysUnlocked != true else { return }
+        await lock(reason: "the Mac goes to sleep")
     }
     public var onChange: (() -> Void)?
     /// The logins Bitwarden can offer may have changed (unlocked, locked, synced): open requests are offered again.
@@ -396,7 +407,7 @@ public final class BitwardenVault {
 
     private func start(_ key: String) {
         let unlocked = now()
-        keep(BitwardenSession(key: key, unlocked: unlocked, until: unlocked.addingTimeInterval(Double(lockHours) * 3600)))
+        keep(BitwardenSession(key: key, unlocked: unlocked, until: Self.until(unlocked: unlocked, hours: lockHours)))
     }
 
     private func keep(_ s: BitwardenSession) {
@@ -418,7 +429,7 @@ public final class BitwardenVault {
     private func scheduleLock() {
         lockTimer?.invalidate()
         lockTimer = nil
-        guard let until = session?.until else { return }
+        guard let until = session?.until, until != .distantFuture else { return }
         let timer = Timer(fire: until, interval: 0, repeats: false) { [weak self] _ in
             Task { @MainActor in await self?.lock(reason: "\(self?.lockHours ?? 0) hours after unlocking") }
         }

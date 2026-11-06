@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 /// What the keeper does with each conversation, for the app (run/keeper.json).
-public struct KeeperStatus: Codable, Sendable {
+public struct KeeperStatus: Codable, Sendable, Equatable {
     public enum State: String, Codable, Sendable {
         /// Running here, reachable in the Claude app.
         case running
@@ -16,7 +16,7 @@ public struct KeeperStatus: Codable, Sendable {
         case folderMissing
     }
 
-    public struct Entry: Codable, Sendable, Identifiable {
+    public struct Entry: Codable, Sendable, Identifiable, Equatable {
         public var id: String
         public var title: String
         public var cwd: String

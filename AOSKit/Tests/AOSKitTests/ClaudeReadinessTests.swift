@@ -80,3 +80,40 @@ final class DialogCheckTests: XCTestCase {
         XCTAssertTrue(Provisioner.dialogCheck.contains(Provisioner.coreAuthAgent))
     }
 }
+
+final class BitwardenStaysUnlockedTests: XCTestCase {
+    func testNeverLockIgnoresSleepAndRestart() {
+        let unlocked = Date(timeIntervalSince1970: 1_000_000)
+        let s = BitwardenSession(key: "k", unlocked: unlocked, until: BitwardenVault.until(unlocked: unlocked, hours: 0))
+        XCTAssertTrue(s.staysUnlocked)
+        XCTAssertTrue(s.isValid(now: unlocked.addingTimeInterval(86_400 * 30), lastSleep: unlocked.addingTimeInterval(60),
+                                boot: unlocked.addingTimeInterval(120)))
+    }
+
+    func testTimedLockStillLocksOnSleep() {
+        let unlocked = Date(timeIntervalSince1970: 1_000_000)
+        let s = BitwardenSession(key: "k", unlocked: unlocked, until: BitwardenVault.until(unlocked: unlocked, hours: 8))
+        XCTAssertFalse(s.staysUnlocked)
+        XCTAssertFalse(s.isValid(now: unlocked.addingTimeInterval(600), lastSleep: unlocked.addingTimeInterval(60), boot: nil))
+    }
+
+    func testOldSettingsKeepTheirChoiceAndZeroIsAllowed() throws {
+        let s = try JSONDecoder().decode(AgentSettings.self, from: Data(#"{"bitwardenLockHours": 0}"#.utf8))
+        XCTAssertEqual(s.bitwardenLockHours, 0)
+        XCTAssertEqual(AgentSettings().bitwardenLockHours, 0)
+    }
+}
+
+final class StaySignedInTests: XCTestCase {
+    func testPatternsFromWhatPeopleType() {
+        XCTAssertEqual(StaySignedIn.pattern(from: "github.com"), "[*.]github.com")
+        XCTAssertEqual(StaySignedIn.pattern(from: " https://www.GitHub.com/login?x=1 "), "[*.]github.com")
+        XCTAssertEqual(StaySignedIn.pattern(from: "*.tum.de"), "[*.]tum.de")
+        XCTAssertEqual(StaySignedIn.pattern(from: "[*.]campus.tum.de"), "[*.]campus.tum.de")
+        XCTAssertEqual(StaySignedIn.pattern(from: "localhost:8080"), nil)
+        XCTAssertEqual(StaySignedIn.pattern(from: "github"), nil)
+        XCTAssertEqual(StaySignedIn.pattern(from: "evil.com, other.com"), nil)
+        XCTAssertEqual(StaySignedIn.pattern(from: "192.168.1.1"), nil)
+        XCTAssertEqual(StaySignedIn.domain(of: "[*.]github.com"), "github.com")
+    }
+}

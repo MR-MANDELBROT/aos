@@ -13,7 +13,7 @@ struct SettingsView: View {
             Tab("Bitwarden", systemImage: "key.horizontal", value: "bitwarden") { BitwardenSettings() }
             Tab("iPhone", systemImage: "iphone", value: "iphone") { PhoneSettings() }
         }
-        .frame(width: 640)
+        .frame(minWidth: 600, idealWidth: 700, maxWidth: .infinity, minHeight: 460, idealHeight: 680, maxHeight: .infinity)
         .environmentObject(model)
         .environmentObject(model.power)
     }
@@ -23,7 +23,6 @@ struct SettingsView: View {
 
 struct GeneralSettings: View {
     @EnvironmentObject var model: AppModel
-    @State private var domains = ""
 
     var body: some View {
         Form {
@@ -34,8 +33,7 @@ struct GeneralSettings: View {
                     Text("None, stay signed in").tag(AgentSettings.SignOutWebsites.none)
                 }
                 if model.settings.signOutWebsites == .allExcept {
-                    TextField("Stay signed in on", text: $domains, prompt: Text("[*.]google.com"))
-                        .onSubmit(saveDomains)
+                    StaySignedInList()
                 }
                 Text(signOutText).font(.caption).foregroundStyle(.secondary)
                 Toggle(isOn: binding(\.shareApplications)) {
@@ -89,11 +87,7 @@ struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear {
-            domains = model.settings.keepSignedIn.joined(separator: ", ")
-            Task { await model.checkHelper() }
-        }
-        .onDisappear(perform: saveDomains)
+        .onAppear { Task { await model.checkHelper() } }
     }
 
     var signOutText: String {
@@ -118,14 +112,54 @@ struct GeneralSettings: View {
         }
     }
 
-    func saveDomains() {
-        let list = domains.split(whereSeparator: { $0 == "," || $0 == " " || $0 == "\n" }).map(String.init)
-            .filter { !$0.isEmpty }
-        model.update { $0.keepSignedIn = list }
-    }
-
     func binding<T>(_ path: WritableKeyPath<AgentSettings, T>) -> Binding<T> {
         Binding(get: { model.settings[keyPath: path] }, set: { v in model.update { $0[keyPath: path] = v } })
+    }
+}
+
+/// The websites that stay signed in when the workspace closes: one row per website (with its subdomains), add and
+/// remove. Typed as a domain or an address; stored as Chrome's cookie pattern.
+struct StaySignedInList: View {
+    @EnvironmentObject var model: AppModel
+    @State private var newSite = ""
+    @State private var problem: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Stay signed in on").font(.callout.weight(.medium))
+            ForEach(model.settings.keepSignedIn, id: \.self) { pattern in
+                HStack(spacing: 8) {
+                    Image(systemName: "globe").foregroundStyle(.secondary)
+                    Text(StaySignedIn.domain(of: pattern))
+                    Text("with subdomains").font(.caption).foregroundStyle(.tertiary)
+                    Spacer()
+                    Button {
+                        model.update { $0.keepSignedIn.removeAll { $0 == pattern } }
+                    } label: {
+                        Image(systemName: "minus.circle.fill").foregroundStyle(.red)
+                    }
+                    .buttonStyle(.plain)
+                    .help(String(localized: "Remove"))
+                }
+            }
+            HStack(spacing: 8) {
+                TextField("Website", text: $newSite, prompt: Text("for example github.com"))
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit(add)
+                Button("Add", action: add).disabled(newSite.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            if let problem { Text(problem).font(.caption).foregroundStyle(.orange) }
+        }
+    }
+
+    func add() {
+        guard let pattern = StaySignedIn.pattern(from: newSite) else {
+            problem = String(localized: "That isn't a website address. Type a domain like github.com.")
+            return
+        }
+        problem = nil
+        newSite = ""
+        model.update { s in if !s.keepSignedIn.contains(pattern) { s.keepSignedIn.append(pattern) } }
     }
 }
 

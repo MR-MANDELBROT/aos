@@ -9,10 +9,17 @@ struct WorkspaceWindow: View {
     /// Observed here too, so the bar follows the setup's step and activity.
     @EnvironmentObject var setup: SetupController
     @State private var coordinator: VMDisplay.Coordinator?
+    /// The bar's height as last laid out: the window grows and shrinks by it, so the screen keeps its size.
+    @State private var barHeight: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 0) {
-            guide
+            VStack(spacing: 0) { guide }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    let delta = height - barHeight
+                    barHeight = height
+                    resizeWindow(by: delta, bar: height)
+                }
             screen
         }
         .frame(minWidth: 800, minHeight: 560)
@@ -60,7 +67,7 @@ struct WorkspaceWindow: View {
 
     @ViewBuilder var guide: some View {
         if let help = model.help {
-            bar(symbol: "hand.raised.fill", tint: .orange, title: "Your agent asks for your help", detail: help.purpose) {
+            bar(symbol: "hand.raised.fill", tint: .orange, context: "Your agent", title: "Your agent asks for your help", detail: help.purpose) {
                 Button("I can't do this") {
                     model.finishHelp(help.id, "The user could not do it. Ask them in the chat how to continue.")
                 }
@@ -71,17 +78,17 @@ struct WorkspaceWindow: View {
             }
         } else if model.helperState == .allowing {
             bar(symbol: "person.badge.key.fill", tint: BrandColor.indigo,
+                context: setup.isComplete ? "Sign-ins" : "Setup · aOS Helper",
                 title: "Switch on aOS Helper below",
                 detail: setup.isComplete
-                    ? String(localized: "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password. Only then: if another window asks, click Not Now.")
-                    : String(localized: "If macOS asks, click Open System Settings, then switch on aOS Helper. aOS enters the password itself, type nothing. Then the setup continues by itself.")) {
+                    ? String(localized: "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password.")
+                    : String(localized: "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password. Then the setup continues by itself.")) {
                 Button("Not Now") { Task { await model.cancelHelperPermission() } }
                 Button("Enter Password") { setup.typeGuestPassword(into: coordinator) }
-                    .disabled(!model.helperPasswordDialog)
-                    .help(model.helperPasswordDialog ? "" : String(localized: "macOS isn't asking for the password right now."))
+                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
             }
         } else if setup.sharingPhase == .allowingHelper && !setup.isComplete {
-            bar(symbol: "person.badge.key.fill", tint: BrandColor.indigo, title: "One moment",
+            bar(symbol: "person.badge.key.fill", tint: BrandColor.indigo, context: "Setup · aOS Helper", title: "One moment",
                 detail: String(localized: "aOS prepares the switch for aOS Helper. Type nothing yet."), busy: true) {}
         } else if setup.step == .screenSharing && !setup.isComplete {
             sharingBar
@@ -92,37 +99,35 @@ struct WorkspaceWindow: View {
         switch setup.sharingPhase {
         case .starting:
             if case .failed(let why) = setup.activity {
-                bar(symbol: "exclamationmark.triangle.fill", tint: .orange, title: "The workspace didn't start", detail: why) {
+                bar(symbol: "exclamationmark.triangle.fill", tint: .orange, context: "Setup · Screen sharing", title: "The workspace didn't start", detail: why) {
                     Button("Try Again") { setup.beginScreenSharing() }
                         .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                 }
             } else if !setup.isBusy && model.workspace.host.virtualMachine == nil {
-                bar(symbol: "power", tint: BrandColor.indigo, title: "The workspace is off",
+                bar(symbol: "power", tint: BrandColor.indigo, context: "Setup · Screen sharing", title: "The workspace is off",
                     detail: String(localized: "Start it for this step.")) {
                     Button("Start the Workspace") { setup.beginScreenSharing() }
                         .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                 }
             } else {
-                bar(symbol: "hourglass", tint: BrandColor.indigo, title: "Please wait, don't click anything yet",
+                bar(symbol: "hourglass", tint: BrandColor.indigo, context: "Setup · Screen sharing", title: "Please wait, don't click anything yet",
                     detail: String(localized: "The workspace starts and then opens System Settings at Sharing. This takes about a minute."),
                     busy: true) {}
             }
         case .waitingForSwitch:
-            bar(symbol: "rectangle.on.rectangle", tint: BrandColor.indigo, title: "Switch on Screen Sharing below",
+            bar(symbol: "rectangle.on.rectangle", tint: BrandColor.indigo, context: "Setup · Screen sharing", title: "Switch on Screen Sharing below",
                 detail: setup.sharingProblem.map { String(localized: "That didn't work yet: \($0)") }
-                    ?? String(localized: "When macOS asks for a password, aOS enters it, type nothing. aOS notices by itself when it worked."),
+                    ?? String(localized: "When macOS asks for the password, click Enter Password. aOS notices by itself when screen sharing is on."),
                 warning: setup.sharingProblem != nil) {
+                Button("Check") { setup.checkScreenSharing() }.disabled(setup.isBusy)
                 Button("Enter Password") { setup.typeGuestPassword(into: coordinator) }
-                    .disabled(!setup.passwordDialogOpen)
-                    .help(setup.passwordDialogOpen ? "" : String(localized: "macOS isn't asking for the password right now."))
-                Button("Check") { setup.checkScreenSharing() }
-                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction).disabled(setup.isBusy)
+                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
             }
         case .checking:
-            bar(symbol: "rectangle.on.rectangle", tint: BrandColor.indigo, title: "Checking screen sharing",
+            bar(symbol: "rectangle.on.rectangle", tint: BrandColor.indigo, context: "Setup · Screen sharing", title: "Checking screen sharing",
                 detail: String(localized: "A few seconds. Then the setup continues."), busy: true) {}
         case .verified, .allowingHelper:
-            bar(symbol: "checkmark.circle.fill", tint: .green, title: "Screen sharing is on",
+            bar(symbol: "checkmark.circle.fill", tint: .green, context: "Setup · Screen sharing", title: "Screen sharing is on",
                 detail: String(localized: "Continue in the setup window.")) {
                 Button("Back to Setup") { model.openWindow?(WindowID.setup); NSApp.activate() }
                     .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
@@ -130,29 +135,63 @@ struct WorkspaceWindow: View {
         }
     }
 
-    /// A full-width strip under the title bar, in the window's chrome.
-    func bar(symbol: String, tint: Color, title: LocalizedStringKey, detail: String, busy: Bool = false,
-             warning: Bool = false, @ViewBuilder actions: () -> some View) -> some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
+    /// A full-width strip under the title bar, in the window's chrome, always the same height (no jumping between
+    /// states): a tinted symbol (or progress), where the user is, what to do, and the buttons.
+    func bar(symbol: String, tint: Color, context: LocalizedStringKey, title: LocalizedStringKey, detail: String,
+             busy: Bool = false, warning: Bool = false, @ViewBuilder actions: () -> some View) -> some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 11, style: .continuous).fill(tint.opacity(0.16))
                 if busy {
-                    ProgressView().controlSize(.small).frame(width: 28)
+                    ProgressView().controlSize(.small)
                 } else {
-                    Image(systemName: symbol).font(.title2).foregroundStyle(tint).frame(width: 28)
+                    Image(systemName: symbol).font(.system(size: 18, weight: .semibold)).foregroundStyle(tint)
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.headline)
-                    Text(detail).font(.callout).foregroundStyle(warning ? .orange : .secondary)
-                        .textSelection(.enabled).lineLimit(3).fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 12)
-                HStack(spacing: 8) { actions() }.controlSize(.large)
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 10)
-            Divider()
+            .frame(width: 40, height: 40)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(context).font(.caption.weight(.semibold)).foregroundStyle(tint).textCase(.uppercase)
+                Text(title).font(.headline)
+                Text(detail).font(.callout).foregroundStyle(warning ? .orange : .secondary)
+                    .textSelection(.enabled).lineLimit(2)
+            }
+            Spacer(minLength: 16)
+            HStack(spacing: 8) { actions() }
+                .controlSize(.large)
+                .tint(tint == .green || tint == .orange ? tint : BrandColor.indigo)
         }
+        .padding(.horizontal, 20)
+        .frame(height: Self.barHeight)
+        .frame(maxWidth: .infinity)
         .background(.bar)
+        .overlay(alignment: .bottom) { Divider() }
+    }
+
+    static let barHeight: CGFloat = 86
+
+    /// Grows (or shrinks) the window by the bar's height at its bottom edge, so the workspace's screen keeps its
+    /// size instead of shrinking into black bars.
+    func resizeWindow(by delta: CGFloat, bar: CGFloat) {
+        guard abs(delta) > 0.5,
+              let window = coordinator?.view?.window
+                ?? NSApp.windows.first(where: { $0.identifier?.rawValue.contains(WindowID.workspace) == true })
+        else { return }
+        var frame = window.frame
+        frame.size.height += delta
+        frame.origin.y -= delta
+        if let visible = window.screen?.visibleFrame {
+            if frame.height > visible.height { frame.size.height = visible.height }
+            if frame.minY < visible.minY { frame.origin.y = visible.minY }
+        }
+        // As wide as the screen in it at that height (1280 x 800 with 10 pt around it): no bars at the sides.
+        let content = window.contentRect(forFrameRect: frame)
+        let screenHeight = content.height - bar - 20
+        if screenHeight > 200 {
+            let width = screenHeight * 1280 / 800 + 20 + (frame.width - content.width)
+            frame.origin.x += (frame.width - width) / 2
+            frame.size.width = width
+        }
+        window.setFrame(frame, display: true, animate: true)
     }
 
     var statusText: String {

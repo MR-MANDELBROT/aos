@@ -51,8 +51,6 @@ final class AppModel: ObservableObject {
     @Published var pairedDevices: [AuthorizedKeys.Device] = []
     @Published var remoteLoginOn = false
     @Published var helperState: HelperState = .unknown
-    /// While the user allows the helper: macOS shows its password dialog in the workspace right now.
-    @Published var helperPasswordDialog = false
     var helperWasAdmin: Bool?
 
     // Bitwarden (see AppModel+Bitwarden.swift); the views read `bitwarden` and redraw on the tick.
@@ -326,15 +324,21 @@ final class AppModel: ObservableObject {
 
     private var ticks = 0
 
+    private func changed<T: Equatable>(_ path: ReferenceWritableKeyPath<AppModel, T>, _ value: T) {
+        if self[keyPath: path] != value { self[keyPath: path] = value }
+    }
+
     func refresh(loginItems: Bool = true) {
-        vmPhase = workspace.host.phase
-        status = workspace.status()
-        session = SessionStatus.read(paths)
-        keeper = KeeperStatus.read(paths)
-        remote = RemoteServerStatus.read(paths)
+        // Only what changed: every assignment redraws all of aOS's open windows.
+        changed(\.vmPhase, workspace.host.phase)
+        changed(\.status, workspace.status())
+        changed(\.session, SessionStatus.read(paths))
+        let k = KeeperStatus.read(paths)
+        if k?.enabled != keeper?.enabled || k?.entries != keeper?.entries { keeper = k }
+        changed(\.remote, RemoteServerStatus.read(paths))
         if loginItems {
-            loginItemEnabled = SMAppService.mainApp.status == .enabled
-            sessionAgentStatus = SessionAgent.service.status
+            changed(\.loginItemEnabled, SMAppService.mainApp.status == .enabled)
+            changed(\.sessionAgentStatus, SessionAgent.service.status)
             power.refreshHelperStatus()
         }
         setup.refreshCompletion()
@@ -423,7 +427,7 @@ final class AppModel: ObservableObject {
         Task.detached(priority: .utility) {
             let list = ClaudeConversations.recent(within: hours * 3600, limit: 40, cache: cache)
                 .filter { $0.startedIn != "sdk-cli" }
-            await MainActor.run { AppModel.shared.conversations = list }
+            await MainActor.run { if AppModel.shared.conversations != list { AppModel.shared.conversations = list } }
         }
     }
 

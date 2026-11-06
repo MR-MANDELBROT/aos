@@ -42,6 +42,7 @@
       }
     },
     "[*.]google.com" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -364,6 +365,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktiv in den letzten %lld Stunden"
+          }
+        }
+      }
+    },
+    "Add" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzufügen"
           }
         }
       }
@@ -1768,6 +1779,16 @@
         }
       }
     },
+    "for example github.com" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zum Beispiel github.com"
+          }
+        }
+      }
+    },
     "For up to %lld minutes. You can watch and close it any time." : {
       "localizations" : {
         "de" : {
@@ -1848,6 +1869,16 @@
         }
       }
     },
+    "How your agent's workspace behaves. You can change it later in the settings." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie sich der Arbeitsplatz deines Agents verhält. Du kannst es später in den Einstellungen ändern."
+          }
+        }
+      }
+    },
     "I can't do this" : {
       "localizations" : {
         "de" : {
@@ -1859,6 +1890,7 @@
       }
     },
     "If macOS asks, click Open System Settings, then switch on aOS Helper. aOS enters the password itself, type nothing. Then the setup continues by itself." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1868,12 +1900,33 @@
         }
       }
     },
+    "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS, klicke „Systemeinstellungen öffnen“ und schalte dann „aOS Helper“ ein. Fragt macOS nach dem Passwort, klicke „Passwort eingeben“."
+          }
+        }
+      }
+    },
     "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password. Only then: if another window asks, click Not Now." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fragt macOS, klicke „Systemeinstellungen öffnen“ und schalte dann „aOS Helper“ ein. Fragt macOS nach dem Passwort, klicke „Passwort eingeben“. Erst danach: Fragt noch ein Fenster, klicke „Nicht jetzt“."
+          }
+        }
+      }
+    },
+    "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password. Then the setup continues by itself." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS, klicke „Systemeinstellungen öffnen“ und schalte dann „aOS Helper“ ein. Fragt macOS nach dem Passwort, klicke „Passwort eingeben“. Danach geht die Einrichtung von selbst weiter."
           }
         }
       }
@@ -2231,6 +2284,7 @@
       }
     },
     "macOS isn't asking for the password right now." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2339,6 +2393,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nie"
+          }
+        }
+      }
+    },
+    "Never (until you lock it)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie (bis du sperrst)"
           }
         }
       }
@@ -2740,7 +2804,18 @@
         }
       }
     },
+    "One more switch: aOS Helper. With it your agent can sign in on websites once you approve, without ever seeing the password." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch ein Schalter: aOS Helper. Damit kann sich dein Agent nach deiner Freigabe auf Websites anmelden, ohne je das Passwort zu sehen."
+          }
+        }
+      }
+    },
     "One more switch: aOS Helper. With it your agent can sign in on websites once you approve, without ever seeing the password. %@ enters the workspace password itself." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3160,6 +3235,16 @@
         }
       }
     },
+    "Recommended: all except google.com. Your agent's sign-ins then end with each use, and Google shows fewer captchas." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfohlen: alle außer google.com. Die Anmeldungen deines Agents enden dann mit jeder Nutzung, und Google zeigt weniger Captchas."
+          }
+        }
+      }
+    },
     "Remote Control is on" : {
       "localizations" : {
         "de" : {
@@ -3477,6 +3562,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einrichtung"
+          }
+        }
+      }
+    },
+    "Setup · aOS Helper" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung · aOS Helper"
+          }
+        }
+      }
+    },
+    "Setup · Screen sharing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichtung · Bildschirmfreigabe"
           }
         }
       }
@@ -3913,6 +4018,16 @@
         }
       }
     },
+    "Stays unlocked, also while the Mac sleeps or after a restart, until you lock it or sign out. Every login your agent gets still needs your approval." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bleibt entsperrt, auch wenn der Mac schläft oder neu startet, bis du sperrst oder dich abmeldest. Jede Anmeldung, die dein Agent bekommt, braucht trotzdem deine Freigabe."
+          }
+        }
+      }
+    },
     "Step %lld of %lld" : {
       "localizations" : {
         "de" : {
@@ -3971,11 +4086,22 @@
       }
     },
     "Switch on Screen Sharing. When macOS asks for a password, aOS enters it. Type nothing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schalte „Bildschirmfreigabe“ ein. Fragt macOS nach einem Passwort, gibt aOS es ein. Tippe nichts."
+          }
+        }
+      }
+    },
+    "Switch on Screen Sharing. When macOS asks for the password, click Enter Password in the bar at the top." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte „Bildschirmfreigabe“ ein. Fragt macOS nach dem Passwort, klicke oben in der Leiste auf „Passwort eingeben“."
           }
         }
       }
@@ -4026,6 +4152,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das hat noch nicht geklappt: %@"
+          }
+        }
+      }
+    },
+    "That isn't a website address. Type a domain like github.com." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist keine Website-Adresse. Tippe eine Domain wie github.com."
           }
         }
       }
@@ -4362,11 +4498,22 @@
       }
     },
     "There, follow the bar at the top: switch on aOS Helper. Type nothing, aOS enters the password." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Folge dort der Leiste oben und schalte „aOS Helper“ ein. Tippe nichts, das Passwort gibt aOS ein."
+          }
+        }
+      }
+    },
+    "There, follow the bar at the top: switch on aOS Helper. When macOS asks for the password, click Enter Password." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folge dort der Leiste oben und schalte „aOS Helper“ ein. Fragt macOS nach dem Passwort, klicke „Passwort eingeben“."
           }
         }
       }
@@ -4541,6 +4688,16 @@
         }
       }
     },
+    "Use Recommended" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfohlene übernehmen"
+          }
+        }
+      }
+    },
     "User name or email" : {
       "localizations" : {
         "de" : {
@@ -4607,6 +4764,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wartet bis %@"
+          }
+        }
+      }
+    },
+    "Website" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Website"
           }
         }
       }
@@ -4682,6 +4849,7 @@
       }
     },
     "When macOS asks for a password, aOS enters it, type nothing. aOS notices by itself when it worked." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4709,6 +4877,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fragt macOS nach einem Passwort, lass es %@ eingeben."
+          }
+        }
+      }
+    },
+    "When macOS asks for the password, click Enter Password. aOS notices by itself when screen sharing is on." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS nach dem Passwort, klicke „Passwort eingeben“. aOS merkt von selbst, wenn die Bildschirmfreigabe an ist."
           }
         }
       }
@@ -4806,6 +4984,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit %@ auf dem iPhone gibst du die Anmeldungen deines Agents mit Face ID frei, bekommst eine Mitteilung, wenn er dich braucht, und schaust unterwegs in den Arbeitsplatz. Ohne iPhone gibst du alles hier am Mac frei."
+          }
+        }
+      }
+    },
+    "with subdomains" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mit Subdomains"
           }
         }
       }

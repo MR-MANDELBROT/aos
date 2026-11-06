@@ -11,12 +11,13 @@ import Virtualization
 @MainActor
 final class SetupController: ObservableObject {
     enum Step: Int, CaseIterable, Identifiable {
-        case requirements, agents, download, install, prepare, screenSharing, connect, session, pair, bitwarden, done
+        case requirements, agents, options, download, install, prepare, screenSharing, connect, session, pair, bitwarden, done
         var id: Int { rawValue }
         var title: String {
             switch self {
             case .requirements: return String(localized: "Check this Mac")
             case .agents: return String(localized: "Choose your agent")
+            case .options: return String(localized: "Settings")
             case .download: return String(localized: "Download macOS")
             case .install: return String(localized: "Create the workspace")
             case .prepare: return String(localized: "Prepare the workspace")
@@ -170,6 +171,21 @@ final class SetupController: ObservableObject {
     func continueAfterAgents() {
         guard !selectedAgents.isEmpty else { return }
         saveSettings { $0.agents = AgentIntegration.all.map(\.id).filter(selectedAgents.contains) }
+        step = .options
+    }
+
+    // MARK: 3. The workspace's settings
+
+    /// Websites stay signed in on Google only (fewer captchas), programs of this Mac in the workspace.
+    func useRecommendedOptions() {
+        saveSettings { s in
+            s.signOutWebsites = .allExcept
+            for p in StaySignedIn.recommended where !s.keepSignedIn.contains(p) { s.keepSignedIn.insert(p, at: 0) }
+            s.shareApplications = true
+        }
+    }
+
+    func continueAfterOptions() {
         if let s = vmState {
             step = s.guestBuild == nil ? .install : (!s.bootstrapped ? .prepare : (!s.screenSharingReady ? .screenSharing : .connect))
         } else {
@@ -338,8 +354,6 @@ final class SetupController: ObservableObject {
     @Published var sharingPhase: SharingPhase = .starting
     /// Why the last check failed (shown in the workspace window's bar).
     @Published var sharingProblem: String?
-    /// macOS shows its password dialog in the workspace right now.
-    @Published var passwordDialogOpen = false
     /// The workspace window's screen, for typing the password (set by the window).
     weak var display: VMDisplay.Coordinator?
     private var sharingWatch: Task<Void, Never>?
@@ -369,37 +383,23 @@ final class SetupController: ObservableObject {
         }
     }
 
-    /// Every two seconds: is screen sharing on (then check it), does macOS ask for the password (then enter it, once
-    /// per dialog; during the setup no agent has used the workspace yet, so nothing else can be waiting for it).
+    /// Every two seconds: is screen sharing on (then check it). The password the user enters with the button in the
+    /// workspace window's bar (their decision, and macOS's dialog can't be told apart reliably from outside: System
+    /// Settings hosts it in its own window, and its service keeps running after it closed).
     private func watchScreenSharing(ip: String, checkWhenOn: Bool = true) {
         sharingWatch?.cancel()
+        guard checkWhenOn else { sharingWatch = nil; return }
         sharingWatch = Task { [weak self] in
-            var typedForDialog = false
-            var typings = 0
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 guard let self, !Task.isCancelled, self.step == .screenSharing, self.sharingPhase == .waitingForSwitch,
                       self.workspace.host.isRunning else { break }
-                let provisioner = self.workspace.provisioner
-                if checkWhenOn, (try? await provisioner.screenSharingEnabled(host: ip)) == true {
+                if (try? await self.workspace.provisioner.screenSharingEnabled(host: ip)) == true {
                     self.sharingWatch = nil
                     self.checkScreenSharing(automatic: true)
                     return
                 }
-                let dialog = await provisioner.passwordDialogOpen(host: ip)
-                self.passwordDialogOpen = dialog
-                if dialog && !typedForDialog && typings < 3 {
-                    try? await Task.sleep(nanoseconds: 1_200_000_000)  // the dialog takes the focus
-                    guard self.sharingPhase == .waitingForSwitch, self.display != nil else { continue }
-                    self.typeGuestPassword(into: self.display)
-                    self.note("entered the workspace password for screen sharing")
-                    typedForDialog = true
-                    typings += 1
-                } else if !dialog {
-                    typedForDialog = false
-                }
             }
-            self?.passwordDialogOpen = false
         }
     }
 
@@ -409,7 +409,6 @@ final class SetupController: ObservableObject {
         guard step == .screenSharing, !isBusy else { return }
         sharingWatch?.cancel()
         sharingWatch = nil
-        passwordDialogOpen = false
         sharingPhase = .checking
         sharingProblem = nil
         run(String(localized: "Checking screen sharing")) {
@@ -476,11 +475,13 @@ final class SetupController: ObservableObject {
         showSetup()
     }
 
-    /// Types the workspace password into the workspace window's screen (the password dialog has the focus there).
+    /// Types the workspace password into the workspace window's screen (the password dialog has the focus there),
+    /// when the user clicks "Enter Password".
     func typeGuestPassword(into view: VMDisplay.Coordinator?) {
         guard let view, let password = try? GuestSecrets(paths: paths).adminPassword(createIfMissing: false) else { return }
         workspace.noteActivity()
         view.type(password + "\n")
+        note("entered the workspace password (button)")
     }
 
     // MARK: 7. Connect agents

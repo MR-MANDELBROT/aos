@@ -475,6 +475,7 @@ final class BitwardenVaultTests: XCTestCase {
         let vault = BitwardenVault(paths: Paths(root: fake.folder), store: store, cli: fake.cli)
         vault.lastSleep = { nil }
         vault.bootTime = { nil }
+        vault.lockHours = 8
         await vault.refresh()
         await vault.unlock(password: FakeBitwarden.password)
         let unlocked = try XCTUnwrap(store.load())

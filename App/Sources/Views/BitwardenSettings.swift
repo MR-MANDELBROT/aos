@@ -7,7 +7,14 @@ struct BitwardenSettings: View {
     @EnvironmentObject var model: AppModel
     @State private var email = ""
     @State private var password = ""
-    @State private var server: ServerChoice = .us
+    /// bitwarden.eu for a Mac set to a European region (where EU accounts are likely), else bitwarden.com.
+    @State private var server: ServerChoice = BitwardenSettings.regionDefault
+
+    static var regionDefault: ServerChoice {
+        let eu: Set<String> = ["AT", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IE",
+                               "IS", "IT", "LI", "LT", "LU", "LV", "MT", "NL", "NO", "PL", "PT", "RO", "SE", "SI", "SK"]
+        return eu.contains(Locale.current.region?.identifier ?? "") ? .eu : .us
+    }
     @State private var serverAddress = ""
     @State private var code = ""
     @FocusState private var focus: Field?
@@ -66,10 +73,13 @@ struct BitwardenSettings: View {
             Section {
                 Picker("Lock again", selection: binding(\.bitwardenLockHours)) {
                     ForEach(AgentSettings.bitwardenLockChoices, id: \.self) { hours in
-                        Text(hours == 1 ? String(localized: "After 1 hour") : String(localized: "After \(hours) hours")).tag(hours)
+                        Text(hours == 0 ? String(localized: "Never (until you lock it)")
+                             : hours == 1 ? String(localized: "After 1 hour") : String(localized: "After \(hours) hours")).tag(hours)
                     }
                 }
-                Text("Counted from unlocking. Bitwarden also locks when this Mac goes to sleep or restarts. While it is locked, sign-in requests show no Bitwarden logins until you unlock it here or in the sign-in window.")
+                Text(model.settings.bitwardenLockHours == 0
+                     ? String(localized: "Stays unlocked, also while the Mac sleeps or after a restart, until you lock it or sign out. Every login your agent gets still needs your approval.")
+                     : String(localized: "Counted from unlocking. Bitwarden also locks when this Mac goes to sleep or restarts. While it is locked, sign-in requests show no Bitwarden logins until you unlock it here or in the sign-in window."))
                     .font(.caption).foregroundStyle(.secondary)
             } header: {
                 Text("Locking")

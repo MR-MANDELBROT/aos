@@ -29,6 +29,7 @@ extension SetupController.Step {
     var symbol: String {
         switch self {
         case .requirements: return "checkmark.shield"
+        case .options: return "slider.horizontal.3"
         case .agents: return "apple.terminal"
         case .download: return "arrow.down.circle"
         case .install: return "laptopcomputer.and.arrow.down"
@@ -158,6 +159,7 @@ private struct StepPage: View {
         switch setup.step {
         case .requirements: requirements
         case .agents: agents
+        case .options: options
         case .download: download
         case .install: install
         case .prepare: prepare
@@ -283,12 +285,12 @@ private struct StepPage: View {
                     Label("Screen sharing is on.", systemImage: "checkmark.circle.fill")
                         .font(.headline).foregroundStyle(.green)
                 }
-                Text("One more switch: aOS Helper. With it your agent can sign in on websites once you approve, without ever seeing the password. \(Brand.name) enters the workspace password itself.")
+                Text("One more switch: aOS Helper. With it your agent can sign in on websites once you approve, without ever seeing the password.")
                     .font(.title3).foregroundStyle(.secondary)
                 GlassCard {
                     VStack(alignment: .leading, spacing: 10) {
                         numbered(1, "Click Allow aOS Helper. The workspace window comes to the front.")
-                        numbered(2, "There, follow the bar at the top: switch on aOS Helper. Type nothing, aOS enters the password.")
+                        numbered(2, "There, follow the bar at the top: switch on aOS Helper. When macOS asks for the password, click Enter Password.")
                         numbered(3, "Then this window comes back by itself.")
                     }
                 }
@@ -300,7 +302,7 @@ private struct StepPage: View {
                 GlassCard {
                     VStack(alignment: .leading, spacing: 10) {
                         numbered(1, "The workspace window opens by itself. Wait until System Settings appears there at Sharing, the bar at the top tells you.")
-                        numbered(2, "Switch on Screen Sharing. When macOS asks for a password, aOS enters it. Type nothing.")
+                        numbered(2, "Switch on Screen Sharing. When macOS asks for the password, click Enter Password in the bar at the top.")
                         numbered(3, "aOS notices when it worked and brings you back here.")
                     }
                 }
@@ -463,6 +465,44 @@ private struct StepPage: View {
         .onAppear { power.refreshHelperStatus() }
     }
 
+    // MARK: The workspace's settings
+
+    var options: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("How your agent's workspace behaves. You can change it later in the settings.")
+                .font(.title3).foregroundStyle(.secondary)
+            GlassCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    Picker(selection: Binding(get: { model.settings.signOutWebsites },
+                                              set: { v in model.update { $0.signOutWebsites = v } })) {
+                        Text("All websites").tag(AgentSettings.SignOutWebsites.all)
+                        Text("All except …").tag(AgentSettings.SignOutWebsites.allExcept)
+                        Text("None, stay signed in").tag(AgentSettings.SignOutWebsites.none)
+                    } label: {
+                        Text("Sign out of websites when it closes").fontWeight(.semibold)
+                    }
+                    .pickerStyle(.menu)
+                    if model.settings.signOutWebsites == .allExcept {
+                        StaySignedInList()
+                    }
+                    Text("Recommended: all except google.com. Your agent's sign-ins then end with each use, and Google shows fewer captchas.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            }
+            GlassCard {
+                Toggle(isOn: Binding(get: { model.settings.shareApplications },
+                                     set: { v in model.update { $0.shareApplications = v } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 8) { Text("Programs of this Mac in the workspace").fontWeight(.semibold); RecommendedBadge() }
+                        Text("Your agent can open them there. They start fresh, without your data and sign-ins; App Store apps and apps with licenses often don't run.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+            }
+        }
+    }
+
     // MARK: iPhone and Bitwarden
 
     var pair: some View {
@@ -607,6 +647,8 @@ private struct StepPage: View {
             if !setup.requirementProblems.isEmpty { Button("Check again") { setup.checkRequirements() }.buttonStyle(.glass) }
         case .agents:
             Button("Search again") { setup.detectAgents() }.buttonStyle(.glass)
+        case .options:
+            Button("Use Recommended") { setup.useRecommendedOptions() }.buttonStyle(.glass)
         case .download:
             if setup.restoreInfo == nil { Button("Look up the newest macOS") { setup.lookUpRestoreImage() }.buttonStyle(.glass).disabled(busy) }
         case .screenSharing:
@@ -637,6 +679,9 @@ private struct StepPage: View {
         switch setup.step {
         case .requirements:
             EmptyView()
+        case .options:
+            Button("Continue") { setup.continueAfterOptions() }
+                .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
         case .agents:
             Button("Continue") { setup.continueAfterAgents() }
                 .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(setup.selectedAgents.isEmpty)

@@ -71,6 +71,7 @@ struct AOSApp: App {
                 .environmentObject(model)
                 .environmentObject(model.power)
         }
+        .windowResizability(.contentMinSize)
     }
 }
 

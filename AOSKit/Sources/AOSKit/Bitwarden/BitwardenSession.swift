@@ -16,8 +16,12 @@ public struct BitwardenSession: Codable, Equatable, Sendable {
         self.until = until
     }
 
+    /// Unlocked until the user locks or signs out (the setting "Never"): sleep and restarts don't lock it either.
+    public var staysUnlocked: Bool { until == .distantFuture }
+
     /// Still good: before its time, and the Mac neither slept nor restarted since it was unlocked.
     public func isValid(now: Date = Date(), lastSleep: Date? = SystemClock.lastSleep, boot: Date? = SystemClock.boot) -> Bool {
+        if staysUnlocked { return true }
         if now >= until || now < unlocked.addingTimeInterval(-300) { return false }
         if let boot, boot > unlocked { return false }
         if let lastSleep, lastSleep > unlocked { return false }

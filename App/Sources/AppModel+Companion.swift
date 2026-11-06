@@ -173,39 +173,17 @@ extension AppModel {
         }
     }
 
-    /// Waits for the switch; when macOS asks for the password (its dialog in the guest), aOS enters the workspace
-    /// account's password itself, so the user only flips the switch.
+    /// Waits for the switch. The password the user enters with "Enter Password" in the workspace window's bar.
     private func watchHelper(ip: String) async {
         let deadline = Date().addingTimeInterval(600)
-        var typedForDialog = false
-        var typings = 0
-        // The password goes in by itself only during the first setup, before any agent ever used the workspace.
-        // Later an agent could have programs running there that wait for exactly this moment (a dialog of their
-        // own, or a real one they asked for): then the person looks at the workspace and clicks "Enter the
-        // workspace password" themselves.
-        let automatic = !setup.isComplete
         while Date() < deadline, helperState == .allowing {
             try? await Task.sleep(nanoseconds: 1_500_000_000)
-            let poll = await workspace.provisioner.helperPermissionPoll(host: ip)
-            helperPasswordDialog = poll.passwordDialog
-            if poll.trusted {
+            if await workspace.provisioner.helperPermissionPoll(host: ip).trusted {
                 await finishHelperPermission(ip: ip, allowed: true)
                 return
             }
-            if automatic && poll.passwordDialog && !typedForDialog && typings < 3 {
-                try? await Task.sleep(nanoseconds: 1_200_000_000)  // the dialog takes the focus
-                do {
-                    try await workspace.typeGuestPasswordForSetup()
-                    typedForDialog = true
-                    typings += 1
-                    append("entered the workspace password for the helper permission")
-                } catch { append("could not enter the password: \(error.localizedDescription)") }
-            } else if !poll.passwordDialog {
-                typedForDialog = false
-            }
         }
         if helperState == .allowing { await finishHelperPermission(ip: ip, allowed: false) }
-        helperPasswordDialog = false
     }
 
     func cancelHelperPermission() async {
@@ -221,7 +199,6 @@ extension AppModel {
             helperWasAdmin = nil
         }
         helperState = allowed ? .allowed : .notAllowed
-        helperPasswordDialog = false
         append(allowed ? "the workspace helper may sign in now" : "the helper permission was not given")
     }
 }

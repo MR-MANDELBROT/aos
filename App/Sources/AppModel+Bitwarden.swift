@@ -10,7 +10,7 @@ extension AppModel {
     func startBitwarden() {
         sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { _ in
-            Task { @MainActor in await AppModel.shared.bitwarden.lock(reason: "the Mac goes to sleep") }
+            Task { @MainActor in await AppModel.shared.bitwarden.lockForSleep() }
         }
         Task { await bitwarden.refresh() }
     }
@@ -41,7 +41,7 @@ extension AppModel {
     var bitwardenStateText: String {
         switch bitwarden.phase {
         case .unlocked:
-            if let until = bitwarden.lockedAt {
+            if let until = bitwarden.lockedAt, until != .distantFuture {
                 return String(localized: "Unlocked until \(until.formatted(date: .omitted, time: .shortened))")
             }
             return String(localized: "Unlocked")
