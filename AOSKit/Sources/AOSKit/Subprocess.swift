@@ -190,4 +190,156 @@ public enum Subprocess {
             }
         }
     }
+
+    // MARK: Programs that ask questions
+
+    /// Starts a program that asks its questions on a terminal (prompt libraries such as the one in Bitwarden's
+    /// command line tool need one): its stdin and stderr are a pseudo terminal, its stdout stays a pipe, so the result
+    /// arrives apart from the prompts. Read the terminal with `terminal`, answer with `send`, collect the end with
+    /// `result()`. Nothing here keeps or logs what passes through.
+    public static func interactive(_ path: String, _ arguments: [String], environment: [String: String]? = nil,
+                                   cwd: String? = nil, timeout: TimeInterval) throws -> Interactive {
+        var master: Int32 = -1, slave: Int32 = -1
+        var size = winsize(ws_row: 40, ws_col: 120, ws_xpixel: 0, ws_ypixel: 0)
+        guard openpty(&master, &slave, nil, nil, &size) == 0 else { throw Failure.spawn(path, errno) }
+        // Both ends above 2 and closed on exec (a fork elsewhere in the process must not inherit them).
+        func aboveTwo(_ fd: Int32) -> Int32 {
+            if fd > 2 { _ = fcntl(fd, F_SETFD, FD_CLOEXEC); return fd }
+            let moved = fcntl(fd, F_DUPFD_CLOEXEC, 3)
+            close(fd)
+            return moved
+        }
+        master = aboveTwo(master)
+        slave = aboveTwo(slave)
+        let out: (Int32, Int32)
+        do {
+            guard master > 2, slave > 2 else { throw Failure.spawn(path, EMFILE) }
+            out = try cloexecPipe(path)
+        } catch {
+            if master >= 0 { close(master) }
+            if slave >= 0 { close(slave) }
+            throw error
+        }
+
+        var actions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&actions)
+        defer { posix_spawn_file_actions_destroy(&actions) }
+        posix_spawn_file_actions_adddup2(&actions, slave, 0)
+        posix_spawn_file_actions_adddup2(&actions, out.1, 1)
+        posix_spawn_file_actions_adddup2(&actions, slave, 2)
+        if let cwd { posix_spawn_file_actions_addchdir(&actions, cwd) }
+        var attributes: posix_spawnattr_t?
+        posix_spawnattr_init(&attributes)
+        defer { posix_spawnattr_destroy(&attributes) }
+        var all = sigset_t(), none = sigset_t()
+        sigfillset(&all)
+        sigemptyset(&none)
+        posix_spawnattr_setsigdefault(&attributes, &all)
+        posix_spawnattr_setsigmask(&attributes, &none)
+        posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGDEF
+                                                    | POSIX_SPAWN_SETSIGMASK))
+        let argv = ([path] + arguments).map { strdup($0) } + [nil]
+        let env = (environment ?? ProcessInfo.processInfo.environment).map { strdup("\($0.key)=\($0.value)") } + [nil]
+        defer {
+            argv.forEach { free($0) }
+            env.forEach { free($0) }
+        }
+        var pid: pid_t = 0
+        let rc = posix_spawn(&pid, path, &actions, &attributes, argv, env)
+        close(slave); close(out.1)
+        guard rc == 0 else {
+            close(master); close(out.0)
+            throw Failure.spawn(path, rc)
+        }
+        return Interactive(pid: pid, master: master, stdout: out.0, path: path, timeout: timeout)
+    }
+
+    /// A running program with a terminal (see `interactive`).
+    public final class Interactive: @unchecked Sendable {
+        public let pid: pid_t
+        /// What the program writes to its terminal (its prompts, the echo of what was typed), in pieces as it comes.
+        /// Ends when the program closed the terminal.
+        public let terminal: AsyncStream<Data>
+        private let master: Int32
+        private let lock = NSLock()
+        private var masterOpen = true
+        private var finished: Result?
+        private var waiting: [CheckedContinuation<Result, Never>] = []
+        private let state = State()
+
+        fileprivate init(pid: pid_t, master: Int32, stdout: Int32, path: String, timeout: TimeInterval) {
+            self.pid = pid
+            self.master = master
+            let (stream, continuation) = AsyncStream<Data>.makeStream(bufferingPolicy: .unbounded)
+            terminal = stream
+            let output = Output()
+            let readers = DispatchGroup()
+            readers.enter()
+            Thread.detachNewThread { [self] in
+                // The terminal: once the program and everything it started closed it, read ends with an error.
+                var buffer = [UInt8](repeating: 0, count: 16384)
+                while true {
+                    let n = read(master, &buffer, buffer.count)
+                    if n > 0 { continuation.yield(Data(buffer[0..<n])) } else if n == -1 && errno == EINTR { continue } else { break }
+                }
+                continuation.finish()
+                lock.withLock {
+                    masterOpen = false
+                    close(master)
+                }
+                readers.leave()
+            }
+            readers.enter()
+            Thread.detachNewThread { Subprocess.readAll(stdout) { output.appendOut($0) }; close(stdout); readers.leave() }
+            let state = self.state
+            DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
+                guard state.signalIfRunning(pid, SIGTERM, markTimeout: true) else { return }
+                DispatchQueue.global().asyncAfter(deadline: .now() + 2) { _ = state.signalIfRunning(pid, SIGKILL) }
+            }
+            Thread.detachNewThread { [self] in
+                var info = siginfo_t()
+                while waitid(P_PID, id_t(pid), &info, WEXITED | WNOWAIT) == -1 && errno == EINTR {}
+                state.markExited()
+                var status: Int32 = 0
+                var waited: pid_t
+                repeat { waited = waitpid(pid, &status, 0) } while waited == -1 && errno == EINTR
+                _ = readers.wait(timeout: .now() + 2)
+                let code: Int32 = waited == -1 ? -1 : ((status & 0x7f) == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f))
+                let result = Result(status: code, stdout: output.out, stderr: Data(), timedOut: state.timedOut)
+                let resume = lock.withLock { () -> [CheckedContinuation<Result, Never>] in
+                    finished = result
+                    defer { waiting = [] }
+                    return waiting
+                }
+                resume.forEach { $0.resume(returning: result) }
+            }
+        }
+
+        /// Types into the program's terminal (an answer ends with "\r", like the Return key).
+        public func send(_ data: Data) {
+            lock.withLock {
+                guard masterOpen else { return }
+                Subprocess.writeAll(master, data)
+            }
+        }
+
+        /// Ends the program (SIGTERM, then SIGKILL after 2 s).
+        public func terminate() {
+            let state = self.state, pid = self.pid
+            guard state.signalIfRunning(pid, SIGTERM) else { return }
+            DispatchQueue.global().asyncAfter(deadline: .now() + 2) { _ = state.signalIfRunning(pid, SIGKILL) }
+        }
+
+        /// Waits until the program ended: its exit status and what it wrote to stdout (stderr went to the terminal).
+        public func result() async -> Result {
+            await withCheckedContinuation { continuation in
+                let ready: Result? = lock.withLock {
+                    if let finished { return finished }
+                    waiting.append(continuation)
+                    return nil
+                }
+                if let ready { continuation.resume(returning: ready) }
+            }
+        }
+    }
 }

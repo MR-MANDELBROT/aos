@@ -31,20 +31,30 @@ public final class WorkspaceController {
     public var onCompanionAnswer: ((AgentRequest) -> String?)?
     /// Sign-ins waiting for the user's answer (from the Mac window or the iPhone), by request id.
     var pendingSignIns: [String: CheckedContinuation<SignInAnswer?, Never>] = [:]
+    /// What each open sign-in offered from Bitwarden, by request id.
+    var signInOffers: [String: SignInOffer] = [:]
+    /// The user's Bitwarden account: the logins for sign-ins come from there.
+    public let bitwarden: BitwardenVault
     /// While a sign-in runs, the agent's other tools wait (nothing may move the focus).
     var signingIn = false
 
-    public init(paths: Paths) {
+    public init(paths: Paths, bitwarden: BitwardenVault? = nil) {
         self.paths = paths
         self.settings = AgentSettings.load(paths)
         self.host = VMHost(bundle: VMBundle(url: paths.vm), paths: paths)
         self.provisioner = Provisioner(paths: paths, kit: GuestKit(policies: ChromePolicies(keepSignedIn: settings.keepSignedIn)))
+        self.bitwarden = bitwarden ?? BitwardenVault(paths: paths)
+        self.bitwarden.lockHours = settings.bitwardenLockHours
         host.onPhaseChange = { [weak self] _ in self?.onChange?() }
+        self.bitwarden.onOffersChanged = { [weak self] in
+            Task { @MainActor in await self?.refreshSignInOffers() }
+        }
     }
 
     public func updateSettings(_ s: AgentSettings) throws {
         try s.save(paths)
         settings = s
+        bitwarden.lockHours = s.bitwardenLockHours
         // New sign-in domains change the Chrome policies: the guest gets them at its next opening.
         provisioner = Provisioner(paths: paths, kit: GuestKit(policies: ChromePolicies(keepSignedIn: s.keepSignedIn)))
         onChange?()

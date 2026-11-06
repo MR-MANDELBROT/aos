@@ -36,9 +36,14 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// Conversation ids the user doesn't want kept.
     public var skippedConversations: [String] = []
 
+    /// Bitwarden locks again this many hours after it was unlocked in aOS (earlier when the Mac sleeps or restarts).
+    public var bitwardenLockHours: Int = 8
+    public static let bitwardenLockChoices = [1, 4, 8, 24]
+
     private enum CodingKeys: String, CodingKey {
         case expireSignIns, keepSignedIn, idleMinutes, sessionName, sessionEnabled, keepAwake, agents, setupFinished
         case keepReachable, keepAutomatic, keepHours, keepTerminal, keepMax, keptConversations, skippedConversations
+        case bitwardenLockHours
     }
 
     public init(from decoder: Decoder) throws {
@@ -59,6 +64,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         keepMax = min(max(try c.decodeIfPresent(Int.self, forKey: .keepMax) ?? d.keepMax, 1), 20)
         keptConversations = try c.decodeIfPresent([String].self, forKey: .keptConversations) ?? d.keptConversations
         skippedConversations = try c.decodeIfPresent([String].self, forKey: .skippedConversations) ?? d.skippedConversations
+        bitwardenLockHours = min(max(try c.decodeIfPresent(Int.self, forKey: .bitwardenLockHours) ?? d.bitwardenLockHours, 1), 24)
     }
 
     public init() {}

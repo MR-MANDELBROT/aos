@@ -38,16 +38,20 @@ public struct Paths: Sendable {
     public var session: URL { root.appendingPathComponent("Session", isDirectory: true) }
     /// Guest scripts copied out of the app bundle for upload.
     public var guestKit: URL { root.appendingPathComponent("GuestKit", isDirectory: true) }
+    /// Programs aOS downloads (Bitwarden's command line tool, checked by its signature before every use).
+    public var bin: URL { root.appendingPathComponent("bin", isDirectory: true) }
+    /// Bitwarden's own files for aOS's sign-in (BITWARDENCLI_APPDATA_DIR; the vault in it is encrypted by Bitwarden).
+    public var bitwarden: URL { root.appendingPathComponent("Bitwarden", isDirectory: true) }
 
     /// Creates the directories that must exist, with private permissions.
     public func prepare() throws {
         let fm = FileManager.default
-        for dir in [root, vm, restoreImages, run, keys, logs, exchange, fetched, session] {
+        for dir in [root, vm, restoreImages, run, keys, logs, exchange, fetched, session, bin, bitwarden] {
             try fm.createDirectory(at: dir, withIntermediateDirectories: true,
                                    attributes: [.posixPermissions: 0o700])
         }
         // The root and the key/run folders must stay private even if they existed before.
-        for dir in [root, keys, run] {
+        for dir in [root, keys, run, bin, bitwarden] {
             try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
         }
     }

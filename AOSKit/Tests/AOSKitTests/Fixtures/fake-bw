@@ -1,0 +1,305 @@
+#!/usr/bin/env python3
+"""A stand-in for Bitwarden's command line tool `bw` in aOS's tests (never shipped).
+
+It answers the commands aOS uses the way `bw` 2026.10 does with BW_RESPONSE=true (one JSON line on stdout:
+{"success":..., "message":..., "data":...}) and asks its questions on the terminal like `bw login` does with
+inquirer 8 (a redrawn "? <question>" line on stderr, a list for the two-step method, raw keys on stdin).
+
+State and scenario live in $BITWARDENCLI_APPDATA_DIR:
+  scenario.json  {"email", "password", "twostep": [method names], "codes": {method: code}, "newdevice": bool,
+                  "newdeviceCode", "items": [Bitwarden item JSON], "totp": {id: code}, "premium": bool}
+  state.json     {"state": "unauthenticated|locked|unlocked", "session", "email", "server", "lastSync", "method",
+                  "emailSent"}
+  argv.log       every command line, one JSON array per line (tests check that no secret was ever on one)
+"""
+import base64
+import json
+import os
+import sys
+import termios
+import time
+import tty
+
+DIR = os.environ["BITWARDENCLI_APPDATA_DIR"]
+
+
+def path(name):
+    return os.path.join(DIR, name)
+
+
+def load(name, default):
+    try:
+        with open(path(name)) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return default
+
+
+def save(name, value):
+    with open(path(name), "w") as f:
+        json.dump(value, f)
+
+
+with open(path("argv.log"), "a") as log:
+    log.write(json.dumps(sys.argv[1:]) + "\n")
+
+scenario = load("scenario.json", {})
+state = load("state.json", {"state": "unauthenticated"})
+
+
+def respond(success, data=None, message=None):
+    if os.environ.get("BW_RESPONSE") != "true":
+        sys.stderr.write("fake-bw: BW_RESPONSE is not set\n")
+        sys.exit(3)
+    answer = {"success": success}
+    if message is not None:
+        answer["message"] = message
+    if data is not None:
+        answer["data"] = data
+    sys.stdout.write(json.dumps(answer) + "\n")
+    sys.stdout.flush()
+    sys.exit(0 if success else 1)
+
+
+def message(title, raw=None):
+    data = {"noColor": False, "object": "message", "title": title, "message": None}
+    if raw is not None:
+        data["raw"] = raw
+    return data
+
+
+def unlocked():
+    return state.get("state") == "unlocked" and os.environ.get("BW_SESSION") == state.get("session")
+
+
+def new_session():
+    return base64.b64encode(os.urandom(64)).decode()
+
+
+# Arguments: global options are taken out (a session key on the command line is recorded as an error).
+args = sys.argv[1:]
+options = {}
+positional = []
+i = 0
+while i < len(args):
+    a = args[i]
+    if a in ("--passwordenv", "--passwordfile", "--url", "--method", "--code", "--session"):
+        options[a[2:]] = args[i + 1] if i + 1 < len(args) else ""
+        i += 2
+        continue
+    if a.startswith("--"):
+        options[a[2:]] = True
+    else:
+        positional.append(a)
+    i += 1
+if "session" in options:
+    with open(path("leaks.log"), "a") as leaks:
+        leaks.write("session on the command line\n")
+if options.get("version"):
+    print("2026.10.1")
+    sys.exit(0)
+interactive = os.environ.get("BW_NOINTERACTION") != "true"
+command = positional[0] if positional else ""
+
+
+# The terminal, as inquirer 8 draws it.
+QUESTION = "\x1b[32m?\x1b[39m \x1b[1m{}\x1b[22m\x1b[0m \x1b[0m"
+
+
+def write_err(text):
+    sys.stderr.write(text)
+    sys.stderr.flush()
+
+
+def raw_keys():
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    tty.setraw(fd)
+    return fd, old
+
+
+def ask(question):
+    write_err("\x1b[2K\x1b[G" + QUESTION.format(question))
+    fd, old = raw_keys()
+    typed = b""
+    try:
+        while True:
+            c = os.read(fd, 1)
+            if not c or c in (b"\r", b"\n"):
+                break
+            typed += c
+            write_err("\x1b[2K\x1b[G" + QUESTION.format(question) + typed.decode(errors="replace"))
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+    answer = typed.decode(errors="replace")
+    write_err("\x1b[2K\x1b[G" + QUESTION.format(question) + "\x1b[36m" + answer + "\x1b[39m\n")
+    return answer
+
+
+def choose(question, choices):
+    selected = 0
+
+    def draw(first):
+        lines = [QUESTION.format(question) + ("\x1b[2m(Use arrow keys)\x1b[22m" if first else "")]
+        for n, name in enumerate(choices):
+            lines.append("\x1b[36m❯ " + name + "\x1b[39m " if n == selected else "  " + name + " ")
+        lines.append("  \x1b[2m" + "─" * 14 + "\x1b[22m")
+        lines.append("\x1b[36m❯ Cancel\x1b[39m " if selected == len(choices) else "  Cancel ")
+        return "\n".join(lines)
+
+    height = len(choices) + 3
+    erase = "\x1b[2K\x1b[1A" * height + "\x1b[2K\x1b[G"
+    write_err("\x1b[?25l" + draw(True) + "\x1b[" + str(height) + "A\x1b[" + str(len(question) + 3) + "C")
+    fd, old = raw_keys()
+    try:
+        while True:
+            c = os.read(fd, 1)
+            if not c or c in (b"\r", b"\n"):
+                break
+            if c == b"\x1b":
+                seq = os.read(fd, 2)
+                if seq == b"[B":
+                    selected = min(selected + 1, len(choices))
+                elif seq == b"[A":
+                    selected = max(selected - 1, 0)
+                write_err(erase + draw(False))
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+    picked = choices[selected] if selected < len(choices) else "Cancel"
+    write_err(erase + QUESTION.format(question) + "\x1b[36m" + picked + "\x1b[39m\n\x1b[?25h")
+    return selected
+
+
+if command == "status":
+    if unlocked():
+        status = "unlocked"
+    elif state.get("state") in ("locked", "unlocked"):
+        status = "locked"
+    else:
+        status = "unauthenticated"
+    signed_in = status != "unauthenticated"
+    respond(True, {"object": "template", "template": {
+        "serverUrl": state.get("server"),
+        "lastSync": state.get("lastSync") if signed_in else None,
+        "userEmail": state.get("email") if signed_in else None,
+        "userId": "5b1c2d3e-0000-4000-8000-000000000001" if signed_in else None,
+        "status": status}})
+
+elif command == "config":
+    if positional[1:2] != ["server"]:
+        respond(False, message="Unknown setting.")
+    if state.get("state") != "unauthenticated":
+        respond(False, message="Logout required before server config update.")
+    url = positional[2] if len(positional) > 2 else None
+    state["server"] = None if url in (None, "null", "bitwarden.com", "https://bitwarden.com") else url
+    save("state.json", state)
+    respond(True, message("Saved setting `config`."))
+
+elif command == "login":
+    if state.get("state") != "unauthenticated":
+        respond(False, message="You are already logged in as %s." % state.get("email"))
+    email = positional[1] if len(positional) > 1 else None
+    if not email and interactive:
+        email = ask("Email address:")
+    password = os.environ.get(options.get("passwordenv", ""), "") if options.get("passwordenv") else ""
+    if not password and interactive:
+        password = ask("Master password:")
+    if not password:
+        respond(False, message="Master password is required.")
+    if email != scenario.get("email") or password != scenario.get("password"):
+        respond(False, message="Invalid master password. Confirm your email is correct and your account was created on bitwarden.com.")
+    methods = scenario.get("twostep", [])
+    if methods:
+        if len(methods) == 1:
+            method = methods[0]
+        elif interactive:
+            picked = choose("Two-step login method:", methods)
+            if picked >= len(methods):
+                respond(False, message="Login failed.")
+            method = methods[picked]
+        else:
+            respond(False, message="Login failed. No provider selected.")
+        if method == "Email":
+            state["emailSent"] = True
+        code = ask("Two-step login code:") if interactive else ""
+        if not code:
+            respond(False, message="Code is required.")
+        if code != scenario.get("codes", {}).get(method):
+            respond(False, message="Two-step token is invalid. Try again.")
+        state["method"] = method
+    if scenario.get("newdevice"):
+        code = ask("New device verification required. Enter OTP sent to login email:") if interactive else ""
+        if not code:
+            respond(False, message="Code is required.")
+        if code != scenario.get("newdeviceCode"):
+            respond(False, message="Invalid new device verification code.")
+    session = new_session()
+    state.update({"state": "unlocked", "session": session, "email": email,
+                  "lastSync": "2026-11-06T10:00:00.000Z"})
+    save("state.json", state)
+    respond(True, message("You are logged in!", raw=session))
+
+elif command == "unlock":
+    if state.get("state") == "unauthenticated":
+        respond(False, message="You are not logged in.")
+    password = os.environ.get(options.get("passwordenv", ""), "") if options.get("passwordenv") else ""
+    if not password:
+        respond(False, message="Master password is required.")
+    if password != scenario.get("password"):
+        respond(False, message="Invalid master password.")
+    session = new_session()
+    state.update({"state": "unlocked", "session": session})
+    save("state.json", state)
+    respond(True, message("Your vault is now unlocked!", raw=session))
+
+elif command == "lock":
+    if state.get("state") == "unauthenticated":
+        respond(False, message="You are not logged in.")
+    state.update({"state": "locked", "session": None})
+    save("state.json", state)
+    respond(True, message("Your vault is locked."))
+
+elif command == "logout":
+    if state.get("state") == "unauthenticated":
+        respond(False, message="You are not logged in.")
+    save("state.json", {"state": "unauthenticated", "server": state.get("server")})
+    respond(True, message("You have logged out."))
+
+elif command == "sync":
+    if not unlocked():
+        respond(False, message="Vault is locked.")
+    state["lastSync"] = time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime())
+    state["syncs"] = state.get("syncs", 0) + 1
+    save("state.json", state)
+    respond(True, message("Syncing complete."))
+
+elif command == "list":
+    if not unlocked():
+        respond(False, message="Vault is locked.")
+    # Bitwarden's own matching is broader than aOS's (base domain); this stand-in returns every login.
+    respond(True, {"object": "list", "data": scenario.get("items", [])})
+
+elif command == "get":
+    if not unlocked():
+        respond(False, message="Vault is locked.")
+    kind = positional[1] if len(positional) > 1 else ""
+    wanted = positional[2] if len(positional) > 2 else ""
+    item = next((x for x in scenario.get("items", []) if x.get("id") == wanted), None)
+    if item is None:
+        respond(False, message="Not found.")
+    if kind == "item":
+        respond(True, item)
+    if kind == "password":
+        respond(True, {"object": "string", "data": item["login"]["password"]})
+    if kind == "username":
+        respond(True, {"object": "string", "data": item["login"]["username"]})
+    if kind == "totp":
+        if not item["login"].get("totp"):
+            respond(False, message="No TOTP available for this login.")
+        if not scenario.get("premium", True):
+            respond(False, message="Premium status is required to use this feature.")
+        respond(True, {"object": "string", "data": scenario.get("totp", {}).get(wanted, "123456")})
+    respond(False, message="Unknown object.")
+
+else:
+    respond(False, message="Unknown command.")
