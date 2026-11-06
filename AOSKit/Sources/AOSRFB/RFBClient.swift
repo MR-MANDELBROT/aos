@@ -2,48 +2,158 @@ import CoreGraphics
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
-import zlib
 
-/// A VNC client for macOS screen sharing in the guest: Apple's RSA login, 32-bit RGBX pixels, raw and zlib
-/// rectangles, pointer and key events. One connection is kept open: screensharingd drops input during the first
-/// two seconds after a connection, so every reconnect costs that wait.
+/// What a connection asks the server for: pixel format and encodings.
+public struct RFBOptions: Equatable, Sendable {
+    /// Picture encodings in order of preference; raw always works.
+    public var encodings: [Int32]
+    public var format: RFBPixelFormat
+    /// The client draws the pointer: the server sends its shape and moves (and leaves it out of the picture).
+    public var localCursor: Bool
+    /// Send `encodings` exactly as given, no pseudo-encodings (the hypervisor's own VNC server crashed the VM on
+    /// encodings it doesn't know).
+    public var exact: Bool
+
+    public init(encodings: [Int32], format: RFBPixelFormat = .rgb888, localCursor: Bool = false, exact: Bool = false) {
+        self.encodings = encodings
+        self.format = format
+        self.localCursor = localCursor
+        self.exact = exact
+    }
+
+    /// The agent's tools: lossless pictures with the pointer in them, sizes that follow the screen.
+    public static let agent = RFBOptions(encodings: [RFBEncoding.zrle, RFBEncoding.zlib, RFBEncoding.copyRect])
+
+    /// A live viewer on the iPhone. `localCursor`: the phone draws the pointer (it moves without delay, but the
+    /// agent's moves don't show: screensharingd sends no pointer positions, measured macOS 27.2).
+    public static func viewer(_ quality: RFBQuality, localCursor: Bool = true) -> RFBOptions {
+        RFBOptions(encodings: quality.encodings, format: quality.format, localCursor: localCursor)
+    }
+
+    /// What SetEncodings says.
+    var wireEncodings: [Int32] {
+        if exact { return encodings }
+        var list = encodings
+        list += [RFBEncoding.desktopSize, RFBEncoding.extendedDesktopSize, RFBEncoding.lastRect]
+        if localCursor { list += [RFBEncoding.richCursor, RFBEncoding.pointerPosition] }
+        return list
+    }
+}
+
+/// Picture quality of a live view. Sizes of one full 1280x800 picture of the workspace's photo desktop, measured
+/// against screensharingd (macOS 27.2): best 1.7 MB, balanced 0.68 MB, saver 0.45 MB, gray 0.15 MB (raw: 4.1 MB).
+public enum RFBQuality: String, CaseIterable, Identifiable, Sendable {
+    /// All colours, lossless (ZRLE, 24 bits).
+    case best
+    /// Thousands of colours (Apple's 15-bit encoding; ZRLE with 16 bits where the server prefers it).
+    case balanced
+    /// 4096 colours (ZRLE, 12 bits): slight banding, for mobile connections.
+    case saver
+    /// 16 shades of gray (Apple's 4-bit encoding): for very slow connections; text stays sharp.
+    case gray
+
+    public var id: String { rawValue }
+
+    public var format: RFBPixelFormat {
+        switch self {
+        case .best: .rgb888
+        case .balanced: .rgb565
+        case .saver, .gray: .rgb444
+        }
+    }
+
+    public var encodings: [Int32] {
+        let standard = [RFBEncoding.zrle, RFBEncoding.zlib, RFBEncoding.copyRect]
+        switch self {
+        case .best, .saver: return standard
+        case .balanced: return [RFBEncoding.appleThousands] + standard
+        case .gray: return [RFBEncoding.appleGray] + standard
+        }
+    }
+}
+
+/// What a live connection reports.
+public enum RFBEvent: Sendable, Equatable {
+    /// The framebuffer changed: `RFBFramebuffer.takeChanges` has what. Sent again only after a reader took them.
+    case frame
+    /// The screen has a new size (the framebuffer was cleared).
+    case resized(width: Int, height: Int)
+    /// The pointer's shape (empty: hidden).
+    case cursor(RFBCursor)
+    /// The server moved the pointer (the agent, or someone at the Mac).
+    case pointer(x: Int, y: Int)
+    /// Text the remote clipboard got (ServerCutText, Latin-1 by the standard).
+    case clipboard(String)
+    case bell
+}
+
+/// Counters of one connection, for measurements and the viewer's statistics.
+public struct RFBStats: Sendable, Equatable {
+    public var bytes = 0
+    public var updates = 0
+    public var rects: [Int32: Int] = [:]
+    public var rectBytes: [Int32: Int] = [:]
+    /// Round trip of the last request the server had to answer at once (a full picture or the keep-alive).
+    public var lastLatency: TimeInterval = 0
+
+    public var summary: String {
+        let parts = rects.keys.sorted().map { e in "\(RFBEncoding.name(e)) \(rects[e]!)x/\(rectBytes[e] ?? 0)B" }
+        return "\(updates) updates, \(bytes) bytes; " + parts.joined(separator: ", ")
+    }
+}
+
+/// A VNC client for macOS screen sharing: Apple's RSA login, ZRLE, zlib, CopyRect and raw pictures, the pointer's
+/// shape, screens that change size, pointer and key events. One connection is kept open: screensharingd drops input
+/// during the first seconds after a connection, so every reconnect costs that wait.
 public actor RFBClient {
     public nonisolated let host: String
     public nonisolated let port: UInt16
     private let username: String
     private let password: String
-    /// Encodings to ask for (zlib for screensharingd). Empty: raw only, nothing sent (the hypervisor's VNC server
-    /// crashed the VM on encodings it doesn't know).
-    private let encodings: [Int32]
+    public nonisolated let options: RFBOptions
+    /// The screen; readers on any thread may look at it (see `RFBFramebuffer`).
+    public nonisolated let framebuffer = RFBFramebuffer()
 
     private var stream: RFBStream?
     private var connectedAt = Date.distantPast
     public private(set) var width = 0
     public private(set) var height = 0
-    private var framebuffer = [UInt8]()
-    private var zstream = z_stream()
-    private var zstreamReady = false
+    /// The desktop's name (ServerInit).
+    public private(set) var serverName = ""
+    /// The pixel format the server would use by itself.
+    public private(set) var serverFormat = RFBPixelFormat.rgb888
+    private var decoder = RFBDecoder(format: .rgb888)
     private var buttons: UInt8 = 0
     private var pointer = (x: 0, y: 0)
+    private var counters = RFBStats()
+    private var reading = false
     /// Pressing input before this much time after connecting gets dropped by screensharingd.
     public static let inputGrace: TimeInterval =
         // screensharingd drops input until about 2 s after a viewer timestamp that comes later than our connect:
         // measured under macOS 27.2, 3 s too early, 4 s sometimes too early, 5 s reliable.
         Double(ProcessInfo.processInfo.environment["AOS_INPUT_GRACE"] ?? "") ?? 5.0
 
-    public init(host: String, port: UInt16 = 5900, username: String, password: String, encodings: [Int32] = [6]) {
+    public init(host: String, port: UInt16 = 5900, username: String, password: String, options: RFBOptions = .agent) {
         self.host = host
         self.port = port
         self.username = username
         self.password = password
-        self.encodings = encodings
+        self.options = options
     }
 
-    deinit {
-        if zstreamReady { inflateEnd(&zstream) }
+    /// `encodings` sent exactly as given (empty: raw only, nothing sent).
+    public init(host: String, port: UInt16 = 5900, username: String, password: String, encodings: [Int32]) {
+        self.init(host: host, port: port, username: username, password: password,
+                  options: RFBOptions(encodings: encodings, exact: true))
     }
 
     public var isConnected: Bool { stream != nil }
+
+    public var stats: RFBStats {
+        var s = counters
+        s.bytes = stream?.bytesReceived ?? counters.bytes
+        return s
+    }
 
     // MARK: Connection
 
@@ -63,10 +173,9 @@ public actor RFBClient {
     }
 
     public func disconnect() {
+        if let stream { counters.bytes = stream.bytesReceived }
         stream?.close()
         stream = nil
-        if zstreamReady { inflateEnd(&zstream); zstreamReady = false }
-        framebuffer = []
         buttons = 0
     }
 
@@ -111,26 +220,22 @@ public actor RFBClient {
         try await s.write(Data([1]))  // ClientInit: shared
         width = Int(try await s.u16())
         height = Int(try await s.u16())
-        _ = try await s.read(16)       // server pixel format
+        serverFormat = RFBPixelFormat(wire: try await s.read(16))
         let nameLength = Int(try await s.u32())
-        _ = try await s.read(min(nameLength, 1 << 16))
+        serverName = String(decoding: try await s.read(min(nameLength, 1 << 16)), as: UTF8.self)
+        dbg("server \(width)x\(height) \(serverFormat.bitsPerPixel) bpp \"\(serverName)\"")
 
-        // SetPixelFormat: 32 bpp, depth 24, little endian, true colour, R at bit 0, G at 8, B at 16 -> RGBX bytes
-        try await s.write(Data([0, 0, 0, 0, 32, 24, 0, 1, 0, 255, 0, 255, 0, 255, 0, 8, 16, 0, 0, 0]))
-        // SetEncodings (raw is always allowed)
+        try await s.write(options.format.message)
+        decoder = RFBDecoder(format: options.format)
+        let encodings = options.wireEncodings
         if !encodings.isEmpty {
             var enc = Data([2, 0])
             enc.appendBE(UInt16(encodings.count))
             for e in encodings { enc.appendBE(e) }
             try await s.write(enc)
         }
-
-        framebuffer = [UInt8](repeating: 0, count: width * height * 4)
-        zstream = z_stream()
-        guard inflateInit_(&zstream, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size)) == Z_OK else {
-            throw RFBError.protocolError("zlib")
-        }
-        zstreamReady = true
+        framebuffer.resize(width: width, height: height)
+        counters = RFBStats()
     }
 
     private func live() async throws -> RFBStream {
@@ -154,113 +259,138 @@ public actor RFBClient {
 
     // MARK: Screen
 
+    private func request(_ s: RFBStream, incremental: Bool, _ rect: RFBRect? = nil) async throws {
+        let r = rect ?? RFBRect(x: 0, y: 0, width: width, height: height)
+        var req = Data([3, incremental ? 1 : 0])  // FramebufferUpdateRequest
+        req.appendBE(UInt16(r.x)); req.appendBE(UInt16(r.y))
+        req.appendBE(UInt16(max(1, r.width))); req.appendBE(UInt16(max(1, r.height)))
+        try await s.write(req)
+    }
+
     /// A fresh picture of the whole screen.
     public func screenshot(timeout: TimeInterval = 15) async throws -> CGImage {
         // A live viewer reads the stream already: its last picture is current.
-        if liveActive, !framebuffer.isEmpty { return try makeImage() }
+        if liveActive, let image = framebuffer.makeImage() { return image }
+        guard !reading else { throw RFBError.protocolError("the screen is being read already") }
+        reading = true
+        defer { reading = false }
         return try await withReconnect { s in
-            var req = Data([3, 0])  // FramebufferUpdateRequest, not incremental
-            req.appendBE(UInt16(0)); req.appendBE(UInt16(0))
-            req.appendBE(UInt16(width)); req.appendBE(UInt16(height))
-            try await s.write(req)
+            try await request(s, incremental: false)
             let deadline = Date().addingTimeInterval(timeout)
+            var resized = false
             while true {
                 if Date() > deadline { throw RFBError.timeout("screenshot") }
                 let type = try await s.u8()
-                switch type {
-                case 0:
-                    try await readUpdate(s)
-                    return try makeImage()
-                case 2:
-                    continue  // bell
-                case 3:
-                    _ = try await s.read(3)
-                    let len = Int(try await s.u32())
-                    _ = try await s.read(len)
-                case 1:
-                    _ = try await s.read(3)
-                    let n = Int(try await s.u16())
-                    _ = try await s.read(n * 6)
-                default:
-                    throw RFBError.protocolError("unknown server message \(type)")
+                if type == 0 {
+                    let result = try await readUpdate(s)
+                    framebuffer.commit()
+                    // After a new size the picture comes with the next update: ask once more for all of it.
+                    if result.resized && !resized {
+                        resized = true
+                        try await request(s, incremental: false)
+                        continue
+                    }
+                    guard let image = framebuffer.makeImage() else { throw RFBError.protocolError("image") }
+                    return image
                 }
+                _ = try await readOtherMessage(type, s)
             }
         }
     }
 
-    private func readUpdate(_ s: RFBStream) async throws {
+    struct UpdateResult {
+        var resized = false
+        var cursor: RFBCursor?
+        var pointer: (x: Int, y: Int)?
+    }
+
+    private func readUpdate(_ s: RFBStream) async throws -> UpdateResult {
         _ = try await s.read(1)
-        let rects = Int(try await s.u16())
-        for _ in 0..<rects {
-            let x = Int(try await s.u16()), y = Int(try await s.u16())
-            let w = Int(try await s.u16()), h = Int(try await s.u16())
-            let encoding = Int32(bitPattern: try await s.u32())
+        let count = Int(try await s.u16())
+        var result = UpdateResult()
+        counters.updates += 1
+        var index = 0
+        // 0xFFFF with LastRect: as many rectangles as come until LastRect.
+        while index < count || count == 0xFFFF {
+            index += 1
+            let header = [UInt8](try await s.read(12))
+            let rect = RFBRect(x: Int(header[0]) << 8 | Int(header[1]), y: Int(header[2]) << 8 | Int(header[3]),
+                               width: Int(header[4]) << 8 | Int(header[5]), height: Int(header[6]) << 8 | Int(header[7]))
+            let encoding = Int32(bitPattern: UInt32(header[8]) << 24 | UInt32(header[9]) << 16 | UInt32(header[10]) << 8 | UInt32(header[11]))
+            var size = 0
             switch encoding {
-            case 0:
-                let data = try await s.read(w * h * 4)
-                blit(data, x: x, y: y, w: w, h: h)
-            case 6:
-                let len = Int(try await s.u32())
-                let compressed = try await s.read(len)
-                let data = try inflate(compressed, expected: w * h * 4)
-                blit(data, x: x, y: y, w: w, h: h)
-            case -223:  // DesktopSize
-                width = w; height = h
-                framebuffer = [UInt8](repeating: 0, count: w * h * 4)
+            case RFBEncoding.raw:
+                size = decoder.rawSize(rect)
+                decoder.raw(try await s.read(size), rect: rect, into: framebuffer)
+            case RFBEncoding.copyRect:
+                let src = [UInt8](try await s.read(4))
+                size = 4
+                framebuffer.copy(from: Int(src[0]) << 8 | Int(src[1]), Int(src[2]) << 8 | Int(src[3]), to: rect)
+            case RFBEncoding.zlib:
+                size = Int(try await s.u32())
+                try decoder.zlib(try await s.read(size), rect: rect, into: framebuffer)
+                size += 4
+            case RFBEncoding.zrle:
+                size = Int(try await s.u32())
+                try decoder.zrle(try await s.read(size), rect: rect, into: framebuffer)
+                size += 4
+            case RFBEncoding.appleHalftone, RFBEncoding.appleGray, RFBEncoding.appleThousands:
+                size = Int(try await s.u32())
+                try decoder.apple(encoding, try await s.read(size), rect: rect, into: framebuffer)
+                size += 4
+            case RFBEncoding.desktopSize:
+                resize(rect.width, rect.height, &result)
+            case RFBEncoding.extendedDesktopSize:
+                let n = Int(try await s.u8())
+                _ = try await s.read(3 + 16 * n)
+                size = 4 + 16 * n
+                // y is the status: 0 means the size is in effect.
+                if rect.y == 0 { resize(rect.width, rect.height, &result) }
+            case RFBEncoding.lastRect:
+                counters.rects[encoding, default: 0] += 1
+                return result
+            case RFBEncoding.richCursor:
+                size = decoder.cursorSize(rect)
+                result.cursor = decoder.cursor(try await s.read(size), rect: rect)
+            case RFBEncoding.pointerPosition:
+                result.pointer = (rect.x, rect.y)
+                pointer = (rect.x, rect.y)
             default:
                 throw RFBError.protocolError("unexpected encoding \(encoding)")
             }
+            counters.rects[encoding, default: 0] += 1
+            counters.rectBytes[encoding, default: 0] += size + 12
         }
+        return result
     }
 
-    private func inflate(_ input: Data, expected: Int) throws -> Data {
-        var out = Data(count: expected)
-        var status: Int32 = Z_OK
-        input.withUnsafeBytes { (inp: UnsafeRawBufferPointer) in
-            out.withUnsafeMutableBytes { (o: UnsafeMutableRawBufferPointer) in
-                zstream.next_in = UnsafeMutablePointer(mutating: inp.bindMemory(to: Bytef.self).baseAddress)
-                zstream.avail_in = uInt(input.count)
-                zstream.next_out = o.bindMemory(to: Bytef.self).baseAddress
-                zstream.avail_out = uInt(expected)
-                while zstream.avail_in > 0 || zstream.avail_out > 0 {
-                    status = zlib.inflate(&zstream, Z_SYNC_FLUSH)
-                    if status != Z_OK { break }
-                    if zstream.avail_out == 0 { break }
-                }
-            }
-        }
-        guard status == Z_OK || status == Z_BUF_ERROR || status == Z_STREAM_END else {
-            throw RFBError.protocolError("zlib \(status)")
-        }
-        guard zstream.avail_out == 0 else { throw RFBError.protocolError("short zlib rectangle") }
-        return out
+    private func resize(_ w: Int, _ h: Int, _ result: inout UpdateResult) {
+        guard w > 0, h > 0, w != width || h != height else { return }
+        dbg("new size \(w)x\(h)")
+        width = w
+        height = h
+        framebuffer.resize(width: w, height: h)
+        result.resized = true
     }
 
-    private func blit(_ data: Data, x: Int, y: Int, w: Int, h: Int) {
-        guard x + w <= width, y + h <= height else { return }
-        data.withUnsafeBytes { (src: UnsafeRawBufferPointer) in
-            framebuffer.withUnsafeMutableBytes { dst in
-                for row in 0..<h {
-                    let from = row * w * 4
-                    let to = ((y + row) * width + x) * 4
-                    dst.baseAddress!.advanced(by: to).copyMemory(from: src.baseAddress!.advanced(by: from),
-                                                                  byteCount: w * 4)
-                }
-            }
+    /// Everything but a framebuffer update. Returns an event for a live viewer, if there is one.
+    private func readOtherMessage(_ type: UInt8, _ s: RFBStream) async throws -> RFBEvent? {
+        switch type {
+        case 1:  // colour map entries (not used with true colour)
+            _ = try await s.read(3)
+            _ = try await s.read(Int(try await s.u16()) * 6)
+            return nil
+        case 2:
+            return .bell
+        case 3:  // server cut text
+            _ = try await s.read(3)
+            let length = Int(try await s.u32())
+            let text = try await s.read(min(length, 1 << 24))
+            if length > 1 << 24 { _ = try await s.read(length - (1 << 24)) }
+            return .clipboard(String(decoding: text.map { UInt16($0) }, as: UTF16.self))
+        default:
+            throw RFBError.protocolError("unknown server message \(type)")
         }
-    }
-
-    private func makeImage() throws -> CGImage {
-        let data = Data(framebuffer) as CFData
-        guard let provider = CGDataProvider(data: data),
-              let image = CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32,
-                                  bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
-                                  provider: provider, decode: nil, shouldInterpolate: false,
-                                  intent: .defaultIntent) else {
-            throw RFBError.protocolError("image")
-        }
-        return image
     }
 
     // MARK: Input
@@ -303,15 +433,51 @@ public actor RFBClient {
         }
     }
 
+    /// Wheel steps at a point with the buttons held: buttons 4/5 (vertical) and 6/7 (horizontal), each step a
+    /// press and a release. Positive `dy` scrolls the content up (wheel down), positive `dx` to the left.
+    public func wheel(x: Int, y: Int, dx: Int, dy: Int, pressed: Set<Button> = []) async throws {
+        try await withReconnect { s in
+            await waitForInputGrace()
+            let held = pressed.reduce(UInt8(0)) { $0 | (1 << UInt8($1.rawValue)) }
+            for (steps, bit) in [(dy, dy > 0 ? UInt8(1 << 4) : UInt8(1 << 3)), (dx, dx > 0 ? UInt8(1 << 6) : UInt8(1 << 5))] {
+                for _ in 0..<min(abs(steps), 50) {
+                    try await sendPointer(s, x: x, y: y, buttons: held | bit)
+                    try await sendPointer(s, x: x, y: y, buttons: held)
+                }
+            }
+        }
+    }
+
+    /// ClientCutText: puts text on the remote clipboard (Latin-1 only, by the standard).
+    public func sendClipboard(_ text: String) async throws {
+        let latin = text.unicodeScalars.map { $0.value < 256 ? UInt8($0.value) : UInt8(ascii: "?") }
+        try await withReconnect { s in
+            var msg = Data([6, 0, 0, 0])
+            msg.appendBE(UInt32(latin.count))
+            msg.append(contentsOf: latin)
+            try await s.write(msg)
+        }
+    }
+
     // MARK: Live
 
     private var liveActive = false
+    private var liveInterval: TimeInterval = 0.05
+    private var wantsFullUpdate = false
 
-    /// Continuous pictures for a live viewer: asks for incremental updates and delivers the whole screen after each
-    /// update, at most every `minimumInterval`. Input methods keep working meanwhile; `screenshot` returns the last
+    /// The live view's pace: at most one update request per `interval`.
+    public func setMinimumInterval(_ interval: TimeInterval) {
+        liveInterval = max(0, interval)
+    }
+
+    /// The next update brings the whole screen (after the viewer was away, for example).
+    public func refreshAll() { wantsFullUpdate = true }
+
+    /// A live view: keeps asking for updates (at most every `minimumInterval`) and reports what happened; the
+    /// picture itself is in `framebuffer`. Input methods keep working meanwhile; `screenshot` returns the current
     /// picture. Ending the stream (or cancelling its task) closes the connection.
-    public nonisolated func liveFrames(minimumInterval: TimeInterval = 0.05) -> AsyncThrowingStream<CGImage, Error> {
-        AsyncThrowingStream { continuation in
+    public nonisolated func events(minimumInterval: TimeInterval = 0.033) -> AsyncThrowingStream<RFBEvent, Error> {
+        AsyncThrowingStream(bufferingPolicy: .unbounded) { continuation in
             let task = Task { await self.runLive(minimumInterval, continuation) }
             continuation.onTermination = { _ in
                 task.cancel()
@@ -320,39 +486,103 @@ public actor RFBClient {
         }
     }
 
-    private func runLive(_ interval: TimeInterval, _ out: AsyncThrowingStream<CGImage, Error>.Continuation) async {
-        guard !liveActive else { out.finish(throwing: RFBError.protocolError("a live view is running already")); return }
+    /// Whole pictures for simple viewers and tests: one after each update, at most every `minimumInterval`.
+    public nonisolated func liveFrames(minimumInterval: TimeInterval = 0.05) -> AsyncThrowingStream<CGImage, Error> {
+        let events = self.events(minimumInterval: minimumInterval)
+        let framebuffer = self.framebuffer
+        return AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    for try await event in events where event == .frame {
+                        framebuffer.takeChanges { _ in }
+                        if let image = framebuffer.makeImage() { continuation.yield(image) }
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private var outstanding = 0
+    private var lastHeard = Date.distantPast
+    private var probeSentAt: Date?
+
+    /// A non-incremental request for one pixel: the server must answer it, so it shows that the connection lives
+    /// (a quiet screen sends nothing, and the stream's watchdog would end it) and measures the round trip.
+    private func keepAlive(_ s: RFBStream) async {
+        guard liveActive, Date().timeIntervalSince(lastHeard) > 8 else { return }
+        lastHeard = Date()
+        probeSentAt = Date()
+        outstanding += 1
+        try? await request(s, incremental: false, RFBRect(x: 0, y: 0, width: 1, height: 1))
+    }
+
+    private func runLive(_ interval: TimeInterval, _ out: AsyncThrowingStream<RFBEvent, Error>.Continuation) async {
+        guard !liveActive, !reading else { out.finish(throwing: RFBError.protocolError("a live view is running already")); return }
         liveActive = true
-        defer { liveActive = false }
+        reading = true
+        liveInterval = interval
+        var keeper: Task<Void, Never>?
+        defer { liveActive = false; reading = false; keeper?.cancel() }
         do {
             let s = try await live()
-            var incremental = false
-            while !Task.isCancelled {
-                var req = Data([3, incremental ? 1 : 0])  // FramebufferUpdateRequest
-                req.appendBE(UInt16(0)); req.appendBE(UInt16(0))
-                req.appendBE(UInt16(width)); req.appendBE(UInt16(height))
-                try await s.write(req)
-                incremental = true
-                var updated = false
-                while !updated {
-                    switch try await s.u8() {
-                    case 0:
-                        try await readUpdate(s)
-                        updated = true
-                    case 2:
-                        continue  // bell
-                    case 3:  // server cut text
-                        _ = try await s.read(3)
-                        _ = try await s.read(Int(try await s.u32()))
-                    case 1:  // colour map
-                        _ = try await s.read(3)
-                        _ = try await s.read(Int(try await s.u16()) * 6)
-                    case let type:
-                        throw RFBError.protocolError("unknown server message \(type)")
-                    }
+            // Requests not answered yet. One more goes out as soon as an update starts to arrive (when the pace
+            // allows), so the server prepares the next picture while this one travels.
+            outstanding = 0
+            lastHeard = Date()
+            var lastRequest = Date.distantPast
+            var full = true
+            framebuffer.commit()
+            if framebuffer.hasChanges { out.yield(.frame) }
+            keeper = Task { [weak self] in
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 4_000_000_000)
+                    await self?.keepAlive(s)
                 }
-                out.yield(try makeImage())
-                try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+            }
+            while !Task.isCancelled {
+                if outstanding == 0 {
+                    let wait = liveInterval - Date().timeIntervalSince(lastRequest)
+                    if wait > 0 { try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
+                    full = full || wantsFullUpdate
+                    wantsFullUpdate = false
+                    if full { probeSentAt = Date() }
+                    try await request(s, incremental: !full)
+                    full = false
+                    lastRequest = Date()
+                    outstanding += 1
+                }
+                let type = try await s.u8()
+                lastHeard = Date()
+                guard type == 0 else {
+                    if let event = try await readOtherMessage(type, s) { out.yield(event) }
+                    continue
+                }
+                outstanding = max(0, outstanding - 1)
+                if let sent = probeSentAt {
+                    counters.lastLatency = Date().timeIntervalSince(sent)
+                    probeSentAt = nil
+                }
+                if outstanding == 0, !wantsFullUpdate, Date().timeIntervalSince(lastRequest) >= liveInterval {
+                    try await request(s, incremental: true)
+                    lastRequest = Date()
+                    outstanding += 1
+                }
+                let result = try await readUpdate(s)
+                lastHeard = Date()
+                if result.resized {
+                    out.yield(.resized(width: width, height: height))
+                    // The new picture: all of it, right away.
+                    try await request(s, incremental: false)
+                    lastRequest = Date()
+                    outstanding += 1
+                }
+                if let cursor = result.cursor { out.yield(.cursor(cursor)) }
+                if let p = result.pointer { out.yield(.pointer(x: p.x, y: p.y)) }
+                if framebuffer.commit() { out.yield(.frame) }
             }
             out.finish()
         } catch is CancellationError {
@@ -361,6 +591,8 @@ public actor RFBClient {
             out.finish(throwing: error)
         }
     }
+
+    // MARK: The agent's input
 
     /// Moves the pointer and clicks `count` times, with `modifiers` held.
     public func click(x: Int, y: Int, button: Button = .left, count: Int = 1, modifiers: [UInt32] = []) async throws {
@@ -476,5 +708,17 @@ public enum ScreenImage {
     public static func crop(_ image: CGImage, to rect: CGRect) -> CGImage? {
         let bounds = CGRect(x: 0, y: 0, width: image.width, height: image.height)
         return image.cropping(to: rect.integral.intersection(bounds))
+    }
+
+    /// `image` scaled by `factor` (smaller than 1 shrinks), with good filtering.
+    public static func scaled(_ image: CGImage, by factor: Double) -> CGImage? {
+        guard factor > 0, factor != 1 else { return image }
+        let w = max(1, Int((Double(image.width) * factor).rounded())), h = max(1, Int((Double(image.height) * factor).rounded()))
+        guard let context = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return nil }
+        context.interpolationQuality = .high
+        context.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+        return context.makeImage()
     }
 }

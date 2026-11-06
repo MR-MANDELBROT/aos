@@ -196,7 +196,8 @@ public enum MCPTools {
     separate from the user's Mac. Use it for tasks that need a website or an app and have no other tool.
     Flow: workspace_open(purpose, minutes) (the user approves it), then screenshot, click, type_text, press_keys, \
     scroll, drag, wait. ALWAYS call workspace_close when the task is done: it shuts the workspace down.
-    Coordinates are pixels in the last screenshot (the screen is 1280x800). After each action you get a new \
+    Coordinates are pixels in the last screenshot (the screen is 1280x800; while the user watches on their iPhone \
+    it can have the phone's shape, the picture says its size). After each action you get a new \
     screenshot (image=false skips it). Start apps from the Dock or Finder (cmd+shift+a opens Applications). \
     Google Chrome is in the Dock. The first time it may ask you to choose a search engine: pick one and confirm \
     (Chrome remembers it).
@@ -261,7 +262,7 @@ public enum MCPTools {
             [
                 "name": "screenshot",
                 "title": "Screenshot",
-                "description": "Current screenshot of the workspace (1280x800). region [x, y, width, height] returns only that part.",
+                "description": "Current screenshot of the workspace (normally 1280x800). region [x, y, width, height] returns only that part.",
                 "inputSchema": schema([
                     "region": ["type": "array", "items": ["type": "number"], "minItems": 4, "maxItems": 4],
                 ]),

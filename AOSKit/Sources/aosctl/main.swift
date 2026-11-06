@@ -112,6 +112,25 @@ func runCommand() async {
                 try Data("\(port) \(vncPassword)".utf8).write(to: paths.run.appendingPathComponent("hypervisor-vnc"))
                 print("hypervisor VNC on port \(port)")
             }
+            // run/display.sock: "W H SCALE" gives the display another size for 10 minutes, "reset" restores it
+            // (development: what a phone's display request does).
+            let displaySocket = LineSocketServer(path: paths.run.appendingPathComponent("display.sock")) { line in
+                let text = String(decoding: line, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+                return await MainActor.run {
+                    if text == "reset" { host.restoreDisplay(); return Data("reset\n".utf8) }
+                    let n = text.split(separator: " ").compactMap { Int($0) }
+                    guard n.count >= 3 else { return Data("usage: W H SCALE [PPI] | reset\n".utf8) }
+                    do {
+                        let r = try host.setDisplay(DisplayRequest(width: n[0], height: n[1], scale: n[2]), lease: 600,
+                                                    pixelsPerInch: n.count > 3 ? n[3] : nil)
+                        return Data("display \(r)\n".utf8)
+                    } catch {
+                        return Data("error \(error.localizedDescription)\n".utf8)
+                    }
+                }
+            }
+            try displaySocket.start()
+            keepAlive.append(displaySocket)
             let ip = try await host.waitForAddress(timeout: 180)
             print("guest address: \(ip)")
             // Ctrl-C: suspend and quit.
@@ -265,6 +284,17 @@ func runCommand() async {
             keepAlive.append(server)
             keepAliveController = controller
             print("serving on \(paths.agentSocket.path)")
+
+        case "display":
+            // display W H SCALE | reset: changes the display of the VM that `aosctl run` runs (development)
+            let client = try LineSocketClient(path: paths.run.appendingPathComponent("display.sock"))
+            let answer = try client.roundTrip(Data(args.dropFirst().joined(separator: " ").utf8))
+            print(String(decoding: answer, as: UTF8.self))
+            exit(0)
+
+        case "rfbprobe":
+            try await rfbProbe(args, paths: paths)
+            exit(0)
 
         case "vnctest":
             // vnctest HOST PORT USER: asks for the password without echo (never printed) and tries a screen sharing

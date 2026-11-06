@@ -24,8 +24,14 @@ public enum RFBError: LocalizedError {
 public final class RFBStream: @unchecked Sendable {
     private let connection: NWConnection
     private let queue = DispatchQueue(label: "dev.marquart.aos.rfb")
-    private var buffer = Data()
+    /// Received bytes; the unread ones start at `head` (compacted now and then, so reads stay cheap).
+    private var buffer: [UInt8] = []
+    private var head = 0
     private let lock = NSLock()
+    private var received = 0
+
+    /// Bytes received so far (statistics).
+    public var bytesReceived: Int { lock.withLock { received } }
 
     public init(host: String, port: UInt16) {
         let tcp = NWProtocolTCP.Options()
@@ -98,15 +104,23 @@ public final class RFBStream: @unchecked Sendable {
                 cont.resume(returning: Data())
             }
         }
-        lock.withLock { buffer.append(chunk) }
+        lock.withLock {
+            if head > 0 && (head == buffer.count || head > 1 << 16) {
+                buffer.removeFirst(head)
+                head = 0
+            }
+            buffer.append(contentsOf: chunk)
+            received += chunk.count
+        }
     }
 
     func read(_ count: Int) async throws -> Data {
+        guard count >= 0 else { throw RFBError.protocolError("negative length") }
         while true {
             let out: Data? = lock.withLock {
-                guard buffer.count >= count else { return nil }
-                let out = Data(buffer.prefix(count))
-                buffer.removeFirst(count)
+                guard buffer.count - head >= count else { return nil }
+                let out = buffer.withUnsafeBufferPointer { Data(buffer: UnsafeBufferPointer(rebasing: $0[head..<(head + count)])) }
+                head += count
                 return out
             }
             if let out { return out }
@@ -117,12 +131,12 @@ public final class RFBStream: @unchecked Sendable {
     func readLine() async throws -> Data {
         while true {
             let (line, tooLong): (Data?, Bool) = lock.withLock {
-                if let nl = buffer.firstIndex(of: 0x0A) {
-                    let line = Data(buffer[buffer.startIndex...nl])
-                    buffer.removeSubrange(buffer.startIndex...nl)
+                if let nl = buffer[head...].firstIndex(of: 0x0A) {
+                    let line = Data(buffer[head...nl])
+                    head = nl + 1
                     return (line, false)
                 }
-                return (nil, buffer.count > 64)
+                return (nil, buffer.count - head > 64)
             }
             if let line { return line }
             if tooLong { throw RFBError.protocolError("no version line") }
@@ -130,10 +144,10 @@ public final class RFBStream: @unchecked Sendable {
         }
     }
 
-    func u8() async throws -> UInt8 { try await read(1)[0] }
-    func u16() async throws -> UInt16 { let d = try await read(2); return UInt16(d[0]) << 8 | UInt16(d[1]) }
+    func u8() async throws -> UInt8 { try await read(1).first! }
+    func u16() async throws -> UInt16 { let d = [UInt8](try await read(2)); return UInt16(d[0]) << 8 | UInt16(d[1]) }
     func u32() async throws -> UInt32 {
-        let d = try await read(4)
+        let d = [UInt8](try await read(4))
         return UInt32(d[0]) << 24 | UInt32(d[1]) << 16 | UInt32(d[2]) << 8 | UInt32(d[3])
     }
 }

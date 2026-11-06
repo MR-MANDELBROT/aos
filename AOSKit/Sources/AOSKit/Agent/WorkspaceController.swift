@@ -194,7 +194,7 @@ public final class WorkspaceController {
         let client = try await connectScreen(ip: ip, timeout: 120)
         lease = (Date().addingTimeInterval(Double(minutes * 60)), purpose)
         log("open for \"\(purpose)\", \(minutes) min")
-        let image = try await client.screenshot()
+        let image = agentView(try await client.screenshot())
         return try picture(request.id, "Workspace open for \(minutes) min. Screen \(image.width)x\(image.height) pixels; coordinates are pixels in this picture.", image)
     }
 
@@ -329,7 +329,7 @@ public final class WorkspaceController {
 
     private func picture(_ id: Int, _ text: String, _ image: CGImage) throws -> AgentResponse {
         let data = try ScreenImage.encode(image, quality: 0.8)
-        return AgentResponse(id: id, ok: true, text: text + leaseNote(), image: data, mimeType: "image/jpeg")
+        return AgentResponse(id: id, ok: true, text: text + displayNote() + leaseNote(), image: data, mimeType: "image/jpeg")
     }
 
     private func leaseNote() -> String {
@@ -338,23 +338,27 @@ public final class WorkspaceController {
         return left < 5 ? " (\(max(0, left)) min left in this session)" : ""
     }
 
-    private func point(_ v: Double?, _ name: String) throws -> Int {
+    /// A coordinate of the agent's picture as screen pixels (`scale`: see `agentScale`).
+    private func point(_ v: Double?, _ name: String, _ scale: Double = 1) throws -> Int {
         guard let v, v.isFinite else { throw WorkspaceError.missing(name) }
-        return Int(v.rounded())
+        return Int((v / scale).rounded())
     }
 
     private func input(_ request: AgentRequest) async throws -> AgentResponse {
         let client = try requireLease()
         var done = ""
+        // The agent's pictures stay small when a phone made the screen bigger; its coordinates are in them.
+        let f = await agentScale(client)
+        let at = { (x: Double?, y: Double?) in "\(Int((x ?? 0).rounded())),\(Int((y ?? 0).rounded()))" }
         switch request.op {
         case "screenshot":
-            let image = try await client.screenshot()
+            let image = agentView(try await client.screenshot())
             if let r = request.region, r.count == 4, let crop = ScreenImage.crop(image, to: CGRect(x: r[0], y: r[1], width: r[2], height: r[3])) {
                 return try picture(request.id, "Region \(Int(r[0])),\(Int(r[1])) \(crop.width)x\(crop.height) of the screen.", crop)
             }
             return try picture(request.id, "Screen \(image.width)x\(image.height).", image)
         case "click":
-            let x = try point(request.x, "x"), y = try point(request.y, "y")
+            let x = try point(request.x, "x", f), y = try point(request.y, "y", f)
             let button: RFBClient.Button
             switch (request.button ?? "left").lowercased() {
             case "right": button = .right
@@ -363,17 +367,17 @@ public final class WorkspaceController {
             }
             let mods = try (request.modifiers ?? "").isEmpty ? [] : Keysyms.combination(request.modifiers!)
             try await client.click(x: x, y: y, button: button, count: request.count ?? 1, modifiers: mods)
-            done = "Clicked at \(x),\(y)."
+            done = "Clicked at \(at(request.x, request.y))."
         case "drag":
-            let x = try point(request.x, "x"), y = try point(request.y, "y")
-            let tx = try point(request.toX, "to_x"), ty = try point(request.toY, "to_y")
+            let x = try point(request.x, "x", f), y = try point(request.y, "y", f)
+            let tx = try point(request.toX, "to_x", f), ty = try point(request.toY, "to_y", f)
             try await client.drag(fromX: x, fromY: y, toX: tx, toY: ty)
-            done = "Dragged from \(x),\(y) to \(tx),\(ty)."
+            done = "Dragged from \(at(request.x, request.y)) to \(at(request.toX, request.toY))."
         case "scroll":
-            let x = try point(request.x, "x"), y = try point(request.y, "y")
+            let x = try point(request.x, "x", f), y = try point(request.y, "y", f)
             let dir = RFBClient.ScrollDirection(rawValue: (request.direction ?? "down").lowercased()) ?? .down
             try await client.scroll(x: x, y: y, direction: dir, steps: request.steps ?? 3)
-            done = "Scrolled \(dir.rawValue) at \(x),\(y)."
+            done = "Scrolled \(dir.rawValue) at \(at(request.x, request.y))."
         case "type":
             let text = request.text ?? ""
             guard !text.isEmpty else { throw WorkspaceError.missing("text") }
@@ -392,7 +396,7 @@ public final class WorkspaceController {
         }
         if request.image == false { return AgentResponse(id: request.id, ok: true, text: done + leaseNote()) }
         try await Task.sleep(nanoseconds: 350_000_000)
-        return try picture(request.id, done, try await client.screenshot())
+        return try picture(request.id, done, agentView(try await client.screenshot()))
     }
 
     /// Text without a key symbol goes through the guest's clipboard: set over SSH, pasted with cmd+v.

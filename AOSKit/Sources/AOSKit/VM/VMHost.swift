@@ -1,3 +1,4 @@
+import AOSRFB
 import Foundation
 import Virtualization
 
@@ -37,6 +38,11 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
     public var onPhaseChange: ((Phase) -> Void)?
     /// Called with each new VZVirtualMachine before it starts or restores (development hooks).
     public var beforeStart: ((VZVirtualMachine) -> Void)?
+    /// Set while the display has another size than the bundle's: a phone views the workspace in its own shape.
+    public private(set) var displayOverride: DisplayRequest?
+    /// Called on the main actor when the display's size changes.
+    public var onDisplayChange: (() -> Void)?
+    private var displayLease: Task<Void, Never>?
 
     public init(bundle: VMBundle, paths: Paths) {
         self.bundle = bundle
@@ -163,6 +169,8 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
                     try? FileManager.default.removeItem(at: bundle.savedStateURL)
                     try await machine.resume()
                     set(.running)
+                    // A state saved while a phone had the display in its shape: back to the workspace's own.
+                    restoreDisplay()
                     return
                 } catch {
                     // A state that doesn't fit any more (macOS update, changed settings): boot cold.
@@ -192,6 +200,11 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
     /// Saves the running VM to disk and stops it; the next `start` continues where it was.
     public func suspend() async throws {
         guard let vm, vm.state == .running || vm.state == .paused else { throw VMHostError.notRunning }
+        if displayOverride != nil {
+            restoreDisplay()
+            // The guest takes a moment to switch back; the saved state should have the workspace's own size.
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+        }
         set(.suspending)
         stopping = true
         defer { stopping = false }
@@ -199,6 +212,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         try await vm.saveMachineStateTo(url: bundle.savedStateURL)
         try await vm.stop()
         self.vm = nil
+        forgetDisplay()
         set(.stopped)
     }
 
@@ -207,7 +221,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         defer { stopping = false }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            if vm == nil || vm?.state == .stopped || vm?.state == .error { vm = nil; set(.stopped); return true }
+            if vm == nil || vm?.state == .stopped || vm?.state == .error { vm = nil; forgetDisplay(); set(.stopped); return true }
             try? await Task.sleep(nanoseconds: 250_000_000)
         }
         return false
@@ -228,11 +242,71 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         defer { stopping = false }
         try await vm.stop()
         self.vm = nil
+        forgetDisplay()
         set(.stopped)
     }
 
     /// The running VM, for a VZVirtualMachineView in the app.
     public var virtualMachine: VZVirtualMachine? { vm }
+
+    // MARK: Display
+
+    /// The display's size in pixels now: the bundle's, or what a phone asked for.
+    public var displaySize: CGSize {
+        if let o = displayOverride { return CGSize(width: o.width, height: o.height) }
+        guard let s = try? bundle.loadState().settings else { return CGSize(width: 1280, height: 800) }
+        return CGSize(width: s.displayWidth, height: s.displayHeight)
+    }
+
+    private var display: VZGraphicsDisplay? { vm?.graphicsDevices.first?.displays.first }
+
+    /// Gives the running workspace's display another size (macOS in the guest follows within a second or two) for
+    /// `lease` seconds: without a renewal (the same call again) it goes back to the workspace's own size, so a phone
+    /// that vanished doesn't leave it in its shape. Returns the size it got.
+    @discardableResult
+    public func setDisplay(_ request: DisplayRequest, lease: TimeInterval, pixelsPerInch: Int? = nil) throws -> DisplayRequest {
+        guard let display, vm?.state == .running else { throw VMHostError.notRunning }
+        let r = request.clamped()
+        if r != displayOverride || pixelsPerInch != nil {
+            let config = VZMacGraphicsDisplayConfiguration(widthInPixels: r.width, heightInPixels: r.height,
+                                                           pixelsPerInch: pixelsPerInch ?? r.pixelsPerInch)
+            try display.reconfigure(configuration: config)
+            displayOverride = r
+            onDisplayChange?()
+        }
+        displayLease?.cancel()
+        displayLease = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(lease * 1_000_000_000))
+            guard !Task.isCancelled, let self, self.displayOverride != nil else { return }
+            self.restoreDisplay()
+        }
+        return r
+    }
+
+    /// The workspace's own display size again (VMSettings: 1280x800 at 110 pixels per inch).
+    public func restoreDisplay() {
+        displayLease?.cancel()
+        displayLease = nil
+        let changed = displayOverride != nil
+        displayOverride = nil
+        if let display, let s = try? bundle.loadState().settings {
+            let config = VZMacGraphicsDisplayConfiguration(widthInPixels: s.displayWidth, heightInPixels: s.displayHeight,
+                                                           pixelsPerInch: s.displayPPI)
+            if display.sizeInPixels != CGSize(width: s.displayWidth, height: s.displayHeight) || changed {
+                try? display.reconfigure(configuration: config)
+            }
+        }
+        if changed { onDisplayChange?() }
+    }
+
+    private func forgetDisplay() {
+        displayLease?.cancel()
+        displayLease = nil
+        if displayOverride != nil {
+            displayOverride = nil
+            onDisplayChange?()
+        }
+    }
 
     // MARK: Delegate
 
@@ -240,6 +314,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         Task { @MainActor in
             guard self.vm === virtualMachine else { return }
             self.vm = nil
+            self.forgetDisplay()
             self.set(.stopped)
             if !self.stopping && self.restartsAfterGuestStop {
                 // A restart inside the guest: boot again.
@@ -256,6 +331,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         Task { @MainActor in
             if self.vm === virtualMachine {
                 self.vm = nil
+                self.forgetDisplay()
                 self.lastError = error.localizedDescription
                 self.set(.error)
             }
