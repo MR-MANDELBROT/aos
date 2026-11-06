@@ -12,6 +12,10 @@ import Virtualization
 //   aosctl run [--provision]      start the VM (first boot: account, auto login, SSH) and keep it running;
 //                                   Ctrl-C suspends it
 //   aosctl ip                     guest address
+//   aosctl display W H SCALE [PPI] | reset
+//                                 another display size for the VM that `run` runs (what the iPhone's request does)
+//   aosctl rfbprobe [--out DIR] [--live S] [--activity|--scroll] [--quality Q] [--resize]
+//                                 what screen sharing in the guest sends: encodings, sizes, frame rates
 //   aosctl power [--plan]         what the stay-awake logic sees (read only); --plan: what would freeze now
 
 setvbuf(stdout, nil, _IOLBF, 0)
