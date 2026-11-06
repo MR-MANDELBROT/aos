@@ -74,11 +74,16 @@ public final class SessionSupervisor: @unchecked Sendable {
     }
 
     private func launch() {
+        guard child == 0 else { return }
         let settings = AgentSettings.load(paths)
         guard settings.sessionEnabled else { setStatus(.stopped, "turned off in settings"); return }
         // The same background process also keeps conversations reachable (SessionKeeper); aOS's own session only
-        // runs once the setup configured its folder.
-        guard ClaudeCode.isConfigured(session: paths.session) else { setStatus(.stopped, "not set up"); return }
+        // runs once the setup configured its folder. That can happen after this process started: look again.
+        guard ClaudeCode.isConfigured(session: paths.session) else {
+            setStatus(.stopped, "not set up")
+            queue.asyncAfter(deadline: .now() + 10) { [weak self] in self?.launch() }
+            return
+        }
         guard let claude = ClaudeCode.executable() else {
             setStatus(.missingClaude, "Claude Code is not installed")
             queue.asyncAfter(deadline: .now() + 30) { self.launch() }

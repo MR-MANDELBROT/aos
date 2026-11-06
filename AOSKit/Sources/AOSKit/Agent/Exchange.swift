@@ -75,16 +75,35 @@ public struct Exchange: Sendable {
         return lines.joined(separator: "\n")
     }
 
-    /// Paths on this Mac that never go into the workspace.
-    static func forbidden(_ url: URL) -> String? {
-        let p = url.standardizedFileURL.resolvingSymlinksInPath().path
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let blocked = ["/Library/Keychains", "/.ssh", "/.gnupg", "/.aws", "/.config/gcloud", "/.netrc",
-                       "/.claude", "/.claude.json", "/Library/Cookies", "/Library/Application Support/\(Brand.name)/Keys"]
-        for b in blocked where p.hasPrefix(home + b) {
-            return "Files from \(b.dropFirst()) never go into the workspace."
+    /// Places on this Mac (relative to the home folder) that never go into the workspace: keys and passwords,
+    /// aOS's own data (its keys and Bitwarden's), Bitwarden's apps, the browsers' profiles with their saved
+    /// passwords and cookies, mail and messages.
+    static let blockedInHome = [
+        "Library/Keychains", ".ssh", ".gnupg", ".aws", ".config/gcloud", ".netrc", ".claude", ".claude.json",
+        "Library/Cookies", "Library/Application Support/\(Brand.name)", "Library/Application Support/Bitwarden CLI",
+        "Library/Application Support/Bitwarden", "Library/Containers/com.bitwarden.desktop",
+        "Library/Group Containers/LTZ2PFU5D6.com.bitwarden.desktop", "Library/Application Support/Google/Chrome",
+        "Library/Application Support/BraveSoftware", "Library/Application Support/Microsoft Edge",
+        "Library/Application Support/Firefox", "Library/Application Support/Arc", "Library/Safari",
+        "Library/Containers/com.apple.Safari", "Library/Mail", "Library/Messages", "Library/Group Containers/2BUA8C4S2C.com.1password",
+    ]
+    static let blockedAnywhere = ["/Library/Keychains", "/private/var/db", "/Library/Application Support/\(Brand.name)"]
+
+    /// Paths on this Mac that never go into the workspace: a blocked place, anything in one, or a folder that
+    /// holds one. Compared without case (APFS ignores it) and after following links.
+    static func forbidden(_ url: URL, home: String = FileManager.default.homeDirectoryForCurrentUser.path) -> String? {
+        func canonical(_ path: String) -> String {
+            let resolved = URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath().path
+            return resolved.lowercased().hasSuffix("/") && resolved.count > 1 ? String(resolved.lowercased().dropLast()) : resolved.lowercased()
         }
-        if p == home || p == "/" { return "Whole folders like your home folder don't go into the workspace." }
+        let p = canonical(url.path)
+        let h = canonical(home)
+        if p == h || p == "/" || p == "/users" { return "Whole folders like your home folder don't go into the workspace." }
+        let blocked = blockedInHome.map { (h + "/" + $0.lowercased(), $0) } + blockedAnywhere.map { (canonical($0), $0) }
+        for (b, name) in blocked {
+            if p == b || p.hasPrefix(b + "/") { return "Files from \(name) never go into the workspace." }
+            if b.hasPrefix(p + "/") { return "This folder contains \(name), which never goes into the workspace." }
+        }
         return nil
     }
 

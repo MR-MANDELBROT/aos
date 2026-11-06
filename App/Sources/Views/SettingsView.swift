@@ -8,12 +8,17 @@ struct SettingsView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            Tab("General", systemImage: "gearshape", value: "general") { GeneralSettings() }
-            Tab("Claude Code", systemImage: "iphone.radiowaves.left.and.right", value: "claude") { ReachableSettings() }
-            Tab("Bitwarden", systemImage: "key.horizontal", value: "bitwarden") { BitwardenSettings() }
-            Tab("iPhone", systemImage: "iphone", value: "iphone") { PhoneSettings() }
+            Tab("General", systemImage: "gearshape", value: "general") { GeneralSettings().endsEditingOnClick() }
+            Tab("Claude Code", systemImage: "iphone.radiowaves.left.and.right", value: "claude") { ReachableSettings().endsEditingOnClick() }
+            Tab("Bitwarden", systemImage: "key.horizontal", value: "bitwarden") { BitwardenSettings().endsEditingOnClick() }
+            Tab("iPhone", systemImage: "iphone", value: "iphone") { PhoneSettings().endsEditingOnClick() }
         }
         .frame(minWidth: 600, idealWidth: 700, maxWidth: .infinity, minHeight: 460, idealHeight: 680, maxHeight: .infinity)
+        // SwiftUI makes settings windows without a resize edge; the window itself gets one.
+        .background(WindowAccessor { window in
+            if !window.styleMask.contains(.resizable) { window.styleMask.insert(.resizable) }
+            window.minSize = NSSize(width: 600, height: 460)
+        })
         .environmentObject(model)
         .environmentObject(model.power)
     }
@@ -26,6 +31,8 @@ struct GeneralSettings: View {
 
     var body: some View {
         Form {
+            SettingsHeader(symbol: "macwindow", title: "Your agent's workspace",
+                           detail: "A Mac of its own for your agent, with its own screen and browser. It opens only when you approve.")
             Section {
                 Picker("Sign out of websites when it closes", selection: binding(\.signOutWebsites)) {
                     Text("All websites").tag(AgentSettings.SignOutWebsites.all)
@@ -43,8 +50,14 @@ struct GeneralSettings: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                Stepper("Close after \(model.settings.idleMinutes) min without activity",
-                        value: binding(\.idleMinutes), in: 5...120, step: 5)
+                Picker("Close when unused for", selection: binding(\.idleMinutes)) {
+                    ForEach([10, 20, 30, 60, 120], id: \.self) { m in
+                        Text(m < 60 ? String(localized: "\(m) minutes") : (m == 60 ? String(localized: "1 hour") : String(localized: "\(m / 60) hours"))).tag(m)
+                    }
+                    if ![10, 20, 30, 60, 120].contains(model.settings.idleMinutes) {
+                        Text(String(localized: "\(model.settings.idleMinutes) minutes")).tag(model.settings.idleMinutes)
+                    }
+                }
             } header: {
                 Text("Workspace")
             } footer: {
@@ -56,7 +69,11 @@ struct GeneralSettings: View {
                     case .allowed:
                         Label("Ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                     case .checking, .allowing:
-                        ProgressView().controlSize(.small)
+                        HStack(spacing: 8) {
+                            ProgressView().controlSize(.small)
+                            Text(model.helperState == .checking ? "The workspace starts (about a minute)" : "In the workspace window")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     default:
                         Button("Set Up …") { Task { await model.allowHelper() } }
                             .buttonStyle(.glass)
@@ -123,6 +140,7 @@ struct StaySignedInList: View {
     @EnvironmentObject var model: AppModel
     @State private var newSite = ""
     @State private var problem: String?
+    @FocusState private var editing: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -142,12 +160,19 @@ struct StaySignedInList: View {
                     .help(String(localized: "Remove"))
                 }
             }
-            HStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 TextField("Website", text: $newSite, prompt: Text("for example github.com"))
+                    .labelsHidden()
+                    .multilineTextAlignment(.leading)
                     .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: .infinity)
+                    .focused($editing)
                     .onSubmit(add)
-                Button("Add", action: add).disabled(newSite.trimmingCharacters(in: .whitespaces).isEmpty)
+                Button("Add", action: add)
+                    .buttonStyle(.bordered)
+                    .disabled(newSite.trimmingCharacters(in: .whitespaces).isEmpty)
             }
+            .controlSize(.large)
             if let problem { Text(problem).font(.caption).foregroundStyle(.orange) }
         }
     }
@@ -159,6 +184,7 @@ struct StaySignedInList: View {
         }
         problem = nil
         newSite = ""
+        editing = false
         model.update { s in if !s.keepSignedIn.contains(pattern) { s.keepSignedIn.append(pattern) } }
     }
 }
@@ -172,6 +198,19 @@ struct ReachableSettings: View {
 
     var body: some View {
         Form {
+            SettingsHeader(symbol: "iphone.radiowaves.left.and.right", title: "Claude Code on your phone",
+                           detail: "Start chats on this Mac from the Claude app and keep conversations reachable when you leave the Mac.")
+            if ClaudeCode.isConfigured(session: model.paths.session) {
+                Section {
+                    TextField("Name in the Claude app", text: $sessionName).onSubmit(saveName)
+                    Toggle("Keep the session running", isOn: binding(\.sessionEnabled))
+                } header: {
+                    Text("\(Brand.name)'s own session")
+                } footer: {
+                    Text("A session that always runs in \(Brand.name)'s folder, with the workspace tools.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
             Section {
                 Toggle(isOn: binding(\.newChats)) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -215,8 +254,16 @@ struct ReachableSettings: View {
                 if model.settings.keepReachable {
                     Toggle("Automatically: conversations from the Claude app", isOn: binding(\.keepAutomatic))
                     if model.settings.keepAutomatic {
-                        Stepper("Active within the last \(model.settings.keepHours) hours",
-                                value: binding(\.keepHours), in: 6...(24 * 14), step: 6)
+                        Picker("Active within", selection: binding(\.keepHours)) {
+                            Text("the last 6 hours").tag(6)
+                            Text("the last day").tag(24)
+                            Text("the last 2 days").tag(48)
+                            Text("the last week").tag(168)
+                            Text("the last 2 weeks").tag(336)
+                            if ![6, 24, 48, 168, 336].contains(model.settings.keepHours) {
+                                Text("the last \(model.settings.keepHours) hours").tag(model.settings.keepHours)
+                            }
+                        }
                         Toggle("Also conversations started in a terminal", isOn: binding(\.keepTerminal))
                     }
                     Stepper("At most \(model.settings.keepMax) at once", value: binding(\.keepMax), in: 1...12)
@@ -238,17 +285,6 @@ struct ReachableSettings: View {
                 }
             }
 
-            if ClaudeCode.isConfigured(session: model.paths.session) {
-                Section {
-                    TextField("Name in the Claude app", text: $sessionName).onSubmit(saveName)
-                    Toggle("Keep the session running", isOn: binding(\.sessionEnabled))
-                } header: {
-                    Text("\(Brand.name)'s own session")
-                } footer: {
-                    Text("A session that always runs in \(Brand.name)'s folder, with the workspace tools.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
         }
         .formStyle(.grouped)
         .onAppear {
@@ -262,7 +298,8 @@ struct ReachableSettings: View {
     var folderText: String {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let path = model.settings.newChatsDirectory.path
-        return path == home ? String(localized: "Your home folder") : path.replacingOccurrences(of: home, with: "~")
+        // The folder's own name for the home folder (as the Finder shows it), else the path from there.
+        return path == home ? FileManager.default.displayName(atPath: home) : path.replacingOccurrences(of: home, with: "~")
     }
 
     func remoteText(_ r: RemoteServerStatus) -> String {
@@ -383,5 +420,12 @@ struct ConversationRow: View {
             return String(localized: "Inactive for longer than \(s.keepHours) hours")
         }
         return String(localized: "Above the limit of \(s.keepMax)")
+    }
+}
+
+extension View {
+    /// A click on an empty spot ends typing in a text field (macOS doesn't by itself); controls keep their clicks.
+    func endsEditingOnClick() -> some View {
+        contentShape(Rectangle()).onTapGesture { NSApp.keyWindow?.makeFirstResponder(nil) }
     }
 }

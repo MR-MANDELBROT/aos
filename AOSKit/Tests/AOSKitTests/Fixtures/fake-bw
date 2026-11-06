@@ -23,6 +23,16 @@ import tty
 DIR = os.environ["BITWARDENCLI_APPDATA_DIR"]
 
 
+
+def read_password(options):
+    """Like bw: --passwordfile reads the first line of the file (aOS hands a pipe as /dev/fd/3)."""
+    if options.get("passwordfile"):
+        with open(options["passwordfile"]) as f:
+            return f.readline().rstrip("\n")
+    if options.get("passwordenv"):
+        return os.environ.get(options["passwordenv"], "")
+    return ""
+
 def path(name):
     return os.path.join(DIR, name)
 
@@ -201,7 +211,7 @@ elif command == "login":
     email = positional[1] if len(positional) > 1 else None
     if not email and interactive:
         email = ask("Email address:")
-    password = os.environ.get(options.get("passwordenv", ""), "") if options.get("passwordenv") else ""
+    password = read_password(options)
     if not password and interactive:
         password = ask("Master password:")
     if not password:
@@ -242,7 +252,7 @@ elif command == "login":
 elif command == "unlock":
     if state.get("state") == "unauthenticated":
         respond(False, message="You are not logged in.")
-    password = os.environ.get(options.get("passwordenv", ""), "") if options.get("passwordenv") else ""
+    password = read_password(options)
     if not password:
         respond(False, message="Master password is required.")
     if password != scenario.get("password"):

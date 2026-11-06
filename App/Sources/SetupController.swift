@@ -546,6 +546,8 @@ final class SetupController: ObservableObject {
         run(String(localized: "Starting the session in the background")) {
             try SessionAgent.enable()
             self.saveSettings { $0.sessionEnabled = true }
+            // Already running since the app started: it starts the session now that its folder is set up.
+            SessionAgent.restart(paths: self.paths)
             self.note("session runs in the background")
             self.toPairing()
         }

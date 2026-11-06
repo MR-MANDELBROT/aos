@@ -133,6 +133,16 @@
         }
       }
     },
+    "%@ is paired: approve sign-ins with Face ID, also on the go." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist gekoppelt: Anmeldungen mit Face ID freigeben, auch unterwegs."
+          }
+        }
+      }
+    },
     "%@ is paired." : {
       "localizations" : {
         "de" : {
@@ -279,12 +289,42 @@
         }
       }
     },
+    "%lld hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Stunden"
+          }
+        }
+      }
+    },
+    "%lld minutes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Minuten"
+          }
+        }
+      }
+    },
     "1 conversation reachable on your phone" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 Unterhaltung auf deinem Handy erreichbar"
+          }
+        }
+      }
+    },
+    "1 hour" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 Stunde"
           }
         }
       }
@@ -305,6 +345,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Es fehlen noch ein paar Schritte."
+          }
+        }
+      }
+    },
+    "A Mac of its own for your agent, with its own screen and browser. It opens only when you approve." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein eigener Mac für deinen Agent, mit eigenem Bildschirm und Browser. Er öffnet sich nur, wenn du zustimmst."
           }
         }
       }
@@ -359,7 +409,18 @@
         }
       }
     },
+    "Active within" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiv in"
+          }
+        }
+      }
+    },
     "Active within the last %lld hours" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1154,6 +1215,16 @@
         }
       }
     },
+    "Claude Code on your phone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code auf deinem Handy"
+          }
+        }
+      }
+    },
     "Claude Code trusts the session folder" : {
       "localizations" : {
         "de" : {
@@ -1207,6 +1278,7 @@
       }
     },
     "Close after %lld min without activity" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1222,6 +1294,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jetzt schließen"
+          }
+        }
+      }
+    },
+    "Close when unused for" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne Nutzung schließen nach"
           }
         }
       }
@@ -1937,6 +2019,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In der Menüleiste"
+          }
+        }
+      }
+    },
+    "In the workspace window" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Fenster des Arbeitsplatzes"
           }
         }
       }
@@ -3666,6 +3758,22 @@
         }
       }
     },
+    "sign in as %@ on %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dich als %@ bei %@ anmelden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "sign in as %1$@ on %2$@"
+          }
+        }
+      }
+    },
     "Sign in to Bitwarden" : {
       "localizations" : {
         "de" : {
@@ -3863,6 +3971,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ beim Anmelden starten"
+          }
+        }
+      }
+    },
+    "Start chats on this Mac from the Claude app and keep conversations reachable when you leave the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starte Chats auf diesem Mac aus der Claude-App und halte Unterhaltungen erreichbar, wenn du vom Mac weggehst."
           }
         }
       }
@@ -4442,6 +4560,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz fährt nach jeder Nutzung herunter; Websites vergessen Anmeldungen, außer bei den Domains unten (dort gibt es weniger Captchas)."
+          }
+        }
+      }
+    },
+    "The workspace starts (about a minute)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz startet (etwa eine Minute)"
           }
         }
       }
@@ -5078,6 +5206,26 @@
         }
       }
     },
+    "Your agent's sign-ins come from your Bitwarden account; you approve each one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldungen deines Agents kommen aus deinem Bitwarden-Konto; du gibst jede einzeln frei."
+          }
+        }
+      }
+    },
+    "Your agent's workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz deines Agents"
+          }
+        }
+      }
+    },
     "Your Claude Code conversations stay in the Claude app on your phone." : {
       "localizations" : {
         "de" : {
@@ -5099,6 +5247,7 @@
       }
     },
     "Your home folder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

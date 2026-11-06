@@ -63,11 +63,14 @@ public enum BitwardenTool {
     nonisolated(unsafe) private static var checked: [String: (stamp: String, problem: String?)] = [:]
 
     /// nil when `path` is a program signed with Bitwarden Inc's Developer ID (team `team`) whose signature holds
-    /// for all of it; otherwise why not. The result is kept while the file stays the same (inode, size, time).
+    /// for all of it; otherwise why not. The result is kept while the file stays the same: inode, size, change
+    /// time and status change time. The latter can't be set back by a program (any write or `touch` moves it), so
+    /// an edit in place that restores size and change time is checked again.
     public static func verify(_ path: String, team: String = teamIdentifier) -> String? {
         var info = stat()
         guard lstat(path, &info) == 0, (info.st_mode & S_IFMT) == S_IFREG else { return "not a file" }
         let stamp = "\(team) \(info.st_dev) \(info.st_ino) \(info.st_size) \(info.st_mtimespec.tv_sec).\(info.st_mtimespec.tv_nsec)"
+            + " \(info.st_ctimespec.tv_sec).\(info.st_ctimespec.tv_nsec)"
         if let hit = cacheLock.withLock({ checked[path] }), hit.stamp == stamp { return hit.problem }
         let problem = checkSignature(path, requirement: developerIDRequirement(team: team))
         cacheLock.withLock { checked[path] = (stamp, problem) }

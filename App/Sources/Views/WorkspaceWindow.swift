@@ -11,17 +11,19 @@ struct WorkspaceWindow: View {
     @State private var coordinator: VMDisplay.Coordinator?
     /// The bar's height as last laid out: the window grows and shrinks by it, so the screen keeps its size.
     @State private var barHeight: CGFloat = 0
+    @StateObject private var fitter = WindowFitter()
 
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 0) { guide }
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
-                    let delta = height - barHeight
                     barHeight = height
-                    resizeWindow(by: delta, bar: height)
+                    fitter.bar = height
+                    fitter.fit(animate: true)
                 }
             screen
         }
+        .background(WindowAccessor { fitter.attach($0) })
         .frame(minWidth: 800, minHeight: 560)
         .onAppear { setup.beginScreenSharing() }
         // The user working in the window keeps the workspace open like the agent's requests do.
@@ -119,9 +121,9 @@ struct WorkspaceWindow: View {
                 detail: setup.sharingProblem.map { String(localized: "That didn't work yet: \($0)") }
                     ?? String(localized: "When macOS asks for the password, click Enter Password. aOS notices by itself when screen sharing is on."),
                 warning: setup.sharingProblem != nil) {
-                Button("Check") { setup.checkScreenSharing() }.disabled(setup.isBusy)
                 Button("Enter Password") { setup.typeGuestPassword(into: coordinator) }
-                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent)
+                Button("Check") { setup.checkScreenSharing() }.disabled(setup.isBusy)
             }
         case .checking:
             bar(symbol: "rectangle.on.rectangle", tint: BrandColor.indigo, context: "Setup · Screen sharing", title: "Checking screen sharing",
@@ -168,31 +170,6 @@ struct WorkspaceWindow: View {
     }
 
     static let barHeight: CGFloat = 86
-
-    /// Grows (or shrinks) the window by the bar's height at its bottom edge, so the workspace's screen keeps its
-    /// size instead of shrinking into black bars.
-    func resizeWindow(by delta: CGFloat, bar: CGFloat) {
-        guard abs(delta) > 0.5,
-              let window = coordinator?.view?.window
-                ?? NSApp.windows.first(where: { $0.identifier?.rawValue.contains(WindowID.workspace) == true })
-        else { return }
-        var frame = window.frame
-        frame.size.height += delta
-        frame.origin.y -= delta
-        if let visible = window.screen?.visibleFrame {
-            if frame.height > visible.height { frame.size.height = visible.height }
-            if frame.minY < visible.minY { frame.origin.y = visible.minY }
-        }
-        // As wide as the screen in it at that height (1280 x 800 with 10 pt around it): no bars at the sides.
-        let content = window.contentRect(forFrameRect: frame)
-        let screenHeight = content.height - bar - 20
-        if screenHeight > 200 {
-            let width = screenHeight * 1280 / 800 + 20 + (frame.width - content.width)
-            frame.origin.x += (frame.width - width) / 2
-            frame.size.width = width
-        }
-        window.setFrame(frame, display: true, animate: true)
-    }
 
     var statusText: String {
         if let purpose = model.status?.leasePurpose, model.vmPhase == .running { return String(localized: "Open: \(purpose)") }
@@ -246,5 +223,66 @@ extension SessionStatus.State {
         case .stopped: return String(localized: "Off")
         case .failed: return String(localized: "Error")
         }
+    }
+}
+
+/// Keeps the workspace window at the shape of what it shows: the bar on top and the workspace's 1280 x 800 screen
+/// with 10 pt around it, so there are no black bars at the sides. Fits when the window appears, when the bar comes
+/// or goes, and after the user resized it (the width leads).
+@MainActor
+final class WindowFitter: ObservableObject {
+    weak var window: NSWindow?
+    var bar: CGFloat = 0
+    private var observer: NSObjectProtocol?
+
+    func attach(_ window: NSWindow) {
+        guard self.window !== window else { return }
+        self.window = window
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+        observer = NotificationCenter.default.addObserver(forName: NSWindow.didEndLiveResizeNotification, object: window,
+                                                          queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.fit(animate: true) }
+        }
+        fit(animate: false)
+    }
+
+    func fit(animate: Bool) {
+        guard let window, !window.styleMask.contains(.fullScreen) else { return }
+        let frame = window.frame
+        let chrome = frame.height - window.contentRect(forFrameRect: frame).height
+        var screenWidth = max(frame.width - 20, 400)
+        var contentHeight = screenWidth * 800 / 1280 + 20 + bar
+        if let visible = window.screen?.visibleFrame, contentHeight + chrome > visible.height {
+            contentHeight = visible.height - chrome
+            screenWidth = (contentHeight - 20 - bar) * 1280 / 800
+        }
+        var fitted = frame
+        fitted.size = NSSize(width: (screenWidth + 20).rounded(), height: (contentHeight + chrome).rounded())
+        fitted.origin.y = frame.maxY - fitted.height
+        fitted.origin.x = frame.midX - fitted.width / 2
+        if let visible = window.screen?.visibleFrame {
+            fitted.origin.x = min(max(fitted.origin.x, visible.minX), visible.maxX - fitted.width)
+            fitted.origin.y = min(max(fitted.origin.y, visible.minY), visible.maxY - fitted.height)
+        }
+        guard abs(fitted.width - frame.width) > 1 || abs(fitted.height - frame.height) > 1
+              || abs(fitted.origin.y - frame.origin.y) > 1 else { return }
+        window.setFrame(fitted, display: true, animate: animate)
+    }
+}
+
+/// Hands the hosting NSWindow to `found` once the view is in it.
+struct WindowAccessor: NSViewRepresentable {
+    var found: (NSWindow) -> Void
+
+    init(_ found: @escaping (NSWindow) -> Void) { self.found = found }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { [weak view] in if let w = view?.window { found(w) } }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        DispatchQueue.main.async { [weak view] in if let w = view?.window { found(w) } }
     }
 }

@@ -216,7 +216,10 @@ private struct StepPage: View {
                                     .font(.title3)
                                     .foregroundStyle(setup.selectedAgents.contains(agent.id) ? BrandColor.indigo : .secondary)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(agent.id == "other" ? String(localized: "Another agent") : agent.name).fontWeight(.medium)
+                                    HStack(spacing: 8) {
+                                        Text(agent.id == "other" ? String(localized: "Another agent") : agent.name).fontWeight(.medium)
+                                        if agent.id == "claude-code" { RecommendedBadge() }
+                                    }
                                     if agent.supportsRemoteSession {
                                         Text("Also reachable from your phone").font(.caption).foregroundStyle(.secondary)
                                     }
@@ -327,6 +330,7 @@ private struct StepPage: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text(agent.id == "other" ? String(localized: "Another agent") : agent.name).fontWeight(.semibold)
+                            if agent.id == "claude-code" { RecommendedBadge() }
                             Spacer()
                             switch setup.connectResults[agent.id] {
                             case .connected?: Label("connected", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
@@ -593,8 +597,21 @@ private struct StepPage: View {
                     if model.settings.keepReachable {
                         feature("iphone.radiowaves.left.and.right", "Reachable", "Your Claude Code conversations stay in the Claude app on your phone.")
                     }
+                    if bitwardenSignedIn {
+                        feature("key.horizontal", "Bitwarden", "Your agent's sign-ins come from your Bitwarden account; you approve each one.")
+                    }
+                    if let device = model.pairedDevices.first {
+                        feature("iphone", "\(Brand.name) on your iPhone", "\(device.name) is paired: approve sign-ins with Face ID, also on the go.")
+                    }
                 }
             }
+            if !bitwardenSignedIn { bitwardenReminder }
+            if model.pairedDevices.isEmpty { phoneReminder }
+        }
+    }
+
+    /// Only when the Bitwarden step was skipped.
+    var bitwardenReminder: some View {
             GlassCard {
                 HStack(spacing: 14) {
                     Image(systemName: "key.horizontal").font(.title).foregroundStyle(BrandColor.indigo).frame(width: 34)
@@ -604,13 +621,17 @@ private struct StepPage: View {
                             .font(.callout).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button(model.bitwarden.isSignedIn ? "Settings" : "Connect") {
+                    Button("Connect") {
                         UserDefaults.standard.set("bitwarden", forKey: "settingsTab")
                         model.openSettingsWindow()
                     }
                     .buttonStyle(.glass)
                 }
             }
+    }
+
+    /// Only when the pairing step was skipped.
+    var phoneReminder: some View {
             GlassCard {
                 HStack(spacing: 14) {
                     Image(systemName: "iphone").font(.title).foregroundStyle(BrandColor.indigo).frame(width: 34)
@@ -627,7 +648,6 @@ private struct StepPage: View {
                     .buttonStyle(.glass)
                 }
             }
-        }
     }
 
     // MARK: Action bar

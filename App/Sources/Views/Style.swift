@@ -65,3 +65,24 @@ struct RecommendedBadge: View {
             .background(BrandColor.indigo.opacity(0.14), in: Capsule())
     }
 }
+
+/// The first section of a settings tab: a symbol, the tab's subject and one sentence about it.
+struct SettingsHeader: View {
+    let symbol: String
+    let title: LocalizedStringKey
+    let detail: LocalizedStringKey
+    var tint: Color = BrandColor.indigo
+
+    var body: some View {
+        Section {
+            HStack(alignment: .center, spacing: 14) {
+                HeroSymbol(systemName: symbol, tint: tint)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.title3.weight(.semibold))
+                    Text(detail).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.vertical, 6)
+        }
+    }
+}

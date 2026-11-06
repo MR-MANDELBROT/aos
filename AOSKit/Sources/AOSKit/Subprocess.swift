@@ -26,12 +26,15 @@ public enum Subprocess {
     }
 
     /// Async: the waiting happens on a thread of its own, never on a Swift concurrency thread.
+    /// `secret`: handed to the child as file descriptor 3 (a pipe it reads, e.g. `--passwordfile /dev/fd/3`), never
+    /// through its environment or arguments, which other processes of the same user can read.
     public static func run(_ path: String, _ arguments: [String], environment: [String: String]? = nil,
-                           cwd: String? = nil, input: Data? = nil, timeout: TimeInterval) async throws -> Result {
+                           cwd: String? = nil, input: Data? = nil, secret: Data? = nil, timeout: TimeInterval) async throws -> Result {
         let outcome: Swift.Result<Result, Error> = await withCheckedContinuation { continuation in
             Thread.detachNewThread {
                 continuation.resume(returning: Swift.Result {
-                    try runBlocking(path, arguments, environment: environment, cwd: cwd, input: input, timeout: timeout)
+                    try runBlocking(path, arguments, environment: environment, cwd: cwd, input: input, secret: secret,
+                                    timeout: timeout)
                 })
             }
         }
@@ -40,7 +43,8 @@ public enum Subprocess {
 
     /// Blocks the calling thread until the program ended (or the timeout ended it).
     public static func runBlocking(_ path: String, _ arguments: [String], environment: [String: String]? = nil,
-                                   cwd: String? = nil, input: Data? = nil, timeout: TimeInterval) throws -> Result {
+                                   cwd: String? = nil, input: Data? = nil, secret: Data? = nil,
+                                   timeout: TimeInterval) throws -> Result {
         // All six ends close on exec right away: a fork elsewhere in the process (a pseudo terminal for a session)
         // must not inherit them, or the reader here would wait for an end that never comes.
         let (inRead, inWrite) = try cloexecPipe(path)
@@ -52,6 +56,11 @@ public enum Subprocess {
         }
         // A child that exits without reading its input must not end us with SIGPIPE
         _ = fcntl(inWrite, F_SETNOSIGPIPE, 1)
+        let secretPipe: (Int32, Int32)?
+        do { secretPipe = secret == nil ? nil : try secretChannel(path) } catch {
+            [inRead, inWrite, outPipe.0, outPipe.1, errPipe.0, errPipe.1].forEach { close($0) }
+            throw error
+        }
 
         var actions: posix_spawn_file_actions_t?
         posix_spawn_file_actions_init(&actions)
@@ -60,6 +69,7 @@ public enum Subprocess {
         posix_spawn_file_actions_adddup2(&actions, inRead, 0)
         posix_spawn_file_actions_adddup2(&actions, outPipe.1, 1)
         posix_spawn_file_actions_adddup2(&actions, errPipe.1, 2)
+        if let secretPipe { posix_spawn_file_actions_adddup2(&actions, secretPipe.0, 3) }
         if let cwd { posix_spawn_file_actions_addchdir(&actions, cwd) }
         var attributes: posix_spawnattr_t?
         posix_spawnattr_init(&attributes)
@@ -83,10 +93,13 @@ public enum Subprocess {
         var pid: pid_t = 0
         let rc = posix_spawn(&pid, path, &actions, &attributes, argv, env)
         close(inRead); close(outPipe.1); close(errPipe.1)
+        if let secretPipe { close(secretPipe.0) }
         guard rc == 0 else {
             close(inWrite); close(outPipe.0); close(errPipe.0)
+            if let secretPipe { close(secretPipe.1) }
             throw Failure.spawn(path, rc)
         }
+        if let secretPipe, let secret { handOver(secret, to: secretPipe.1) }
 
         let state = State()
         let stdinFD = inWrite, stdoutFD = outPipe.0, stderrFD = errPipe.0
@@ -121,6 +134,37 @@ public enum Subprocess {
         guard waitError == 0 else { throw Failure.wait(path, waitError) }
         let code: Int32 = (status & 0x7f) == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f)
         return Result(status: code, stdout: output.out, stderr: output.err, timedOut: state.timedOut)
+    }
+
+    /// The pipe for a secret: both ends close on exec and sit above 3, so the dup2 onto 3 always makes a new
+    /// descriptor (one that stays open across exec).
+    private static func secretChannel(_ path: String) throws -> (Int32, Int32) {
+        let (r, w) = try cloexecPipe(path)
+        func aboveThree(_ fd: Int32) -> Int32 {
+            if fd > 3 { return fd }
+            let moved = fcntl(fd, F_DUPFD_CLOEXEC, 4)
+            close(fd)
+            return moved
+        }
+        let read = aboveThree(r), write = aboveThree(w)
+        guard read > 3, write > 3 else {
+            if read >= 0 { close(read) }
+            if write >= 0 { close(write) }
+            throw Failure.spawn(path, EMFILE)
+        }
+        _ = fcntl(write, F_SETNOSIGPIPE, 1)
+        return (read, write)
+    }
+
+    /// Writes the secret and a newline into the child's descriptor 3, then closes it (end of file for the reader).
+    private static func handOver(_ secret: Data, to fd: Int32) {
+        Thread.detachNewThread {
+            var data = secret
+            data.append(0x0a)
+            writeAll(fd, data)
+            data.resetBytes(in: 0..<data.count)
+            close(fd)
+        }
     }
 
     /// A pipe whose two ends close on exec and are above 2 (so dup2 onto 0, 1 or 2 always makes a new descriptor).
@@ -198,7 +242,7 @@ public enum Subprocess {
     /// arrives apart from the prompts. Read the terminal with `terminal`, answer with `send`, collect the end with
     /// `result()`. Nothing here keeps or logs what passes through.
     public static func interactive(_ path: String, _ arguments: [String], environment: [String: String]? = nil,
-                                   cwd: String? = nil, timeout: TimeInterval) throws -> Interactive {
+                                   cwd: String? = nil, secret: Data? = nil, timeout: TimeInterval) throws -> Interactive {
         var master: Int32 = -1, slave: Int32 = -1
         var size = winsize(ws_row: 40, ws_col: 120, ws_xpixel: 0, ws_ypixel: 0)
         guard openpty(&master, &slave, nil, nil, &size) == 0 else { throw Failure.spawn(path, errno) }
@@ -224,9 +268,15 @@ public enum Subprocess {
         var actions: posix_spawn_file_actions_t?
         posix_spawn_file_actions_init(&actions)
         defer { posix_spawn_file_actions_destroy(&actions) }
+        let secretPipe: (Int32, Int32)?
+        do { secretPipe = secret == nil ? nil : try secretChannel(path) } catch {
+            [master, slave, out.0, out.1].forEach { close($0) }
+            throw error
+        }
         posix_spawn_file_actions_adddup2(&actions, slave, 0)
         posix_spawn_file_actions_adddup2(&actions, out.1, 1)
         posix_spawn_file_actions_adddup2(&actions, slave, 2)
+        if let secretPipe { posix_spawn_file_actions_adddup2(&actions, secretPipe.0, 3) }
         if let cwd { posix_spawn_file_actions_addchdir(&actions, cwd) }
         var attributes: posix_spawnattr_t?
         posix_spawnattr_init(&attributes)
@@ -247,10 +297,13 @@ public enum Subprocess {
         var pid: pid_t = 0
         let rc = posix_spawn(&pid, path, &actions, &attributes, argv, env)
         close(slave); close(out.1)
+        if let secretPipe { close(secretPipe.0) }
         guard rc == 0 else {
             close(master); close(out.0)
+            if let secretPipe { close(secretPipe.1) }
             throw Failure.spawn(path, rc)
         }
+        if let secretPipe, let secret { handOver(secret, to: secretPipe.1) }
         return Interactive(pid: pid, master: master, stdout: out.0, path: path, timeout: timeout)
     }
 

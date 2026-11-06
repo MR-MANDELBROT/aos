@@ -4,9 +4,9 @@ import Foundation
 /// with it (`BitwardenTool` finds Bitwarden's signed build or downloads it from Bitwarden). aOS asks it for exactly
 /// what a sign-in needs.
 ///
-/// Secrets never go on a command line: the master password reaches `bw` in an environment variable whose name
-/// `--passwordenv` gives, the session key as BW_SESSION, one-time codes on its terminal. Nothing `bw` prints is
-/// logged; errors carry only Bitwarden's own message.
+/// Secrets never go on a command line: the master password reaches `bw` through a pipe it reads as
+/// `--passwordfile /dev/fd/3` (not the environment, which other processes of the user can read), the session key as
+/// BW_SESSION, one-time codes on its terminal. Nothing `bw` prints is logged; errors carry only Bitwarden's own message.
 public struct BitwardenCLI: Sendable {
     public let executable: String
     /// Bitwarden's own files for aOS (BITWARDENCLI_APPDATA_DIR), apart from the user's own `bw`, if they have one.
@@ -15,7 +15,8 @@ public struct BitwardenCLI: Sendable {
     public var timeout: TimeInterval = 90
 
     /// The environment variable that carries the master password (only its name is on the command line).
-    static let passwordVariable = "AOS_BW_MASTER_PASSWORD"
+    /// Where `bw` reads the master password: descriptor 3, a pipe from aOS (Subprocess `secret`).
+    static let secretFile = "/dev/fd/3"
 
     public init(executable: String, dataDirectory: URL) {
         self.executable = executable
@@ -57,20 +58,20 @@ public struct BitwardenCLI: Sendable {
         return text.range(of: #"^[0-9][0-9A-Za-z.\-]{0,30}$"#, options: .regularExpression) != nil ? text : nil
     }
 
-    /// Starts `bw login`: the master password goes in through the environment, the questions Bitwarden asks next
+    /// Starts `bw login`: the master password goes in through a pipe of its own (descriptor 3), never the
+    /// environment or the arguments (other processes of the user can read both); the questions Bitwarden asks next
     /// (two-step method and code, new device code) come through the returned conversation.
     public func startLogin(email: String, password: String) throws -> BitwardenLoginConversation {
         guard Self.isEmail(email) else { throw BitwardenError.invalidEmail }
-        var env = environment(interactive: true)
-        env[Self.passwordVariable] = password
-        let process = try Subprocess.interactive(executable, ["login", email, "--passwordenv", Self.passwordVariable],
-                                                 environment: env, timeout: BitwardenLoginConversation.timeout)
+        let process = try Subprocess.interactive(executable, ["login", email, "--passwordfile", Self.secretFile],
+                                                 environment: environment(interactive: true),
+                                                 secret: Data(password.utf8), timeout: BitwardenLoginConversation.timeout)
         return BitwardenLoginConversation(process: process, email: email)
     }
 
     /// `bw unlock` with the master password; returns the new session key.
     public func unlock(password: String) async throws -> String {
-        let reply = try await run(["unlock", "--passwordenv", Self.passwordVariable], password: password, timeout: 60)
+        let reply = try await run(["unlock", "--passwordfile", Self.secretFile], password: password, timeout: 60)
         guard let key = reply.object?["raw"] as? String, Self.isSessionKey(key) else {
             throw BitwardenError.unexpected("no session key")
         }
@@ -188,14 +189,14 @@ public struct BitwardenCLI: Sendable {
                      timeout: TimeInterval? = nil) async throws -> Reply {
         var env = environment(interactive: false)
         if let session { env["BW_SESSION"] = session }
-        if let password { env[Self.passwordVariable] = password }
         // One `bw` at a time for these files: it keeps its state in one JSON file (a sync while a login is read
         // could hand the reader a half-written file).
         let key = dataDirectory.standardizedFileURL.path
         await BitwardenSerial.shared.acquire(key)
         let result: Subprocess.Result
         do {
-            result = try await Subprocess.run(executable, arguments, environment: env, timeout: timeout ?? self.timeout)
+            result = try await Subprocess.run(executable, arguments, environment: env,
+                                              secret: password.map { Data($0.utf8) }, timeout: timeout ?? self.timeout)
         } catch {
             await BitwardenSerial.shared.release(key)
             throw BitwardenError.notRunnable(error.localizedDescription)
@@ -229,8 +230,9 @@ public struct BitwardenCLI: Sendable {
             "BITWARDENCLI_APPDATA_DIR": dataDirectory.path,
             "BW_RESPONSE": "true",
         ]
-        for key in ["USER", "LOGNAME", "TMPDIR", "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy",
-                    "no_proxy", "NODE_EXTRA_CA_CERTS"] {
+        // No proxy or certificate variables: another process of the user could set them (launchctl setenv) to read
+        // Bitwarden's traffic.
+        for key in ["USER", "LOGNAME", "TMPDIR"] {
             if let value = inherited[key] { env[key] = value }
         }
         if interactive {

@@ -145,11 +145,23 @@ extension AppModel {
 
     /// Asks the helper in a running workspace whether it may sign in.
     func checkHelper() async {
-        guard workspace.host.isRunning, let ip = try? workspace.host.guestAddress() else { return }
+        guard workspace.host.isRunning, let ip = try? workspace.host.guestAddress() else {
+            // The workspace is off: what was last seen (no start just to look).
+            if helperState == .unknown, let known = (try? workspace.host.bundle.loadState())?.helperAllowed {
+                helperState = known ? .allowed : .notAllowed
+            }
+            return
+        }
         if helperState == .allowing { return }
         let status = await workspace.provisioner.helperStatus(host: ip)
         if helperState == .allowing { return }
         helperState = status == nil ? .unknown : (status?.trusted == true ? .allowed : .notAllowed)
+        if let trusted = status?.trusted { rememberHelper(trusted) }
+    }
+
+    /// Kept with the workspace, so the settings know it while the workspace is off.
+    func rememberHelper(_ allowed: Bool) {
+        try? workspace.host.bundle.updateState { $0.helperAllowed = allowed }
     }
 
     /// Starts the workspace, shows its window and opens the place where the user allows the helper. The window
@@ -162,7 +174,7 @@ extension AppModel {
                 helperState = .unavailable(String(localized: "The helper isn't installed in the workspace yet."))
                 return
             }
-            if status.trusted == true { helperState = .allowed; return }
+            if status.trusted == true { helperState = .allowed; rememberHelper(true); return }
             helperWasAdmin = try await workspace.provisioner.beginHelperPermission(host: ip)
             helperState = .allowing
             openWindow?(WindowID.workspace)
@@ -199,6 +211,7 @@ extension AppModel {
             helperWasAdmin = nil
         }
         helperState = allowed ? .allowed : .notAllowed
+        rememberHelper(allowed)
         append(allowed ? "the workspace helper may sign in now" : "the helper permission was not given")
     }
 }

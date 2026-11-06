@@ -261,6 +261,9 @@ public final class BitwardenVault {
         if let cli = await currentCLI() {
             do { try await cli.logout() } catch BitwardenError.notLoggedIn {} catch { problem = error }
         }
+        // Bitwarden's files for aOS go too (its encrypted vault and the account's tokens), also when its tool
+        // couldn't run: signed out means nothing of the account stays on this Mac.
+        try? FileManager.default.removeItem(at: paths.bitwarden)
         email = nil
         lastSync = nil
         phase = .signedOut

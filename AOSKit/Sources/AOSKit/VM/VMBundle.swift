@@ -33,6 +33,9 @@ public struct VMState: Codable, Sendable, Equatable {
     public var screenSharingReady: Bool
     /// Fingerprint of the guest kit last installed (GuestKit.fingerprint).
     public var kitFingerprint: String?
+    /// Whether the helper in the guest may see and type (last seen; nil: never asked). The app shows it without
+    /// starting the workspace.
+    public var helperAllowed: Bool?
 }
 
 public enum VMBundleError: LocalizedError {

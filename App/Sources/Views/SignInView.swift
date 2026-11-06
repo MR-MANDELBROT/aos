@@ -1,4 +1,5 @@
 import AOSKit
+import LocalAuthentication
 import SwiftUI
 
 /// "<Agent> wants to sign in on <website>": the user picks one of their Bitwarden logins for the site (aOS gets it
@@ -46,8 +47,9 @@ struct SignInView: View {
                 HStack(spacing: 10) {
                     Button { decline(e) } label: { Text("Don't Sign In").frame(maxWidth: .infinity) }
                         .buttonStyle(.glass).keyboardShortcut(.cancelAction)
+                    // No Return shortcut: a Bitwarden login is approved with Touch ID or the Mac's password.
                     Button { approve(e) } label: { Text(e.field == "code" ? "Fill In" : "Sign In").frame(maxWidth: .infinity) }
-                        .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                        .buttonStyle(.glassProminent)
                         .disabled(!ready(e))
                 }
                 .controlSize(.large)
@@ -214,8 +216,17 @@ struct SignInView: View {
     }
 
     func approve(_ e: CompanionEvent) {
-        if let selection, choices(e).contains(where: { $0.id == selection }) {
-            model.answerSignIn(e, login: selection)
+        if let selection, let choice = choices(e).first(where: { $0.id == selection }) {
+            // A login from Bitwarden: only the person at this Mac can approve it (Touch ID or the Mac's password,
+            // in macOS's own dialog), not a click or a key press another program sends.
+            let site = e.host ?? ""
+            Task {
+                guard await MacApproval.confirm(String(localized: "sign in as \(choice.username.isEmpty ? choice.name : choice.username) on \(site)")) else { return }
+                model.answerSignIn(e, login: selection)
+                clear()
+                if model.signIns.count <= 1 { dismissWindow(id: WindowID.signIn) }
+            }
+            return
         } else {
             model.answerSignIn(e, username: username.isEmpty ? nil : username, password: password.isEmpty ? nil : password,
                                code: code.isEmpty ? nil : code)
@@ -232,5 +243,18 @@ struct SignInView: View {
 
     func clear() {
         username = ""; password = ""; code = ""; masterPassword = ""; selection = nil; showOther = false
+    }
+}
+
+/// The person at this Mac confirms with Touch ID or the Mac's password (macOS's own dialog; another program can't
+/// answer it).
+enum MacApproval {
+    @MainActor
+    static func confirm(_ reason: String) async -> Bool {
+        let context = LAContext()
+        context.localizedCancelTitle = String(localized: "Cancel")
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { return false }
+        do { return try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) } catch { return false }
     }
 }

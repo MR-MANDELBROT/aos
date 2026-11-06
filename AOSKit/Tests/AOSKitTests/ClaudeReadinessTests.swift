@@ -117,3 +117,21 @@ final class StaySignedInTests: XCTestCase {
         XCTAssertEqual(StaySignedIn.domain(of: "[*.]github.com"), "github.com")
     }
 }
+
+final class ExchangeBlocklistTests: XCTestCase {
+    let home = "/Users/max"
+    func blocked(_ path: String) -> Bool { Exchange.forbidden(URL(fileURLWithPath: path), home: home) != nil }
+
+    func testSecretsAndAOSDataStayOut() {
+        XCTAssertTrue(blocked("/Users/max/Library/Application Support/aOS/Bitwarden/data.json"))
+        XCTAssertTrue(blocked("/Users/max/Library/Application Support/AOS/Keys/maintenance"))
+        XCTAssertTrue(blocked("/Users/max/.SSH/id_ed25519"))
+        XCTAssertTrue(blocked("/Users/max/Library/Application Support/Bitwarden CLI/data.json"))
+        XCTAssertTrue(blocked("/Users/max/Library/Application Support/Google/Chrome/Default/Login Data"))
+        XCTAssertTrue(blocked("/Users/max/Library/Application Support"))   // holds aOS's data
+        XCTAssertTrue(blocked("/Users/max/Library"))
+        XCTAssertTrue(blocked("/Users/max"))
+        XCTAssertFalse(blocked("/Users/max/Documents/report.pdf"))
+        XCTAssertFalse(blocked("/Users/max/Library/Application Support/Some App/export.csv"))
+    }
+}
