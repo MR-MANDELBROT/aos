@@ -145,9 +145,11 @@ extension WorkspaceController {
             guard result.ok else { throw GuestHelperError.unavailable(result.error ?? "the fields could not be filled") }
             companion.post(CompanionEvent(event: "signin.closed", request: id, result: "filled"))
             log("sign-in for \(site) filled (\((result.filled ?? []).joined(separator: ", ")), approved on \(answer.from))")
-            let filled = (result.filled ?? []).joined(separator: " and ")
+            let fields = (result.filled ?? []).map { $0 == "username" ? "user name" : $0 }
+            let what = fields.isEmpty ? "The sign-in" : "The " + fields.joined(separator: " and ")
+            let verb = fields.count > 1 ? "were" : "was"
             return AgentResponse(id: request.id, ok: true,
-                                 text: "The user approved. \(filled.isEmpty ? "The sign-in" : "The " + filled) for \(site) was filled\(result.submitted == true ? " and submitted" : ""). Take a screenshot to see the result; never ask for or type the password yourself.")
+                                 text: "The user approved. \(what) for \(site) \(verb) filled\(result.submitted == true ? " and submitted" : ""). Take a screenshot to see the result; never ask for or type the password yourself.")
         } catch {
             companion.post(CompanionEvent(event: "signin.closed", request: id, result: "failed"))
             log("sign-in for \(site) failed: \(error.localizedDescription)")

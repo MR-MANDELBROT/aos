@@ -71,7 +71,31 @@ enum WindowID {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if offerMoveToApplications() { return }
         Task { @MainActor in AppModel.shared.launched() }
+    }
+
+    /// Annex opened outside an Applications folder (on its disk image, in Downloads): it registers its programs by
+    /// path, so it offers to move itself first. True when it moved and is about to open again from there.
+    @MainActor private func offerMoveToApplications() -> Bool {
+        let app = Bundle.main.bundleURL
+        guard !AppLocation.isStable(app), !AppLocation.isDevelopmentBuild(app) else { return false }
+        let alert = NSAlert()
+        alert.messageText = String(localized: "Move Annex to the Applications folder?")
+        alert.informativeText = String(localized: "Annex keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again.")
+        alert.addButton(withTitle: String(localized: "Move to Applications"))
+        alert.addButton(withTitle: String(localized: "Not Now"))
+        NSApp.activate()
+        guard alert.runModal() == .alertFirstButtonReturn else { return false }
+        do {
+            let move = try AppLocation.moveToApplications(app)
+            AppLocation.relaunch(move)
+            NSApp.terminate(nil)
+            return true
+        } catch {
+            NSAlert(error: error).runModal()
+            return false
+        }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

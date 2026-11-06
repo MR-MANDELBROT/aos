@@ -300,6 +300,10 @@ DE.update({
     'No iPhone paired yet.': 'Noch kein iPhone gekoppelt.',
     'No sign-in waiting.': 'Keine Anmeldung wartet.',
     'Not Now': 'Nicht jetzt',
+    'Move Annex to the Applications folder?': 'Annex in den Ordner „Programme“ bewegen?',
+    'Annex keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again.':
+        'Annex arbeitet im Hintergrund und trägt sich bei deinen Agenten und deinem iPhone ein. Dafür braucht es einen festen Platz. Es kopiert sich dorthin und öffnet sich neu.',
+    'Move to Applications': 'In „Programme“ bewegen',
     'Not connected': 'Nicht verbunden',
     'Not paired yet': 'Noch nicht gekoppelt',
     'Not pinned': 'Nicht angeheftet',

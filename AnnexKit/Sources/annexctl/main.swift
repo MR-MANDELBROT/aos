@@ -280,11 +280,16 @@ func runCommand() async {
             exit(0)
 
         case "pair-test":
-            // pair-test KEYS_FILE PORT FINGERPRINT: a pairing against a test sshd (its own authorized_keys), prints the
-            // link and waits for one phone
-            guard args.count >= 4, let port = UInt16(args[2]) else { fail("pair-test KEYS_FILE PORT FINGERPRINT") }
+            // pair-test KEYS_FILE PORT FINGERPRINT [HOSTS [COMPANION]]: a pairing against a test sshd (its own
+            // authorized_keys), prints the link and waits for one phone. HOSTS: comma-separated, instead of this
+            // Mac's names and addresses; COMPANION: the annex-companion the phone runs.
+            guard args.count >= 4, let port = UInt16(args[2]) else {
+                fail("pair-test KEYS_FILE PORT FINGERPRINT [HOSTS [COMPANION]]")
+            }
+            let hosts = args.count > 4 ? args[4].split(separator: ",").map(String.init) : nil
             let session = PairingSession(keys: AuthorizedKeys(url: URL(fileURLWithPath: args[1])), sshPort: port,
-                                         hostKeyFingerprint: args[3])
+                                         hostKeyFingerprint: args[3], hosts: hosts,
+                                         companion: args.count > 5 ? args[5] : nil)
             session.onChange = {
                 switch session.state {
                 case .waiting: print("LINK \(session.url ?? "")")

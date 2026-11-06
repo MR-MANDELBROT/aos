@@ -139,16 +139,31 @@ public final class PairingSession {
     private let sshPort: UInt16
     private let fixedFingerprint: String?
     private var failures = 0
-    public static let companionPath = "/Applications/Annex.app/Contents/MacOS/annex-companion"
+    private let hosts: [String]?
+    private let companion: String
 
-    /// Tests pass another key file, SSH port and host key fingerprint (an sshd of their own).
-    public init(keys: AuthorizedKeys = AuthorizedKeys(), sshPort: UInt16 = 22, hostKeyFingerprint: String? = nil) {
+    /// annex-companion in this app (the phone runs it over SSH), or where Annex is normally installed.
+    public static var companionPath: String {
+        let app = Bundle.main.bundleURL
+        let inApp = app.appendingPathComponent("Contents/MacOS/annex-companion").path
+        if app.pathExtension == "app", AppLocation.isStable(app), FileManager.default.isExecutableFile(atPath: inApp) {
+            return inApp
+        }
+        return "/Applications/\(Brand.name).app/Contents/MacOS/annex-companion"
+    }
+
+    /// Tests pass another key file, SSH port and host key fingerprint (an sshd of their own), and may name the hosts
+    /// and the companion program.
+    public init(keys: AuthorizedKeys = AuthorizedKeys(), sshPort: UInt16 = 22, hostKeyFingerprint: String? = nil,
+                hosts: [String]? = nil, companion: String? = nil) {
         var bytes = [UInt8](repeating: 0, count: 16)
         _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         code = Data(bytes)
         self.keys = keys
         self.sshPort = sshPort
         self.fixedFingerprint = hostKeyFingerprint
+        self.hosts = hosts
+        self.companion = companion ?? Self.companionPath
     }
 
     public func start() {
@@ -201,7 +216,7 @@ public final class PairingSession {
             .replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
         let items: [(String, String)] = [
             ("n", MacSSH.macName()),
-            ("h", MacSSH.addresses().joined(separator: ",")),
+            ("h", (hosts ?? MacSSH.addresses()).joined(separator: ",")),
             ("p", String(port)),
             ("s", String(sshPort)),
             ("u", NSUserName()),
@@ -259,7 +274,7 @@ public final class PairingSession {
         case .success(let request):
             do {
                 try keys.add(key: request.key, id: request.id, name: request.device)
-                respond(["ok": true, "user": NSUserName(), "companion": Self.companionPath]) { [weak self] in
+                respond(["ok": true, "user": NSUserName(), "companion": companion]) { [weak self] in
                     self?.stop()
                     self?.state = .paired(request.device)
                 }
