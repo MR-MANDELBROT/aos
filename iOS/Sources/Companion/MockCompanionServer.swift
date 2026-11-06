@@ -54,6 +54,7 @@ final class MockCompanionServer: @unchecked Sendable {
 
     /// Connects the server to any byte sink (the stdout of an exec channel in the SSH tests). Feed what the client
     /// sends into the returned `Feeder`.
+    @discardableResult
     func attach(write: @escaping @Sendable (Data) -> Void, hangUp: @escaping @Sendable () -> Void) -> Feeder {
         lock.withLock {
             outbound = write

@@ -46,12 +46,13 @@ final class HoldUntilSSHStarts: ChannelDuplexHandler, @unchecked Sendable {
         guard !released, !releasing else { return }
         releasing = true
         // After the current call returns: the SSH handler is busy writing right now.
+        let bound = NIOLoopBound(context, eventLoop: context.eventLoop)
         context.eventLoop.execute {
             self.released = true
             let held = self.held
             self.held.removeAll()
-            for buffer in held { context.fireChannelRead(self.wrapInboundOut(buffer)) }
-            if !held.isEmpty { context.fireChannelReadComplete() }
+            for buffer in held { bound.value.fireChannelRead(self.wrapInboundOut(buffer)) }
+            if !held.isEmpty { bound.value.fireChannelReadComplete() }
         }
     }
 }

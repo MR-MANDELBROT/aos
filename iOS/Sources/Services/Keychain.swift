@@ -51,8 +51,14 @@ enum Keychain {
         var query = base(service: service, account: account)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
-        if let context { query[kSecUseAuthenticationContext as String] = context }
-        if let prompt { query[kSecUseOperationPrompt as String] = prompt }
+        if let context {
+            query[kSecUseAuthenticationContext as String] = context
+        } else if let prompt {
+            // Without an evaluated context iOS asks itself; this says why.
+            let asking = LAContext()
+            asking.localizedReason = prompt
+            query[kSecUseAuthenticationContext as String] = asking
+        }
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         switch status {

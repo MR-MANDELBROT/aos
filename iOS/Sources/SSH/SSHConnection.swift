@@ -176,7 +176,13 @@ final class SSHConnection: @unchecked Sendable {
         return try await client.createDirectTCPIPChannel(
             using: SSHChannelType.DirectTCPIP(targetHost: targetHost, targetPort: targetPort, originatorAddress: originator)
         ) { channel in
-            channel.pipeline.addHandler(handler())
+            // Citadel calls this on the channel's event loop.
+            do {
+                try channel.pipeline.syncOperations.addHandler(handler())
+                return channel.eventLoop.makeSucceededVoidFuture()
+            } catch {
+                return channel.eventLoop.makeFailedFuture(error)
+            }
         }
     }
 }

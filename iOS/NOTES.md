@@ -1,0 +1,134 @@
+# Annex for iPhone: notes
+
+Design: `Docs/COMPANION.md`. This file holds what the Mac side has to match, requests for AnnexRFB (not changed from
+here), what was learned about the libraries, and what is open.
+
+## Layout
+
+```
+iOS/
+  project.yml, generate.sh      XcodeGen spec (target Annex, dev.marquart.annex.ios, iOS 27, Swift 6); generate.sh
+                                also copies the Mac app's Icon Composer icon (platform iOS) and Package.resolved
+  Package.resolved              exact package revisions (the generated project is gitignored)
+  Sources/Core                  pure logic: pairing link and proof, OpenSSH key format, matching rule, TOTP, CSV,
+                                Bitwarden import, companion protocol (JSON lines), keysym mapping
+  Sources/Services              keychain, Face ID, device key (Secure Enclave), stores for Macs, hosts, secrets
+  Sources/SSH                   SSHConnection (Citadel over Network.framework), SessionChannel (exec, PTY),
+                                LocalForwarder (127.0.0.1 listener -> direct-tcpip), PairingClient
+  Sources/Companion             CompanionClient (actor), MockCompanionServer (tests and demo), command line
+  Sources/App                   AnnexApp, AppModel, MacConnection (reconnects), settings, lock, demo data (debug)
+  Sources/{Overview,Pairing,Terminal,Screen,Vault,SignIn,Settings,Design}   the UI
+  Tests                         unit and integration tests (in-process SSH, RFB and pairing servers)
+  Tools                         test.sh, sim.sh, screenshots.sh, localize.sh (+ translations_de.py), render-icon.sh
+```
+
+Run the tests: `iOS/Tools/test.sh`. Run the app with sample data: `iOS/Tools/sim.sh -AnnexDemo YES` (debug builds
+only; `-AnnexDemoTab vault`, `-AnnexDemoSheet signin|help|pairing|settings|lock|...`, see `Sources/App/Demo.swift`).
+Screenshots of every screen, light and dark: `iOS/Tools/screenshots.sh de` (or `en`), into `build/ios-screenshots`.
+Strings: write English in code, German in `Tools/translations_de.py`, then `iOS/Tools/localize.sh`; it refuses
+nothing but reports missing German, mismatched format specifiers and dashes used as punctuation.
+
+Only an iOS 26.4 simulator runtime was installed here. The project targets iOS 27; `test.sh` and `sim.sh` lower the
+deployment target for that build only when the simulator is older. The app uses no iOS 27-only API so far.
+
+## What the Mac side must match
+
+Pairing (`Sources/Core/PairingLink.swift`, tests in `Tests/PairingTests.swift`):
+
+- URL `annex-pair://v1?n=&h=&p=&s=&u=&k=&c=`. Percent-encode every value with only the unreserved characters left
+  as they are (`A-Z a-z 0-9 - . _ ~`): `+`, `/` and `=` in the fingerprint must become `%2B`, `%2F`, `%3D`, spaces
+  `%20` (not `+`; the iPhone does not turn `+` into a space). `h` may separate hosts with a literal `,` or `%2C`.
+  `s` defaults to 22, `n` falls back to the first host. A host other than `v1` that looks like `v2`, `v3` makes the
+  iPhone say "update the app".
+- `k`: `SHA256:` + standard base64 of the SHA-256 of the host key blob, padding optional. Verified against this
+  Mac's real sshd: the iPhone negotiates `ssh-ed25519` and its fingerprint equals `ssh-keygen -lf
+  /etc/ssh/ssh_host_ed25519_key.pub`.
+- `c`: exactly 16 bytes, base64url, no padding.
+- Request line: `{"device":"…","key":"ecdsa-sha2-nistp256 AAAA…","proof":"…","v":1}` + `\n` (keys sorted, `/` not
+  escaped; parse it as JSON, don't rely on the order).
+- Proof: standard base64 **with padding** of `HMAC-SHA256(key: the 16 raw bytes of c, message: UTF-8 of key + "\n" +
+  device)`, with `key` and `device` exactly as the JSON strings decode. Reference vector (also in the tests):
+  `c` = bytes 00 01 … 0f (`AAECAwQFBgcICQoLDA0ODw`), device `Max’s iPhone` (U+2019),
+  key `ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGsX0fLhLEJH+Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT+NC4v4af5uO5+tKfA+eFivOM1drMV7Oy7ZAaDe/UfU=`
+  (the P-256 generator point) gives `mrui6J5uTrdDd7yaEdlJQU6kWIO77PVkB04oYtW2SAQ=`. Compare in constant time.
+- Before writing `authorized_keys`: accept only `ecdsa-sha2-nistp256` followed by one base64 blob whose decoded type
+  string is the same (nothing else on the line, so no options can be smuggled in), and sanitize the device name
+  (the iPhone already removes control characters and line breaks and cuts it to 64 characters, but the Mac must not
+  trust that: a line break in the name would add a line to `authorized_keys`).
+- Answer: one JSON line, then close. The iPhone uses `user` for SSH (falls back to `u`) and `companion` as the path
+  (falls back to `/Applications/Annex.app/Contents/MacOS/annex-companion`). A close without an answer is shown as
+  "the Mac ended the pairing, show a new code".
+- The iPhone connects to the pairing port of each host in `h` in order; if none answers it browses Bonjour for
+  `_annex-pair._tcp` (a service named like `n` wins, otherwise the only one found).
+- `authorized_keys` options: the terminal needs a PTY and the screens need port forwarding (direct-tcpip to
+  127.0.0.1:5900 and to the VM). `no-agent-forwarding,no-X11-forwarding` as in the design is fine; `restrict` or
+  `command=` would break the terminal and the screens.
+
+Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/CompanionClient.swift`):
+
+- Exec command: `'<companion path>' serve` (single-quoted for the login shell sshd runs it with).
+- Order after connecting: `hello`, `subscribe`, `status` (subscribe before status, so no event falls between).
+  `status` is asked again after every `workspace` event (for `purpose` and `until`).
+- Lines that aren't JSON are skipped (a shell's login message, for example); lines up to 1 MiB; unknown fields and
+  unknown events are ignored. Request timeout 20 s.
+- `signin.answer` carries `totp` only when the login has a TOTP secret. `help.done` when the person taps Done.
+- Dates: ISO 8601 with or without fractional seconds. `region`: workspace pixels; `w` or `h` 0 means no region.
+- `screen` `mac`: if the companion isn't ready, the iPhone assumes 127.0.0.1:5900.
+- Session `state` strings the iPhone shows in words: `running`, `starting`, `stopped`, `waiting`/`asking`,
+  `failed`; others as they come.
+- Matching rule: as in the design, plus: IP addresses only match exactly (otherwise `0.0.1` would be a "parent" of
+  `10.0.0.1`). The Mac should check the same.
+- Exit status 127 of the exec channel is shown as "Annex isn't installed where it was paired; pair again".
+
+## Requests for AnnexRFB (not changed from here)
+
+1. A transport hook: `RFBClient` only connects with NWConnection to host:port, so the iPhone runs a loopback
+   listener (`LocalForwarder`) and bridges each connection to a direct-tcpip channel. An initializer that takes a
+   byte stream (or a connect closure) would remove the listener, a local port that other apps on the phone could
+   connect to while a screen is open (they would still need the screen sharing password).
+2. Frame cost: every `liveFrames` picture copies the whole framebuffer (`Data(framebuffer)` in `makeImage`). For a
+   Retina Mac (3024x1964) that is 23 MB per frame; at 10 frames a second the phone moves 230 MB/s. Changed
+   rectangles, or a picture made from a buffer that is reused, would make the Mac's own screen much lighter.
+3. Bandwidth: 32-bit pixels with zlib only. A lower pixel format or Tight/JPEG would make "Saves data" do more than
+   lower the frame rate over cellular.
+4. Input readiness: input waits `inputGrace` (5 s) after connecting; the iPhone shows "input works in a moment".
+   Exposing the connect time (or an `isInputReady`) would let it show this exactly.
+5. Cursor: no cursor pseudo-encoding; in trackpad mode the iPhone draws its own pointer.
+6. Typing beyond ASCII into the workspace: the iPhone has no path (on the Mac's own screen it uses `pbcopy` over
+   SSH, then cmd+v). A companion op such as `{"op":"paste","target":"workspace","text":"…"}` would close the gap.
+
+## What was learned about the libraries
+
+- **Citadel is pinned to 0.12.0**: 0.12.1 replaced its swift-nio-ssh dependency (the Citadel author's fork,
+  Joannis/swift-nio-ssh) with a new third-party fork (Wellz26/swift-nio-ssh, created 2026-04-02 for Mac Catalyst).
+  0.12.0 has everything needed. Moving up later: check that fork first.
+- `SSHClient.connect(on:settings:)` (used so the app owns the channel and can open exec channels on Citadel's
+  NIOSSHHandler) builds the pipeline with synchronous operations off the event loop (assertion in debug). The app
+  runs it with the channel's event loop as task executor (`EventLoopTaskExecutor`) and holds bytes that arrive
+  before NIOSSH is in the pipeline (`HoldUntilSSHStarts`): the server's version line comes right after TCP connects.
+- Citadel asks a custom `NIOSSHClientUserAuthenticationDelegate` only once, so one login method per connection:
+  the key for the paired Mac, key or password for an added host.
+- Citadel's server-side exec doesn't deliver stdin for exec channels (its SubsystemHandler only releases reads for
+  shell and sftp); the tests' SSH server is written on NIOSSH directly.
+- `NWParameters.acceptLocalOnly` rejects loopback connections; the forwarder binds to 127.0.0.1 instead.
+- SwiftTerm 1.99 doesn't expose its `Terminal`; the size comes from `sizeChanged`.
+- An Icon Composer icon can't be loaded with `UIImage(named:)` (it crashes with "Need an imageRef"); the in-app icon
+  is an `ictool` rendering (`Tools/render-icon.sh`).
+- The global accent color didn't reach every control on iOS; the root view sets the brand indigo as tint, last, so
+  sheets and overlays get it too.
+- In the simulator, keychain items behind user presence are readable without Face ID (the simulator doesn't enforce
+  the ACL), and unsigned builds can't use the keychain at all (-34018); the scripts sign ad hoc.
+
+## Open points
+
+- Not run on a real iPhone: Secure Enclave key, Face ID prompts and the keychain ACL, camera scanning, the local
+  network permission prompt, cellular and VPN behavior. All of that needs a device and Max's signing.
+- Not run against the real Mac side (pairing listener and `annex-companion` were built in parallel): tested
+  against the in-process mock, an NIOSSH server and a fake pairing listener. First real run: pair, then watch
+  `log stream --predicate 'subsystem == "dev.marquart.annex.ios"'` on the Mac for the phone's console.
+- Notifications while the app is closed (phase 2, CloudKit) are not built; requests show while the app is open.
+  In the background the connection is kept for 25 s, then dropped and rebuilt on return.
+- Unpairing on the iPhone doesn't remove the key on the Mac (the design leaves that to Annex on the Mac).
+- iPhone only (no iPad layout). Landscape works but wasn't tuned.
+- Local network denial is detected for pairing (NWConnection path); for SSH (NIO on Network.framework) it shows as
+  "not reachable" with the hint about Tailscale and the local network setting.

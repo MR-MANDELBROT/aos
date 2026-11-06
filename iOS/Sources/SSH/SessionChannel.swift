@@ -114,7 +114,10 @@ private final class SessionHandler: ChannelInboundHandler, @unchecked Sendable {
             try await eventLoop.flatSubmit {
                 let promise = self.eventLoop.makePromise(of: Void.self)
                 self.replies.append(promise)
-                channel.triggerUserOutboundEvent(makeEvent()).whenFailure { error in promise.fail(error) }
+                let sent = self.eventLoop.makePromise(of: Void.self)
+                sent.futureResult.whenFailure { error in promise.fail(error) }
+                // On the event loop here, so the synchronous pipeline call is right (and takes non-Sendable events).
+                channel.pipeline.syncOperations.triggerUserOutboundEvent(makeEvent(), promise: sent)
                 // A server that never answers must not leave the app waiting.
                 let timeout = self.eventLoop.scheduleTask(in: .seconds(15)) { promise.fail(ChannelFailureMarker()) }
                 promise.futureResult.whenComplete { _ in timeout.cancel() }
@@ -127,8 +130,9 @@ private final class SessionHandler: ChannelInboundHandler, @unchecked Sendable {
 
     func handlerAdded(context: ChannelHandlerContext) {
         // Keep reading after the remote side closes its output (exit status comes after that).
+        let bound = NIOLoopBound(context, eventLoop: context.eventLoop)
         context.channel.setOption(ChannelOptions.allowRemoteHalfClosure, value: true).whenFailure { error in
-            context.fireErrorCaught(error)
+            bound.value.fireErrorCaught(error)
         }
     }
 

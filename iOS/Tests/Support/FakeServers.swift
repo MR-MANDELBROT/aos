@@ -225,8 +225,9 @@ private final class PairingSession: ChannelInboundHandler, @unchecked Sendable {
     }
 
     private func reply(_ context: ChannelHandlerContext, _ text: String) {
+        let bound = NIOLoopBound(context, eventLoop: context.eventLoop)
         context.writeAndFlush(wrapOutboundOut(context.channel.allocator.buffer(string: text + "\n"))).whenComplete { _ in
-            context.close(promise: nil)
+            bound.value.close(promise: nil)
         }
     }
 }

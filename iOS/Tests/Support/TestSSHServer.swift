@@ -36,24 +36,38 @@ final class TestSSHServer: @unchecked Sendable {
         let log = ServerLog()
         let channel = try await ServerBootstrap(group: MultiThreadedEventLoopGroup.singleton)
             .childChannelInitializer { channel in
-                channel.pipeline.addHandler(NIOSSHHandler(
-                    role: .server(.init(hostKeys: [hostKey], userAuthDelegate: auth)),
-                    allocator: channel.allocator,
-                    inboundChildChannelInitializer: { child, type in
-                        switch type {
-                        case .session:
-                            return child.pipeline.addHandler(SessionServer(companion: companion, log: log))
-                        case .directTCPIP(let target):
-                            log.add("direct-tcpip \(target.targetHost):\(target.targetPort)")
-                            let (local, remote) = Glue.pair()
-                            return ClientBootstrap(group: child.eventLoop)
-                                .channelInitializer { $0.pipeline.addHandler(remote) }
-                                .connect(host: target.targetHost, port: target.targetPort)
-                                .flatMap { _ in child.pipeline.addHandlers([ChannelDataCodec(), local]) }
-                        default:
-                            return child.eventLoop.makeFailedFuture(ChannelError.operationUnsupported)
-                        }
-                    }))
+                // Initializers run on the channel's event loop: synchronous pipeline operations are right there.
+                do {
+                    try channel.pipeline.syncOperations.addHandler(NIOSSHHandler(
+                        role: .server(.init(hostKeys: [hostKey], userAuthDelegate: auth)),
+                        allocator: channel.allocator,
+                        inboundChildChannelInitializer: { child, type in
+                            switch type {
+                            case .session:
+                                return child.eventLoop.makeCompletedFuture {
+                                    try child.pipeline.syncOperations.addHandler(SessionServer(companion: companion, log: log))
+                                }
+                            case .directTCPIP(let target):
+                                log.add("direct-tcpip \(target.targetHost):\(target.targetPort)")
+                                let (local, remote) = Glue.pair()
+                                return ClientBootstrap(group: child.eventLoop)
+                                    .channelInitializer { remoteChannel in
+                                        remoteChannel.eventLoop.makeCompletedFuture {
+                                            try remoteChannel.pipeline.syncOperations.addHandler(remote)
+                                        }
+                                    }
+                                    .connect(host: target.targetHost, port: target.targetPort)
+                                    .flatMapThrowing { _ in
+                                        try child.pipeline.syncOperations.addHandlers([ChannelDataCodec(), local])
+                                    }
+                            default:
+                                return child.eventLoop.makeFailedFuture(ChannelError.operationUnsupported)
+                            }
+                        }))
+                    return channel.eventLoop.makeSucceededVoidFuture()
+                } catch {
+                    return channel.eventLoop.makeFailedFuture(error)
+                }
             }
             .bind(host: "127.0.0.1", port: 0).get()
         return TestSSHServer(channel: channel, hostKey: hostKey, companion: companion, log: log)
@@ -146,10 +160,11 @@ private final class SessionServer: ChannelDuplexHandler, @unchecked Sendable {
                 return
             }
             let loop = channel.eventLoop
-            feeder = companion.attach(write: { [weak self] data in
-                loop.execute { self?.write(channel, data, type: .channel) }
-            }, hangUp: { [weak self] in
-                loop.execute { self?.exit(channel, status: 0) }
+            let server = self
+            feeder = companion.attach(write: { data in
+                loop.execute { server.write(channel, data, type: .channel) }
+            }, hangUp: {
+                loop.execute { server.exit(channel, status: 0) }
             })
         case let pty as SSHChannelRequestEvent.PseudoTerminalRequest:
             hasPTY = true
@@ -159,7 +174,11 @@ private final class SessionServer: ChannelDuplexHandler, @unchecked Sendable {
             shell = hasPTY
             log.add("shell")
             if request.wantReply {
-                channel.triggerUserOutboundEvent(hasPTY ? ChannelSuccessEvent() as Any : ChannelFailureEvent(), promise: nil)
+                if hasPTY {
+                    channel.triggerUserOutboundEvent(ChannelSuccessEvent(), promise: nil)
+                } else {
+                    channel.triggerUserOutboundEvent(ChannelFailureEvent(), promise: nil)
+                }
             }
             if hasPTY { write(channel, Data("Welcome to the test shell\r\n$ ".utf8), type: .channel) }
         case let size as SSHChannelRequestEvent.WindowChangeRequest:
@@ -248,13 +267,15 @@ final class Glue: ChannelDuplexHandler, @unchecked Sendable {
         if context.eventLoop.inEventLoop {
             context.writeAndFlush(wrapOutboundOut(buffer), promise: nil)
         } else {
-            context.eventLoop.execute { context.writeAndFlush(self.wrapOutboundOut(buffer), promise: nil) }
+            let bound = NIOLoopBound(context, eventLoop: context.eventLoop)
+            context.eventLoop.execute { bound.value.writeAndFlush(self.wrapOutboundOut(buffer), promise: nil) }
         }
     }
 
     private func closeFromPartner() {
         guard let context else { return }
-        context.eventLoop.execute { context.close(promise: nil) }
+        let bound = NIOLoopBound(context, eventLoop: context.eventLoop)
+        context.eventLoop.execute { bound.value.close(promise: nil) }
     }
 
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
