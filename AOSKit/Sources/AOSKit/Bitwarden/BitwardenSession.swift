@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import LocalAuthentication
 import Security
 
 /// Bitwarden's session key while the vault is unlocked for aOS, with when it was unlocked and when it locks again.
@@ -64,6 +65,11 @@ public struct KeychainSessionStore: BitwardenSessionStore {
         var q = query
         q[kSecReturnData as String] = true
         q[kSecMatchLimit as String] = kSecMatchLimitOne
+        // No dialog if it can be avoided (it would wait on the main thread): an item macOS won't hand over counts
+        // as locked.
+        let context = LAContext()
+        context.interactionNotAllowed = true
+        q[kSecUseAuthenticationContext as String] = context
         var item: CFTypeRef?
         guard SecItemCopyMatching(q as CFDictionary, &item) == errSecSuccess, let data = item as? Data else { return nil }
         return try? JSONDecoder().decode(BitwardenSession.self, from: data)

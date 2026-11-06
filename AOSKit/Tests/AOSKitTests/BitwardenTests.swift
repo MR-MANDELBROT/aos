@@ -281,6 +281,26 @@ final class BitwardenCLITests: XCTestCase {
         XCTAssertFalse(fake.commandLines.contains(key))
     }
 
+    func testOneBwAtATimePerFolder() async throws {
+        let serial = BitwardenSerial()
+        let log = StepLog()
+        await serial.acquire("a")
+        let waiting = Task {
+            await serial.acquire("a")
+            log.append(.question("second", secret: false))
+            await serial.release("a")
+        }
+        await serial.acquire("b")  // another folder doesn't wait
+        await serial.release("b")
+        try await Task.sleep(nanoseconds: 100_000_000)
+        log.append(.question("first", secret: false))
+        await serial.release("a")
+        await waiting.value
+        XCTAssertEqual(log.steps, [.question("first", secret: false), .question("second", secret: false)])
+        await serial.acquire("a")  // free again
+        await serial.release("a")
+    }
+
     func testRepliesAndChecks() {
         let reply = BitwardenCLI.reply(from: Data("(node) a warning\n{\"success\":false,\"message\":\"Vault is locked.\"}\n".utf8))
         XCTAssertEqual(reply?.success, false)

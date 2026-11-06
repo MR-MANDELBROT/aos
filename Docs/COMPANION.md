@@ -4,8 +4,8 @@ The iPhone app of aOS. Same name and brand as the Mac app ("aOS", indigo and min
 user, wherever they are:
 
 - **Sign-ins for the agent** ("agentic passwords"): the agent in the workspace needs to sign in, the iPhone shows the
-  request, the user approves with Face ID, aOS fills the sign-in into the workspace. The agent never sees the
-  password.
+  request with the user's Bitwarden logins that fit the site, the user approves one with Face ID, and aOS on the Mac
+  gets exactly that login from Bitwarden and fills it into the workspace. The agent never sees the password.
 - **Terminal**: SSH to the paired Mac (and other hosts the user adds).
 - **Screen**: the paired Mac's screen and the aOS workspace, live, with touch, keyboard and trackpad gestures.
   Same screen sharing code as the Mac app (`AOSKit/Sources/AOSRFB`).
@@ -13,18 +13,25 @@ user, wherever they are:
   workspace screen on the iPhone.
 - **Settings**.
 
-## Decisions (2026-11-06, made while Max slept; all reversible)
+## Decisions (2026-11-06; the first version had a vault of its own on the iPhone, replaced the same day)
 
-- **Not Bitwarden-branded.** Bitwarden's name and logo are trademarks, its iOS app is GPL and its SDK has its own
-  license. aOS is our own app with our own UI.
-- **Where the passwords live: aOS's own vault on the iPhone ("Tresor")**, in the iOS keychain, this device only,
-  every read behind Face ID (or the device passcode). Import from a Bitwarden export (JSON or CSV, unencrypted) once,
-  then the export should be deleted; the app says so. This is what makes the one-tap agentic flow possible: the app can
-  pick the matching login by itself.
-  Plus, for users who keep their passwords elsewhere: the approval sheet has username and password fields with iOS
-  AutoFill, so Bitwarden's (or 1Password's, or Apple's) AutoFill extension fills them, with that app's own Face ID.
-  Later, when Bitwarden ships Agent Access (open protocol, github.com/bitwarden/agent-access), aOS can use the
-  user's Bitwarden vault directly without a fork.
+- **Where the passwords live: in the user's own Bitwarden account.** Max's decision: "We build the front end
+  (password, one-time code, help, captchas), and in the back end the app talks to the user's Bitwarden account. You
+  sign in only to Bitwarden, and the requests come in our app." The user signs in to Bitwarden once, in aOS on the
+  Mac; for every sign-in aOS asks Bitwarden for exactly the login the user approved. aOS keeps no passwords, the iPhone
+  has no vault.
+- **How the Mac talks to Bitwarden: Bitwarden's official command line tool `bw`, as a program of its own.**
+  Bitwarden's SDK license forbids offering an app built with it to others, and its GPL iOS code can't go to the App
+  Store. So aOS links nothing of Bitwarden and ships nothing of it: it downloads Bitwarden's own signed macOS build
+  from Bitwarden when the user signs in (or uses the user's `bw` if it is that build) and runs it (Docs/DESIGN.md,
+  "Bitwarden").
+- **The iPhone never talks to Bitwarden.** It shows the request (agent, website, purpose) and which Bitwarden logins
+  match, by name and user name, never a password; the user approves one with Face ID and the answer names the login.
+  The Mac gets password and one-time code from Bitwarden and fills them.
+- **Without Bitwarden:** the approval sheet keeps user name and password fields with iOS AutoFill, so another password
+  app (1Password, Apple's Passwords, Bitwarden's own app) fills them with its own Face ID.
+- **Not Bitwarden-branded.** Bitwarden is named as what it is, the user's password manager; aOS uses none of its
+  logos and is not made by or affiliated with Bitwarden.
 - **Connection: SSH.** The Mac's Remote Login (OpenSSH) carries everything: the terminal, the companion API (an exec
   channel running `aos-companion serve`), and the screens (direct-tcpip channels to 127.0.0.1:5900 for the Mac and
   to the workspace VM). No new server, no listening port beyond OpenSSH, strong crypto, pinned host key. Outside the
@@ -78,8 +85,12 @@ Requests:
   (for `workspace`: the VM's address and its screen sharing account; the iPhone opens a direct-tcpip channel to
   host:port through the same SSH connection. For `mac` there are no credentials: the user types their Mac account
   name and password once, the app keeps them in its keychain.)
-- `{"id":5,"op":"signin.answer","request":"<request id>","username":"...","password":"...","totp":"123456"}` or
-  `{"id":5,"op":"signin.answer","request":"<id>","decline":true}` -> `{"id":5,"ok":true}`
+- `{"id":5,"op":"signin.answer","request":"<request id>","login":"<Bitwarden item id>"}` (the user approved one of
+  the request's `logins`; the Mac gets it from Bitwarden), or
+  `{"id":5,"op":"signin.answer","request":"<id>","username":"...","password":"...","totp":"123456"}` (another
+  password app's AutoFill), or `{"id":5,"op":"signin.answer","request":"<id>","totp":"123456"}` (a code typed by
+  hand), or `{"id":5,"op":"signin.answer","request":"<id>","decline":true}` -> `{"id":5,"ok":true}`. A `login`
+  that wasn't offered with the request, or one without `totp` for a `code` request, is refused (`ok: false`).
 - `{"id":6,"op":"help.done","request":"<id>"}` -> `{"id":6,"ok":true}`
 - `{"id":8,"op":"type","text":"Grüße 😀"}` -> `{"id":8,"ok":true}` (types into the workspace; text beyond ASCII goes
   through the guest's clipboard, as for the agent)
@@ -87,9 +98,16 @@ Requests:
   itself wants to open the workspace)
 
 Events:
-- `{"event":"signin","request":"<id>","agent":"Claude Code","host":"www.example.com","field":"username|password|code","purpose":"...","expires":"<ISO>"}`
-  (`field`: where the agent clicked. For `code` the answer carries `totp` only; for `password` the user name is filled
-  too if the page has an empty user name field before it.)
+- `{"event":"signin","request":"<id>","agent":"Claude Code","host":"www.example.com","field":"username|password|code","purpose":"...","expires":"<ISO>","bitwarden":"unlocked|locked|off|unavailable","logins":[{"id":"<Bitwarden item id>","name":"Example","username":"max@example.com","totp":true}]}`
+  (`field`: where the agent clicked. For `code` the answer carries `totp` only, or a `login` with `totp: true`, whose
+  current code the Mac gets from Bitwarden; for `password` the user name is filled too if the page has an empty user
+  name field before it.
+  `bitwarden`: `unlocked`: `logins` are the user's Bitwarden logins for the site (maybe none); `locked`: the user is
+  signed in to Bitwarden in aOS but has to unlock it on the Mac first; `off`: no Bitwarden in aOS (AutoFill only);
+  `unavailable`: Bitwarden didn't answer. Missing (an older Mac) counts as `off`. `logins` never carry a password
+  or an authenticator key; `totp` says the login has a key.
+  A `signin` event with a request id the phone already has replaces that request: the Mac sends the request again
+  when its logins change, for example after Bitwarden was unlocked on the Mac or synced.)
 - `{"event":"signin.closed","request":"<id>","result":"filled|declined|expired|failed"}`
 - `{"event":"help","request":"<id>","agent":"...","purpose":"...","region":{"x":0,"y":0,"w":0,"h":0}}`
 - `{"event":"help.closed","request":"<id>"}`
@@ -103,24 +121,30 @@ the exec channel is open; the Mac counts a phone as connected while it polled wi
 
 ## Matching logins
 
-A vault login matches a request for host H when the host of one of its URIs equals H or is a parent domain of H that
-still has at least two labels (`amazon.de` matches `www.amazon.de`; `login.tum.de` does not match `campus.tum.de`;
-`de` matches nothing). The Mac checks the same rule against the page it fills.
+A Bitwarden login matches a request for host H when the host of one of its URIs equals H or is a parent domain of H
+that still has at least two labels (`amazon.de` matches `www.amazon.de`; `login.tum.de` does not match
+`campus.tum.de`; `de` matches nothing; IP addresses only match exactly). The Mac (`HostMatching` in AOSKit) applies
+it to what `bw list items --url https://H` returns (Bitwarden's own matching, which is broader), leaves out logins with
+Bitwarden's "master password re-prompt" (aOS can't ask for the master password on the phone), and checks the rule
+again right before it fills a login.
 
 ## Filling in the workspace (Mac side)
 
 The agent clicks into the sign-in field and calls `sign_in(purpose)`. aOS asks the helper in the workspace (aOS
 Helper, an app with the Accessibility permission, installed and checked by code signature) which field has the focus
-and on which website; only a user name, password or one-time code field counts. aOS blocks all other workspace
-tools while the request runs, shows the request on the Mac and sends it to the iPhone; whoever answers first wins.
-With the answer the helper types into the workspace only if the focus is still on that website, and submits. The
-agent gets only the result. DevTools are off in the workspace's Chrome, so a filled password can't be read back.
+and on which website; only a user name, password or one-time code field counts. aOS asks Bitwarden for the logins
+that match the site, blocks all other workspace tools while the request runs, shows the request on the Mac and sends
+it to the iPhone; whoever answers first wins. For an approved Bitwarden login the Mac gets user name and password
+(`bw get item`) or the current one-time code (`bw get totp`) right then. The helper types into the workspace only if
+the focus is still on that website, and submits. The agent gets only the result. DevTools are off in the workspace's
+Chrome, so a filled password can't be read back.
 
 ## iPhone app structure
 
 - XcodeGen spec `iOS/project.yml`, target `aOS` (bundle `dev.marquart.aos.ios`, iOS 27), packages: `AOSKit`
   (local, product `AOSRFB`), Citadel (SSH, on SwiftNIO SSH), SwiftTerm.
-- Tabs: Overview (Mac, workspace, requests), Terminal, Screen, Vault; settings from the Overview.
+- Tabs: Overview (Mac, workspace, requests), Terminal, Screen; settings from the Overview.
 - German and English (string catalogs), German first for Max.
-- Trust in the design: what is where, said plainly ("Your passwords stay on this iPhone, locked with Face ID"),
-  lock and shield symbols only where they are true, no dark patterns, every approval shows who asks for what.
+- Trust in the design: what is where, said plainly ("Your passwords stay in Bitwarden. You approve every sign-in with
+  Face ID."), lock and shield symbols only where they are true, no dark patterns, every approval shows who asks for
+  what and which login it gives.

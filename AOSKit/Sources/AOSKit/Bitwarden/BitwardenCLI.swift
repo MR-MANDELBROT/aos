@@ -189,12 +189,18 @@ public struct BitwardenCLI: Sendable {
         var env = environment(interactive: false)
         if let session { env["BW_SESSION"] = session }
         if let password { env[Self.passwordVariable] = password }
+        // One `bw` at a time for these files: it keeps its state in one JSON file (a sync while a login is read
+        // could hand the reader a half-written file).
+        let key = dataDirectory.standardizedFileURL.path
+        await BitwardenSerial.shared.acquire(key)
         let result: Subprocess.Result
         do {
             result = try await Subprocess.run(executable, arguments, environment: env, timeout: timeout ?? self.timeout)
         } catch {
+            await BitwardenSerial.shared.release(key)
             throw BitwardenError.notRunnable(error.localizedDescription)
         }
+        await BitwardenSerial.shared.release(key)
         if result.timedOut { throw BitwardenError.timeout }
         guard let reply = Self.reply(from: result.stdout) else {
             throw BitwardenError.unexpected(Self.describe(result))
@@ -260,6 +266,32 @@ public struct BitwardenCLI: Sendable {
         let fractional = ISO8601DateFormatter()
         fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return fractional.date(from: text) ?? ISO8601DateFormatter().date(from: text)
+    }
+}
+
+/// Runs `bw` commands for one data folder one after the other, in the order they asked.
+actor BitwardenSerial {
+    static let shared = BitwardenSerial()
+    private var busy = Set<String>()
+    private var waiting: [String: [CheckedContinuation<Void, Never>]] = [:]
+
+    func acquire(_ key: String) async {
+        guard busy.contains(key) else {
+            busy.insert(key)
+            return
+        }
+        // The one before hands its turn over in release().
+        await withCheckedContinuation { waiting[key, default: []].append($0) }
+    }
+
+    func release(_ key: String) {
+        if var queue = waiting[key], !queue.isEmpty {
+            let next = queue.removeFirst()
+            waiting[key] = queue.isEmpty ? nil : queue
+            next.resume()
+        } else {
+            busy.remove(key)
+        }
     }
 }
 

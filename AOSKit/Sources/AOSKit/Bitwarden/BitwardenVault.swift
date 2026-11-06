@@ -234,6 +234,8 @@ public final class BitwardenVault {
             log("Bitwarden locked (\(reason))")
             onOffersChanged?()
         }
+        // While signing in there is no session yet; a `bw lock` would only lock the one the sign-in is about to make.
+        guard conversation == nil, phase != .noTool, phase != .signedOut else { return }
         let task = Task { [weak self] in
             if let cli = await self?.currentCLI() { try? await cli.lock() }
         }
