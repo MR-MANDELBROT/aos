@@ -235,4 +235,35 @@ final class RFBDecoderTests: XCTestCase {
         XCTAssertEqual(WorkspaceController.agentScale(width: 1200, height: 2560), 0.5)
         XCTAssertEqual(WorkspaceController.agentScale(width: 600, height: 1160), 1)
     }
+
+    /// The phone's display request: signed (target and size), refused while the workspace is off.
+    @MainActor
+    func testTheDisplayRequestIsSignedAndNeedsARunningWorkspace() async throws {
+        let phone = TestPhone()
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("aos-display-\(UUID().uuidString)")
+        let paths = Paths(root: root)
+        try paths.prepare()
+        let c = WorkspaceController(paths: paths, bitwarden: BitwardenVault(paths: paths, store: MemorySessionStore()),
+                                    phoneKeys: MemoryPhoneKeys([phone.trusted]))
+        var request = AgentRequest(id: 1, op: "companion.display")
+        request.target = "workspace"
+        request.text = "1200x2322@2"
+        let unsigned = await c.handle(request)
+        XCTAssertEqual(unsigned.code, "pair-again")
+        let off = await c.handle(phone.sign(request))
+        XCTAssertFalse(off.ok)
+        XCTAssertEqual(off.text, "The workspace is not running.")
+        // A size changed on its way breaks the signature
+        let signed = phone.sign(request)
+        var changed = signed
+        changed.text = "4000x4000@2"
+        let refused = await c.handle(changed)
+        XCTAssertEqual(refused.code, "invalid")
+        var mac = request
+        mac.target = "mac"
+        let notTheMac = await c.handle(phone.sign(mac))
+        XCTAssertEqual(notTheMac.text, "Only the workspace's display can change.")
+        XCTAssertNil(c.host.displayOverride)
+        XCTAssertEqual(c.host.displaySize, CGSize(width: 1280, height: 800))
+    }
 }
