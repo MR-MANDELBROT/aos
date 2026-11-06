@@ -26,9 +26,7 @@ extension AppModel {
 
     /// Asks macOS to allow the background helper (Bitwarden runs only there): it shows up in Login Items.
     func allowHelperForBitwarden() {
-        power.ensureHelperRegistered()
-        power.refreshHelperStatus()
-        if power.helperStatus != .enabled { power.openLoginItems() }
+        power.startHelperApproval()
     }
 
     /// At launch: the account's state, and locking when the Mac goes to sleep.

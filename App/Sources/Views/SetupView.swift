@@ -136,7 +136,7 @@ private struct StepPage: View {
         .sheet(item: $terminalCommand, onDismiss: { readinessTick += 1 }) { cmd in terminalSheet(cmd) }
         .sheet(isPresented: $showBitwarden) {
             VStack(spacing: 0) {
-                BitwardenSettings().environmentObject(model)
+                BitwardenSettings().environmentObject(model).environmentObject(model.power)
                 Divider()
                 HStack {
                     Spacer()
@@ -453,14 +453,8 @@ private struct StepPage: View {
                 if power.cloupiPresent {
                     OtherWakeServiceNote()
                 } else if model.settings.stayAwake == .lidClosed {
-                    if power.helperStatus == .requiresApproval {
-                        HStack(spacing: 10) {
-                            Label("macOS asks you once to allow \(Brand.name)'s background helper.", systemImage: "lock.shield")
-                                .font(.callout)
-                            Spacer()
-                            Button("Open Login Items") { power.openLoginItems() }.buttonStyle(.glass)
-                        }
-                    }
+                    Divider()
+                    HelperApprovalCard(reason: "For this aOS needs its background helper (it also keeps Bitwarden apart from your other programs). macOS asks you once:")
                     Divider()
                     HotspotChoice(compact: true)
                 }
@@ -565,12 +559,7 @@ private struct StepPage: View {
                     }
                     if model.bitwarden.phase == .needsHelper {
                         Divider()
-                        HStack(spacing: 12) {
-                            Text("Bitwarden runs in aOS's background helper. macOS asks you once to allow it in Login Items.")
-                                .font(.callout)
-                            Spacer()
-                            Button("Allow …") { model.allowHelperForBitwarden() }.buttonStyle(.glass)
-                        }
+                        HelperApprovalCard(reason: "Bitwarden runs in aOS's background helper, apart from your other programs. macOS asks you once to allow it:")
                     }
                 }
             }

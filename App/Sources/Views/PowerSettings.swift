@@ -69,18 +69,21 @@ struct HelperRow: View {
 
     var body: some View {
         LabeledContent {
-            switch power.helperStatus {
-            case .enabled:
+            if power.helperStatus == .enabled {
                 Label("Allowed", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-            case .requiresApproval:
-                Button("Open Login Items") { power.openLoginItems() }.buttonStyle(.glass)
-            default:
-                Button("Set Up") { power.ensureHelperRegistered() }.buttonStyle(.glass)
+            } else if power.helperApproving {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Waiting for your yes").font(.caption).foregroundStyle(.secondary)
+                }
+            } else {
+                Button("Allow …") { power.startHelperApproval() }.buttonStyle(.glass)
             }
         } label: {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Background helper")
                 Text(detail).font(.caption).foregroundStyle(.secondary)
+                if power.helperApproving { HelperApprovalSteps().padding(.top, 4) }
                 if let note = power.helperNote {
                     Text(note).font(.caption).foregroundStyle(.orange)
                 }
@@ -92,12 +95,60 @@ struct HelperRow: View {
     var detail: String {
         switch power.helperStatus {
         case .enabled:
-            return String(localized: "Keeps the Mac awake with the lid closed and changes Wi-Fi settings for you.")
-        case .requiresApproval:
-            return String(localized: "macOS asks you once: switch on \(Brand.name) under Login Items & Extensions, \"Allow in the Background\".")
+            return String(localized: "Keeps the Mac awake with the lid closed, looks after Wi-Fi and runs Bitwarden apart from your other programs.")
         default:
-            return String(localized: "Needed to keep the Mac awake with the lid closed. macOS asks you once to allow it.")
+            return String(localized: "Needed to keep the Mac awake with the lid closed and for Bitwarden. macOS asks you once to allow it.")
         }
+    }
+}
+
+/// What macOS shows while the person allows the helper, so nothing looks stuck.
+struct HelperApprovalSteps: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            step(1, "macOS briefly shows the notice \"Background items added\".")
+            step(2, "System Settings opens at Login Items & Extensions: under \"Allow in the Background\", switch on aOS.")
+            step(3, "macOS asks for your password or Touch ID.")
+            step(4, "Then a check mark appears here. Nothing else to do.")
+        }
+        .font(.caption)
+    }
+
+    func step(_ n: Int, _ text: LocalizedStringKey) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("\(n)").fontWeight(.bold).foregroundStyle(BrandColor.indigo).frame(width: 12)
+            Text(text).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+/// The guided way to allow the helper, as a card for the setup: why, what comes, waiting, done.
+struct HelperApprovalCard: View {
+    @EnvironmentObject var power: PowerController
+    let reason: LocalizedStringKey
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if power.helperStatus == .enabled {
+                Label("aOS's background helper is allowed.", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green).font(.callout.weight(.medium))
+            } else {
+                Text(reason).font(.callout)
+                HelperApprovalSteps()
+                HStack(spacing: 10) {
+                    if power.helperApproving {
+                        ProgressView().controlSize(.small)
+                        Text("Waiting for your yes in System Settings …").font(.callout).foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Open Again") { power.openLoginItems() }.buttonStyle(.glass)
+                    } else {
+                        Spacer()
+                        Button("Allow the Background Helper …") { power.startHelperApproval() }.buttonStyle(.glassProminent)
+                    }
+                }
+            }
+        }
+        .onAppear { power.refreshHelperStatus() }
     }
 }
 

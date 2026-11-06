@@ -692,6 +692,16 @@
         }
       }
     },
+    "aOS's background helper is allowed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrunddienst von aOS ist erlaubt."
+          }
+        }
+      }
+    },
     "Approve" : {
       "localizations" : {
         "de" : {
@@ -985,7 +995,18 @@
         }
       }
     },
+    "Bitwarden runs in aOS's background helper, apart from your other programs. macOS asks you once to allow it:" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden läuft im Hintergrunddienst von aOS, getrennt von deinen anderen Programmen. macOS fragt dich einmal, ob du ihn erlaubst:"
+          }
+        }
+      }
+    },
     "Bitwarden runs in aOS's background helper. macOS asks you once to allow it in Login Items." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2005,6 +2026,16 @@
         }
       }
     },
+    "For this aOS needs its background helper (it also keeps Bitwarden apart from your other programs). macOS asks you once:" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dafür braucht aOS seinen Hintergrunddienst (er hält auch Bitwarden von deinen anderen Programmen getrennt). macOS fragt dich einmal:"
+          }
+        }
+      }
+    },
     "For up to %lld minutes. You can watch and close it any time." : {
       "localizations" : {
         "de" : {
@@ -2350,11 +2381,22 @@
       }
     },
     "Keeps the Mac awake with the lid closed and changes Wi-Fi settings for you." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hält den Mac mit geschlossenem Deckel wach und ändert WLAN-Einstellungen für dich."
+          }
+        }
+      }
+    },
+    "Keeps the Mac awake with the lid closed, looks after Wi-Fi and runs Bitwarden apart from your other programs." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hält den Mac bei geschlossenem Deckel wach, kümmert sich ums WLAN und führt Bitwarden getrennt von deinen anderen Programmen aus."
           }
         }
       }
@@ -2509,6 +2551,16 @@
         }
       }
     },
+    "macOS asks for your password or Touch ID." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS fragt nach deinem Passwort oder Touch ID."
+          }
+        }
+      }
+    },
     "macOS asks whether %@ may connect to devices on your local network. Allow it: the workspace counts as such a device." : {
       "localizations" : {
         "de" : {
@@ -2520,6 +2572,7 @@
       }
     },
     "macOS asks you once to allow %@'s background helper." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2530,11 +2583,22 @@
       }
     },
     "macOS asks you once: switch on %@ under Login Items & Extensions, \"Allow in the Background\"." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS fragt dich einmal: Schalte %@ unter „Anmeldeobjekte & Erweiterungen“ bei „Im Hintergrund erlauben“ ein."
+          }
+        }
+      }
+    },
+    "macOS briefly shows the notice \"Background items added\"." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS zeigt kurz die Mitteilung „Hintergrundobjekte hinzugefügt“."
           }
         }
       }
@@ -2545,6 +2609,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS hat die Änderung nicht übernommen."
+          }
+        }
+      }
+    },
+    "macOS doesn't let aOS change how this Mac joins your hotspot. With the lid closed it joins as you set it in macOS." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS lässt aOS nicht ändern, wie dieser Mac deinem Hotspot beitritt. Bei geschlossenem Deckel tritt er so bei, wie du es in macOS eingestellt hast."
           }
         }
       }
@@ -2653,7 +2727,18 @@
         }
       }
     },
+    "Needed to keep the Mac awake with the lid closed and for Bitwarden. macOS asks you once to allow it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nötig, um den Mac bei geschlossenem Deckel wach zu halten, und für Bitwarden. macOS fragt dich einmal, ob du ihn erlaubst."
+          }
+        }
+      }
+    },
     "Needed to keep the Mac awake with the lid closed. macOS asks you once to allow it." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3193,6 +3278,16 @@
         }
       }
     },
+    "Open Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut öffnen"
+          }
+        }
+      }
+    },
     "Open elsewhere" : {
       "localizations" : {
         "de" : {
@@ -3224,6 +3319,7 @@
       }
     },
     "Open Login Items" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3353,7 +3449,14 @@
       }
     },
     "Pair it again to approve from it" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koppel es neu, um damit freizugeben"
+          }
+        }
+      }
     },
     "Pair your iPhone" : {
       "localizations" : {
@@ -3847,6 +3950,7 @@
       }
     },
     "Set Up" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4484,6 +4588,16 @@
         }
       }
     },
+    "System Settings opens at Login Items & Extensions: under \"Allow in the Background\", switch on aOS." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Systemeinstellungen öffnen sich bei „Anmeldeobjekte & Erweiterungen“: Schalte dort unter „Im Hintergrund erlauben“ aOS ein."
+          }
+        }
+      }
+    },
     "Talking to Bitwarden …" : {
       "localizations" : {
         "de" : {
@@ -4844,6 +4958,16 @@
         }
       }
     },
+    "Then a check mark appears here. Nothing else to do." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dann erscheint hier ein Häkchen. Sonst ist nichts zu tun."
+          }
+        }
+      }
+    },
     "Then System Settings opens there at Sharing, for the next step." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4866,11 +4990,22 @@
       }
     },
     "There, Bitwarden's tool runs as a hidden user of its own, so your other programs (also a coding agent with a terminal) can't read its data, its session or your master password. macOS asks you once to allow the helper in Login Items." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dort läuft Bitwardens Programm unter einem eigenen, versteckten Benutzer. So kommen deine anderen Programme, auch ein Coding-Agent mit Terminal, weder an seine Daten noch an seine Sitzung oder dein Master-Passwort. macOS fragt dich einmal, ob du den Dienst unter „Anmeldeobjekte“ erlaubst."
+          }
+        }
+      }
+    },
+    "There, Bitwarden's tool runs as a hidden user of its own, so your other programs (also a coding agent with a terminal) can't read its data, its session or your master password. macOS asks you once:" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dort läuft Bitwardens Programm unter einem eigenen, versteckten Benutzer. So kommen deine anderen Programme, auch ein Coding-Agent mit Terminal, weder an seine Daten noch an seine Sitzung oder dein Master-Passwort. macOS fragt dich einmal:"
           }
         }
       }
@@ -5152,6 +5287,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wartet darauf, dass du dem Ordner vertraust."
+          }
+        }
+      }
+    },
+    "Waiting for your yes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warte auf deine Erlaubnis"
+          }
+        }
+      }
+    },
+    "Waiting for your yes in System Settings …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warte auf deine Erlaubnis in den Systemeinstellungen …"
           }
         }
       }

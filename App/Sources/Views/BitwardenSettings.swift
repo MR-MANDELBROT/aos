@@ -67,10 +67,7 @@ struct BitwardenSettings: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Label("Bitwarden runs in aOS's background helper", systemImage: "lock.shield")
                             .font(.headline)
-                        Text("There, Bitwarden's tool runs as a hidden user of its own, so your other programs (also a coding agent with a terminal) can't read its data, its session or your master password. macOS asks you once to allow the helper in Login Items.")
-                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        Button("Allow the Background Helper …") { model.allowHelperForBitwarden() }
-                            .buttonStyle(.glassProminent)
+                        HelperApprovalCard(reason: "There, Bitwarden's tool runs as a hidden user of its own, so your other programs (also a coding agent with a terminal) can't read its data, its session or your master password. macOS asks you once:")
                     }
                     .padding(.vertical, 4)
                 }

@@ -25,6 +25,9 @@ final class PowerController: ObservableObject {
     @Published private(set) var hotspotApply: HotspotApply = .idle
     @Published private(set) var helperNote: String?
     @Published private(set) var holding = false
+    /// macOS asks the person to allow the helper right now (Login Items); aOS looks every second.
+    @Published private(set) var helperApproving = false
+    private var approvalWatch: Task<Void, Never>?
 
     var log: (String) -> Void = { _ in }
 
@@ -201,9 +204,14 @@ final class PowerController: ObservableObject {
                 self.hotspotRestoredOnce = true
                 self.hotspotApply = want == nil ? .idle : .done
             } else {
-                // Not again at every tick: airportd restarts with each try.
-                self.hotspotRetryAfter = Date().addingTimeInterval(300)
-                self.hotspotApply = .failed(r.message.isEmpty ? String(localized: "macOS didn't take the change.") : r.message)
+                // Not again at every tick: airportd restarts with each try. When macOS doesn't let the helper read
+                // the known networks at all (macOS 27 keeps that store from root too), trying again changes nothing:
+                // not before the next launch, and the settings say so.
+                let blocked = r.message.contains("didn't let the helper read the known networks")
+                self.hotspotRetryAfter = blocked ? .distantFuture : Date().addingTimeInterval(300)
+                self.hotspotApply = .failed(blocked
+                    ? String(localized: "macOS doesn't let aOS change how this Mac joins your hotspot. With the lid closed it joins as you set it in macOS.")
+                    : (r.message.isEmpty ? String(localized: "macOS didn't take the change.") : r.message))
             }
             if want != nil || !r.message.contains("nothing to restore") {
                 self.log("hotspot \(want.map { "choice \($0.rawValue) for the closed lid" } ?? "settings of the user"): \(r.ok ? "in effect" : "not in effect (\(r.message))")")
@@ -240,11 +248,39 @@ final class PowerController: ObservableObject {
                 try service.register()
                 log("background helper registered")
             } catch {
-                log("background helper: \(error.localizedDescription)")
-                helperNote = error.localizedDescription
+                // The first registration "fails" with Operation not permitted while macOS waits for the person's yes
+                // in Login Items: that is the normal way, not a problem to show.
+                if service.status != .requiresApproval {
+                    log("background helper: \(error.localizedDescription)")
+                    helperNote = error.localizedDescription
+                }
             }
         }
         refreshHelperStatus()
+    }
+
+    /// The one guided way to allow the helper: registers it, opens Login Items where macOS wants the person's yes,
+    /// and looks every second (5 minutes at most) so the window shows at once that it worked.
+    func startHelperApproval() {
+        ensureHelperRegistered()
+        guard helperStatus != .enabled else { return }
+        openLoginItems()
+        helperApproving = true
+        approvalWatch?.cancel()
+        approvalWatch = Task { [weak self] in
+            for _ in 0..<300 {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard let self, !Task.isCancelled else { return }
+                self.refreshHelperStatus()
+                if self.helperStatus == .enabled {
+                    self.helperApproving = false
+                    self.helperNote = nil
+                    self.log("background helper allowed")
+                    return
+                }
+            }
+            self?.helperApproving = false
+        }
     }
 
     func openLoginItems() {

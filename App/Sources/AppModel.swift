@@ -390,7 +390,8 @@ final class AppModel: ObservableObject {
             if sessionChanged { SessionAgent.restart(paths: paths) }
             updateSessionAgent()
             // Both need the background helper; macOS asks the user once to allow it.
-            if lidClosedChosen && !Self.isPreview { power.ensureHelperRegistered() }
+            // The helper needs the person's yes in Login Items: the window shows the guided way (HelperApproval).
+            _ = lidClosedChosen
             // Takes effect only with the lid closed (the helper notes and restores the user's own settings).
             if hotspotChosen != nil, !Self.isPreview { power.retryHotspot() }
         } catch { append("settings: \(error.localizedDescription)") }
