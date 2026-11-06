@@ -28,17 +28,24 @@ ensure_running() {
     launchctl bootstrap "gui/$UID_G" "$PLIST" 2>/dev/null || true
   fi
 }
+# Owned by root, readable and runnable by the account (the kit unpacks with umask 077; older setups also created
+# /usr/local/libexec itself as 0700, which the account can't pass)
+own() {
+  chmod 755 "$(dirname "$LIBEXEC")" "$LIBEXEC"
+  chown -R root:wheel "$LIBEXEC/AnnexHelper.app"
+  chmod -R u=rwX,go=rX "$LIBEXEC/AnnexHelper.app"
+}
 # Same version already installed: keep it (and its running process)
 if [ -d "$LIBEXEC/AnnexHelper.app" ] && diff -rq "$T/AnnexHelper.app" "$LIBEXEC/AnnexHelper.app" >/dev/null 2>&1 \
    && [ -f "$PLIST" ]; then
+  own
   ensure_running
   exit 0
 fi
 launchctl bootout "gui/$UID_G/$LABEL" 2>/dev/null || true
 rm -rf "$LIBEXEC/AnnexHelper.app"
 mv "$T/AnnexHelper.app" "$LIBEXEC/AnnexHelper.app"
-chown -R root:wheel "$LIBEXEC/AnnexHelper.app"
-chmod -R go-w "$LIBEXEC/AnnexHelper.app"
+own
 
 cat > "$PLIST.new" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>

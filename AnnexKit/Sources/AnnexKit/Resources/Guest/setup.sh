@@ -35,7 +35,7 @@ UID_G="$(id -u "$GUEST_USER")"
 as_user() { launchctl asuser "$UID_G" sudo -u "$GUEST_USER" -H "$@"; }
 
 # Scripts
-install -d -m 755 -o root -g wheel "$LIBEXEC"
+install -d -m 755 -o root -g wheel "$(dirname "$LIBEXEC")" "$LIBEXEC"
 for f in guest-service.sh shutdown.sh finish.sh prepare.sh helper.sh update.sh; do
   zsh -n "$K/$f" || die "$f has a syntax error"
   install -m 755 -o root -g wheel "$K/$f" "$LIBEXEC/$f"

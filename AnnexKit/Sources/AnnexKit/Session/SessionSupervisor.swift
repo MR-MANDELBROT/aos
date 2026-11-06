@@ -340,25 +340,11 @@ public enum ClaudeCode {
     @discardableResult
     public static func run(_ args: [String], cwd: URL? = nil, timeout: TimeInterval = 30) throws -> (Int32, String) {
         guard let exe = executable() else { throw SessionError.missingClaude }
-        let p = Process()
-        p.executableURL = exe
-        p.arguments = args
-        if let cwd { p.currentDirectoryURL = cwd }
         var env = ProcessInfo.processInfo.environment
         env.removeValue(forKey: "ANTHROPIC_API_KEY")
         env.removeValue(forKey: "CLAUDECODE")
-        p.environment = env
-        let out = Pipe()
-        p.standardOutput = out
-        p.standardError = out
-        p.standardInput = FileHandle.nullDevice
-        try p.run()
-        let deadline = Date().addingTimeInterval(timeout)
-        while p.isRunning && Date() < deadline { usleep(100_000) }
-        if p.isRunning { p.terminate() }
-        p.waitUntilExit()
-        let text = String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-        return (p.terminationStatus, text)
+        let r = try Subprocess.runBlocking(exe.path, args, environment: env, cwd: cwd?.path, timeout: timeout)
+        return (r.status, String(decoding: r.stdout + r.stderr, as: UTF8.self))
     }
 
     public static func version() -> String? {

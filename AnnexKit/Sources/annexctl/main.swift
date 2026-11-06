@@ -249,6 +249,11 @@ func runCommand() async {
             controller.onHelpRequest = { purpose in print("help asked: \(purpose)"); return "The user is done. Continue with a screenshot." }
             let server = LineSocketServer(path: paths.agentSocket) { line in
                 guard let request = try? JSONDecoder().decode(AgentRequest.self, from: line) else { return Data() }
+                if request.op == "dev.allowHelper" {
+                    // What the app does in AppModel.allowHelper, for testing without the app
+                    let text = await devAllowHelper(controller)
+                    return (try? JSONEncoder().encode(AgentResponse(id: request.id, ok: true, text: text))) ?? Data()
+                }
                 let response = await controller.handle(request)
                 return (try? JSONEncoder().encode(response)) ?? Data()
             }
@@ -319,6 +324,39 @@ func runCommand() async {
 }
 
 @MainActor var keepAlive: [AnyObject] = []
+
+/// The helper permission flow of the app (AppModel.allowHelper / watchHelper), driven from annexctl serve.
+@MainActor
+func devAllowHelper(_ controller: WorkspaceController) async -> String {
+    do {
+        print("helper: boot and prepare")
+        let ip = try await controller.bootAndPrepare(reason: "allowing the helper")
+        print("helper: status")
+        guard let status = await controller.provisioner.helperStatus(host: ip) else { return "helper not installed" }
+        if status.trusted == true { return "already allowed" }
+        print("helper: begin")
+        let wasAdmin = try await controller.provisioner.beginHelperPermission(host: ip)
+        print("helper: waiting for the switch (account was admin: \(wasAdmin))")
+        var typed = false, typings = 0
+        let deadline = Date().addingTimeInterval(600)
+        var allowed = false
+        while Date() < deadline {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            let poll = await controller.provisioner.helperPermissionPoll(host: ip)
+            if poll.trusted { allowed = true; break }
+            if poll.passwordDialog && !typed && typings < 3 {
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+                try await controller.typeGuestPasswordForSetup()
+                typed = true; typings += 1
+                print("helper: entered the workspace password")
+            } else if !poll.passwordDialog { typed = false }
+        }
+        try await controller.provisioner.endHelperPermission(host: ip, wasAdmin: wasAdmin)
+        return allowed ? "allowed" : "not allowed (timeout)"
+    } catch {
+        return "error: \(error.localizedDescription)"
+    }
+}
 @MainActor var keepAliveController: WorkspaceController?
 
 func isBlack(_ image: CGImage) -> Bool {

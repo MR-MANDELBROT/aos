@@ -85,40 +85,14 @@ public struct SSH: Sendable {
     @discardableResult
     public func run(_ command: String, input: Data? = nil, timeout: TimeInterval = 120,
                     check: Bool = true, what: String? = nil) async throws -> SSHResult {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
-        process.arguments = try arguments(command: command)
-        process.environment = try environment()
-        let out = Pipe(), err = Pipe(), inp = Pipe()
-        process.standardOutput = out
-        process.standardError = err
-        process.standardInput = inp
-        try process.run()
-        if let input { inp.fileHandleForWriting.write(input) }
-        try? inp.fileHandleForWriting.close()
-
         let label = what ?? "ssh command"
-        let result: SSHResult = try await withThrowingTaskGroup(of: SSHResult?.self) { group in
-            group.addTask {
-                async let o = Task.detached { out.fileHandleForReading.readDataToEndOfFile() }.value
-                async let e = Task.detached { err.fileHandleForReading.readDataToEndOfFile() }.value
-                let (stdout, stderr) = await (o, e)
-                process.waitUntilExit()
-                return SSHResult(status: process.terminationStatus, stdout: stdout,
-                                 stderr: String(decoding: stderr, as: UTF8.self))
-            }
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-                return nil
-            }
-            let first = try await group.next()!
-            group.cancelAll()
-            guard let first else {
-                process.terminate()
-                throw SSHError.timeout(label)
-            }
-            return first
-        }
+        let debug = ProcessInfo.processInfo.environment["ANNEX_SSH_DEBUG"] != nil
+        if debug { FileHandle.standardError.write(Data("ssh: start \(label)\n".utf8)) }
+        defer { if debug { FileHandle.standardError.write(Data("ssh: end \(label)\n".utf8)) } }
+        let r = try await Subprocess.run("/usr/bin/ssh", try arguments(command: command), environment: try environment(),
+                                         input: input ?? Data(), timeout: timeout)
+        if r.timedOut { throw SSHError.timeout(label) }
+        let result = SSHResult(status: r.status, stdout: r.stdout, stderr: String(decoding: r.stderr, as: UTF8.self))
         if check && result.status != 0 { throw SSHError.failed(label, result.status, result.stderr) }
         return result
     }
@@ -140,12 +114,9 @@ public struct SSH: Sendable {
     /// Creates an ed25519 key pair without passphrase (private 0600), unless it exists.
     public static func ensureKey(_ url: URL, comment: String) throws {
         if FileManager.default.fileExists(atPath: url.path) { return }
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/usr/bin/ssh-keygen")
-        p.arguments = ["-q", "-t", "ed25519", "-N", "", "-C", comment, "-f", url.path]
-        try p.run()
-        p.waitUntilExit()
-        guard p.terminationStatus == 0 else { throw SSHError.failed("ssh-keygen", p.terminationStatus, "") }
+        let r = try Subprocess.runBlocking("/usr/bin/ssh-keygen",
+                                           ["-q", "-t", "ed25519", "-N", "", "-C", comment, "-f", url.path], timeout: 30)
+        guard r.status == 0 else { throw SSHError.failed("ssh-keygen", r.status, String(decoding: r.stderr, as: UTF8.self)) }
     }
 
     public static func publicKey(_ url: URL) throws -> String {
@@ -153,3 +124,5 @@ public struct SSH: Sendable {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
+
+

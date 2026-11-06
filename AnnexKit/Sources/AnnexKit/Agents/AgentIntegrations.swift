@@ -173,24 +173,12 @@ public struct AgentIntegration: Identifiable, Sendable, Hashable {
 
     @discardableResult
     static func run(_ exe: String, _ args: [String], timeout: TimeInterval = 60) throws -> (Int32, String) {
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: exe)
-        p.arguments = args
         var env = ProcessInfo.processInfo.environment
         env["PATH"] = "\(home)/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         env.removeValue(forKey: "CLAUDECODE")
-        p.environment = env
-        p.currentDirectoryURL = FileManager.default.homeDirectoryForCurrentUser
-        let out = Pipe()
-        p.standardOutput = out
-        p.standardError = out
-        p.standardInput = FileHandle.nullDevice
-        try p.run()
-        let deadline = Date().addingTimeInterval(timeout)
-        while p.isRunning && Date() < deadline { usleep(100_000) }
-        if p.isRunning { p.terminate() }
-        p.waitUntilExit()
-        return (p.terminationStatus, String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self))
+        let r = try Subprocess.runBlocking(exe, args, environment: env,
+                                           cwd: FileManager.default.homeDirectoryForCurrentUser.path, timeout: timeout)
+        return (r.status, String(decoding: r.stdout + r.stderr, as: UTF8.self))
     }
 
     /// Adds Annex's server to a JSON config (keeps everything else; a backup of the old file stays next to it).

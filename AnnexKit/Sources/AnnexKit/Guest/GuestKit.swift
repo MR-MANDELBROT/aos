@@ -123,25 +123,27 @@ public struct GuestKit: Sendable {
     }
 
     /// The workspace helper, packed (the app ships it as Resources/AnnexHelper.app; development builds don't have it).
+    /// Where the helper app is: in the app bundle, or (development tools) at ANNEX_HELPER_APP.
+    static let helperApp: URL? = {
+        if let path = ProcessInfo.processInfo.environment["ANNEX_HELPER_APP"], !path.isEmpty,
+           FileManager.default.fileExists(atPath: path) {
+            return URL(fileURLWithPath: path)
+        }
+        return Bundle.main.url(forResource: "AnnexHelper", withExtension: "app")
+    }()
+
     static let helperArchive: Data? = {
-        guard let app = Bundle.main.url(forResource: "AnnexHelper", withExtension: "app") else { return nil }
-        let tar = Process()
-        tar.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
-        tar.arguments = ["-czf", "-", "--no-xattrs", "--no-mac-metadata", "-C", app.deletingLastPathComponent().path,
-                         "AnnexHelper.app"]
-        tar.environment = ["COPYFILE_DISABLE": "1"]
-        let out = Pipe()
-        tar.standardOutput = out
-        tar.standardError = FileHandle.nullDevice
-        guard (try? tar.run()) != nil else { return nil }
-        let data = out.fileHandleForReading.readDataToEndOfFile()
-        tar.waitUntilExit()
-        return tar.terminationStatus == 0 && !data.isEmpty ? data : nil
+        guard let app = helperApp else { return nil }
+        guard let r = try? Subprocess.runBlocking(
+            "/usr/bin/tar", ["-czf", "-", "--no-xattrs", "--no-mac-metadata", "-C", app.deletingLastPathComponent().path,
+                             "AnnexHelper.app"],
+            environment: ["COPYFILE_DISABLE": "1", "PATH": "/usr/bin:/bin"], timeout: 60) else { return nil }
+        return r.status == 0 && !r.stdout.isEmpty ? r.stdout : nil
     }()
 
     /// What identifies the helper's version (the archive itself changes with every packing).
     static let helperDigest: Data = {
-        guard let app = Bundle.main.url(forResource: "AnnexHelper", withExtension: "app") else { return Data() }
+        guard let app = helperApp else { return Data() }
         var d = Data()
         for part in ["Contents/MacOS/AnnexHelper", "Contents/Info.plist", "Contents/_CodeSignature/CodeResources"] {
             d.append(FileManager.default.contents(atPath: app.appendingPathComponent(part).path) ?? Data())
