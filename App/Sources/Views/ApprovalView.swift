@@ -14,6 +14,7 @@ struct ApprovalView: View {
                     Text("\(a.agent) wants to open its workspace").font(.title3.bold()).multilineTextAlignment(.center)
                     Text("For up to \(a.minutes) minutes. You can watch and close it any time.")
                         .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 GlassCard {
                     VStack(alignment: .leading, spacing: 4) {

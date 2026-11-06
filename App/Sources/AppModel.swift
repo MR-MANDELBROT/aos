@@ -53,6 +53,7 @@ final class AppModel: ObservableObject {
 
     var openWindow: ((String) -> Void)?
     var openSettingsAction: (() -> Void)?
+    var openersNoted = false
 
     private init() {
         try? paths.prepare()
@@ -137,6 +138,10 @@ final class AppModel: ObservableObject {
     func applyPreview() {
         guard let preview = ProcessInfo.processInfo.environment["ANNEX_PREVIEW"] else { return }
         let parts = preview.split(separator: ":").map(String.init)
+        if parts.first != "step" {
+            // Only the window being reviewed
+            NSApp.windows.filter { $0.identifier?.rawValue.contains(WindowID.setup) == true }.forEach { $0.close() }
+        }
         switch parts.first {
         case "step":
             if let n = Int(parts.dropFirst().first ?? ""), let step = SetupController.Step(rawValue: n) {
@@ -153,17 +158,44 @@ final class AppModel: ObservableObject {
                                                     host: "accounts.example.com", field: parts.dropFirst().first ?? "username",
                                                     purpose: "Download the invoice for October",
                                                     expires: Date().addingTimeInterval(180)))
+        case "menu":
+            // The menu bar panel, in a window of its own
+            let host = NSHostingView(rootView: MenuView().environmentObject(self))
+            let size = host.fittingSize
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: max(size.width, 320), height: max(size.height, 200)),
+                                  styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            window.title = "Menu"
+            window.contentView = host
+            window.center()
+            window.makeKeyAndOrderFront(nil)
+            previewWindows.append(window)
+            NSApp.activate()
         case "settings":
             UserDefaults.standard.set(parts.dropFirst().first ?? "general", forKey: "settingsTab")
-            if let open = openSettingsAction { open() } else {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            }
-            NSApp.activate()
+            openSettingsWindow()
         default: break
         }
     }
 
+    /// A design preview (ANNEX_PREVIEW): no agent socket, no background process, no timers. Run it with ANNEX_HOME
+    /// pointing elsewhere; it must not register or remove the real background process.
+    static let isPreview = ProcessInfo.processInfo.environment["ANNEX_PREVIEW"] != nil
+    private var previewWindows: [NSWindow] = []
+
     func launched() {
+        if Self.isPreview {
+            if ProcessInfo.processInfo.environment["ANNEX_APPEARANCE"] == "dark" {
+                NSApp.appearance = NSAppearance(named: .darkAqua)
+            } else if ProcessInfo.processInfo.environment["ANNEX_APPEARANCE"] == "light" {
+                NSApp.appearance = NSAppearance(named: .aqua)
+            }
+            refresh(loginItems: false)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                self?.applyPreview()
+                self?.snapshotIfAsked()
+            }
+            return
+        }
         do {
             let server = LineSocketServer(path: paths.agentSocket) { line in
                 guard let request = try? JSONDecoder().decode(AgentRequest.self, from: line) else {
@@ -192,6 +224,46 @@ final class AppModel: ObservableObject {
         refresh()
         if !setup.isComplete { openWindow?(WindowID.setup) ; showSetupSoon() }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in self?.applyPreview() }
+    }
+
+    /// Opens the Settings window, also when no SwiftUI view has handed over its opener yet: then through the app
+    /// menu's Settings item, as the keyboard shortcut would.
+    func openSettingsWindow() {
+        NSApp.activate()
+        if let open = openSettingsAction { open(); return }
+        if let item = NSApp.mainMenu?.items.first?.submenu?.items.first(where: { $0.keyEquivalent == "," }),
+           let action = item.action {
+            NSApp.sendAction(action, to: item.target, from: item)
+        }
+    }
+
+    /// ANNEX_SNAPSHOT=<folder>: a few seconds after the preview, every visible window is drawn into
+    /// <folder>/<title>.png and the app quits (design review where screen recording isn't allowed).
+    private func snapshotIfAsked() {
+        guard let folder = ProcessInfo.processInfo.environment["ANNEX_SNAPSHOT"] else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+            let dir = URL(fileURLWithPath: folder, isDirectory: true)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            // The window server's picture of our own windows (with glass and shadows); drawing the views ourselves
+            // is the fallback.
+            typealias Capture = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+            let capture = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGWindowListCreateImage")
+                .map { unsafeBitCast($0, to: Capture.self) }
+            for (n, window) in NSApp.windows.enumerated() where window.isVisible && window.frame.width > 60 {
+                let title = window.title.isEmpty ? "window-\(n)" : window.title
+                let url = dir.appendingPathComponent(title.replacingOccurrences(of: "/", with: "-") + ".png")
+                // optionIncludingWindow (8), boundsIgnoreFraming (1)
+                if let capture, let image = capture(.null, 8, UInt32(window.windowNumber), 1)?.takeRetainedValue() {
+                    try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: url)
+                    continue
+                }
+                guard let view = window.contentView?.superview ?? window.contentView,
+                      let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { continue }
+                view.cacheDisplay(in: view.bounds, to: rep)
+                try? rep.representation(using: .png, properties: [:])?.write(to: url.deletingPathExtension().appendingPathExtension("drawn.png"))
+            }
+            exit(0)
+        }
     }
 
     private func showSetupSoon() {

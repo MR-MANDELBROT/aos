@@ -11,13 +11,17 @@ struct AnnexApp: App {
             MenuView()
                 .environmentObject(model)
         } label: {
+            // The label is the one view that exists from launch on: it hands over the openers.
             Image(systemName: model.menuSymbol)
                 .accessibilityLabel(Brand.name)
+                .registersOpeners(note: "menu bar")
+                .environmentObject(model)
         }
         .menuBarExtraStyle(.window)
 
         Window(Text("Welcome to \(Brand.name)"), id: WindowID.setup) {
             SetupView()
+                .registersOpeners()
                 .environmentObject(model)
                 .environmentObject(model.setup)
         }
@@ -28,18 +32,21 @@ struct AnnexApp: App {
 
         Window(Text("Workspace"), id: WindowID.workspace) {
             WorkspaceWindow()
+                .registersOpeners()
                 .environmentObject(model)
         }
         .defaultSize(width: 1280, height: 860)
 
         Window(Text("Session"), id: WindowID.session) {
             SessionWindow()
+                .registersOpeners()
                 .environmentObject(model)
         }
         .defaultSize(width: 980, height: 640)
 
         Window(Text("Approve"), id: WindowID.approval) {
             ApprovalView()
+                .registersOpeners()
                 .environmentObject(model)
         }
         .windowStyle(.hiddenTitleBar)
@@ -48,6 +55,7 @@ struct AnnexApp: App {
 
         Window(Text("Sign In"), id: WindowID.signIn) {
             SignInView()
+                .registersOpeners()
                 .environmentObject(model)
         }
         .windowStyle(.hiddenTitleBar)
@@ -56,9 +64,34 @@ struct AnnexApp: App {
 
         Settings {
             SettingsView()
+                .registersOpeners()
                 .environmentObject(model)
         }
     }
+}
+
+/// Every window hands the model SwiftUI's openers, so buttons and annex:// links work before the menu bar panel was
+/// ever opened (during the first setup it usually wasn't).
+struct RegistersOpeners: ViewModifier {
+    var note: String?
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
+
+    func body(content: Content) -> some View {
+        content.onAppear {
+            model.openWindow = { openWindow(id: $0) }
+            model.openSettingsAction = { openSettings() }
+            if let note, !model.openersNoted {
+                model.openersNoted = true
+                model.append("window openers ready (\(note))")
+            }
+        }
+    }
+}
+
+extension View {
+    func registersOpeners(note: String? = nil) -> some View { modifier(RegistersOpeners(note: note)) }
 }
 
 enum WindowID {

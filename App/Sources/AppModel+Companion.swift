@@ -130,11 +130,11 @@ extension AppModel {
             Task { await allowHelper() }
         case "pair":
             UserDefaults.standard.set("iphone", forKey: "settingsTab")
-            openSettingsAction?()
+            openSettingsWindow()
         case "settings":
             let tab = url.pathComponents.dropFirst().first ?? "general"
             UserDefaults.standard.set(tab, forKey: "settingsTab")
-            openSettingsAction?()
+            openSettingsWindow()
         default:
             break
         }

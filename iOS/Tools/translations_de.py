@@ -203,16 +203,16 @@ DE = {
     'Notes': 'Notizen',
     'Now delete the export file': 'Lösche jetzt die Exportdatei',
     'OK': 'OK',
-    "On the Mac: open Annex and choose „Connect iPhone“. It turns on nothing new; it uses the Mac's Remote Login.":
-        'Auf dem Mac: Öffne Annex und wähle „iPhone verbinden“. Es schaltet nichts Neues ein, sondern nutzt die entfernte Anmeldung des Macs.',
+    "On the Mac: click Annex in the menu bar, then “Pair” next to iPhone. Annex uses the Mac's Remote Login for this, nothing else.":
+        'Auf dem Mac: Klicke in der Menüleiste auf Annex, dann bei „iPhone“ auf „Koppeln“. Annex nutzt dafür die entfernte Anmeldung des Macs, sonst nichts.',
     'One finger': 'Ein Finger',
     'One per line. The login is offered for these sites and their subdomains.':
         'Eine pro Zeile. Die Anmeldung wird für diese Websites und ihre Subdomains angeboten.',
     'One-time code': 'Einmalcode',
     'One-time codes (optional)': 'Einmalcodes (optional)',
     'Open': 'Geöffnet',
-    'Open Annex on your Mac and choose „Connect iPhone“. Then scan the code it shows.':
-        'Öffne Annex auf deinem Mac und wähle „iPhone verbinden“. Scanne dann den Code, den es zeigt.',
+    'On your Mac, click Annex in the menu bar, then “Pair” next to iPhone. Then scan the code it shows.':
+        'Klicke auf deinem Mac in der Menüleiste auf Annex, dann bei „iPhone“ auf „Koppeln“. Scanne dann den Code, den es zeigt.',
     'Open until %@': 'Geöffnet bis %@',
     'Or paste the link': 'Oder füge den Link ein',
     'Other computers': 'Weitere Rechner',

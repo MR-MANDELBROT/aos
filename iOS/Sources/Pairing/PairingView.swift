@@ -107,7 +107,7 @@ struct PairingView: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    FactRow(symbol: "desktopcomputer", text: "On the Mac: open Annex and choose \u{201E}Connect iPhone\u{201C}. It turns on nothing new; it uses the Mac's Remote Login.")
+                    FactRow(symbol: "desktopcomputer", text: "On the Mac: click Annex in the menu bar, then \u{201C}Pair\u{201D} next to iPhone. Annex uses the Mac's Remote Login for this, nothing else.")
                     FactRow(symbol: "key", text: "This iPhone makes its own key. Only its public half goes to the Mac.")
                 }
             }

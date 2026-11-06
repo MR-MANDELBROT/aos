@@ -316,7 +316,7 @@ struct WelcomeView: View {
             }
             .buttonStyle(.glassProminent)
             .controlSize(.large)
-            Text("Open Annex on your Mac and choose \u{201E}Connect iPhone\u{201C}. Then scan the code it shows.")
+            Text("On your Mac, click Annex in the menu bar, then \u{201C}Pair\u{201D} next to iPhone. Then scan the code it shows.")
                 .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
     }

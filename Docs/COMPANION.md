@@ -37,7 +37,7 @@ user, wherever they are:
 
 ## Pairing
 
-1. Annex on the Mac ("Connect iPhone") checks that Remote Login is on (port 22 answers) and otherwise opens
+1. Annex on the Mac ("Pair" next to iPhone in the menu, or Settings > iPhone) checks that Remote Login is on (port 22 answers) and otherwise opens
    System Settings > General > Sharing. It starts a pairing listener: TCP on a random port, advertised over Bonjour
    as `_annex-pair._tcp`, open for 3 minutes and for one pairing.
 2. It shows a QR code with the URL

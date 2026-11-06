@@ -111,7 +111,7 @@ struct MenuView: View {
         return String(localized: "Ready")
     }
 
-    func attention(symbol: String, title: String, detail: String, action: @escaping () -> Void) -> some View {
+    func attention(symbol: String, title: LocalizedStringKey, detail: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: symbol).font(.title3).foregroundStyle(.orange)

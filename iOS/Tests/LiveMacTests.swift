@@ -21,6 +21,8 @@ struct LiveMacTests {
 
         // Pairing with the real listener: the Mac checks the proof and writes the key
         let model = AppModel()
+        let previousName = model.deviceName
+        defer { model.deviceName = previousName }
         model.deviceName = "Annex Live Test"
         let mac = try await model.pair(with: link) { _ in }
         #expect(mac.hostKeyFingerprint == link.hostKeyFingerprint)

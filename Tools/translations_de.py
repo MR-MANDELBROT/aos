@@ -172,6 +172,8 @@ DE.update({
     "Which agent should use the workspace? %@ adds itself to the agent's settings as an MCP server. You can connect more than one.":
         'Welcher Agent soll den Arbeitsplatz nutzen? %@ trägt sich in seinen Einstellungen als MCP-Server ein. Du kannst mehrere verbinden.',
     'Your agent asks for your help': 'Dein Agent bittet dich um Hilfe',
+    'Finish setting up %@': '%@ fertig einrichten',
+    'Another agent': 'Anderer Agent',
     'Your agent needs your help': 'Dein Agent braucht deine Hilfe',
     'add by hand:': 'von Hand eintragen:',
     'configure by hand': 'von Hand einrichten',

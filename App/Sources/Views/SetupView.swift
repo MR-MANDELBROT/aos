@@ -193,7 +193,7 @@ private struct StepPage: View {
                                     .font(.title3)
                                     .foregroundStyle(setup.selectedAgents.contains(agent.id) ? BrandColor.indigo : .secondary)
                                 VStack(alignment: .leading, spacing: 1) {
-                                    Text(agent.name).fontWeight(.medium)
+                                    Text(agent.id == "other" ? String(localized: "Another agent") : agent.name).fontWeight(.medium)
                                     if agent.supportsRemoteSession {
                                         Text("Also reachable from your phone").font(.caption).foregroundStyle(.secondary)
                                     }
@@ -286,7 +286,7 @@ private struct StepPage: View {
                 GlassCard {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text(agent.name).fontWeight(.semibold)
+                            Text(agent.id == "other" ? String(localized: "Another agent") : agent.name).fontWeight(.semibold)
                             Spacer()
                             switch setup.connectResults[agent.id] {
                             case .connected?: Label("connected", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
@@ -398,8 +398,7 @@ private struct StepPage: View {
                     Spacer()
                     Button("Pair") {
                         UserDefaults.standard.set("iphone", forKey: "settingsTab")
-                        model.openSettingsAction?()
-                        NSApp.activate()
+                        model.openSettingsWindow()
                     }
                     .buttonStyle(.glass)
                 }

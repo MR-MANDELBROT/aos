@@ -71,28 +71,6 @@
         }
       }
     },
-    "%@ creates the virtual Mac and installs macOS into it. This takes about 10 minutes." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ legt den virtuellen Mac an und installiert macOS darin. Das dauert etwa 10 Minuten."
-          }
-        }
-      }
-    },
-    "%@ gives Claude its own Mac: a virtual Mac with its own screen and browser, separate from yours. Claude uses it for tasks that need a website or an app, and you reach Claude from the Claude app on your phone at any time." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ gibt Claude einen eigenen Mac: einen virtuellen Mac mit eigenem Bildschirm und Browser, getrennt von deinem. Claude nutzt ihn für Aufgaben, die eine Website oder eine App brauchen, und du erreichst Claude jederzeit über die Claude-App auf deinem Handy."
-          }
-        }
-      }
-    },
     "%@ gives your coding agent its own Mac: a virtual Mac with its own screen and browser, separate from yours. Your agent uses it for tasks that need a website or an app; you approve every time it opens." : {
       "localizations" : {
         "de" : {
@@ -113,39 +91,6 @@
         }
       }
     },
-    "%@ is ready." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ ist bereit."
-          }
-        }
-      }
-    },
-    "%@ lives in the menu bar and starts with your Mac." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ wohnt in der Menüleiste und startet mit deinem Mac."
-          }
-        }
-      }
-    },
-    "%@ lives in the menu bar. It starts with your Mac and keeps the session running." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ wohnt in der Menüleiste. Es startet mit deinem Mac und hält die Sitzung am Laufen."
-          }
-        }
-      }
-    },
     "%@ on your iPhone" : {
       "localizations" : {
         "de" : {
@@ -162,23 +107,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ gekoppelt, gerade nicht verbunden"
-          }
-        }
-      }
-    },
-    "%@ runs Claude Code, Anthropic's own app, with your Claude subscription (Pro, Max or Team). You install it and sign in yourself; %@ never sees your sign-in." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ nutzt Claude Code, die App von Anthropic, mit deinem Claude-Abo (Pro, Max oder Team). Du installierst es und meldest dich selbst an; %@ sieht deine Anmeldung nie."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ runs Claude Code, Anthropic's own app, with your Claude subscription (Pro, Max or Team). You install it and sign in yourself; %2$@ never sees your sign-in."
           }
         }
       }
@@ -283,83 +211,6 @@
         }
       }
     },
-    "1. Open the workspace window. System Settings is already open there at General > Sharing." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1. Öffne das Fenster des Arbeitsplatzes. Dort sind die Systemeinstellungen schon bei Allgemein > Teilen geöffnet."
-          }
-        }
-      }
-    },
-    "1. Register tools" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1. Werkzeuge eintragen"
-          }
-        }
-      }
-    },
-    "2. Start once" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Einmal starten"
-          }
-        }
-      }
-    },
-    "2. Switch on Screen Sharing." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Schalte „Bildschirmfreigabe“ ein."
-          }
-        }
-      }
-    },
-    "3. Run in the background" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Im Hintergrund laufen lassen"
-          }
-        }
-      }
-    },
-    "3. When macOS asks for a password, click \"Enter the workspace password\" in the window." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Fragt macOS nach einem Passwort, klicke im Fenster auf „Passwort des Arbeitsplatzes eingeben“."
-          }
-        }
-      }
-    },
-    "4. Come back here and click Check." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "4. Komm hierher zurück und klicke auf „Prüfen“."
-          }
-        }
-      }
-    },
     "A few steps are left." : {
       "localizations" : {
         "de" : {
@@ -386,17 +237,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eine Anmeldung wartet auf dich"
-          }
-        }
-      }
-    },
-    "About 60 GB of free disk space are needed (%lld GB free)." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Etwa 60 GB freier Speicher werden gebraucht (%lld GB frei)."
           }
         }
       }
@@ -437,17 +277,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "von Hand eintragen"
-          }
-        }
-      }
-    },
-    "add by hand:" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "von Hand eintragen:"
           }
         }
       }
@@ -508,6 +337,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Immer erreichbar halten"
+          }
+        }
+      }
+    },
+    "Annex keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annex arbeitet im Hintergrund und trägt sich bei deinen Agenten und deinem iPhone ein. Dafür braucht es einen festen Platz. Es kopiert sich dorthin und öffnet sich neu."
+          }
+        }
+      }
+    },
+    "Another agent" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anderer Agent"
           }
         }
       }
@@ -698,17 +547,6 @@
         }
       }
     },
-    "Checking this Mac …" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prüfe diesen Mac …"
-          }
-        }
-      }
-    },
     "Choose your agent" : {
       "localizations" : {
         "de" : {
@@ -719,34 +557,12 @@
         }
       }
     },
-    "Claude asks for your help" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude bittet dich um Hilfe"
-          }
-        }
-      }
-    },
     "Claude Code" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claude Code"
-          }
-        }
-      }
-    },
-    "Claude Code %@ is installed" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude Code %@ ist installiert"
           }
         }
       }
@@ -767,28 +583,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claude Code ist nicht installiert"
-          }
-        }
-      }
-    },
-    "Claude needs your help" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude braucht deine Hilfe"
-          }
-        }
-      }
-    },
-    "Click Open System Settings if macOS asks, then switch on Annex Helper under Accessibility. When macOS asks for a password, let %@ enter it. This happens only once." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fragt macOS, klicke auf „Systemeinstellungen öffnen“ und schalte „Annex Helper“ ein. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig."
           }
         }
       }
@@ -819,17 +613,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jetzt schließen"
-          }
-        }
-      }
-    },
-    "Close the workspace now" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arbeitsplatz jetzt schließen"
           }
         }
       }
@@ -924,17 +707,6 @@
         }
       }
     },
-    "Continue setup …" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einrichtung fortsetzen …"
-          }
-        }
-      }
-    },
     "Conversations" : {
       "localizations" : {
         "de" : {
@@ -981,17 +753,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details"
-          }
-        }
-      }
-    },
-    "Don't allow" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nicht erlauben"
           }
         }
       }
@@ -1136,6 +897,16 @@
         }
       }
     },
+    "Finish setting up %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ fertig einrichten"
+          }
+        }
+      }
+    },
     "First start of the session" : {
       "localizations" : {
         "de" : {
@@ -1216,17 +987,6 @@
         }
       }
     },
-    "Help needed" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hilfe gefragt"
-          }
-        }
-      }
-    },
     "I can't do this" : {
       "localizations" : {
         "de" : {
@@ -1263,28 +1023,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Länger als %lld Stunden inaktiv"
-          }
-        }
-      }
-    },
-    "Install" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Installieren"
-          }
-        }
-      }
-    },
-    "Install Claude Code" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude Code installieren"
           }
         }
       }
@@ -1359,40 +1097,12 @@
         }
       }
     },
-    "Keep this Mac awake" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diesen Mac wach halten"
-          }
-        }
-      }
-    },
     "Keep this Mac awake while something must stay reachable" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac wach halten, solange etwas erreichbar bleiben muss"
-          }
-        }
-      }
-    },
-    "Last step: %@ registers its tools with Claude Code and starts the session \"%@\". Start it once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then close the terminal." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Letzter Schritt: %@ trägt seine Werkzeuge in Claude Code ein und startet die Sitzung „%@“. Starte sie hier einmal: Claude Code fragt, ob du dem Ordner vertraust und ob Remote Control an sein soll. Beantworte beides mit Ja und schließe dann das Terminal."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Last step: %1$@ registers its tools with Claude Code and starts the session \"%2$@\". Start it once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then close the terminal."
           }
         }
       }
@@ -1427,40 +1137,6 @@
         }
       }
     },
-    "macOS %@ (%@), about 18 GB. The download continues where it stopped if you quit %@ or lose the connection." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macOS %@ (%@), etwa 18 GB. Der Download macht dort weiter, wo er aufgehört hat, wenn du %@ beendest oder die Verbindung abbricht."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "macOS %1$@ (%2$@), about 18 GB. The download continues where it stopped if you quit %3$@ or lose the connection."
-          }
-        }
-      }
-    },
-    "macOS %@ (%@), about 26 GB. The download continues where it stopped if you quit %@ or lose the connection." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macOS %@ (%@), etwa 26 GB. Der Download macht dort weiter, wo er aufgehört hat, wenn du %@ beendest oder die Verbindung abbricht."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "macOS %1$@ (%2$@), about 26 GB. The download continues where it stopped if you quit %3$@ or lose the connection."
-          }
-        }
-      }
-    },
     "macOS 27 or later is required." : {
       "localizations" : {
         "de" : {
@@ -1477,6 +1153,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS fragt, ob %@ sich mit Geräten im lokalen Netzwerk verbinden darf. Erlaube es: Der Arbeitsplatz zählt als solches Gerät."
+          }
+        }
+      }
+    },
+    "Move Annex to the Applications folder?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annex in den Ordner „Programme“ bewegen?"
+          }
+        }
+      }
+    },
+    "Move to Applications" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In „Programme“ bewegen"
           }
         }
       }
@@ -1567,17 +1263,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Anfrage offen."
-          }
-        }
-      }
-    },
-    "No request." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Anfrage."
           }
         }
       }
@@ -1702,17 +1387,6 @@
         }
       }
     },
-    "off, starts when Claude needs it" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aus, startet bei Bedarf"
-          }
-        }
-      }
-    },
     "off, starts when your agent needs it" : {
       "localizations" : {
         "de" : {
@@ -1769,17 +1443,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auf dem Handy"
-          }
-        }
-      }
-    },
-    "On your phone: open the Claude app. The session \"%@\" appears with a computer icon." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auf dem Handy: Öffne die Claude-App. Die Sitzung „%@“ erscheint mit einem Computersymbol."
           }
         }
       }
@@ -1864,17 +1527,6 @@
         }
       }
     },
-    "Open the Claude app on your phone or at claude.ai/code. The session \"%@\" appears with a computer icon. Ask Claude for something that needs a website: it asks for permission to open its workspace, and you approve it there." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffne die Claude-App auf dem Handy oder claude.ai/code. Die Sitzung „%@“ erscheint mit einem Computersymbol. Bitte Claude um etwas, das eine Website braucht: Claude fragt dort, ob es seinen Arbeitsplatz öffnen darf, und du bestätigst."
-          }
-        }
-      }
-    },
     "Open the Claude app: the session \"%@\" appears with a computer icon." : {
       "localizations" : {
         "de" : {
@@ -1937,17 +1589,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffne die Freigabe-Einstellungen"
-          }
-        }
-      }
-    },
-    "Opens Claude's sign-in page in your browser." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffnet die Anmeldeseite von Claude in deinem Browser."
           }
         }
       }
@@ -2092,17 +1733,6 @@
         }
       }
     },
-    "reachable from your phone" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "vom Handy erreichbar"
-          }
-        }
-      }
-    },
     "Reachable from your phone" : {
       "localizations" : {
         "de" : {
@@ -2119,17 +1749,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fertig"
-          }
-        }
-      }
-    },
-    "Registering the workspace tools with Claude Code" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trage die Werkzeuge in Claude Code ein"
           }
         }
       }
@@ -2230,17 +1849,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Startet die Anmeldung von Claude Code selbst; %@ sieht sie nie."
-          }
-        }
-      }
-    },
-    "Save" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sichern"
           }
         }
       }
@@ -2351,17 +1959,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einstellungen"
-          }
-        }
-      }
-    },
-    "Settings …" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einstellungen …"
           }
         }
       }
@@ -2486,17 +2083,6 @@
         }
       }
     },
-    "Signed in" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Angemeldet"
-          }
-        }
-      }
-    },
     "Signed in to Claude Code" : {
       "localizations" : {
         "de" : {
@@ -2543,17 +2129,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einmal starten"
-          }
-        }
-      }
-    },
-    "Start the session" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sitzung starten"
           }
         }
       }
@@ -2654,28 +2229,6 @@
         }
       }
     },
-    "Switch on Screen Sharing in the System Settings below. When macOS asks for a password:" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schalte unten in den Systemeinstellungen die Bildschirmfreigabe ein. Fragt macOS nach einem Passwort:"
-          }
-        }
-      }
-    },
-    "Switch on Screen Sharing." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schalte „Bildschirmfreigabe“ ein."
-          }
-        }
-      }
-    },
     "Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x." : {
       "localizations" : {
         "de" : {
@@ -2746,45 +2299,12 @@
         }
       }
     },
-    "The Mac doesn't go to sleep by itself while the session runs. Closing a laptop's lid still puts it to sleep." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac schläft nicht von selbst ein, solange die Sitzung läuft. Zuklappen schickt ein MacBook trotzdem in den Ruhezustand."
-          }
-        }
-      }
-    },
     "The workspace is off" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz ist aus"
-          }
-        }
-      }
-    },
-    "The workspace is off. It starts when Claude opens it." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Arbeitsplatz ist aus. Er startet, wenn Claude ihn öffnet."
-          }
-        }
-      }
-    },
-    "The workspace is off. It starts when your agent opens it." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Arbeitsplatz ist aus. Er startet, wenn dein Agent ihn öffnet."
           }
         }
       }
@@ -2829,17 +2349,6 @@
         }
       }
     },
-    "The workspace starts for the first time without the setup assistant: %@ creates its account, locks remote access down to this Mac, installs Google Chrome and turns off sleep and updates." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Arbeitsplatz startet zum ersten Mal ohne Einrichtungsassistent: %@ legt sein Konto an, erlaubt Fernzugriff nur von diesem Mac, installiert Google Chrome und schaltet Ruhezustand und Updates aus."
-          }
-        }
-      }
-    },
     "The workspace starts for the first time, without the setup assistant. %@ creates its account, allows remote access only from this Mac, installs Google Chrome and turns off sleep and automatic updates." : {
       "localizations" : {
         "de" : {
@@ -2866,17 +2375,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Mac"
-          }
-        }
-      }
-    },
-    "This Mac can't run virtual machines (Apple silicon is required)." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieser Mac kann keine virtuellen Maschinen ausführen (Apple Silicon nötig)."
           }
         }
       }
@@ -2921,45 +2419,12 @@
         }
       }
     },
-    "Updates …" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Updates …"
-          }
-        }
-      }
-    },
     "User name or email" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzername oder E-Mail"
-          }
-        }
-      }
-    },
-    "Uses Anthropic's installer: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit dem Installer von Anthropic: %@"
-          }
-        }
-      }
-    },
-    "waiting" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "wartet"
           }
         }
       }
