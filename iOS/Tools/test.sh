@@ -8,6 +8,7 @@
 # deployment target is lowered for this build only, so the tests still run. ANNEX_SIM_DEVICE picks another simulator.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+./generate.sh >/dev/null
 DEVICE_NAME="${ANNEX_SIM_DEVICE:-iPhone 17 Pro}"
 DERIVED="${ANNEX_DERIVED_DATA:-$(cd .. && pwd)/build/ios-sim}"
 
@@ -35,7 +36,7 @@ ONLY=()
 for t in "$@"; do ONLY+=(-only-testing:"$t"); done
 
 xcodebuild -project Annex.xcodeproj -scheme Annex -derivedDataPath "$DERIVED" \
-  -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO \
+  -destination 'generic/platform=iOS Simulator' CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual \
   -skipPackagePluginValidation -skipMacroValidation ${TARGET_ARGS[@]+"${TARGET_ARGS[@]}"} build-for-testing -quiet
 
 XCTESTRUN=$(ls -t "$DERIVED"/Build/Products/*.xctestrun | head -1)
