@@ -108,6 +108,19 @@ public struct Provisioner: Sendable {
         return wasAdmin
     }
 
+    /// While the user allows the helper: whether macOS shows its password dialog (SecurityAgent) and whether the
+    /// helper is allowed already, in one round trip.
+    public func helperPermissionPoll(host: String) async -> (passwordDialog: Bool, trusted: Bool) {
+        let command = "if pgrep -x SecurityAgent >/dev/null; then echo DIALOG; fi; " +
+            "echo '{\"op\":\"status\"}' | \(GuestHelper.executable) client"
+        guard let r = try? await maintenance(host: host).run(command, timeout: 20, check: false, what: "helper status")
+        else { return (false, false) }
+        let lines = r.text.split(separator: "\n").map(String.init)
+        let status = lines.last.flatMap { $0.data(using: .utf8) }
+            .flatMap { try? JSONDecoder().decode(GuestHelper.Status.self, from: $0) }
+        return (lines.contains("DIALOG"), status?.trusted == true)
+    }
+
     /// Ends `beginHelperPermission`: the account is a standard user again (if it was one), System Settings closes.
     public func endHelperPermission(host: String, wasAdmin: Bool) async throws {
         let root = maintenance(host: host)

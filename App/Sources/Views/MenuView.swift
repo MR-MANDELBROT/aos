@@ -88,6 +88,7 @@ struct MenuView: View {
         .frame(width: 340)
         .onAppear {
             model.openWindow = { openWindow(id: $0) }
+            model.openSettingsAction = { openSettings() }
             model.refreshPhone()
         }
     }

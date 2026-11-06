@@ -84,4 +84,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        Task { @MainActor in urls.forEach { AppModel.shared.handle(url: $0) } }
+    }
 }

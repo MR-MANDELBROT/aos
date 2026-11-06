@@ -52,6 +52,7 @@ final class AppModel: ObservableObject {
     var helperWasAdmin: Bool?
 
     var openWindow: ((String) -> Void)?
+    var openSettingsAction: (() -> Void)?
 
     private init() {
         try? paths.prepare()

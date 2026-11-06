@@ -199,6 +199,21 @@ public final class WorkspaceController {
         return ip
     }
 
+    /// Types the workspace account's password into whatever has the focus in the guest (macOS's own password dialog
+    /// during setup steps), then Return. Never goes through the clipboard.
+    public func typeGuestPasswordForSetup() async throws {
+        guard let ip = try host.guestAddress() else { throw WorkspaceError.notOpen }
+        let client = try await connectScreen(ip: ip, timeout: 60)
+        let password = try guestPassword()
+        var keys: [UInt32] = []
+        for c in password {
+            guard let k = Keysyms.forCharacter(c) else { throw WorkspaceError.missing("a typable password") }
+            keys.append(k)
+        }
+        try await client.type(keys)
+        try await client.press([try Keysyms.key("return")])
+    }
+
     /// Fails fast without the local network permission: otherwise SSH and screen sharing would only time out after
     /// minutes. Right after a start the VM's bridge is not up yet (connections then go nowhere), so this tries for a
     /// few seconds; anything but Network.framework's explicit denial counts as "allowed".

@@ -120,6 +120,27 @@ extension AppModel {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Sharing-Settings.extension")!)
     }
 
+    // MARK: Links (annex://)
+
+    /// annex://allow-helper starts the helper permission, annex://pair opens pairing, annex://settings/<tab> a tab.
+    func handle(url: URL) {
+        guard url.scheme == "annex" else { return }
+        switch url.host {
+        case "allow-helper":
+            Task { await allowHelper() }
+        case "pair":
+            UserDefaults.standard.set("iphone", forKey: "settingsTab")
+            openSettingsAction?()
+        case "settings":
+            let tab = url.pathComponents.dropFirst().first ?? "general"
+            UserDefaults.standard.set(tab, forKey: "settingsTab")
+            openSettingsAction?()
+        default:
+            break
+        }
+        NSApp.activate()
+    }
+
     // MARK: The workspace helper
 
     /// Asks the helper in a running workspace whether it may sign in.
@@ -152,13 +173,29 @@ extension AppModel {
         }
     }
 
+    /// Waits for the switch; when macOS asks for the password (its dialog in the guest), Annex enters the workspace
+    /// account's password itself, so the user only flips the switch.
     private func watchHelper(ip: String) async {
         let deadline = Date().addingTimeInterval(600)
+        var typedForDialog = false
+        var typings = 0
         while Date() < deadline, helperState == .allowing {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            if let s = await workspace.provisioner.helperStatus(host: ip), s.trusted == true {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            let poll = await workspace.provisioner.helperPermissionPoll(host: ip)
+            if poll.trusted {
                 await finishHelperPermission(ip: ip, allowed: true)
                 return
+            }
+            if poll.passwordDialog && !typedForDialog && typings < 3 {
+                try? await Task.sleep(nanoseconds: 1_200_000_000)  // the dialog takes the focus
+                do {
+                    try await workspace.typeGuestPasswordForSetup()
+                    typedForDialog = true
+                    typings += 1
+                    append("entered the workspace password for the helper permission")
+                } catch { append("could not enter the password: \(error.localizedDescription)") }
+            } else if !poll.passwordDialog {
+                typedForDialog = false
             }
         }
         if helperState == .allowing { await finishHelperPermission(ip: ip, allowed: false) }
