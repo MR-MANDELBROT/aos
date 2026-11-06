@@ -29,6 +29,21 @@ public struct AgentRequest: Codable, Sendable {
     /// Which agent calls (ANNEX_AGENT, or the MCP client's name).
     public var agent: String?
 
+    // Companion (iPhone) operations
+    /// The request a companion answers (sign-in, help, approval).
+    public var request: String?
+    public var username: String?
+    public var password: String?
+    public var totp: String?
+    public var decline: Bool?
+    public var allowed: Bool?
+    /// companion.events: the last sequence number the companion has seen.
+    public var since: Int?
+    /// companion.screen: "mac" or "workspace".
+    public var target: String?
+    /// The companion device's name (hello).
+    public var device: String?
+
     public init(id: Int, op: String) { self.id = id; self.op = op }
 }
 

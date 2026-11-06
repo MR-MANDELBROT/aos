@@ -16,6 +16,8 @@ let package = Package(
         .executable(name: "annexctl", targets: ["annexctl"]),
         .executable(name: "annex-mcp", targets: ["annex-mcp"]),
         .executable(name: "annex-session", targets: ["annex-session"]),
+        .executable(name: "annex-companion", targets: ["annex-companion"]),
+        .executable(name: "annex-guest-helper", targets: ["annex-guest-helper"]),
     ],
     targets: [
         .target(
@@ -36,6 +38,9 @@ let package = Package(
         .executableTarget(name: "annexctl", dependencies: ["AnnexKit"], path: "Sources/annexctl"),
         .executableTarget(name: "annex-mcp", dependencies: ["AnnexKit"], path: "Sources/annex-mcp"),
         .executableTarget(name: "annex-session", dependencies: ["AnnexKit"], path: "Sources/annex-session"),
+        .executableTarget(name: "annex-companion", dependencies: ["AnnexKit"], path: "Sources/annex-companion"),
+        // Runs inside the workspace (its own app bundle there, see project.yml); depends on nothing of Annex.
+        .executableTarget(name: "annex-guest-helper", path: "Sources/annex-guest-helper"),
         .testTarget(name: "AnnexKitTests", dependencies: ["AnnexKit", "AnnexRFB"], path: "Tests/AnnexKitTests"),
     ],
     swiftLanguageModes: [.v5]

@@ -1,8 +1,8 @@
 import AnnexKit
 import Foundation
 
-// Keeps the Claude Code session running (started by launchd as a LaunchAgent of the app, see
-// App/LaunchAgents). SIGTERM ends the session too.
+// Keeps the Claude Code session running and the conversations the user wants reachable (started by launchd as a
+// LaunchAgent of the app, see App/LaunchAgents). SIGTERM ends them too.
 let paths = Paths.default
 try? paths.prepare()
 // Log to Logs/session.log (kept short: the old log moves aside when it passes 2 MB).
@@ -18,12 +18,16 @@ supervisor.log = { line in
     let stamp = ISO8601DateFormatter().string(from: Date())
     FileHandle.standardError.write(Data("\(stamp) \(line)\n".utf8))
 }
+let keeper = SessionKeeper(paths: paths)
+keeper.log = supervisor.log
 signal(SIGTERM, SIG_IGN)
 let term = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
 term.setEventHandler {
     supervisor.stop()
+    keeper.stopAll()
     DispatchQueue.main.asyncAfter(deadline: .now() + 6) { exit(0) }
 }
 term.resume()
 supervisor.run()
+keeper.run()
 dispatchMain()

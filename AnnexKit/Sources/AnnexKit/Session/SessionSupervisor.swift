@@ -76,6 +76,9 @@ public final class SessionSupervisor: @unchecked Sendable {
     private func launch() {
         let settings = AgentSettings.load(paths)
         guard settings.sessionEnabled else { setStatus(.stopped, "turned off in settings"); return }
+        // The same background process also keeps conversations reachable (SessionKeeper); Annex's own session only
+        // runs once the setup configured its folder.
+        guard ClaudeCode.isConfigured(session: paths.session) else { setStatus(.stopped, "not set up"); return }
         guard let claude = ClaudeCode.executable() else {
             setStatus(.missingClaude, "Claude Code is not installed")
             queue.asyncAfter(deadline: .now() + 30) { self.launch() }
@@ -293,6 +296,36 @@ public enum ClaudeCode {
         return nil
     }
 
+    /// The environment of a fresh terminal: nothing from a Claude Code process that may have started us (its markers
+    /// turn off saving the transcript), no API keys.
+    public static func cleanEnvironment() -> [String] {
+        let inherited = ProcessInfo.processInfo.environment
+        var env: [String: String] = [:]
+        for k in ["HOME", "USER", "LOGNAME", "TMPDIR", "LANG", "LC_ALL", "LC_CTYPE", "SHELL"] {
+            if let v = inherited[k] { env[k] = v }
+        }
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        env["HOME"] = env["HOME"] ?? home
+        env["USER"] = env["USER"] ?? NSUserName()
+        env["LOGNAME"] = env["LOGNAME"] ?? NSUserName()
+        env["LANG"] = env["LANG"] ?? "en_US.UTF-8"
+        env["TERM"] = "xterm-256color"
+        env["COLORTERM"] = "truecolor"
+        env["PATH"] = "\(home)/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        return env.map { "\($0.key)=\($0.value)" }
+    }
+
+    /// The user's login shell if it is one whose `-l -c 'exec "$@"'` we know (it sets PATH like a new terminal
+    /// window, which MCP servers started through npx and the like need), otherwise zsh.
+    public static func loginShell() -> String {
+        if let pw = getpwuid(getuid()), let shell = pw.pointee.pw_shell.map({ String(cString: $0) }),
+           ["zsh", "bash", "sh"].contains((shell as NSString).lastPathComponent),
+           FileManager.default.isExecutableFile(atPath: shell) {
+            return shell
+        }
+        return "/bin/zsh"
+    }
+
     /// Claude Code stores conversations per folder in ~/.claude/projects/<folder with / replaced by ->.
     public static func hasConversation(in folder: URL) -> Bool {
         let encoded = folder.standardizedFileURL.path.replacingOccurrences(of: "/", with: "-")
@@ -344,6 +377,11 @@ public enum ClaudeCode {
         return (code == 0 && method != "none", method)
     }
 
+    /// The setup registered the workspace tools for the session folder (see `configure`).
+    public static func isConfigured(session: URL) -> Bool {
+        FileManager.default.fileExists(atPath: session.appendingPathComponent(".claude/settings.local.json").path)
+    }
+
     /// Registers the MCP server for the session folder only (local scope) and writes the folder's permission
     /// rules: the workspace tools run without asking, except opening the workspace, which the user approves.
     public static func configure(session: URL, mcpBinary: URL) throws {
@@ -376,6 +414,9 @@ public enum SessionError: LocalizedError {
         }
     }
 }
+
+/// For files that import Apple's Network framework, where `Network` means the framework.
+public typealias TCPCheck = Network
 
 /// Is the host reachable (DNS and TCP)? Waiting for this avoids starting Claude Code without network.
 public enum Network {

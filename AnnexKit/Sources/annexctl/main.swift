@@ -274,6 +274,37 @@ func runCommand() async {
             }
             exit(0)
 
+        case "keeper":
+            // keeper plan: what the session keeper would keep now (with the current settings, or --all as if on)
+            var settings = AgentSettings.load(paths)
+            if args.contains("--all") { settings.keepReachable = true }
+            let recent = ClaudeConversations.recent(within: Double(settings.keepHours) * 3600)
+            let live = ClaudeConversations.live()
+            print("conversations in the last \(settings.keepHours) h: \(recent.count), live processes: \(live.count)")
+            for c in recent {
+                let d = c.desktop.map { "desktop(archived:\($0.archived) scheduled:\($0.scheduled) mode:\($0.permissionMode ?? "-") rcOff:\($0.remoteControlTurnedOff))" } ?? "cli"
+                let running = live.filter { $0.sessionId == c.id }.map { "\($0.entrypoint):\($0.pid)" }.joined(separator: ",")
+                print("  \(c.id.prefix(8)) rc:\(c.usedRemoteControl ? "y" : "n") \(d) \(running.isEmpty ? "" : "LIVE \(running) ")\"\(c.title.prefix(50))\" \(c.cwd)")
+            }
+            let chosen = SessionKeeper.select(recent, settings: settings, exclude: paths.session.standardizedFileURL.path)
+            print("would keep (max \(settings.keepMax)):")
+            for (c, pinned) in chosen { print("  \(pinned ? "pinned" : "auto  ") \(c.id.prefix(8)) \"\(c.title.prefix(60))\"") }
+            guard args.contains("--run") else { exit(0) }
+            // keeper --all --run: run the keeper in the foreground with these settings (testing), Ctrl-C ends it
+            let keeper = SessionKeeper(paths: paths)
+            let fixed = settings
+            keeper.settings = { _ in fixed }
+            keeper.log = { line in print(ISO8601DateFormatter().string(from: Date()), line); fflush(stdout) }
+            signal(SIGTERM, SIG_IGN); signal(SIGINT, SIG_IGN)
+            for sig in [SIGTERM, SIGINT] {
+                let src = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+                src.setEventHandler { keeper.stopAll(); DispatchQueue.main.asyncAfter(deadline: .now() + 6) { exit(0) } }
+                src.resume()
+                keepAlive.append(src as AnyObject)
+            }
+            keeper.run()
+            return
+
         case "ip":
             let host = VMHost(bundle: bundle, paths: paths)
             print(try host.guestAddress() ?? "no address")

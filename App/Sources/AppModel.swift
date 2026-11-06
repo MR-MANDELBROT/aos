@@ -34,6 +34,11 @@ final class AppModel: ObservableObject {
     @Published var settings: AgentSettings
     @Published var loginItemEnabled = false
     @Published var sessionAgentStatus: SMAppService.Status = .notRegistered
+    /// What the session keeper does (run/keeper.json, written by annex-session).
+    @Published var keeper: KeeperStatus?
+    /// Recent Claude Code conversations, for the settings (filled while the settings show them).
+    @Published var conversations: [ClaudeConversation] = []
+    let conversationCache = ConversationCache()
 
     var openWindow: ((String) -> Void)?
 
@@ -143,6 +148,7 @@ final class AppModel: ObservableObject {
             append("agent socket: \(error.localizedDescription)")
         }
         workspace.startIdleWatch()
+        updateSessionAgent()
         // Cheap state every 2 s; the login item status means two XPC calls to macOS, so only every 30 s
         // (and whenever a view asks with refresh()).
         statusTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
@@ -177,12 +183,15 @@ final class AppModel: ObservableObject {
         vmPhase = workspace.host.phase
         status = workspace.status()
         session = SessionStatus.read(paths)
+        keeper = KeeperStatus.read(paths)
         if loginItems {
             loginItemEnabled = SMAppService.mainApp.status == .enabled
             sessionAgentStatus = SessionAgent.service.status
         }
         setup.refreshCompletion()
-        keepAwake.set(settings.keepAwake && settings.sessionEnabled && sessionAgentStatus == .enabled)
+        // Awake while something must stay reachable: Annex's own session or kept conversations.
+        let ownSession = settings.sessionEnabled && ClaudeCode.isConfigured(session: paths.session)
+        keepAwake.set(settings.keepAwake && sessionAgentStatus == .enabled && (ownSession || reachableCount > 0))
         updateActivationPolicy()
     }
 
@@ -211,8 +220,68 @@ final class AppModel: ObservableObject {
             try workspace.updateSettings(s)
             settings = s
             if sessionChanged { SessionAgent.restart(paths: paths) }
+            updateSessionAgent()
         } catch { append("settings: \(error.localizedDescription)") }
     }
+
+    /// The background process (annex-session) runs while it has something to do: Annex's own session once it is set
+    /// up, or keeping conversations reachable.
+    func updateSessionAgent() {
+        let needed = settings.keepReachable
+            || (settings.sessionEnabled && ClaudeCode.isConfigured(session: paths.session))
+        do {
+            if needed && SessionAgent.service.status != .enabled {
+                try SessionAgent.enable()
+                append("background process registered")
+            } else if !needed && SessionAgent.service.status == .enabled {
+                try SessionAgent.disable()
+                append("background process removed")
+            }
+        } catch { append("background process: \(error.localizedDescription)") }
+        sessionAgentStatus = SessionAgent.service.status
+    }
+
+    /// Changes one setting right away.
+    func update(_ change: (inout AgentSettings) -> Void) {
+        var s = settings
+        change(&s)
+        guard s != settings else { return }
+        save(s)
+    }
+
+    // MARK: Reachable conversations
+
+    func loadConversations() {
+        let hours = Double(max(settings.keepHours, 24 * 7))
+        let cache = conversationCache
+        Task.detached(priority: .utility) {
+            let list = ClaudeConversations.recent(within: hours * 3600, limit: 40, cache: cache)
+                .filter { $0.startedIn != "sdk-cli" }
+            await MainActor.run { AppModel.shared.conversations = list }
+        }
+    }
+
+    func pin(_ id: String, _ on: Bool) {
+        update { s in
+            s.keptConversations.removeAll { $0 == id }
+            s.skippedConversations.removeAll { $0 == id }
+            if on { s.keptConversations.append(id) }
+        }
+    }
+
+    func skip(_ id: String) {
+        update { s in
+            s.keptConversations.removeAll { $0 == id }
+            if !s.skippedConversations.contains(id) { s.skippedConversations.append(id) }
+        }
+    }
+
+    func unskip(_ id: String) {
+        update { s in s.skippedConversations.removeAll { $0 == id } }
+    }
+
+    /// For the menu: how many conversations are reachable now through the keeper.
+    var reachableCount: Int { keeper?.entries.filter { $0.state == .running || $0.state == .starting }.count ?? 0 }
 
     func setLoginItem(_ on: Bool) {
         do {

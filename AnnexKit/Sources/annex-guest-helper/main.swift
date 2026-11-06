@@ -1,0 +1,405 @@
+import AppKit
+import ApplicationServices
+import Darwin
+import Foundation
+
+// Annex's helper inside the workspace (installed at /usr/local/libexec/annex/AnnexHelper.app).
+//
+//   AnnexHelper serve    in the account's session (LaunchAgent): answers on a socket in the account's Library;
+//                        needs the Accessibility permission to see the focused field and to type
+//   AnnexHelper client   as root over SSH: relays one JSON line from stdin to the helper and its answer to stdout,
+//                        but only if the program answering on the socket is this installed helper (nothing else in
+//                        the workspace can pose as it and receive a password)
+//
+// Requests: {"op":"status"} {"op":"focus"} {"op":"fill","host":"...","kind":"username|password|code",
+// "username":"...","password":"...","code":"..."}. Answers never contain what was typed.
+
+let helperVersion = "1"
+let guestUser = "annex"
+
+func socketPath(home: String) -> String { "\(home)/Library/Application Support/AnnexHelper/helper.sock" }
+
+func reply(_ object: [String: Any]) -> Data {
+    ((try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data("{}".utf8)) + Data([0x0A])
+}
+
+// MARK: Accessibility
+
+enum AX {
+    static func attribute(_ element: AXUIElement, _ name: String) -> CFTypeRef? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, name as CFString, &value) == .success else { return nil }
+        return value
+    }
+
+    static func string(_ element: AXUIElement, _ name: String) -> String? { attribute(element, name) as? String }
+
+    static func children(_ element: AXUIElement) -> [AXUIElement] {
+        (attribute(element, kAXChildrenAttribute) as? [AXUIElement]) ?? []
+    }
+
+    static func parent(_ element: AXUIElement) -> AXUIElement? {
+        guard let p = attribute(element, kAXParentAttribute) else { return nil }
+        return (p as! AXUIElement)
+    }
+
+    /// The focused element of the frontmost app, if that app is Chrome. Chrome builds the accessibility tree of web
+    /// pages only for assistive apps; AXManualAccessibility asks for it.
+    static func chromeFocus() -> (app: AXUIElement, element: AXUIElement)? {
+        guard let front = NSWorkspace.shared.frontmostApplication,
+              front.bundleIdentifier == "com.google.Chrome" else { return nil }
+        let app = AXUIElementCreateApplication(front.processIdentifier)
+        AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+        guard let f = attribute(app, kAXFocusedUIElementAttribute) else { return nil }
+        return (app, f as! AXUIElement)
+    }
+
+    /// The web page an element belongs to and its URL.
+    static func webArea(of element: AXUIElement) -> (area: AXUIElement, url: URL)? {
+        var current: AXUIElement? = element
+        var depth = 0
+        while let e = current, depth < 80 {
+            if string(e, kAXRoleAttribute) == "AXWebArea" {
+                if let u = attribute(e, kAXURLAttribute) {
+                    if CFGetTypeID(u) == CFURLGetTypeID() { return (e, (u as! CFURL) as URL) }
+                    if let s = u as? String, let url = URL(string: s) { return (e, url) }
+                }
+                return nil
+            }
+            current = parent(e)
+            depth += 1
+        }
+        return nil
+    }
+
+    static func isTextField(_ e: AXUIElement) -> Bool {
+        let role = string(e, kAXRoleAttribute)
+        return role == "AXTextField" || role == "AXComboBox" || role == "AXSearchField"
+    }
+
+    static func isSecure(_ e: AXUIElement) -> Bool { string(e, kAXSubroleAttribute) == "AXSecureTextField" }
+
+    /// "password", "code" or "username" for a text field; codes are recognized by their label.
+    static func kind(_ e: AXUIElement) -> String {
+        if isSecure(e) { return "password" }
+        let label = [kAXDescriptionAttribute, kAXTitleAttribute, kAXPlaceholderValueAttribute, kAXHelpAttribute,
+                     "AXDOMIdentifier"].compactMap { string(e, $0) }.joined(separator: " ").lowercased()
+        let codeWords = ["code", "otp", "2fa", "token", "verification", "bestätigung", "einmal", "pin", "authenticator"]
+        if codeWords.contains(where: { label.contains($0) }) && !label.contains("postal") && !label.contains("zip") {
+            return "code"
+        }
+        return "username"
+    }
+
+    /// Text fields of a page in document order (bounded walk).
+    static func fields(in area: AXUIElement) -> [AXUIElement] {
+        var out: [AXUIElement] = []
+        var stack: [AXUIElement] = [area]
+        var visited = 0
+        while let e = stack.popLast(), visited < 6000 {
+            visited += 1
+            if isTextField(e) {
+                let enabled = (attribute(e, kAXEnabledAttribute) as? Bool) ?? true
+                if enabled { out.append(e) }
+                continue
+            }
+            stack.append(contentsOf: children(e).reversed())
+        }
+        return out
+    }
+
+    static func focus(_ e: AXUIElement) -> Bool {
+        AXUIElementSetAttributeValue(e, kAXFocusedAttribute as CFString, kCFBooleanTrue) == .success
+    }
+
+    static func isEmpty(_ e: AXUIElement) -> Bool { ((attribute(e, kAXValueAttribute) as? String) ?? "").isEmpty }
+}
+
+// MARK: Typing
+
+enum Keyboard {
+    static let source = CGEventSource(stateID: .hidSystemState)
+
+    static func post(_ key: CGKeyCode, flags: CGEventFlags = []) {
+        for down in [true, false] {
+            let e = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: down)
+            e?.flags = flags
+            e?.post(tap: .cghidEventTap)
+            usleep(8000)
+        }
+    }
+
+    /// Types any text (also characters the keyboard layout doesn't have) as Unicode key events.
+    static func type(_ text: String) {
+        for unit in text.utf16 {
+            var u = unit
+            for down in [true, false] {
+                let e = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: down)
+                e?.keyboardSetUnicodeString(stringLength: 1, unicodeString: &u)
+                e?.post(tap: .cghidEventTap)
+            }
+            usleep(12000)
+        }
+    }
+
+    static func selectAll() { post(0x00, flags: .maskCommand) }
+    static func returnKey() { post(0x24) }
+}
+
+// MARK: Requests
+
+func hostMatches(_ url: URL, _ host: String) -> Bool {
+    guard let h = url.host?.lowercased(), ["https", "http"].contains(url.scheme?.lowercased() ?? "") else { return false }
+    return h == host.lowercased()
+}
+
+func currentFocus() -> [String: Any] {
+    guard AXIsProcessTrusted() else { return ["ok": false, "error": "the helper is not allowed to use accessibility"] }
+    guard let (_, element) = AX.chromeFocus() else {
+        return ["ok": true, "kind": "none", "error": "Chrome is not the frontmost app or nothing has the focus"]
+    }
+    guard AX.isTextField(element) else { return ["ok": true, "kind": "none", "error": "the focus is not in a text field"] }
+    guard let (_, url) = AX.webArea(of: element), let host = url.host, ["https", "http"].contains(url.scheme ?? "") else {
+        return ["ok": true, "kind": "none", "error": "the field is not on a website"]
+    }
+    return ["ok": true, "kind": AX.kind(element), "host": host.lowercased(), "app": "Google Chrome"]
+}
+
+/// Waits up to `seconds` for a password field on a page of `host` (two-step sign-ins show it after "Next").
+func waitForPasswordField(host: String, seconds: Double) -> AXUIElement? {
+    let deadline = Date().addingTimeInterval(seconds)
+    while Date() < deadline {
+        usleep(400_000)
+        guard let front = NSWorkspace.shared.frontmostApplication, front.bundleIdentifier == "com.google.Chrome" else {
+            continue
+        }
+        let app = AXUIElementCreateApplication(front.processIdentifier)
+        AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+        guard let window = AX.attribute(app, kAXFocusedWindowAttribute) else { continue }
+        var stack: [AXUIElement] = [window as! AXUIElement]
+        var visited = 0
+        while let e = stack.popLast(), visited < 3000 {
+            visited += 1
+            guard AX.string(e, kAXRoleAttribute) == "AXWebArea" else {
+                stack.append(contentsOf: AX.children(e))
+                continue
+            }
+            guard let u = AX.attribute(e, kAXURLAttribute), CFGetTypeID(u) == CFURLGetTypeID(),
+                  hostMatches((u as! CFURL) as URL, host) else { continue }
+            if let field = AX.fields(in: e).first(where: AX.isSecure) { return field }
+        }
+    }
+    return nil
+}
+
+func fill(_ r: [String: Any]) -> [String: Any] {
+    guard AXIsProcessTrusted() else { return ["ok": false, "error": "the helper is not allowed to use accessibility"] }
+    guard let host = r["host"] as? String, let kind = r["kind"] as? String else { return ["ok": false, "error": "bad request"] }
+    let username = r["username"] as? String, password = r["password"] as? String, code = r["code"] as? String
+    // The focus must still be where the user approved it: a text field of the same kind on the same website.
+    guard let (_, element) = AX.chromeFocus(), AX.isTextField(element), let (area, url) = AX.webArea(of: element),
+          hostMatches(url, host) else {
+        return ["ok": false, "error": "the focus moved away from the sign-in field on \(host)"]
+    }
+    guard AX.kind(element) == kind || (kind == "username" && AX.kind(element) == "code") else {
+        return ["ok": false, "error": "a different field has the focus now"]
+    }
+    var filled: [String] = []
+    switch kind {
+    case "code":
+        guard let code, !code.isEmpty else { return ["ok": false, "error": "no code in the answer"] }
+        Keyboard.selectAll(); Keyboard.type(code); filled.append("code")
+        Keyboard.returnKey()
+        return ["ok": true, "filled": filled, "submitted": true, "host": host]
+
+    case "password":
+        guard let password, !password.isEmpty else { return ["ok": false, "error": "no password in the answer"] }
+        // An empty user name field before the password field on the same page gets the user name first.
+        if let username, !username.isEmpty {
+            let fields = AX.fields(in: area)
+            if let index = fields.firstIndex(where: { CFEqual($0, element) }),
+               let before = fields[..<index].last(where: { !AX.isSecure($0) && AX.isEmpty($0) }),
+               AX.focus(before) {
+                usleep(150_000)
+                Keyboard.type(username); filled.append("user name")
+                guard AX.focus(element) else { return ["ok": false, "error": "could not return to the password field"] }
+                usleep(150_000)
+            }
+        }
+        // Check once more right before typing the secret.
+        guard let (_, now) = AX.chromeFocus(), CFEqual(now, element), AX.isSecure(now) else {
+            return ["ok": false, "error": "the focus moved away from the password field"]
+        }
+        Keyboard.selectAll(); Keyboard.type(password); filled.append("password")
+        Keyboard.returnKey()
+        return ["ok": true, "filled": filled, "submitted": true, "host": host]
+
+    default:  // username
+        guard let username, !username.isEmpty else { return ["ok": false, "error": "no user name in the answer"] }
+        Keyboard.selectAll(); Keyboard.type(username); filled.append("user name")
+        guard let password, !password.isEmpty else {
+            Keyboard.returnKey()
+            return ["ok": true, "filled": filled, "submitted": true, "host": host]
+        }
+        // Same page: the next password field after the user name field. Otherwise submit and wait for the
+        // password step on the same website.
+        let fields = AX.fields(in: area)
+        var target: AXUIElement?
+        if let index = fields.firstIndex(where: { CFEqual($0, element) }) {
+            target = fields[(index + 1)...].first(where: AX.isSecure)
+        }
+        if target == nil {
+            Keyboard.returnKey()
+            target = waitForPasswordField(host: host, seconds: 12)
+            guard target != nil else {
+                return ["ok": true, "filled": filled, "submitted": true, "host": host,
+                        "error": "no password field appeared on \(host); if the next page asks for it, call sign_in there"]
+            }
+        }
+        guard let field = target, AX.focus(field) else {
+            return ["ok": false, "filled": filled, "error": "could not move to the password field"]
+        }
+        usleep(250_000)
+        guard let (_, now) = AX.chromeFocus(), CFEqual(now, field), let (_, u2) = AX.webArea(of: now),
+              hostMatches(u2, host) else {
+            return ["ok": false, "filled": filled, "error": "the password field is not on \(host) any more"]
+        }
+        Keyboard.selectAll(); Keyboard.type(password); filled.append("password")
+        Keyboard.returnKey()
+        return ["ok": true, "filled": filled, "submitted": true, "host": host]
+    }
+}
+
+func handle(_ line: Data) -> Data {
+    guard let r = try? JSONSerialization.jsonObject(with: line) as? [String: Any], let op = r["op"] as? String else {
+        return reply(["ok": false, "error": "bad request"])
+    }
+    switch op {
+    case "status": return reply(["ok": true, "trusted": AXIsProcessTrusted(), "version": helperVersion])
+    case "focus": return reply(currentFocus())
+    case "fill":
+        // Accessibility calls and key events belong on the main thread.
+        var out: [String: Any] = [:]
+        DispatchQueue.main.sync { out = fill(r) }
+        return reply(out)
+    case "prompt":
+        // Puts the helper into the Accessibility list in System Settings (macOS shows its own question too).
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        return reply(["ok": true, "trusted": AXIsProcessTrustedWithOptions(options)])
+    default: return reply(["ok": false, "error": "unknown op"])
+    }
+}
+
+// MARK: Socket
+
+func readLine(_ fd: Int32, limit: Int = 1 << 16) -> Data? {
+    var data = Data()
+    var byte: UInt8 = 0
+    while data.count < limit {
+        let n = read(fd, &byte, 1)
+        if n <= 0 { return data.isEmpty ? nil : data }
+        if byte == 0x0A { return data }
+        data.append(byte)
+    }
+    return data
+}
+
+func writeAll(_ fd: Int32, _ data: Data) {
+    data.withUnsafeBytes { raw in
+        var offset = 0
+        while offset < raw.count {
+            let n = write(fd, raw.baseAddress!.advanced(by: offset), raw.count - offset)
+            if n <= 0 { return }
+            offset += n
+        }
+    }
+}
+
+func makeAddress(_ path: String) -> sockaddr_un {
+    var addr = sockaddr_un()
+    addr.sun_family = sa_family_t(AF_UNIX)
+    withUnsafeMutableBytes(of: &addr.sun_path) { raw in
+        path.utf8CString.withUnsafeBytes { raw.copyMemory(from: UnsafeRawBufferPointer(rebasing: $0.prefix(raw.count - 1))) }
+    }
+    return addr
+}
+
+func serve() -> Never {
+    let home = NSHomeDirectory()
+    let path = socketPath(home: home)
+    let dir = (path as NSString).deletingLastPathComponent
+    try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+    unlink(path)
+    let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+    var addr = makeAddress(path)
+    let old = umask(0o077)
+    let rc = withUnsafePointer(to: &addr) {
+        $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { bind(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
+    }
+    umask(old)
+    guard rc == 0, listen(fd, 4) == 0 else {
+        FileHandle.standardError.write(Data("cannot listen on \(path): \(errno)\n".utf8))
+        exit(1)
+    }
+    // Ask Chrome for its accessibility tree early (it builds it lazily).
+    _ = AXIsProcessTrusted()
+    DispatchQueue.global().async {
+        while true {
+            let client = accept(fd, nil, nil)
+            guard client >= 0 else { continue }
+            var tv = timeval(tv_sec: 10, tv_usec: 0)
+            setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+            var on: Int32 = 1
+            setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))
+            if let line = readLine(client) { writeAll(client, handle(line)) }
+            close(client)
+        }
+    }
+    NSApplication.shared.setActivationPolicy(.prohibited)
+    NSApplication.shared.run()
+    exit(0)
+}
+
+/// Root's side: relay one request, but only to the installed helper.
+func client() -> Never {
+    guard let pw = getpwnam(guestUser) else { print(String(decoding: reply(["ok": false, "error": "no account"]), as: UTF8.self)); exit(1) }
+    let home = String(cString: pw.pointee.pw_dir)
+    let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+    var addr = makeAddress(socketPath(home: home))
+    let rc = withUnsafePointer(to: &addr) {
+        $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
+    }
+    func fail(_ s: String) -> Never {
+        FileHandle.standardOutput.write(reply(["ok": false, "error": s]))
+        exit(1)
+    }
+    guard rc == 0 else { fail("the helper is not running (no one logged in, or it was stopped)") }
+    // Who answers? It must be this very program, running as the account.
+    var pid: pid_t = 0
+    var length = socklen_t(MemoryLayout<pid_t>.size)
+    guard getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &pid, &length) == 0, pid > 0 else { fail("cannot identify the helper") }
+    var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
+    guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 else { fail("cannot identify the helper") }
+    let peer = URL(fileURLWithPath: String(cString: buffer)).resolvingSymlinksInPath().path
+    let me = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath().path
+    var uid: uid_t = 0, gid: gid_t = 0
+    guard getpeereid(fd, &uid, &gid) == 0, uid == pw.pointee.pw_uid, peer == me,
+          me.hasPrefix("/usr/local/libexec/annex/") else {
+        fail("something other than the installed helper listens on its socket")
+    }
+    guard let line = readLine(STDIN_FILENO) else { fail("no request") }
+    writeAll(fd, line + Data([0x0A]))
+    var tv = timeval(tv_sec: 60, tv_usec: 0)
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+    guard let answer = readLine(fd) else { fail("no answer from the helper") }
+    FileHandle.standardOutput.write(answer + Data([0x0A]))
+    exit(0)
+}
+
+switch CommandLine.arguments.dropFirst().first {
+case "client": client()
+case "serve", .none: serve()
+default:
+    FileHandle.standardError.write(Data("usage: AnnexHelper serve | client\n".utf8))
+    exit(2)
+}

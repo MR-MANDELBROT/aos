@@ -11,7 +11,7 @@ public final class WorkspaceController {
     public private(set) var provisioner: Provisioner
     public private(set) var settings: AgentSettings
     private var rfb: RFBClient?
-    private var lease: (until: Date, purpose: String)?
+    var lease: (until: Date, purpose: String)?
     private var lastActivity = Date()
     private var idleTimer: Timer?
     private var busy = false
@@ -25,6 +25,14 @@ public final class WorkspaceController {
     public var onHelpRequest: ((String) async -> String)?
     /// Asks the user on the Mac whether an agent may open the workspace (agent name, purpose, minutes).
     public var onApprovalRequest: ((String, String, Int) async -> Bool)?
+    /// What the iPhone app sees and can answer.
+    public let companion = CompanionHub()
+    /// A help or approval answer from the iPhone (the app owns those questions); returns an error text or nil.
+    public var onCompanionAnswer: ((AgentRequest) -> String?)?
+    /// Sign-ins waiting for the user's answer (from the Mac window or the iPhone), by request id.
+    var pendingSignIns: [String: CheckedContinuation<SignInAnswer?, Never>] = [:]
+    /// While a sign-in runs, the agent's other tools wait (nothing may move the focus).
+    var signingIn = false
 
     public init(paths: Paths) {
         self.paths = paths
@@ -82,6 +90,13 @@ public final class WorkspaceController {
     // MARK: Requests
 
     public func handle(_ request: AgentRequest) async -> AgentResponse {
+        // The iPhone app's requests are not the agent's activity: they must not keep the workspace open.
+        if request.op.hasPrefix("companion.") || ["signin.answer", "help.done", "approval.answer"].contains(request.op) {
+            return await handleCompanion(request)
+        }
+        if signingIn && request.op != "status" {
+            return AgentResponse.failure(request.id, "A sign-in is in progress. Wait for the result of sign_in, then continue.")
+        }
         lastActivity = Date()
         busy = true
         defer { busy = false; lastActivity = Date(); onChange?() }
@@ -105,6 +120,8 @@ public final class WorkspaceController {
             case "get":
                 let text = try Exchange(paths: paths).get(name: request.name ?? "", keep: request.keep ?? false)
                 return AgentResponse(id: request.id, ok: true, text: text)
+            case "sign_in":
+                return try await signIn(request)
             default:
                 return try await input(request)
             }
@@ -130,7 +147,7 @@ public final class WorkspaceController {
         return lines.joined(separator: "\n")
     }
 
-    private func guestPassword() throws -> String { try GuestSecrets(paths: paths).adminPassword(createIfMissing: false) }
+    func guestPassword() throws -> String { try GuestSecrets(paths: paths).adminPassword(createIfMissing: false) }
 
     private func open(_ request: AgentRequest) async throws -> AgentResponse {
         guard setupComplete else {
@@ -236,7 +253,7 @@ public final class WorkspaceController {
         return "\(error)".contains("Network is down") || "\(error)".contains("error 50")
     }
 
-    private func requireLease() throws -> RFBClient {
+    func requireLease() throws -> RFBClient {
         guard let lease, lease.until > Date() else { throw WorkspaceError.notOpen }
         guard let rfb else { throw WorkspaceError.notOpen }
         return rfb
@@ -358,6 +375,8 @@ public enum WorkspaceError: LocalizedError {
     case notSetUp, needsPurpose, notOpen, screenUnavailable, helpUnavailable, approvalUnavailable, declined, localNetworkDenied
     case missing(String)
     case unknownOperation(String)
+    case helperNotAllowed
+    case noSignInField(String?)
 
     public var errorDescription: String? {
         switch self {
@@ -371,6 +390,10 @@ public enum WorkspaceError: LocalizedError {
         case .helpUnavailable: return "Asking the user for help is not available right now. Tell the user in the chat what you need."
         case .missing(let p): return "Missing parameter \(p)."
         case .unknownOperation(let op): return "Unknown operation \(op)."
+        case .helperNotAllowed:
+            return "Signing in isn't set up in the workspace yet: the user has to allow the \(Brand.name) helper once (\(Brand.name) settings > Workspace). Tell the user; until then ask them to sign in with ask_user_for_help."
+        case .noSignInField(let detail):
+            return "No sign-in field has the focus. Click into the user name, email, password or code field of the sign-in form in Chrome first, then call sign_in again.\(detail.map { " (\($0))" } ?? "")"
         }
     }
 }

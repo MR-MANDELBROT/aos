@@ -21,8 +21,24 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// The setup ran to the end once.
     public var setupFinished: Bool = false
 
+    // Keeping Claude Code conversations reachable from the Claude app (SessionKeeper)
+    /// Keep conversations running in the background after the window or terminal that ran them closed.
+    public var keepReachable: Bool = false
+    /// Besides the pinned ones: every conversation that used Remote Control within `keepHours`.
+    public var keepAutomatic: Bool = true
+    public var keepHours: Int = 48
+    /// Also conversations started in a terminal (off: only the Claude app's; terminal ones can still be pinned).
+    public var keepTerminal: Bool = false
+    /// At most this many at once (each one is a Claude Code process, about 250 MB).
+    public var keepMax: Int = 6
+    /// Conversation ids the user pinned (kept regardless of age).
+    public var keptConversations: [String] = []
+    /// Conversation ids the user doesn't want kept.
+    public var skippedConversations: [String] = []
+
     private enum CodingKeys: String, CodingKey {
         case expireSignIns, keepSignedIn, idleMinutes, sessionName, sessionEnabled, keepAwake, agents, setupFinished
+        case keepReachable, keepAutomatic, keepHours, keepTerminal, keepMax, keptConversations, skippedConversations
     }
 
     public init(from decoder: Decoder) throws {
@@ -36,6 +52,13 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         keepAwake = try c.decodeIfPresent(Bool.self, forKey: .keepAwake) ?? d.keepAwake
         agents = try c.decodeIfPresent([String].self, forKey: .agents) ?? d.agents
         setupFinished = try c.decodeIfPresent(Bool.self, forKey: .setupFinished) ?? d.setupFinished
+        keepReachable = try c.decodeIfPresent(Bool.self, forKey: .keepReachable) ?? d.keepReachable
+        keepAutomatic = try c.decodeIfPresent(Bool.self, forKey: .keepAutomatic) ?? d.keepAutomatic
+        keepHours = min(max(try c.decodeIfPresent(Int.self, forKey: .keepHours) ?? d.keepHours, 1), 24 * 30)
+        keepTerminal = try c.decodeIfPresent(Bool.self, forKey: .keepTerminal) ?? d.keepTerminal
+        keepMax = min(max(try c.decodeIfPresent(Int.self, forKey: .keepMax) ?? d.keepMax, 1), 20)
+        keptConversations = try c.decodeIfPresent([String].self, forKey: .keptConversations) ?? d.keptConversations
+        skippedConversations = try c.decodeIfPresent([String].self, forKey: .skippedConversations) ?? d.skippedConversations
     }
 
     public init() {}

@@ -141,6 +141,27 @@ public final class AgentClient: @unchecked Sendable {
         socket = try LineSocketClient(path: paths.agentSocket)
     }
 
+    /// Connects to the app; if it isn't running (and this is the real app folder), starts it in the background and
+    /// waits up to 20 s for it.
+    public static func connectStartingApp(paths: Paths = .default) throws -> AgentClient {
+        do {
+            return try AgentClient(paths: paths)
+        } catch SocketError.notRunning(let path) {
+            guard paths.root == Paths.default.root else { throw SocketError.notRunning(path) }
+            let open = Process()
+            open.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            open.arguments = ["-g", "-b", Brand.bundleIdentifierPrefix]
+            try? open.run()
+            open.waitUntilExit()
+            let deadline = Date().addingTimeInterval(20)
+            while Date() < deadline {
+                usleep(500_000)
+                if let client = try? AgentClient(paths: paths) { return client }
+            }
+            throw SocketError.notRunning(path)
+        }
+    }
+
     public func send(_ build: (inout AgentRequest) -> Void) throws -> AgentResponse {
         try lock.withLock {
             var request = AgentRequest(id: nextID, op: "")
