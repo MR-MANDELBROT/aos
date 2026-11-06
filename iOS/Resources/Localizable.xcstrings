@@ -195,6 +195,22 @@
         }
       }
     },
+    "%lld pt · %lld × %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld pt · %2$lld × %3$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld pt · %2$lld × %3$lld"
+          }
+        }
+      }
+    },
     "%lld:%@ left" : {
       "localizations" : {
         "de" : {
@@ -461,6 +477,16 @@
         }
       }
     },
+    "aOS on the Mac now takes requests only when this iPhone signs them, with a key it gets when you pair. Show the pairing code on the Mac (Settings > iPhone) and scan it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf dem Mac nimmt Anfragen jetzt nur noch an, wenn dieses iPhone sie unterschreibt, mit einem Schlüssel aus der Kopplung. Zeig auf dem Mac den Kopplungscode (Einstellungen > iPhone) und scanne ihn."
+          }
+        }
+      }
+    },
     "aOS on the Mac said no." : {
       "localizations" : {
         "de" : {
@@ -571,6 +597,16 @@
         }
       }
     },
+    "Arrow pad" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfeilfeld"
+          }
+        }
+      }
+    },
     "Asking the Mac" : {
       "localizations" : {
         "de" : {
@@ -597,6 +633,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausgewogen"
+          }
+        }
+      }
+    },
+    "Bigger" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größer"
+          }
+        }
+      }
+    },
+    "Bigger Text" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größere Schrift"
           }
         }
       }
@@ -657,6 +713,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prüfe den Schlüssel des Macs"
+          }
+        }
+      }
+    },
+    "Clear Scrollback" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verlauf löschen"
           }
         }
       }
@@ -751,12 +817,52 @@
         }
       }
     },
+    "Control" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control"
+          }
+        }
+      }
+    },
     "Copied" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kopiert"
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieren"
+          }
+        }
+      }
+    },
+    "Copy Last Output" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Ausgabe kopieren"
+          }
+        }
+      }
+    },
+    "Copy Screen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm kopieren"
           }
         }
       }
@@ -811,12 +917,42 @@
         }
       }
     },
+    "Default" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard"
+          }
+        }
+      }
+    },
+    "Default Text Size" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardschriftgröße"
+          }
+        }
+      }
+    },
     "Delete" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Löschen"
+          }
+        }
+      }
+    },
+    "Delete Forward" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorwärts löschen"
           }
         }
       }
@@ -871,6 +1007,26 @@
         }
       }
     },
+    "Double tap to keep it on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweimal tippen, damit sie an bleibt"
+          }
+        }
+      }
+    },
+    "Down Arrow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfeil nach unten"
+          }
+        }
+      }
+    },
     "Drag one finger: drag (select, move windows)" : {
       "localizations" : {
         "de" : {
@@ -897,6 +1053,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bearbeiten"
+          }
+        }
+      }
+    },
+    "End" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ende"
+          }
+        }
+      }
+    },
+    "End of selection" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ende der Auswahl"
+          }
+        }
+      }
+    },
+    "Escape" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escape"
           }
         }
       }
@@ -1051,6 +1237,26 @@
         }
       }
     },
+    "Hide Keyboard" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastatur ausblenden"
+          }
+        }
+      }
+    },
+    "Home" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pos1"
+          }
+        }
+      }
+    },
     "How the iPhone reaches it" : {
       "localizations" : {
         "de" : {
@@ -1121,6 +1327,16 @@
         }
       }
     },
+    "Keep Screen On" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm bleibt an"
+          }
+        }
+      }
+    },
     "Kept in" : {
       "localizations" : {
         "de" : {
@@ -1181,12 +1397,32 @@
         }
       }
     },
+    "Left Arrow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfeil nach links"
+          }
+        }
+      }
+    },
     "Lock again" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wieder sperren"
+          }
+        }
+      }
+    },
+    "Locked" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Festgestellt"
           }
         }
       }
@@ -1331,6 +1567,16 @@
         }
       }
     },
+    "No output to copy" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Ausgabe zum Kopieren"
+          }
+        }
+      }
+    },
     "No picture" : {
       "localizations" : {
         "de" : {
@@ -1411,12 +1657,32 @@
         }
       }
     },
+    "Off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus"
+          }
+        }
+      }
+    },
     "OK" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        }
+      }
+    },
+    "On for the next key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An für die nächste Taste"
           }
         }
       }
@@ -1471,6 +1737,16 @@
         }
       }
     },
+    "Open Link" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link öffnen"
+          }
+        }
+      }
+    },
     "Open the workspace" : {
       "localizations" : {
         "de" : {
@@ -1487,6 +1763,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geöffnet bis %@"
+          }
+        }
+      }
+    },
+    "Option" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wahltaste"
           }
         }
       }
@@ -1521,6 +1807,16 @@
         }
       }
     },
+    "Output copied" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgabe kopiert"
+          }
+        }
+      }
+    },
     "Overview" : {
       "localizations" : {
         "de" : {
@@ -1531,12 +1827,52 @@
         }
       }
     },
+    "Page Down" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild ab"
+          }
+        }
+      }
+    },
+    "Page Up" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild auf"
+          }
+        }
+      }
+    },
     "Pair" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Koppeln"
+          }
+        }
+      }
+    },
+    "Pair Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu koppeln"
+          }
+        }
+      }
+    },
+    "Pair again to keep approving from this iPhone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koppel neu, um weiter mit diesem iPhone freizugeben."
           }
         }
       }
@@ -1641,6 +1977,26 @@
         }
       }
     },
+    "Paste" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einsetzen"
+          }
+        }
+      }
+    },
+    "Paste %lld lines?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Zeilen einsetzen?"
+          }
+        }
+      }
+    },
     "Picture rate" : {
       "localizations" : {
         "de" : {
@@ -1707,6 +2063,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entfernter Bildschirm"
+          }
+        }
+      }
+    },
+    "Right Arrow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfeil nach rechts"
           }
         }
       }
@@ -1781,6 +2147,16 @@
         }
       }
     },
+    "Screen copied" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm kopiert"
+          }
+        }
+      }
+    },
     "Screen Sharing must be on, on the Mac: System Settings > General > Sharing." : {
       "localizations" : {
         "de" : {
@@ -1817,6 +2193,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sicherheit"
+          }
+        }
+      }
+    },
+    "Select All" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles auswählen"
           }
         }
       }
@@ -1901,6 +2287,36 @@
         }
       }
     },
+    "Shift" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umschalttaste"
+          }
+        }
+      }
+    },
+    "Shift Tab" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umschalttaste und Tab"
+          }
+        }
+      }
+    },
+    "Show Keyboard" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastatur einblenden"
+          }
+        }
+      }
+    },
     "Show the screen" : {
       "localizations" : {
         "de" : {
@@ -1957,6 +2373,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Angemeldet. aOS hat sie im Arbeitsplatz eingetragen."
+          }
+        }
+      }
+    },
+    "Smaller" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleiner"
+          }
+        }
+      }
+    },
+    "Smaller Text" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleinere Schrift"
           }
         }
       }
@@ -2021,6 +2457,16 @@
         }
       }
     },
+    "Start of selection" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfang der Auswahl"
+          }
+        }
+      }
+    },
     "Starting" : {
       "localizations" : {
         "de" : {
@@ -2051,12 +2497,32 @@
         }
       }
     },
+    "Swipe up, down, left or right to send arrow keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach oben, unten, links oder rechts wischen sendet Pfeiltasten"
+          }
+        }
+      }
+    },
     "Switches how one finger works on the screen" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wechselt, was ein Finger auf dem Bildschirm macht"
+          }
+        }
+      }
+    },
+    "Tab" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabulator"
           }
         }
       }
@@ -2097,6 +2563,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Terminal"
+          }
+        }
+      }
+    },
+    "Terminal keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminaltasten"
+          }
+        }
+      }
+    },
+    "Text Size" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schriftgröße"
           }
         }
       }
@@ -2481,6 +2967,16 @@
         }
       }
     },
+    "The shell runs each line as soon as it arrives." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Shell führt jede Zeile aus, sobald sie ankommt."
+          }
+        }
+      }
+    },
     "The workspace didn't accept the screen sharing login." : {
       "localizations" : {
         "de" : {
@@ -2597,6 +3093,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Schlüssel dieses iPhones ließ sich nicht erzeugen: %@"
+          }
+        }
+      }
+    },
+    "This request couldn't be signed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Anfrage konnte nicht signiert werden."
           }
         }
       }
@@ -2797,6 +3303,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ entkoppeln?"
+          }
+        }
+      }
+    },
+    "Up Arrow" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfeil nach oben"
           }
         }
       }

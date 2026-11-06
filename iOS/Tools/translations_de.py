@@ -425,4 +425,8 @@ DE.update({
     'Text Size': 'Schriftgröße',
     'The shell runs each line as soon as it arrives.': 'Die Shell führt jede Zeile aus, sobald sie ankommt.',
     'Up Arrow': 'Pfeil nach oben',
+    "Pair Again": "Neu koppeln",
+    "Pair again to keep approving from this iPhone.": "Koppel neu, um weiter mit diesem iPhone freizugeben.",
+    "This request couldn't be signed.": "Diese Anfrage konnte nicht signiert werden.",
+    "aOS on the Mac now takes requests only when this iPhone signs them, with a key it gets when you pair. Show the pairing code on the Mac (Settings > iPhone) and scan it.": "aOS auf dem Mac nimmt Anfragen jetzt nur noch an, wenn dieses iPhone sie unterschreibt, mit einem Schlüssel aus der Kopplung. Zeig auf dem Mac den Kopplungscode (Einstellungen > iPhone) und scanne ihn.",
 })

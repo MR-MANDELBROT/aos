@@ -216,7 +216,7 @@ struct SignedRequestTests {
                                        signer: CompanionSigner(phoneID: "000000000000", key: CompanionKey.ephemeral()))
         await stranger.start()
         await #expect(throws: CompanionError.pairAgain) { try await stranger.helpDone(request: "h1") }
-        #expect(CompanionError.pairAgain.errorDescription == "Pair again to keep approving from this iPhone.")
+        #expect(CompanionError.pairAgain.errorDescription == String(localized: "Pair again to keep approving from this iPhone."))
         // The right id with a key the Mac doesn't have: refused, but not "pair again"
         let impostor = CompanionClient(transport: server.makeTransport(),
                                        signer: CompanionSigner(phoneID: signer.phoneID, key: CompanionKey.ephemeral()))
