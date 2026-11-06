@@ -10,20 +10,21 @@ iOS/
   project.yml, generate.sh      XcodeGen spec (target aOS, dev.marquart.aos.ios, iOS 27, Swift 6); generate.sh
                                 also copies the Mac app's Icon Composer icon (platform iOS) and Package.resolved
   Package.resolved              exact package revisions (the generated project is gitignored)
-  Sources/Core                  pure logic: pairing link and proof, OpenSSH key format, matching rule, TOTP, CSV,
-                                Bitwarden import, companion protocol (JSON lines), keysym mapping
+  Sources/Core                  pure logic: pairing link and proof, OpenSSH key format, companion protocol (JSON
+                                lines), keysym mapping
   Sources/Services              keychain, Face ID, device key (Secure Enclave), stores for Macs, hosts, secrets
   Sources/SSH                   SSHConnection (Citadel over Network.framework), SessionChannel (exec, PTY),
                                 LocalForwarder (127.0.0.1 listener -> direct-tcpip), PairingClient
   Sources/Companion             CompanionClient (actor), MockCompanionServer (tests and demo), command line
   Sources/App                   AOSApp, AppModel, MacConnection (reconnects), settings, lock, demo data (debug)
-  Sources/{Overview,Pairing,Terminal,Screen,Vault,SignIn,Settings,Design}   the UI
+  Sources/{Overview,Pairing,Terminal,Screen,SignIn,Settings,Design}   the UI
   Tests                         unit and integration tests (in-process SSH, RFB and pairing servers)
   Tools                         test.sh, sim.sh, screenshots.sh, localize.sh (+ translations_de.py), render-icon.sh
 ```
 
 Run the tests: `iOS/Tools/test.sh`. Run the app with sample data: `iOS/Tools/sim.sh -AOSDemo YES` (debug builds
-only; `-AOSDemoTab vault`, `-AOSDemoSheet signin|help|pairing|settings|lock|...`, see `Sources/App/Demo.swift`).
+only; `-AOSDemoTab screen`, `-AOSDemoSheet signin|signin-code|signin-locked|signin-off|help|pairing|settings|lock|...`,
+see `Sources/App/Demo.swift`).
 Screenshots of every screen, light and dark: `iOS/Tools/screenshots.sh de` (or `en`), into `build/ios-screenshots`.
 Strings: write English in code, German in `Tools/translations_de.py`, then `iOS/Tools/localize.sh`; it refuses
 nothing but reports missing German, mismatched format specifiers and dashes used as punctuation.
@@ -72,10 +73,16 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   the app shows each request id once). `status` is asked again after every `workspace` event (for `purpose` and
   `until`) and every 25 s as a heartbeat (the Mac counts a phone as connected while it asked within 45 s); a heartbeat
   that times out closes the exec channel and the companion starts again.
-- `signin` with `field`: `code` gets a code entry (text content type one-time code, or "Fill in from <login>" with
-  Face ID when a vault login for the host has a TOTP secret; the code sent is recomputed at sending time) and the
-  answer carries `totp` only. `username`/`password` answer with user name, password and the current TOTP if the
-  login has one. A missing or unknown `field` counts as `password`.
+- `signin` carries the person's Bitwarden logins for the site (`logins`: id, name, user name, `totp`) and
+  Bitwarden's state on the Mac (`bitwarden`: `unlocked`, `locked`, `off`, `unavailable`; missing or unknown counts
+  as `off`). The sheet lists the logins (name and user name; the iPhone never talks to Bitwarden and never gets a
+  password) and approves one after Face ID: `{"op":"signin.answer","request":"…","login":"<id>"}`. `locked` says
+  "unlock it in aOS on the Mac"; the Mac then sends the same request again with its logins, and the app updates the
+  request it has (same id) instead of showing it again. "From another password app" (fields with AutoFill) answers
+  with `username`/`password` as before.
+- `field` `code`: logins with `totp` get "Fill in the code from <login>" (Face ID, the answer names the login, the
+  Mac gets the current code from Bitwarden); otherwise a code entry (text content type one-time code) and the
+  answer carries `totp` only. A missing or unknown `field` counts as `password`.
 - `approval` events get a sheet (who, why, for how long, countdown) with Allow / Don't Allow ->
   `{"op":"approval.answer","request":"…","allowed":true|false}`; `approval.closed` shows the result. Sign-ins and
   approvals share one queue and one sheet, in the order they came; "Later" keeps one waiting in the overview.
@@ -85,13 +92,13 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   the inserted text), through the same queue as the keys so the order holds; ASCII stays key events over RFB.
 - Lines that aren't JSON are skipped (a shell's login message, for example); lines up to 1 MiB; unknown fields and
   unknown events are ignored. Request timeout 20 s.
-- `signin.answer` carries `totp` only when the login has a TOTP secret. `help.done` when the person taps Done.
+- `help.done` when the person taps Done.
 - Dates: ISO 8601 with or without fractional seconds. `region`: workspace pixels; `w` or `h` 0 means no region.
 - `screen` `mac`: if the companion isn't ready, the iPhone assumes 127.0.0.1:5900.
 - Session `state` strings the iPhone shows in words: `running`, `starting`, `stopped`, `waiting`/`asking`,
   `failed`; others as they come.
-- Matching rule: as in the design, plus: IP addresses only match exactly (otherwise `0.0.1` would be a "parent" of
-  `10.0.0.1`). The Mac should check the same.
+- Matching logins to the site is the Mac's job (AOSKit `HostMatching`, ported from the iPhone's first version with
+  its own vault, which is gone).
 - Exit status 127 of the exec channel is shown as "aOS isn't installed where it was paired; pair again".
 
 ## Requests for AOSRFB (not changed from here)

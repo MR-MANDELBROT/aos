@@ -100,7 +100,7 @@ targets:
         NSBonjourServices:
           - _aos-pair._tcp
           - _ssh._tcp
-        NSFaceIDUsageDescription: "Face ID unlocks your passwords and approves sign-ins for your agent."
+        NSFaceIDUsageDescription: "Face ID approves sign-ins for your agent and unlocks aOS."
         NSCameraUsageDescription: "The camera scans the pairing code that aOS shows on your Mac."
     settings:
       base:

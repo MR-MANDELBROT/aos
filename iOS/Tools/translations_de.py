@@ -1,12 +1,12 @@
 # German UI strings of the iPhone app (key: English source). Applied by iOS/Tools/localize.sh.
 # Style: plain German, real umlauts, "du", no dashes as sentence punctuation, typographic quotes „…“.
-# Terms as on the Mac and in Bitwarden: Entfernte Anmeldung, Bildschirmfreigabe, Accountname, Tresor exportieren.
+# Terms as on the Mac and in Bitwarden: Entfernte Anmeldung, Bildschirmfreigabe, Accountname, Master-Passwort.
 DE = {
     # Info.plist
     'CFBundleDisplayName': 'aOS',
     'CFBundleName': 'aOS',
     'NSCameraUsageDescription': 'Die Kamera liest den Kopplungscode, den aOS auf deinem Mac zeigt.',
-    'NSFaceIDUsageDescription': 'Face ID entsperrt deine Passwörter und gibt Anmeldungen für deinen Agent frei.',
+    'NSFaceIDUsageDescription': 'Face ID gibt Anmeldungen für deinen Agent frei und entsperrt aOS.',
     'NSLocalNetworkUsageDescription': 'aOS verbindet sich in deinem Netzwerk mit deinem Mac: zum Koppeln und über SSH. Sonst wird nichts in deinem Netzwerk kontaktiert.',
 
     '': '',
@@ -19,14 +19,12 @@ DE = {
     '%@ asks to sign in': '%@ möchte sich anmelden',
     '%@ asks for a one-time code': '%@ bittet um einen Einmalcode',
     '%@ wants to open the workspace': '%@ möchte den Arbeitsplatz öffnen',
-    '%lld s': '%lld s',
     'Allow': 'Erlauben',
     'Allowed. The workspace opens.': 'Erlaubt. Der Arbeitsplatz öffnet sich.',
     "aOS on the Mac isn't answering right now (%@). It keeps trying.":
         'aOS auf dem Mac antwortet gerade nicht (%@). Es versucht es weiter.',
     "aOS on the Mac isn't answering right now. It keeps trying.": 'aOS auf dem Mac antwortet gerade nicht. Es versucht es weiter.',
     "Don't Allow": 'Nicht erlauben',
-    'Fill in from %@': 'Aus %@ einsetzen',
     'Fill in the code for %@': 'Code für %@ einsetzen',
     'For %lld minutes': 'Für %lld Minuten',
     'Not allowed. The workspace stays closed.': 'Nicht erlaubt. Der Arbeitsplatz bleibt geschlossen.',
@@ -48,23 +46,16 @@ DE = {
         '%1$@ zeigt jetzt %2$@. Das passiert, wenn der Rechner neu eingerichtet wurde, kann aber auch heißen, dass jemand dazwischen sitzt. Mach nur weiter, wenn du weißt, warum er sich geändert hat.',
     '%@ to open aOS': '%@ zum Öffnen von aOS',
     '%@@%@': '%1$@@%2$@',
-    '%lld': '%lld',
     '%lld:%@ left': 'noch %1$lld:%2$@',
-    '1. Open Tools > Export vault.': '1. Öffne Werkzeuge > Tresor exportieren.',
-    '2. Choose the format „.json“ or „.csv“, not the encrypted one.': '2. Wähle das Format „.json“ oder „.csv“, nicht das verschlüsselte.',
-    '3. Save the file in Files (On My iPhone).': '3. Sichere die Datei in der Dateien-App (Auf meinem iPhone).',
     'A Mac of its own for your coding agent.': 'Ein eigener Mac für deinen Coding-Agent.',
     'Account name': 'Accountname',
-    'Add': 'Hinzufügen',
     'Add a computer': 'Rechner hinzufügen',
-    'Add a login': 'Anmeldung hinzufügen',
     "Add this iPhone's public key (Settings > SSH key of this iPhone) to ~/.ssh/authorized_keys on that computer.":
         'Trag den öffentlichen Schlüssel dieses iPhones (Einstellungen > SSH-Schlüssel dieses iPhones) auf dem Rechner in ~/.ssh/authorized_keys ein.',
     'Address': 'Adresse',
     'Addresses': 'Adressen',
     'After %lld min': 'Nach %lld Min.',
     'After 1 hour': 'Nach 1 Stunde',
-    'Already in the vault: %lld': 'Schon im Tresor: %lld',
     'Always': 'Immer',
     'aOS': 'aOS',
     'aOS %@ on the Mac answers.': 'aOS %@ auf dem Mac antwortet.',
@@ -72,7 +63,6 @@ DE = {
     'aOS is locked': 'aOS ist gesperrt',
     "aOS isn't installed on the Mac where it was paired. Open aOS on the Mac and pair again.":
         'aOS ist auf dem Mac nicht mehr dort installiert, wo es beim Koppeln war. Öffne aOS auf dem Mac und kopple neu.',
-    'aOS may not delete it there. Delete it in the Files app.': 'aOS darf sie dort nicht löschen. Lösche sie in der Dateien-App.',
     'aOS may not use the local network. Allow it in Settings > Privacy & Security > Local Network, then try again.':
         'aOS darf das lokale Netzwerk nicht nutzen. Erlaube es unter Einstellungen > Datenschutz & Sicherheit > Lokales Netzwerk und versuch es dann noch einmal.',
     'aOS may not use the local network. Allow it in Settings > Privacy & Security > Local Network.':
@@ -87,19 +77,14 @@ DE = {
     'aOS on your iPhone': 'aOS auf deinem iPhone',
     'aOS remembers the key and warns you if it ever changes.': 'aOS merkt sich den Schlüssel und warnt dich, falls er sich je ändert.',
     'Approve with %@': 'Mit %@ freigeben',
-    'Approved sign-ins go once, encrypted over SSH, to aOS on your Mac, which types them into the workspace. Neither the app nor the Mac keeps them.':
-        'Freigegebene Anmeldungen gehen einmal verschlüsselt über SSH an aOS auf deinem Mac, das sie im Arbeitsplatz einträgt. Weder die App noch der Mac behalten sie.',
     'Asking the Mac': 'Frage den Mac',
     "At %@ a different computer answered, or the Mac's SSH key changed. If you set the Mac up again, pair it again.":
         'Unter %@ hat ein anderer Rechner geantwortet, oder der SSH-Schlüssel des Macs hat sich geändert. Hast du den Mac neu eingerichtet, kopple ihn neu.',
     'Balanced': 'Ausgewogen',
-    'Bring your logins from Bitwarden': 'Hol deine Anmeldungen aus Bitwarden',
     'Cancel': 'Abbrechen',
     'Change login': 'Anmeldung ändern',
     'Check that this is the key of your computer. On it, run:': 'Prüfe, ob das der Schlüssel deines Rechners ist. Führe dort aus:',
     "Checking the Mac's key": 'Prüfe den Schlüssel des Macs',
-    'Choose the export file': 'Exportdatei wählen',
-    'Clear copied passwords': 'Kopierte Passwörter löschen',
     'Closed. It opens when your agent needs it.': 'Geschlossen. Er öffnet sich, wenn dein Agent ihn braucht.',
     'Closing': 'Wird geschlossen',
     'Connect': 'Verbinden',
@@ -110,18 +95,12 @@ DE = {
     'Connecting …': 'Verbinde …',
     'Continue': 'Weiter',
     'Copied': 'Kopiert',
-    'Copied. The clipboard forgets it after %lld seconds.': 'Kopiert. Die Zwischenablage vergisst es nach %lld Sekunden.',
-    'Copy': 'Kopieren',
     'Copy the public key': 'Öffentlichen Schlüssel kopieren',
-    'Copy user name': 'Benutzername kopieren',
     "Couldn't type „%@“.": '„%@“ ließ sich nicht tippen.',
     'Decline': 'Ablehnen',
     'Declined.': 'Abgelehnt.',
     'Declined. The agent gets no sign-in.': 'Abgelehnt. Der Agent bekommt keine Anmeldung.',
     'Delete': 'Löschen',
-    'Delete login': 'Anmeldung löschen',
-    'Delete the file now': 'Datei jetzt löschen',
-    'Delete „%@“?': '„%@“ löschen?',
     'Direct': 'Direkt',
     'Direct (one finger touches the screen)': 'Direkt (ein Finger tippt auf den Bildschirm)',
     'Disconnect': 'Trennen',
@@ -129,10 +108,6 @@ DE = {
     'Drag one finger: drag (select, move windows)': 'Mit einem Finger ziehen: ziehen (auswählen, Fenster bewegen)',
     'Drag one finger: move the pointer': 'Mit einem Finger ziehen: den Zeiger bewegen',
     'Edit': 'Bearbeiten',
-    'Edit login': 'Anmeldung bearbeiten',
-    'Every look at a password and every approval needs Face ID or your passcode.':
-        'Jeder Blick auf ein Passwort und jede Freigabe braucht Face ID oder deinen Code.',
-    'Every look at a password needs Face ID or your passcode.': 'Jeder Blick auf ein Passwort braucht Face ID oder deinen Code.',
     'Expired': 'Abgelaufen',
     'Failed': 'Fehlgeschlagen',
     'Running': 'Läuft',
@@ -143,20 +118,10 @@ DE = {
     "Forget the login for the Mac's screen": 'Anmeldung für den Bildschirm des Macs vergessen',
     'Forget the old key': 'Alten Schlüssel vergessen',
     'From another password app': 'Aus einer anderen Passwort-App',
-    'From your vault': 'Aus deinem Tresor',
     'Gestures': 'Gesten',
-    'Has a one-time code': 'Mit Einmalcode',
     'Help in the workspace': 'Hilfe im Arbeitsplatz',
-    'Hide': 'Ausblenden',
     'Hide keyboard': 'Tastatur ausblenden',
     'How the iPhone reaches it': 'So erreicht ihn das iPhone',
-    'If it was in iCloud Drive, also empty „Recently Deleted“ in Files.':
-        'Lag sie in iCloud Drive, leere auch „Zuletzt gelöscht“ in der Dateien-App.',
-    'Import': 'Importieren',
-    'Import from Bitwarden': 'Aus Bitwarden importieren',
-    'Import the logins': 'Anmeldungen importieren',
-    'Imported logins stay on this iPhone, locked with Face ID.': 'Importierte Anmeldungen bleiben auf diesem iPhone, geschützt mit Face ID.',
-    'In Bitwarden': 'In Bitwarden',
     'In use': 'Aktiv',
     'Input works in a moment …': 'Eingaben gehen gleich …',
     'It asks for a sign-in by naming the site and why. You see the request and decide.':
@@ -172,27 +137,18 @@ DE = {
     'Keyboard: type; ⌘ ⌥ ⌃ ⇧ in the key bar apply to the next key': 'Tastatur: tippen; ⌘ ⌥ ⌃ ⇧ in der Tastenleiste gelten für die nächste Taste',
     'Keychain': 'Schlüsselbund',
     'Later': 'Später',
-    'Left out, not logins (notes, cards, identities): %lld': 'Weggelassen, keine Anmeldungen (Notizen, Karten, Identitäten): %lld',
-    'Left out, without user name and password: %lld': 'Weggelassen, ohne Benutzername und Passwort: %lld',
     'Lock again': 'Wieder sperren',
     'Log in to the screen of %@': 'Am Bildschirm von %@ anmelden',
     'Log in with': 'Anmelden mit',
-    'Login deleted': 'Anmeldung gelöscht',
-    'Logins found: %lld': 'Gefundene Anmeldungen: %lld',
-    'Logins imported: %lld': 'Importierte Anmeldungen: %lld',
     'Mac': 'Mac',
-    'Make a strong password': 'Starkes Passwort erzeugen',
     'Moves the pointer (trackpad)': 'Bewegt den Zeiger (Trackpad)',
     'Name': 'Name',
     'Name (optional)': 'Name (optional)',
     'Name of this iPhone': 'Name dieses iPhones',
     'Needs your attention': 'Braucht dich',
-    'New login': 'Neue Anmeldung',
     'New password (empty keeps the old one)': 'Neues Passwort (leer behält das alte)',
     'No address to try.': 'Keine Adresse zum Probieren.',
     'No computers yet': 'Noch keine Rechner',
-    'No login for %@ in your vault': 'Keine Anmeldung für %@ in deinem Tresor',
-    'No logins yet': 'Noch keine Anmeldungen',
     'No news from the Mac': 'Keine Nachricht vom Mac',
     'No picture': 'Kein Bild',
     'Not connected': 'Nicht verbunden',
@@ -200,16 +156,11 @@ DE = {
     'Not connected to your Mac': 'Nicht mit deinem Mac verbunden',
     'Not reachable right now': 'Gerade nicht erreichbar',
     'Not reachable: %@': 'Nicht erreichbar: %@',
-    'Notes': 'Notizen',
-    'Now delete the export file': 'Lösche jetzt die Exportdatei',
     'OK': 'OK',
     "On the Mac: click aOS in the menu bar, then “Pair” next to iPhone. aOS uses the Mac's Remote Login for this, nothing else.":
         'Auf dem Mac: Klicke in der Menüleiste auf aOS, dann bei „iPhone“ auf „Koppeln“. aOS nutzt dafür die entfernte Anmeldung des Macs, sonst nichts.',
     'One finger': 'Ein Finger',
-    'One per line. The login is offered for these sites and their subdomains.':
-        'Eine pro Zeile. Die Anmeldung wird für diese Websites und ihre Subdomains angeboten.',
     'One-time code': 'Einmalcode',
-    'One-time codes (optional)': 'Einmalcodes (optional)',
     'Open': 'Geöffnet',
     'On your Mac, click aOS in the menu bar, then “Pair” next to iPhone. Then scan the code it shows.':
         'Klicke auf deinem Mac in der Menüleiste auf aOS, dann bei „iPhone“ auf „Koppeln“. Scanne dann den Code, den es zeigt.',
@@ -231,8 +182,6 @@ DE = {
     "Pairing didn't work": 'Das Koppeln hat nicht geklappt',
     'Passcode': 'Code',
     'Password': 'Passwort',
-    'Passwords in the vault always need Face ID, whether or not the app itself is locked.':
-        'Passwörter im Tresor brauchen immer Face ID, ob die App selbst gesperrt ist oder nicht.',
     'Picture rate': 'Bildrate',
     'Pinch: zoom. Three fingers: move the zoomed picture': 'Zusammenziehen: zoomen. Drei Finger: das vergrößerte Bild verschieben',
     'Pinned at pairing. If the Mac answers with another key, the app stops and tells you.':
@@ -256,24 +205,15 @@ DE = {
         'Auf dem Mac muss die Bildschirmfreigabe an sein: Systemeinstellungen > Allgemein > Teilen.',
     'Screen sharing on the Mac asks for the name and password of your Mac account, once.':
         'Die Bildschirmfreigabe des Macs fragt einmal nach Name und Passwort deines Mac-Accounts.',
-    'Search logins': 'Anmeldungen durchsuchen',
-    'Seconds left: %lld': 'Verbleibende Sekunden: %lld',
     'Secure Enclave': 'Secure Enclave',
     'Security': 'Sicherheit',
-    'Send the sign-in for %@': 'Anmeldung für %@ senden',
     'Send this sign-in': 'Diese Anmeldung senden',
     'Sending …': 'Sende …',
     'Sent. aOS fills it into the workspace.': 'Gesendet. aOS trägt sie im Arbeitsplatz ein.',
     'Set a passcode for this iPhone first (Settings > Face ID & Passcode).':
         'Leg zuerst einen Code für dieses iPhone fest (Einstellungen > Face ID & Code).',
-    'Set a passcode for this iPhone first (Settings > Face ID & Passcode). The vault needs it.':
-        'Leg zuerst einen Code für dieses iPhone fest (Einstellungen > Face ID & Code). Der Tresor braucht ihn.',
     'Settings': 'Einstellungen',
     'Share the public key': 'Öffentlichen Schlüssel teilen',
-    'Show': 'Zeigen',
-    'Show code': 'Code zeigen',
-    'Show notes': 'Notizen zeigen',
-    'Show the login for %@': 'Anmeldung für %@ zeigen',
     'Show the screen': 'Bildschirm zeigen',
     'Show the screen of %@': 'Bildschirm von %@ zeigen',
     'Sign-in request': 'Anmeldeanfrage',
@@ -290,7 +230,6 @@ DE = {
     'Tap: click where you tap': 'Tippen: dort klicken, wo du tippst',
     'Terminal': 'Terminal',
     "That isn't a pairing code of aOS.": 'Das ist kein Kopplungscode von aOS.',
-    "That isn't a valid secret for one-time codes.": 'Das ist kein gültiges Geheimnis für Einmalcodes.',
     "The Mac account name and password for its screen stay on this iPhone behind Face ID and only go to the Mac's screen sharing.":
         'Accountname und Passwort für den Bildschirm des Macs bleiben auf diesem iPhone hinter Face ID und gehen nur an die Bildschirmfreigabe des Macs.',
     'The Mac account name and password for screen sharing, kept on this iPhone behind Face ID.':
@@ -320,11 +259,6 @@ DE = {
     'The connection': 'Die Verbindung',
     'The connection to aOS on the Mac ended.': 'Die Verbindung zu aOS auf dem Mac ist beendet.',
     'The connection to the Mac ended.': 'Die Verbindung zum Mac ist beendet.',
-    'The export contains all your passwords unencrypted. aOS reads it once; afterwards you delete it.':
-        'Der Export enthält alle deine Passwörter unverschlüsselt. aOS liest ihn einmal, danach löschst du ihn.',
-    'The export file is deleted.': 'Die Exportdatei ist gelöscht.',
-    'The file contains no logins.': 'Die Datei enthält keine Anmeldungen.',
-    "The file couldn't be read.": 'Die Datei ließ sich nicht lesen.',
     'The iPhone accepts the Mac only with exactly this key, now and later.':
         'Das iPhone nimmt den Mac nur mit genau diesem Schlüssel an, jetzt und später.',
     'The iPhone now reaches your Mac by itself whenever the app is open.':
@@ -335,8 +269,6 @@ DE = {
         'Das iPhone spricht über SSH mit deinem Mac, mit einem Schlüssel, der dieses iPhone nie verlässt.',
     "The key isn't available.": 'Der Schlüssel ist nicht verfügbar.',
     'The key of this computer changed': 'Der Schlüssel dieses Rechners hat sich geändert',
-    "The login is removed from this iPhone. This can't be undone.":
-        'Die Anmeldung wird von diesem iPhone entfernt. Das lässt sich nicht rückgängig machen.',
     'The password stays on this iPhone, behind Face ID.': 'Das Passwort bleibt auf diesem iPhone, hinter Face ID.',
     "The pictures of your Mac and the workspace travel through the same SSH connection and aren't stored.":
         'Die Bilder deines Macs und des Arbeitsplatzes kommen durch dieselbe SSH-Verbindung und werden nicht gespeichert.',
@@ -356,12 +288,7 @@ DE = {
         'Der Bildschirm des Arbeitsplatzes ist nicht verfügbar. Ist der Arbeitsplatz geöffnet?',
     'There is no server of ours in between. Outside your home network you need Tailscale or another VPN to reach the Mac.':
         'Dazwischen steht kein Server von uns. Außerhalb deines Heimnetzes brauchst du Tailscale oder ein anderes VPN, um den Mac zu erreichen.',
-    "They stay on this iPhone, in its keychain, only on this device. They aren't synced to iCloud and aren't part of backups.":
-        'Sie bleiben auf diesem iPhone, in seinem Schlüsselbund, nur auf diesem Gerät. Sie werden nicht mit iCloud synchronisiert und sind in keinem Backup.',
     'This code is from a newer aOS. Update the app on this iPhone.': 'Dieser Code stammt von einem neueren aOS. Aktualisiere die App auf diesem iPhone.',
-    'This export is encrypted. Export again and choose „.json“ or „.csv“ without encryption.':
-        'Dieser Export ist verschlüsselt. Exportiere erneut und wähle „.json“ oder „.csv“ ohne Verschlüsselung.',
-    "This file doesn't look like a Bitwarden export.": 'Diese Datei sieht nicht nach einem Bitwarden-Export aus.',
     'This iPhone': 'Dieses iPhone',
     "This iPhone forgets the Mac. To remove the iPhone's key from the Mac too, open aOS on the Mac and remove it from the paired devices.":
         'Dieses iPhone vergisst den Mac. Um den Schlüssel des iPhones auch vom Mac zu entfernen, öffne aOS auf dem Mac und entferne es aus den gekoppelten Geräten.',
@@ -369,7 +296,6 @@ DE = {
         'Dieses iPhone erzeugt einen eigenen Schlüssel. Nur seine öffentliche Hälfte geht an den Mac.',
     "This iPhone's key": 'Schlüssel dieses iPhones',
     "This iPhone's key couldn't be created: %@": 'Der Schlüssel dieses iPhones ließ sich nicht erzeugen: %@',
-    "This login's password is missing on this iPhone.": 'Das Passwort dieser Anmeldung fehlt auf diesem iPhone.',
     'This request has expired.': 'Diese Anfrage ist abgelaufen.',
     "To log in to another computer with this iPhone's key, add this line to ~/.ssh/authorized_keys there. The public key isn't secret.":
         'Um dich mit dem Schlüssel dieses iPhones an einem anderen Rechner anzumelden, trag diese Zeile dort in ~/.ssh/authorized_keys ein. Der öffentliche Schlüssel ist nicht geheim.',
@@ -384,7 +310,6 @@ DE = {
     'Two-finger tap or long press: right click': 'Mit zwei Fingern tippen oder lange drücken: Rechtsklick',
     'Unlock aOS': 'aOS entsperren',
     'Unlock the login for the screen of %@': 'Anmeldung für den Bildschirm von %@ entsperren',
-    'Unlock the password': 'Passwort entsperren',
     'Unlock the password for %@': 'Passwort für %@ entsperren',
     'Unlock with %@': 'Mit %@ entsperren',
     "Unlocking didn't work. Try again.": 'Das Entsperren hat nicht geklappt. Versuch es noch einmal.',
@@ -394,18 +319,10 @@ DE = {
     'Use the password for %@': 'Passwort für %@ verwenden',
     'User': 'Benutzer',
     'User %@': 'Benutzer %@',
-    'User name': 'Benutzername',
     'User name or email': 'Benutzername oder E-Mail',
-    'Vault': 'Tresor',
     'Version': 'Version',
     'Waiting for you': 'Wartet auf dich',
-    'Websites': 'Websites',
     'What is where': 'Was ist wo',
-    'When your agent needs to sign in somewhere, aOS finds the login here and asks you first.':
-        'Muss sich dein Agent irgendwo anmelden, findet aOS die Anmeldung hier und fragt dich vorher.',
-    'With a secret here, aOS sends the current code together with the password.':
-        'Mit einem Geheimnis hier schickt aOS den aktuellen Code zusammen mit dem Passwort.',
-    'With one-time codes: %lld': 'Mit Einmalcodes: %lld',
     'Workspace': 'Arbeitsplatz',
     'Your Mac': 'Dein Mac',
     'Your Mac and the workspace, live, with touch and keyboard.': 'Dein Mac und der Arbeitsplatz, live, mit Touch und Tastatur.',
@@ -414,21 +331,47 @@ DE = {
         'Dein Agent fragt, du gibst mit Face ID frei. Er sieht das Passwort nie.',
     'Your agent never sees a password. aOS fills it into the workspace for you.':
         'Dein Agent sieht nie ein Passwort. aOS trägt es für dich im Arbeitsplatz ein.',
-    'Your agent never sees them. aOS fills them in for it after you approve.':
-        'Dein Agent sieht sie nie. aOS trägt sie für ihn ein, nachdem du freigegeben hast.',
-    "Your password app (Bitwarden, 1Password, Passwords) fills these fields with its own Face ID. aOS sends them once and doesn't keep them.":
-        'Deine Passwort-App (Bitwarden, 1Password, Passwörter) füllt diese Felder mit ihrem eigenen Face ID. aOS sendet sie einmal und behält sie nicht.',
     'Your passwords': 'Deine Passwörter',
-    "Your passwords stay on this iPhone, in its keychain. They aren't synced or backed up.":
-        'Deine Passwörter bleiben auf diesem iPhone, in seinem Schlüsselbund. Sie werden weder synchronisiert noch gesichert.',
-    'Your passwords stay on this iPhone, locked with Face ID.': 'Deine Passwörter bleiben auf diesem iPhone, geschützt mit Face ID.',
-    'after %lld s': 'nach %lld s',
     'no reason given': 'ohne Grund',
-    'otpauth://… or the secret': 'otpauth://… oder das Geheimnis',
     'ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub': 'ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub',
     'worked last': 'zuletzt erreicht',
     'your network (%@)': 'dein Netzwerk (%@)',
     '„%@“': '„%@“',
-    '„%@“ still contains all your passwords unencrypted. Delete it, and empty „Recently Deleted“ in Files afterwards.':
-        '„%@“ enthält noch alle deine Passwörter unverschlüsselt. Lösche die Datei und leere danach „Zuletzt gelöscht“ in der Dateien-App.',
 }
+
+# Sign-ins from the person's Bitwarden account (the Mac talks to Bitwarden, the iPhone approves).
+DE.update({
+    'A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with Face ID or your passcode.':
+        'Eine Anmeldeanfrage zeigt, welche deiner Bitwarden-Anmeldungen zur Website passen, mit Name und Benutzername, nie mit Passwort. Du gibst eine mit Face ID oder deinem Code frei.',
+    'Approve the sign-in for %@': 'Anmeldung für %@ freigeben',
+    'Approved. aOS on your Mac gets this login from Bitwarden and fills it in.':
+        'Freigegeben. aOS auf deinem Mac holt diese Anmeldung aus Bitwarden und trägt sie ein.',
+    'Approving a sign-in always needs Face ID, whether or not the app itself is locked.':
+        'Eine Anmeldung freizugeben braucht immer Face ID, ob die App selbst gesperrt ist oder nicht.',
+    "Bitwarden didn't answer on your Mac": 'Bitwarden hat auf deinem Mac nicht geantwortet',
+    'Bitwarden is locked on your Mac': 'Bitwarden ist auf deinem Mac gesperrt',
+    'Fill in the code from %@': 'Code aus %@ einsetzen',
+    'From Bitwarden': 'Aus Bitwarden',
+    'No login for %@ in Bitwarden': 'Keine Anmeldung für %@ in Bitwarden',
+    'No login with a one-time code for %@ in Bitwarden': 'Keine Anmeldung mit Einmalcode für %@ in Bitwarden',
+    'Or type the code': 'Oder tippe den Code ein',
+    'Set a passcode for this iPhone first (Settings > Face ID & Passcode). Approving a sign-in needs Face ID or the passcode.':
+        'Leg zuerst einen Code für dieses iPhone fest (Einstellungen > Face ID & Code). Eine Anmeldung freizugeben braucht Face ID oder den Code.',
+    "They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden's own command line tool; this iPhone never talks to Bitwarden.":
+        'Sie bleiben in deinem Bitwarden-Konto. aOS auf deinem Mac meldet sich dort mit dem eigenen Befehlszeilenprogramm von Bitwarden an; dieses iPhone spricht nie mit Bitwarden.',
+    'Type the code below, or decline.': 'Tippe den Code unten ein, oder lehne ab.',
+    'Unlock it in aOS on the Mac. The logins for this website then appear here.':
+        'Entsperre es in aOS auf dem Mac. Die Anmeldungen für diese Website erscheinen dann hier.',
+    "Without Bitwarden, your password app's AutoFill fills the fields in the request; aOS sends them once, encrypted over SSH, and doesn't keep them.":
+        'Ohne Bitwarden füllt das automatische Ausfüllen deiner Passwort-App die Felder der Anfrage; aOS sendet sie einmal, verschlüsselt über SSH, und behält sie nicht.',
+    "Your password app (1Password, Passwords, Bitwarden's app) fills these fields with its own Face ID. aOS sends them once and doesn't keep them.":
+        'Deine Passwort-App (1Password, Passwörter, die App von Bitwarden) füllt diese Felder mit ihrem eigenen Face ID. aOS sendet sie einmal und behält sie nicht.',
+    'Your passwords stay in Bitwarden. You approve every sign-in with Face ID.':
+        'Deine Passwörter bleiben in Bitwarden. Jede Anmeldung gibst du mit Face ID frei.',
+    'Your passwords stay in Bitwarden. aOS on your Mac gets only the login you approve, right before it fills it in.':
+        'Deine Passwörter bleiben in Bitwarden. aOS auf deinem Mac holt nur die Anmeldung, die du freigibst, direkt bevor es sie einträgt.',
+    'aOS on your Mac gets the current code from Bitwarden and fills it in.':
+        'aOS auf deinem Mac holt den aktuellen Code aus Bitwarden und trägt ihn ein.',
+    'aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither the iPhone nor the Mac keeps it.':
+        'aOS auf deinem Mac holt dann genau diese Anmeldung aus Bitwarden und tippt sie in den Arbeitsplatz. Weder das iPhone noch der Mac behält sie.',
+})

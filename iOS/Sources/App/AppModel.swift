@@ -9,11 +9,10 @@ private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "app")
 /// The app's state: paired Macs, added hosts, requests from the agent, and the sessions the tabs show.
 @MainActor @Observable
 final class AppModel {
-    enum Tab: String, Hashable, CaseIterable { case overview, terminal, screen, vault }
+    enum Tab: String, Hashable, CaseIterable { case overview, terminal, screen }
 
     let settings: AppSettings
     let lock: AppLock
-    let vault: VaultModel
     let isDemo: Bool
 
     private(set) var macs: [PairedMac]
@@ -91,8 +90,6 @@ final class AppModel {
         if isDemo {
             #if DEBUG
             let demo = Demo.content()
-            vault = VaultModel(store: MemoryVaultStore(entries: Demo.emptyVault ? [] : demo.vault),
-                               requiresAuthentication: false)
             macs = Demo.unpaired ? [] : [demo.mac]
             hosts = Demo.unpaired ? [] : demo.hosts
             deviceKey = DeviceKey.ephemeral()
@@ -100,7 +97,6 @@ final class AppModel {
             fatalError("The demo exists in debug builds only")
             #endif
         } else {
-            vault = VaultModel(store: KeychainVaultStore())
             macs = ConfigStore.loadMacs()
             hosts = ConfigStore.loadHosts()
             loadDeviceKey()
@@ -110,6 +106,13 @@ final class AppModel {
 
     var activeMac: PairedMac? { macs.first }
     var isPaired: Bool { !macs.isEmpty }
+
+    /// Face ID (or the passcode) before an approval; the demo has nothing to protect.
+    func confirmWithBiometrics(reason: String) async throws {
+        guard !isDemo else { return }
+        let context = try await Biometrics.authenticate(reason: reason)
+        context.invalidate()
+    }
 
     func screen(for target: ScreenTarget) -> ScreenSession {
         target == .mac ? macScreen : workspaceScreen
@@ -331,8 +334,13 @@ final class AppModel {
 
     /// A new question: queued, and shown unless another one is open.
     private func ask(_ question: Question) {
-        // A phone that subscribes again gets the open questions again: once is enough.
-        guard !questions.contains(where: { $0.id == question.id }) else { return }
+        // A question the app has already comes again: after a new subscribe (once is enough), or because the Mac
+        // has news for it (Bitwarden was unlocked and now offers logins). It is updated where it is, not shown anew.
+        if let index = questions.firstIndex(where: { $0.id == question.id }) {
+            questions[index] = question
+            if presentedQuestion?.id == question.id { presentedQuestion = question }
+            return
+        }
         questions.append(question)
         if presentedQuestion == nil { presentedQuestion = question }
         schedulePruning()

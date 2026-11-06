@@ -277,7 +277,7 @@ struct WorkspaceCard: View {
 struct PromiseCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            FactRow(symbol: "faceid", text: "Your passwords stay on this iPhone, locked with Face ID.")
+            FactRow(symbol: "faceid", text: "Your passwords stay in Bitwarden. You approve every sign-in with Face ID.")
             FactRow(symbol: "eye.slash", text: "Your agent never sees a password. aOS fills it into the workspace for you.")
             FactRow(symbol: "lock", text: "The iPhone talks to your Mac over SSH with a key that never leaves this iPhone.")
         }

@@ -80,6 +80,22 @@ struct FactRow: View {
     }
 }
 
+/// A letter in a tinted circle instead of a site's icon (nothing is loaded from the web).
+struct Monogram: View {
+    let text: String
+    var size: CGFloat = 36
+
+    var body: some View {
+        let letter = text.trimmingCharacters(in: .whitespaces).first.map { String($0).uppercased() } ?? "?"
+        Text(letter)
+            .font(.system(size: size * 0.45, weight: .semibold, design: .rounded))
+            .foregroundStyle(BrandColor.indigo)
+            .frame(width: size, height: size)
+            .background(BrandColor.indigo.opacity(0.14), in: Circle())
+            .accessibilityHidden(true)
+    }
+}
+
 /// A key or fingerprint. Never hyphenated (German text gets hyphenated, and a hyphen would look like part of the
 /// key): one line scaled to fit, or broken into lines of fixed length.
 struct KeyText: View {

@@ -108,6 +108,11 @@ final class MacConnection {
         return try await companion.screen(target)
     }
 
+    func answerSignIn(request: String, login: String) async throws {
+        guard let companion else { throw CompanionError.closed }
+        try await companion.answerSignIn(request: request, login: login)
+    }
+
     func answerSignIn(request: String, username: String, password: String, totp: String?) async throws {
         guard let companion else { throw CompanionError.closed }
         try await companion.answerSignIn(request: request, username: username, password: password, totp: totp)

@@ -1,26 +1,23 @@
 import SwiftUI
 
-/// The agent asks to sign in somewhere. The person sees who asks for what, picks a login and approves with Face ID,
-/// or declines. What is sent is never stored or logged.
+/// The agent asks to sign in somewhere. The person sees who asks for what and which of their Bitwarden logins fit the
+/// site (name and user name; the passwords stay in Bitwarden), approves one with Face ID, fills the fields from
+/// another password app, or declines. aOS on the Mac then gets the approved login from Bitwarden and fills it. This
+/// iPhone never talks to Bitwarden, and nothing it sends is stored or logged.
 struct SignInSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     let request: SignInRequest
 
-    enum Phase: Equatable { case choosing, sending, sent, declined, failed(String) }
+    enum Phase: Equatable { case choosing, sending, sent(fromBitwarden: Bool), declined, failed(String) }
 
-    @State private var selection: VaultEntry.ID?
+    @State private var selection: BitwardenLogin.ID?
     @State private var phase: Phase = .choosing
     @State private var showOtherApp = false
     @State private var otherUser = ""
     @State private var otherPassword = ""
-    // A one-time code request
     @State private var code = ""
-    /// The vault login's TOTP while the sheet is open (filled in with Face ID), so the code sent is the current one.
-    @State private var codeSource: TOTP?
-    @State private var filledCode: String?
 
-    private var matches: [VaultEntry] { model.vault.logins(for: request.host) }
     private var result: SignInResult? { model.signInResults[request.id] }
 
     var body: some View {
@@ -39,8 +36,10 @@ struct SignInSheet: View {
                             case .choosing, .failed:
                                 if request.field == .code { codeChooser } else { chooser }
                             case .sending: ProgressView("Sending …").frame(maxWidth: .infinity)
-                            case .sent:
-                                notice(symbol: "paperplane.fill", text: "Sent. aOS fills it into the workspace.", tint: BrandColor.mint)
+                            case .sent(let fromBitwarden):
+                                notice(symbol: "paperplane.fill",
+                                       text: fromBitwarden ? "Approved. aOS on your Mac gets this login from Bitwarden and fills it in."
+                                           : "Sent. aOS fills it into the workspace.", tint: BrandColor.mint)
                             case .declined:
                                 notice(symbol: "hand.raised.fill", text: "Declined. The agent gets no sign-in.", tint: .secondary)
                             }
@@ -61,10 +60,19 @@ struct SignInSheet: View {
                 }
             }
         }
-        .onAppear { if selection == nil { selection = matches.first?.id } }
+        .onAppear {
+            if selection == nil { selection = request.choices.first?.id }
+            showOtherApp = request.choices.isEmpty
+        }
+        .onChange(of: request.logins) { _, _ in
+            // The Mac sent the request again with Bitwarden's logins (it was unlocked meanwhile).
+            if !request.choices.contains(where: { $0.id == selection }) { selection = request.choices.first?.id }
+            if !request.choices.isEmpty { showOtherApp = false }
+        }
         .onDisappear {
             otherUser = ""
             otherPassword = ""
+            code = ""
         }
         .presentationDetents([.large])
     }
@@ -114,49 +122,81 @@ struct SignInSheet: View {
         .padding(.top, 8)
     }
 
+    /// What Bitwarden on the Mac can offer, when it offers nothing to choose.
+    enum BitwardenNotice: Equatable {
+        case locked, noLogin, unavailable
+    }
+
+    static func bitwardenNotice(for request: SignInRequest) -> BitwardenNotice? {
+        switch request.bitwarden {
+        case .locked: return .locked
+        case .unavailable: return .unavailable
+        case .unlocked: return request.choices.isEmpty ? .noLogin : nil
+        case .off: return nil
+        }
+    }
+
+    @ViewBuilder
+    private func bitwardenNoticeCard(_ kind: BitwardenNotice) -> some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 6) {
+                switch kind {
+                case .locked:
+                    Label("Bitwarden is locked on your Mac", systemImage: "lock.fill").font(.headline)
+                    Text("Unlock it in aOS on the Mac. The logins for this website then appear here.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                case .noLogin:
+                    Label(request.field == .code ? "No login with a one-time code for \(request.host) in Bitwarden"
+                          : "No login for \(request.host) in Bitwarden", systemImage: "key.horizontal")
+                        .font(.headline)
+                    Text(request.field == .code ? "Type the code below, or decline."
+                         : "Use a login from another password app below, or decline.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                case .unavailable:
+                    Label("Bitwarden didn't answer on your Mac", systemImage: "exclamationmark.triangle").font(.headline)
+                    Text(request.field == .code ? "Type the code below, or decline."
+                         : "Use a login from another password app below, or decline.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
     private var chooser: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if matches.isEmpty {
-                GlassCard {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label("No login for \(request.host) in your vault", systemImage: "key.horizontal")
-                            .font(.headline)
-                        Text("Use a login from another password app below, or decline.")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }
-                }
-            } else {
-                Text("From your vault").font(.headline)
+            if let kind = Self.bitwardenNotice(for: request) { bitwardenNoticeCard(kind) }
+            if !request.choices.isEmpty {
+                Text("From Bitwarden").font(.headline)
                 VStack(spacing: 0) {
-                    ForEach(matches) { entry in
+                    ForEach(request.choices) { login in
                         Button {
-                            selection = entry.id
+                            selection = login.id
                         } label: {
                             HStack(spacing: 12) {
-                                Monogram(text: entry.title)
+                                Monogram(text: login.name)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(entry.username.isEmpty ? entry.title : entry.username).font(.body.weight(.medium))
-                                    Text(entry.title + (entry.hasTOTP ? String(localized: " · with one-time code") : ""))
+                                    Text(login.username.isEmpty ? login.name : login.username).font(.body.weight(.medium))
+                                    Text(login.name + (login.hasCode ? String(localized: " · with one-time code") : ""))
                                         .font(.footnote).foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                Image(systemName: selection == entry.id ? "checkmark.circle.fill" : "circle")
+                                Image(systemName: selection == login.id ? "checkmark.circle.fill" : "circle")
                                     .font(.title3)
-                                    .foregroundStyle(selection == entry.id ? BrandColor.indigo : .secondary)
+                                    .foregroundStyle(selection == login.id ? BrandColor.indigo : .secondary)
                             }
                             .padding(.vertical, 10)
                             .padding(.horizontal, 14)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityAddTraits(selection == entry.id ? .isSelected : [])
-                        if entry.id != matches.last?.id { Divider().padding(.leading, 62) }
+                        .accessibilityAddTraits(selection == login.id ? .isSelected : [])
+                        if login.id != request.choices.last?.id { Divider().padding(.leading, 62) }
                     }
                 }
                 .glassEffect(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
                 Button {
-                    Task { await approve() }
+                    Task { await approve(selection) }
                 } label: {
                     Label("Approve with \(Biometrics.name)", systemImage: Biometrics.symbol).frame(maxWidth: .infinity)
                 }
@@ -189,7 +229,7 @@ struct SignInSheet: View {
                     }
                     .buttonStyle(.glass)
                     .disabled(otherPassword.isEmpty || phase == .sending)
-                    Text("Your password app (Bitwarden, 1Password, Passwords) fills these fields with its own Face ID. aOS sends them once and doesn't keep them.")
+                    Text("Your password app (1Password, Passwords, Bitwarden's app) fills these fields with its own Face ID. aOS sends them once and doesn't keep them.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 .textFieldStyle(.roundedBorder)
@@ -201,6 +241,9 @@ struct SignInSheet: View {
             .glassEffect(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
             FactRow(symbol: "eye.slash", text: "The agent never sees the password. aOS types it into the sign-in page in the workspace, only on this site.")
+            if request.bitwarden == .unlocked || request.bitwarden == .locked {
+                FactRow(symbol: "key.horizontal", text: "Your passwords stay in Bitwarden. aOS on your Mac gets only the login you approve, right before it fills it in.")
+            }
         }
     }
 
@@ -224,68 +267,44 @@ struct SignInSheet: View {
         }
     }
 
-    // MARK: Actions
-
-    private func approve() async {
-        guard let id = selection, let entry = model.vault.entry(id: id), let connection = model.connection else { return }
-        do {
-            let context = try await model.vault.authenticate(reason: String(localized: "Send the sign-in for \(request.host)"))
-            defer { context?.invalidate() }
-            phase = .sending
-            let secret = try model.vault.secret(for: entry, context: context)
-            let code = try? TOTP(parsing: secret.totp).code()
-            try await connection.answerSignIn(request: request.id, username: entry.username, password: secret.password,
-                                              totp: secret.totp.isEmpty ? nil : code)
-            phase = .sent
-            closeSoon()
-        } catch Biometrics.Failure.cancelled {
-            phase = .choosing
-        } catch {
-            phase = .failed(error.localizedDescription)
-        }
-    }
-
     // MARK: One-time code
-
-    private var codeLogins: [VaultEntry] { matches.filter(\.hasTOTP) }
 
     private var codeChooser: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("One-time code").font(.headline)
-            HStack {
-                TextField(text: $code, prompt: Text(verbatim: "123456")) { Text("One-time code") }
-                    .textContentType(.oneTimeCode)
-                    .keyboardType(.numberPad)
-                    .autocorrectionDisabled()
-                    .font(.system(.title, design: .monospaced).weight(.semibold))
-                if let codeSource, code == filledCode {
-                    TimelineView(.periodic(from: .now, by: 1)) { context in
-                        Text("\(codeSource.secondsRemaining(at: context.date)) s")
-                            .font(.footnote.monospacedDigit()).foregroundStyle(.secondary)
+            if let kind = Self.bitwardenNotice(for: request) { bitwardenNoticeCard(kind) }
+            if !request.choices.isEmpty {
+                Text("From Bitwarden").font(.headline)
+                ForEach(request.choices) { login in
+                    Button {
+                        Task { await approve(login.id) }
+                    } label: {
+                        Label("Fill in the code from \(login.name)", systemImage: Biometrics.symbol).frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(.glassProminent)
+                    .controlSize(.large)
+                    .disabled(phase == .sending)
                 }
-            }
-            .padding(14)
-            .glassEffect(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-
-            ForEach(codeLogins) { entry in
-                Button {
-                    Task { await fillCode(from: entry) }
-                } label: {
-                    Label("Fill in from \(entry.title)", systemImage: Biometrics.symbol).frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.glass)
-                .controlSize(.large)
+                Text("aOS on your Mac gets the current code from Bitwarden and fills it in.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
 
-            Button {
+            Text(request.choices.isEmpty ? "One-time code" : "Or type the code").font(.headline)
+            TextField(text: $code, prompt: Text(verbatim: "123456")) { Text("One-time code") }
+                .textContentType(.oneTimeCode)
+                .keyboardType(.numberPad)
+                .autocorrectionDisabled()
+                .font(.system(.title, design: .monospaced).weight(.semibold))
+                .padding(14)
+                .glassEffect(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+            let send = Button {
                 Task { await sendCode() }
             } label: {
                 Label("Send the code", systemImage: "paperplane").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.glassProminent)
             .controlSize(.large)
             .disabled(code.trimmingCharacters(in: .whitespaces).isEmpty || phase == .sending)
+            if request.choices.isEmpty { send.buttonStyle(.glassProminent) } else { send.buttonStyle(.glass) }
 
             Button(role: .destructive) {
                 Task { await decline() }
@@ -299,16 +318,23 @@ struct SignInSheet: View {
         }
     }
 
-    /// The current code of a vault login, after Face ID.
-    private func fillCode(from entry: VaultEntry) async {
+    // MARK: Actions
+
+    /// Approves a Bitwarden login after Face ID: the Mac gets it (or its current code) from Bitwarden.
+    private func approve(_ login: BitwardenLogin.ID?) async {
+        guard let login, let connection = model.connection else { return }
         do {
-            let context = try await model.vault.authenticate(reason: String(localized: "Fill in the code for \(request.host)"))
-            defer { context?.invalidate() }
-            let totp = try TOTP(parsing: model.vault.secret(for: entry, context: context).totp)
-            codeSource = totp
-            filledCode = totp.code()
-            code = filledCode ?? ""
+            try await model.confirmWithBiometrics(reason: request.field == .code
+                ? String(localized: "Fill in the code for \(request.host)")
+                : String(localized: "Approve the sign-in for \(request.host)"))
+            phase = .sending
+            try await connection.answerSignIn(request: request.id, login: login)
+            phase = .sent(fromBitwarden: true)
+            closeSoon()
         } catch Biometrics.Failure.cancelled {
+            phase = .choosing
+        } catch Biometrics.Failure.unavailable {
+            phase = .failed(String(localized: "Set a passcode for this iPhone first (Settings > Face ID & Passcode). Approving a sign-in needs Face ID or the passcode."))
         } catch {
             phase = .failed(error.localizedDescription)
         }
@@ -316,15 +342,12 @@ struct SignInSheet: View {
 
     private func sendCode() async {
         guard let connection = model.connection else { return }
-        // Filled in from the vault and not changed since: send the code that is current now.
-        let value = (code == filledCode ? codeSource?.code() : nil) ?? code.trimmingCharacters(in: .whitespaces)
+        let value = code.trimmingCharacters(in: .whitespaces)
         phase = .sending
         do {
             try await connection.answerSignInCode(request: request.id, code: value)
             code = ""
-            filledCode = nil
-            codeSource = nil
-            phase = .sent
+            phase = .sent(fromBitwarden: false)
             closeSoon()
         } catch {
             phase = .failed(error.localizedDescription)
@@ -337,7 +360,7 @@ struct SignInSheet: View {
         do {
             try await connection.answerSignIn(request: request.id, username: otherUser, password: otherPassword, totp: nil)
             otherPassword = ""
-            phase = .sent
+            phase = .sent(fromBitwarden: false)
             closeSoon()
         } catch {
             phase = .failed(error.localizedDescription)

@@ -19,6 +19,8 @@ SHOTS=(
   "signin|-AOSDemoTab overview -AOSDemoSheet signin"
   "signin-nomatch|-AOSDemoTab overview -AOSDemoSheet signin-none"
   "signin-code|-AOSDemoTab overview -AOSDemoSheet signin-code"
+  "signin-locked|-AOSDemoTab overview -AOSDemoSheet signin-locked"
+  "signin-off|-AOSDemoTab overview -AOSDemoSheet signin-off"
   "approval|-AOSDemoTab overview -AOSDemoSheet approval"
   "pairing|-AOSDemoTab overview -AOSDemoSheet pairing"
   "settings|-AOSDemoTab overview -AOSDemoSheet settings"
@@ -27,11 +29,6 @@ SHOTS=(
   "terminal|-AOSDemoTab terminal -AOSDemoSheet shell"
   "screen|-AOSDemoTab screen"
   "screen-help|-AOSDemoTab overview -AOSDemoSheet help"
-  "vault|-AOSDemoTab vault"
-  "vault-empty|-AOSDemoTab vault -AOSDemoEmptyVault YES"
-  "vault-detail|-AOSDemoTab vault -AOSDemoSheet detail"
-  "vault-editor|-AOSDemoTab vault -AOSDemoSheet editor"
-  "vault-import|-AOSDemoTab vault -AOSDemoSheet import"
 )
 
 for appearance in light dark; do

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Builds the app, installs it in the iOS Simulator and starts it. Arguments go to the app, for example the demo:
 #
-#   iOS/Tools/sim.sh -AOSDemo YES -AOSDemoTab vault
+#   iOS/Tools/sim.sh -AOSDemo YES -AOSDemoTab screen
 #   iOS/Tools/sim.sh --no-build -AOSDemo YES -AOSDemoSheet signin
 #
 # Like test.sh, it lowers the deployment target for this build when the simulator runs an older iOS.

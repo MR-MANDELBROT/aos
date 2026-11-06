@@ -32,11 +32,8 @@ final class AppSettings {
     var autoLockMinutes: Int { didSet { defaults.set(autoLockMinutes, forKey: "autoLockMinutes") } }
     var frameRate: FrameRate { didSet { defaults.set(frameRate.rawValue, forKey: "frameRate") } }
     var inputMode: InputMode { didSet { defaults.set(inputMode.rawValue, forKey: "inputMode") } }
-    /// Seconds before a copied password leaves the clipboard.
-    var clipboardSeconds: Int { didSet { defaults.set(clipboardSeconds, forKey: "clipboardSeconds") } }
 
     static let autoLockChoices = [0, 1, 5, 15, 60]
-    static let clipboardChoices = [30, 60, 120]
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -44,6 +41,5 @@ final class AppSettings {
         autoLockMinutes = defaults.object(forKey: "autoLockMinutes") as? Int ?? 5
         frameRate = FrameRate(rawValue: defaults.string(forKey: "frameRate") ?? "") ?? .balanced
         inputMode = InputMode(rawValue: defaults.string(forKey: "inputMode") ?? "") ?? .trackpad
-        clipboardSeconds = defaults.object(forKey: "clipboardSeconds") as? Int ?? 60
     }
 }

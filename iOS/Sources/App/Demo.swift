@@ -3,20 +3,19 @@ import Foundation
 import UIKit
 
 /// Sample data for screenshots and UI work: start the app with `-AOSDemo YES` (debug builds only).
-/// `-AOSDemoTab overview|terminal|screen|vault` picks the tab, `-AOSDemoSheet signin|help|pairing|settings` opens
-/// a request or sheet. Nothing here touches the keychain or the network.
+/// `-AOSDemoTab overview|terminal|screen` picks the tab, `-AOSDemoSheet signin|signin-code|signin-none|signin-locked|
+/// signin-off|approval|help|pairing|settings|lock|requests` opens a request or sheet. Nothing here touches the keychain
+/// or the network.
 enum Demo {
     static var isRequested: Bool { UserDefaults.standard.bool(forKey: "AOSDemo") }
     static var tab: String? { UserDefaults.standard.string(forKey: "AOSDemoTab") }
     static var sheet: String? { UserDefaults.standard.string(forKey: "AOSDemoSheet") }
-    /// `-AOSDemoUnpaired YES`: the welcome page; `-AOSDemoEmptyVault YES`: the vault before the first login.
+    /// `-AOSDemoUnpaired YES`: the welcome page.
     static var unpaired: Bool { UserDefaults.standard.bool(forKey: "AOSDemoUnpaired") }
-    static var emptyVault: Bool { UserDefaults.standard.bool(forKey: "AOSDemoEmptyVault") }
 
     struct Content {
         var mac: PairedMac
         var hosts: [SSHHost]
-        var vault: [(VaultEntry, VaultSecret)]
     }
 
     static func content() -> Content {
@@ -30,22 +29,18 @@ enum Demo {
                     hostKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN8Rl2qwv75VjkzLHaW5OyZu4CaxGsZU2+cYoDrSFSrY"),
             SSHHost(label: "", host: "lxhalle.in.tum.de", user: "ge12abc", auth: .password),
         ]
-        func login(_ title: String, _ user: String, _ uris: [String], totp: Bool = false, notes: String = "")
-            -> (VaultEntry, VaultSecret) {
-            (VaultEntry(title: title, username: user, uris: uris, hasTOTP: totp, hasNotes: !notes.isEmpty),
-             VaultSecret(password: PasswordGenerator.make(), totp: totp ? "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ" : "",
-                         notes: notes))
-        }
-        let vault = [
-            login("Amazon", "max@marquart.dev", ["https://www.amazon.de"]),
-            login("GitHub", "mr-mandelbrot", ["https://github.com"], totp: true),
-            login("TUMonline", "ge12abc", ["https://campus.tum.de", "login.tum.de"], notes: "Matrikelnummer im Ausweis"),
-            login("Deutsche Bahn", "max@marquart.dev", ["https://www.bahn.de"]),
-            login("Moodle", "ge12abc", ["https://www.moodle.tum.de"]),
-            login("Notion", "max@marquart.dev", ["https://www.notion.so"], totp: true),
-        ]
-        return Content(mac: mac, hosts: hosts, vault: vault)
+        return Content(mac: mac, hosts: hosts)
     }
+
+    /// Bitwarden logins as the Mac offers them with a request (sample data).
+    static let amazonLogins = [
+        BitwardenLogin(id: "0b6d3f7e-1c2a-4e5b-9a8d-7c6b5a4f3e21", name: "Amazon", username: "max@marquart.dev", hasCode: false),
+        BitwardenLogin(id: "4f2e8a1c-3b7d-4c9e-8f6a-1d2c3b4a5e6f", name: "Amazon Business", username: "einkauf@marquart.dev",
+                       hasCode: true),
+    ]
+    static let githubLogins = [
+        BitwardenLogin(id: "9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d", name: "GitHub", username: "mr-mandelbrot", hasCode: true),
+    ]
 
     @MainActor
     static func start(_ connection: MacConnection, model: AppModel) {
@@ -54,7 +49,6 @@ enum Demo {
         switch tab {
         case "terminal": model.tab = .terminal
         case "screen": model.tab = .screen
-        case "vault": model.tab = .vault
         default: model.tab = .overview
         }
         if let image = workspacePicture() { model.workspaceScreen.showDemo(image) }
@@ -65,11 +59,21 @@ enum Demo {
             case "signin":
                 server.emit(.signIn(SignInRequest(id: "demo-1", agent: "Claude Code", host: "www.amazon.de",
                                                   purpose: "Die Rechnung vom Oktober herunterladen",
-                                                  expires: Date().addingTimeInterval(4 * 60 + 32))))
+                                                  expires: Date().addingTimeInterval(4 * 60 + 32),
+                                                  logins: amazonLogins, bitwarden: .unlocked)))
             case "signin-code":
                 server.emit(.signIn(SignInRequest(id: "demo-3", agent: "Claude Code", host: "github.com",
                                                   purpose: "Mit dem Code aus der App anmelden",
-                                                  expires: Date().addingTimeInterval(2 * 60 + 10), field: .code)))
+                                                  expires: Date().addingTimeInterval(2 * 60 + 10), field: .code,
+                                                  logins: githubLogins, bitwarden: .unlocked)))
+            case "signin-locked":
+                server.emit(.signIn(SignInRequest(id: "demo-5", agent: "Claude Code", host: "www.amazon.de",
+                                                  purpose: "Die Rechnung vom Oktober herunterladen",
+                                                  expires: Date().addingTimeInterval(4 * 60), bitwarden: .locked)))
+            case "signin-off":
+                server.emit(.signIn(SignInRequest(id: "demo-6", agent: "Codex", host: "portal.example-energie.de",
+                                                  purpose: "Zählerstand eintragen",
+                                                  expires: Date().addingTimeInterval(3 * 60), bitwarden: .off)))
             case "approval":
                 server.emit(.approval(ApprovalRequest(id: "demo-4", agent: "Codex",
                                                       purpose: "Die Rechnungen vom Oktober herunterladen",
@@ -77,7 +81,7 @@ enum Demo {
             case "signin-none":
                 server.emit(.signIn(SignInRequest(id: "demo-2", agent: "Codex", host: "portal.example-energie.de",
                                                   purpose: "Zählerstand eintragen",
-                                                  expires: Date().addingTimeInterval(3 * 60))))
+                                                  expires: Date().addingTimeInterval(3 * 60), bitwarden: .unlocked)))
             case "help":
                 server.emit(.help(HelpRequest(id: "help-1", agent: "Claude Code",
                                               purpose: "Bitte das Captcha auf der Anmeldeseite lösen",
@@ -87,7 +91,8 @@ enum Demo {
             case "requests":
                 server.emit(.signIn(SignInRequest(id: "demo-1", agent: "Claude Code", host: "www.amazon.de",
                                                   purpose: "Die Rechnung vom Oktober herunterladen",
-                                                  expires: Date().addingTimeInterval(4 * 60 + 32))))
+                                                  expires: Date().addingTimeInterval(4 * 60 + 32),
+                                                  logins: amazonLogins, bitwarden: .unlocked)))
                 try? await Task.sleep(for: .milliseconds(300))
                 model.closeQuestionSheet()
             default: break

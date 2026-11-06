@@ -51,15 +51,10 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    Picker("Clear copied passwords", selection: $settings.clipboardSeconds) {
-                        ForEach(AppSettings.clipboardChoices, id: \.self) { seconds in
-                            Text("after \(seconds) s").tag(seconds)
-                        }
-                    }
                 } header: {
                     Text("Security")
                 } footer: {
-                    Text("Passwords in the vault always need Face ID, whether or not the app itself is locked.")
+                    Text("Approving a sign-in always needs Face ID, whether or not the app itself is locked.")
                 }
 
                 Section("Screen") {
@@ -234,9 +229,10 @@ struct AboutView: View {
                     }
                 }
                 AboutSection(title: "Your passwords", symbol: "key.horizontal", lines: [
-                    "They stay on this iPhone, in its keychain, only on this device. They aren't synced to iCloud and aren't part of backups.",
-                    "Every look at a password and every approval needs Face ID or your passcode.",
-                    "Approved sign-ins go once, encrypted over SSH, to aOS on your Mac, which types them into the workspace. Neither the app nor the Mac keeps them.",
+                    "They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden's own command line tool; this iPhone never talks to Bitwarden.",
+                    "A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with Face ID or your passcode.",
+                    "aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither the iPhone nor the Mac keeps it.",
+                    "Without Bitwarden, your password app's AutoFill fills the fields in the request; aOS sends them once, encrypted over SSH, and doesn't keep them.",
                 ])
                 AboutSection(title: "Your agent", symbol: "sparkles", lines: [
                     "It asks for a sign-in by naming the site and why. You see the request and decide.",

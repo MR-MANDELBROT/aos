@@ -43,7 +43,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>The camera scans the pairing code that aOS shows on your Mac.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Face ID unlocks your passwords and approves sign-ins for your agent.</string>
+	<string>Face ID approves sign-ins for your agent and unlocks aOS.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>aOS connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted.</string>
 	<key>UIApplicationSceneManifest</key>
