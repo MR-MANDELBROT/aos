@@ -142,8 +142,14 @@ public final class PowerHelperClient: @unchecked Sendable {
     public func hold(seconds: Int, timeout: TimeInterval = 15) async -> HelperReply {
         await call(timeout: timeout) { $0.hold(seconds: seconds, reply: $1) }
     }
+    /// The choice for the closed lid; the helper notes the user's own settings first.
     public func apply(_ join: HotspotJoin) async -> HelperReply {
         await call(timeout: 90) { $0.applyHotspotJoin(join.rawValue, reply: $1) }
+    }
+
+    /// The lid opened: the user's own hotspot settings again (nothing happens if none were noted).
+    public func restoreHotspot() async -> HelperReply {
+        await call(timeout: 90) { $0.applyHotspotJoin("restore", reply: $1) }
     }
     public func join(network: String) async -> HelperReply { await call(timeout: 60) { $0.join(network: network, reply: $1) } }
     public func recover(_ step: PowerHelperService.Recovery) async -> HelperReply {

@@ -113,12 +113,24 @@ public struct Provisioner: Sendable {
 
     /// While the user allows the helper: whether macOS shows its password dialog and whether the
     /// helper is allowed already, in one round trip.
+    static let coreAuthAgent = "/System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha"
+
+    /// Prints DIALOG while macOS shows a password dialog on the workspace's screen: an on-screen window that belongs
+    /// to one of macOS's own dialog programs (System Settings asks through LocalAuthenticationUI, other requests
+    /// through coreautha or SecurityAgent). Not the programs alone: they keep running for a while after a dialog
+    /// closed (measured: still there after 4 s, gone after 30 s), and typing then goes to whatever has the focus.
+    /// By the program's path, not its name (any process can call itself LocalAuthenticationRemoteService).
+    static var dialogCheck: String {
+        let jxa = "ObjC.import(\"CoreGraphics\"); var l=ObjC.castRefToObject($.CGWindowListCopyWindowInfo(" +
+            "$.kCGWindowListOptionOnScreenOnly,0)); var o=[]; for(var i=0;i<l.count;i++){" +
+            "o.push(l.objectAtIndex(i).objectForKey(\"kCGWindowOwnerPID\").js)}; o.join(\" \")"
+        return "u=\(Brand.guestUser); for p in $(launchctl asuser $(id -u $u) sudo -u $u /usr/bin/osascript -l JavaScript " +
+            "-e '\(jxa)' 2>/dev/null); do case \"$(ps -o comm= -p $p)\" in " +
+            "'\(securityAgent)'|'\(localAuthenticationService)'|'\(coreAuthAgent)') echo DIALOG; break;; esac; done"
+    }
+
     public func helperPermissionPoll(host: String) async -> (passwordDialog: Bool, trusted: Bool) {
-        // macOS 27 asks through LocalAuthenticationUI; older versions through SecurityAgent.
-        // By the program's path, not its name (any process can call itself LocalAuthenticationRemoteService).
-        let command = "if ps -axo comm= | grep -qx -e '\(Self.securityAgent)' -e '\(Self.localAuthenticationService)'; " +
-            "then echo DIALOG; fi; " +
-            "echo '{\"op\":\"status\"}' | \(GuestHelper.executable) client"
+        let command = Self.dialogCheck + "; echo '{\"op\":\"status\"}' | \(GuestHelper.executable) client"
         guard let r = try? await maintenance(host: host).run(command, timeout: 20, check: false, what: "helper status")
         else { return (false, false) }
         let lines = r.text.split(separator: "\n").map(String.init)
@@ -162,9 +174,8 @@ public struct Provisioner: Sendable {
 
     /// Whether macOS shows its password dialog in the workspace right now (by the program's path, as above).
     public func passwordDialogOpen(host: String) async -> Bool {
-        let command = "ps -axo comm= | grep -qx -e '\(Self.securityAgent)' -e '\(Self.localAuthenticationService)'"
-        let r = try? await maintenance(host: host).run(command, timeout: 15, check: false, what: "password dialog")
-        return r?.status == 0
+        let r = try? await maintenance(host: host).run(Self.dialogCheck, timeout: 15, check: false, what: "password dialog")
+        return r?.text.contains("DIALOG") == true
     }
 
     /// Makes the account a standard user (after screen sharing works).

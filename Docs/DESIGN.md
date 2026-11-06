@@ -130,15 +130,21 @@ charge, thermal state, external screens, whether Cloupi is on the Mac, and wheth
 - **Cloupi**: when its wake daemon is on the Mac (`/Library/Application Support/cloupi-wake`,
   `/Library/LaunchDaemons/de.cloupi.waked.plist`, or launchd knows `system/de.cloupi.waked`), it owns sleep and Wi-Fi.
   aOS holds no assertion and freezes nothing, the helper refuses and never touches pmset or Wi-Fi, and the settings
-  say "Managed by Cloupi". aOS never stops, changes or reads Cloupi's services.
+  say "Another service takes care of this" (the user sees no product name). aOS never stops, changes or reads that
+  service.
 
-**The iPhone hotspot.** The question (Settings > General > iPhone hotspot; in the setup right after "Stay awake with
-the lid closed") is "Only when I switch it on on the iPhone" or "Automatically (uses more energy)"
-(`AgentSettings.hotspotJoin`). aOS applies it to macOS itself:
+**The iPhone hotspot.** The question (Settings > General > iPhone hotspot; in the setup under "Stay awake with the
+lid closed") is "When needed: you switch it on on the iPhone" (recommended, also when unanswered) or "Connect
+automatically" (`AgentSettings.hotspotJoin`). It applies only while the lid is closed (aOS's lid-closed mode): when
+the lid closes the helper notes the user's own two settings (`/Library/Application Support/aOS/hotspot-before-lid.json`,
+root) and sets the answer's; when the lid opens it writes the noted ones back and removes the note. With the lid open
+macOS behaves as the user set it. The app asks for the restore once after every launch too, should an earlier run
+have ended with the lid closed; a failed change is tried again after five minutes at the earliest (each one restarts
+airportd).
 
-| Answer | Auto-join of the user's hotspots | Ask to join hotspots |
-|--------|----------------------------------|----------------------|
-| Only when I switch it on | off | Never |
+| Answer (lid closed) | Auto-join of the user's hotspots | Ask to join hotspots |
+|---------------------|----------------------------------|----------------------|
+| When needed | off | Never |
 | Automatically | on | Automatic |
 
 How macOS 27 keeps both (found as a normal user on macOS 27.0, 26A428, MacBookPro18,3):

@@ -35,7 +35,9 @@ extension SetupController.Step {
         case .prepare: return "gearshape.2"
         case .screenSharing: return "rectangle.on.rectangle"
         case .connect: return "link"
+        case .pair: return "qrcode"
         case .session: return "iphone.radiowaves.left.and.right"
+        case .bitwarden: return "key.horizontal"
         case .done: return "checkmark.seal"
         }
     }
@@ -91,6 +93,9 @@ private struct StepPage: View {
     @EnvironmentObject var power: PowerController
     @Environment(\.openWindow) private var openWindow
     @State private var terminalCommand: TerminalCommand?
+    @State private var showBitwarden = false
+    /// Read the session folder's readiness again (after the terminal sheet closed).
+    @State private var readinessTick = 0
 
     struct TerminalCommand: Identifiable {
         let id = UUID()
@@ -127,7 +132,19 @@ private struct StepPage: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 14)
         }
-        .sheet(item: $terminalCommand) { cmd in terminalSheet(cmd) }
+        .sheet(item: $terminalCommand, onDismiss: { readinessTick += 1 }) { cmd in terminalSheet(cmd) }
+        .sheet(isPresented: $showBitwarden) {
+            VStack(spacing: 0) {
+                BitwardenSettings().environmentObject(model)
+                Divider()
+                HStack {
+                    Spacer()
+                    Button("Done") { showBitwarden = false }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                }
+                .padding(14)
+            }
+            .frame(width: 580, height: 640)
+        }
     }
 
     var stepCounter: String {
@@ -146,7 +163,9 @@ private struct StepPage: View {
         case .prepare: prepare
         case .screenSharing: screenSharing
         case .connect: connect
+        case .pair: pair
         case .session: session
+        case .bitwarden: bitwardenStep
         case .done: done
         }
     }
@@ -343,15 +362,32 @@ private struct StepPage: View {
             Text("Optional: \(Brand.name) can keep a Claude Code session running on this Mac that you reach from the Claude app on your phone (Remote Control). You approve opening the workspace right there.")
                 .font(.title3).foregroundStyle(.secondary)
             GlassCard {
+                VStack(alignment: .leading, spacing: 10) {
                 Toggle(isOn: Binding(get: { model.settings.keepReachable },
                                      set: { v in model.update { $0.keepReachable = v } })) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Keep conversations reachable").fontWeight(.semibold)
+                        HStack(spacing: 8) { Text("Keep conversations reachable").fontWeight(.semibold); RecommendedBadge() }
                         Text("When the Claude app or a terminal closes a conversation, \(Brand.name) keeps it running, so it stays in the Claude app on your phone.")
                             .font(.callout).foregroundStyle(.secondary)
                     }
                 }
                 .toggleStyle(.switch)
+                if model.settings.keepReachable {
+                    Picker("Conversations active within", selection: Binding(get: { model.settings.keepHours },
+                                                                             set: { v in model.update { $0.keepHours = v } })) {
+                        Text("the last 6 hours").tag(6)
+                        Text("the last day").tag(24)
+                        Text("the last 2 days").tag(48)
+                        Text("the last week").tag(168)
+                        Text("the last 2 weeks").tag(336)
+                        if ![6, 24, 48, 168, 336].contains(model.settings.keepHours) {
+                            Text("the last \(model.settings.keepHours) hours").tag(model.settings.keepHours)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .fixedSize()
+                }
+                }
             }
             lidClosedCard
             GlassCard {
@@ -370,18 +406,24 @@ private struct StepPage: View {
                     }
                     Text("Runs Claude Code's own sign-in; \(Brand.name) never sees it.").font(.caption).foregroundStyle(.secondary)
                     Divider()
-                    HStack {
-                        Text("Start the session once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then click Done.")
-                            .font(.callout)
-                        Spacer()
-                        Button("Start once") {
-                            terminalCommand = TerminalCommand(
-                                title: String(localized: "First start of the session"),
-                                command: "claude --remote-control \(shellQuote(model.settings.sessionName))",
-                                directory: model.paths.session)
+                    let ready = ClaudeCode.readiness(folder: model.paths.session)
+                    let _ = readinessTick
+                    checkRow(ready.trusted, done: "Claude Code trusts the session folder", todo: "Claude Code doesn't trust the session folder yet")
+                    checkRow(ready.remoteControl, done: "Remote Control is on", todo: "Remote Control isn't confirmed yet")
+                    if !(ready.trusted && ready.remoteControl) {
+                        HStack {
+                            Text("Start the session once here: Claude Code asks whether you trust the folder and whether to enable Remote Control. Answer yes to both, then click Done.")
+                                .font(.callout)
+                            Spacer()
+                            Button("Start once") {
+                                terminalCommand = TerminalCommand(
+                                    title: String(localized: "First start of the session"),
+                                    command: "claude --remote-control \(shellQuote(model.settings.sessionName))",
+                                    directory: model.paths.session)
+                            }
+                            .buttonStyle(.glass)
+                            .disabled(!setup.claudeSignedIn)
                         }
-                        .buttonStyle(.glass)
-                        .disabled(!setup.claudeSignedIn)
                     }
                 }
             }
@@ -395,7 +437,7 @@ private struct StepPage: View {
                 Toggle(isOn: Binding(get: { model.settings.stayAwake == .lidClosed },
                                      set: { v in model.update { $0.stayAwake = v ? .lidClosed : .lidOpen } })) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Stay awake with the lid closed").fontWeight(.semibold)
+                        HStack(spacing: 8) { Text("Stay awake with the lid closed").fontWeight(.semibold); RecommendedBadge() }
                         Text("Conversations and agents keep working with the lid closed, also on battery. Meanwhile \(Brand.name) freezes your other apps; they continue when you open the lid.")
                             .font(.callout).foregroundStyle(.secondary)
                     }
@@ -403,7 +445,7 @@ private struct StepPage: View {
                 .toggleStyle(.switch)
                 .disabled(power.cloupiPresent)
                 if power.cloupiPresent {
-                    CloupiNote()
+                    OtherWakeServiceNote()
                 } else if model.settings.stayAwake == .lidClosed {
                     if power.helperStatus == .requiresApproval {
                         HStack(spacing: 10) {
@@ -419,6 +461,79 @@ private struct StepPage: View {
             }
         }
         .onAppear { power.refreshHelperStatus() }
+    }
+
+    // MARK: iPhone and Bitwarden
+
+    var pair: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("With \(Brand.name) on your iPhone you approve your agent's sign-ins with Face ID, get a notice when it needs you, and look at the workspace on the go. Without it, you approve everything here on the Mac.")
+                .font(.title3).foregroundStyle(.secondary)
+            if let device = model.pairedDevices.first {
+                GlassCard {
+                    Label("\(device.name) is paired.", systemImage: "checkmark.circle.fill")
+                        .font(.headline).foregroundStyle(.green)
+                }
+            } else if !model.remoteLoginOn {
+                GlassCard {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("First: Remote Login").fontWeight(.semibold)
+                            Text("The iPhone connects to this Mac over SSH: encrypted, and only with its own key. Switch on Remote Login in System Settings, then come back here.")
+                                .font(.callout).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button("Turn On …") { model.openRemoteLoginSettings() }.buttonStyle(.glass)
+                    }
+                }
+            } else {
+                GlassCard { PairingView(inline: true).environmentObject(model) }
+            }
+        }
+        .onReceive(Timer.publish(every: 3, on: .main, in: .common).autoconnect()) { _ in model.refreshPhone() }
+    }
+
+    var bitwardenSignedIn: Bool {
+        let _ = model.bitwardenTick
+        switch model.bitwarden.phase {
+        case .locked, .unlocking, .unlocked: return true
+        default: return false
+        }
+    }
+
+    var bitwardenStep: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("When a website needs a sign-in, your agent asks. You pick one of your Bitwarden logins and approve it; \(Brand.name) gets just that login from Bitwarden and types it into the workspace. Your agent never sees it.")
+                .font(.title3).foregroundStyle(.secondary)
+            GlassCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 12) {
+                        Label(bitwardenSignedIn ? String(localized: "Signed in to Bitwarden") : String(localized: "Not signed in yet"),
+                              systemImage: bitwardenSignedIn ? "checkmark.circle.fill" : "key.horizontal")
+                            .font(.headline)
+                            .foregroundStyle(bitwardenSignedIn ? .green : .primary)
+                        Spacer()
+                        if bitwardenSignedIn {
+                            Button("Show …") { showBitwarden = true }.buttonStyle(.glass)
+                        } else {
+                            Button("Sign In …") { showBitwarden = true }.buttonStyle(.glassProminent)
+                        }
+                    }
+                    Text("Your master password goes to Bitwarden's own command line tool once and isn't stored. If Bitwarden asks for a code or a check, you answer it in the same window.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    func checkRow(_ ok: Bool, done: LocalizedStringKey, todo: LocalizedStringKey) -> some View {
+        Label {
+            Text(ok ? done : todo)
+        } icon: {
+            Image(systemName: ok ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                .foregroundStyle(ok ? .green : .orange)
+        }
+        .font(.callout)
     }
 
     var done: some View {
@@ -505,6 +620,14 @@ private struct StepPage: View {
             Button("Connect again") { setup.connectAgents() }.buttonStyle(.glass).disabled(busy)
         case .session:
             Button("Skip") { setup.skipSession() }.buttonStyle(.glass)
+        case .pair:
+            if model.pairedDevices.isEmpty {
+                Button("Skip (not recommended)") { setup.continueAfterPair() }.buttonStyle(.glass)
+            }
+        case .bitwarden:
+            if !bitwardenSignedIn {
+                Button("Skip") { setup.continueAfterBitwarden() }.buttonStyle(.glass)
+            }
         default:
             EmptyView()
         }
@@ -545,6 +668,12 @@ private struct StepPage: View {
         case .session:
             Button("Run in the background") { setup.enableSession() }
                 .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(busy || !setup.claudeSignedIn)
+        case .pair:
+            Button("Continue") { setup.continueAfterPair() }
+                .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(model.pairedDevices.isEmpty)
+        case .bitwarden:
+            Button("Continue") { setup.continueAfterBitwarden() }
+                .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(!bitwardenSignedIn)
         case .done:
             Button("Done") { NSApp.keyWindow?.close() }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
         }

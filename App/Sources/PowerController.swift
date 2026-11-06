@@ -53,7 +53,13 @@ final class PowerController: ObservableObject {
     private var networkBusy = false
     private var preferredNetworks: (at: Date, names: [String])?
     private var helperHotspots: [String]?
-    private var pendingHotspot: HotspotJoin?
+    /// The hotspot choice in effect now (only while the lid is closed); nil: the user's own macOS settings.
+    private var hotspotHeld: HotspotJoin?
+    /// At the first chance after launch the helper restores the user's settings, should an earlier run have ended
+    /// with the lid closed.
+    private var hotspotRestoredOnce = false
+    private var hotspotBusy = false
+    private var hotspotRetryAfter = Date.distantPast
 
     /// Freeze only after the lid has been closed (and no input came) for this long.
     static let freezeAfterSeconds: TimeInterval = 20
@@ -172,9 +178,36 @@ final class PowerController: ObservableObject {
         } else if network.offlineSince != nil {
             network = NetworkMemory()
         }
-        if helperStatus == .enabled, let join = pendingHotspot {
-            pendingHotspot = nil
-            applyHotspot(join)
+        updateHotspot(lidClosedMode: lidClosedMode, choice: settings.hotspotJoin, now: now)
+    }
+
+    /// The hotspot choice applies only while the lid is closed: on closing aOS's helper notes the user's own macOS
+    /// settings and sets the choice, on opening it writes the user's settings back. With the lid open nothing changes.
+    private func updateHotspot(lidClosedMode: Bool, choice: HotspotJoin?, now: Date) {
+        guard helperStatus == .enabled, !cloupiPresent, !hotspotBusy, now >= hotspotRetryAfter else { return }
+        let want: HotspotJoin? = lidClosedMode ? (choice ?? .manual) : nil
+        if want == hotspotHeld && hotspotRestoredOnce { return }
+        hotspotBusy = true
+        if want != nil { hotspotApply = .working }
+        let helper = self.helper
+        Task {
+            let r: HelperReply
+            if let want { r = await helper.apply(want) } else { r = await helper.restoreHotspot() }
+            self.hotspotBusy = false
+            if let w = r.wifi { self.wifi = w }
+            if let names = r.status?.hotspotNames { self.helperHotspots = names }
+            if r.ok {
+                self.hotspotHeld = want
+                self.hotspotRestoredOnce = true
+                self.hotspotApply = want == nil ? .idle : .done
+            } else {
+                // Not again at every tick: airportd restarts with each try.
+                self.hotspotRetryAfter = Date().addingTimeInterval(300)
+                self.hotspotApply = .failed(r.message.isEmpty ? String(localized: "macOS didn't take the change.") : r.message)
+            }
+            if want != nil || !r.message.contains("nothing to restore") {
+                self.log("hotspot \(want.map { "choice \($0.rawValue) for the closed lid" } ?? "settings of the user"): \(r.ok ? "in effect" : "not in effect (\(r.message))")")
+            }
         }
     }
 
@@ -400,24 +433,11 @@ final class PowerController: ObservableObject {
     }
 
     /// Applies the user's choice to macOS through the helper and reads the result back.
-    func applyHotspot(_ join: HotspotJoin) {
-        guard !cloupiPresent else { return }
-        ensureHelperRegistered()
-        guard helperStatus == .enabled else {
-            pendingHotspot = join
-            hotspotApply = .waitingForHelper
-            return
-        }
-        hotspotApply = .working
-        let helper = self.helper
-        Task {
-            let r = await helper.apply(join)
-            if let w = r.wifi { self.wifi = w }
-            if let names = r.status?.hotspotNames { self.helperHotspots = names }
-            self.hotspotApply = r.ok ? .done : .failed(r.message.isEmpty ? String(localized: "macOS didn't take the change.") : r.message)
-            self.log("hotspot choice \(join.rawValue): \(r.ok ? "in effect" : "not in effect (\(r.message))")")
-            self.refreshWiFiState()
-        }
+    /// The choice changed or the user wants another try: it takes effect at the next tick if the lid is closed.
+    func retryHotspot() {
+        hotspotRetryAfter = .distantPast
+        if helperStatus != .enabled { ensureHelperRegistered() }
+        if hotspotHeld != nil { hotspotHeld = nil }
     }
 
     /// The Wi-Fi pane of System Settings (the fallback when the change didn't take).

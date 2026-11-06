@@ -53,3 +53,15 @@ struct AppIconImage: View {
             .frame(width: size, height: size)
     }
 }
+
+/// "Recommended" next to a setting's title.
+struct RecommendedBadge: View {
+    var body: some View {
+        Text("Recommended")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(BrandColor.indigo)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(BrandColor.indigo.opacity(0.14), in: Capsule())
+    }
+}

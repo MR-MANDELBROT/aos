@@ -103,6 +103,56 @@ public enum WiFiPreferences {
     }
 }
 
+extension WiFiPreferences {
+    /// The user's own hotspot settings before aOS changed them for a closed lid: the auto-join flag of each Personal
+    /// Hotspot (nil: the entry had none) and "Ask to join hotspots" (nil: not set). Written back when the lid opens.
+    public struct Original: Codable, Equatable, Sendable {
+        public var autoJoinDisabled: [String: Bool?]
+        public var hotspotMode: String?
+
+        public init(autoJoinDisabled: [String: Bool?], hotspotMode: String?) {
+            self.autoJoinDisabled = autoJoinDisabled
+            self.hotspotMode = hotspotMode
+        }
+    }
+
+    public static func original(in store: [String: Any], hotspotMode: String?) -> Original {
+        var flags: [String: Bool?] = [:]
+        for (key, value) in store {
+            guard let entry = value as? [String: Any], isPersonalHotspotEntry(entry) else { continue }
+            flags[key] = flagValue(entry[autoJoinDisabledKey])
+        }
+        return Original(autoJoinDisabled: flags, hotspotMode: hotspotMode)
+    }
+
+    /// The entries to write so each Personal Hotspot carries its flag from `original` again (also in the OS-specific
+    /// part where that has a copy); entries that already match, or that aren't in `original`, aren't returned.
+    public static func restoringAutoJoin(in store: [String: Any], original: Original) -> [String: [String: Any]] {
+        var out: [String: [String: Any]] = [:]
+        for (key, value) in store {
+            guard var entry = value as? [String: Any], let saved = original.autoJoinDisabled[key] else { continue }
+            var changed = false
+            if flagValue(entry[autoJoinDisabledKey]) != saved {
+                entry[autoJoinDisabledKey] = saved
+                changed = true
+            }
+            if var os = entry[osSpecificKey] as? [String: Any], let current = flagValue(os[autoJoinDisabledKey]) {
+                let want = saved ?? false
+                if current != want {
+                    os[autoJoinDisabledKey] = want
+                    entry[osSpecificKey] = os
+                    changed = true
+                }
+            }
+            if changed { out[key] = entry }
+        }
+        return out
+    }
+
+    static func flagValue(_ value: Any?) -> Bool? { flag(value) }
+    static func isPersonalHotspotEntry(_ entry: [String: Any]) -> Bool { isPersonalHotspot(entry) }
+}
+
 /// The two hotspot settings as macOS reports them now (read through airportd; works for a normal user).
 public struct WiFiState: Codable, Equatable, Sendable {
     public var hotspotMode: WiFiPreferences.HotspotMode?

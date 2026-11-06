@@ -17,7 +17,7 @@ struct StayAwakeSection: View {
             }
             .disabled(power.cloupiPresent)
             if power.cloupiPresent {
-                CloupiNote()
+                OtherWakeServiceNote()
             } else {
                 Text(explanation).font(.caption).foregroundStyle(.secondary)
                 if model.settings.stayAwake == .lidClosed {
@@ -101,12 +101,13 @@ struct HelperRow: View {
     }
 }
 
-struct CloupiNote: View {
+/// Another wake service on this Mac already keeps it awake and looks after Wi-Fi: two would fight over both.
+struct OtherWakeServiceNote: View {
     var body: some View {
         Label {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Managed by Cloupi")
-                Text("Cloupi's own service keeps this Mac awake and looks after Wi-Fi. \(Brand.name) leaves both alone.")
+                Text("Another service takes care of this")
+                Text("Another service on this Mac already keeps it awake and looks after Wi-Fi. \(Brand.name) leaves both alone.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         } icon: {
@@ -123,10 +124,10 @@ struct HotspotSection: View {
     var body: some View {
         Section {
             if power.cloupiPresent {
-                CloupiNote()
+                OtherWakeServiceNote()
             } else {
                 HotspotChoice()
-                if let w = power.wifi { HotspotStateLine(state: w, choice: model.settings.hotspotJoin) }
+                if let w = power.wifi { HotspotStateLine(state: w, choice: nil) }
                 switch power.hotspotApply {
                 case .idle, .done:
                     EmptyView()
@@ -143,7 +144,7 @@ struct HotspotSection: View {
                             .foregroundStyle(.orange)
                         Text(message).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                         HStack {
-                            Button("Try Again") { if let j = model.settings.hotspotJoin { power.applyHotspot(j) } }
+                            Button("Try Again") { power.retryHotspot() }
                                 .buttonStyle(.glass)
                             Button("Open Wi-Fi Settings") { power.openWiFiSettings() }.buttonStyle(.glass)
                         }
@@ -157,28 +158,28 @@ struct HotspotSection: View {
     }
 }
 
-/// The two answers, as radio buttons with an explanation each.
+/// The two answers for the closed lid, as radio buttons with an explanation each. With the lid open macOS's own
+/// settings stay as they are.
 struct HotspotChoice: View {
     @EnvironmentObject var model: AppModel
     var compact = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("When should this Mac join your iPhone's hotspot?")
+            Text("Your iPhone's hotspot with the lid closed")
                 .fontWeight(compact ? .medium : .regular)
-            option(.manual, "Only when I switch it on on the iPhone",
-                   "macOS never joins or wakes your hotspot by itself. Switch it on and \(Brand.name) connects (with the lid closed as soon as your iPhone sends it); switch it off and the Mac stays disconnected. Meanwhile the Mac keeps looking for known Wi-Fi.")
-            option(.automatic, "Automatically (uses more energy)",
-                   "macOS joins your hotspot whenever it can and may switch it on by itself when there's no Wi-Fi. That keeps your iPhone's hotspot busy and uses its battery.")
-            if model.settings.hotspotJoin == nil {
-                Text("\(Brand.name) changes this in macOS's Wi-Fi settings for you.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
+            option(.manual, "When needed: you switch it on on the iPhone", recommended: true,
+                   "Switch the hotspot on on your iPhone and the Mac connects; switch it off and the Mac stays disconnected. Meanwhile it keeps looking for known Wi-Fi.")
+            option(.automatic, "Connect automatically",
+                   "The Mac joins your hotspot by itself and switches it on when there's no Wi-Fi. That uses more energy, mostly your iPhone's.")
+            Text("Only with the lid closed. With the lid open everything stays as you set it in macOS.")
+                .font(.caption).foregroundStyle(.secondary)
         }
     }
 
-    func option(_ value: HotspotJoin, _ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
-        let selected = model.settings.hotspotJoin == value
+    func option(_ value: HotspotJoin, _ title: LocalizedStringKey, recommended: Bool = false,
+                _ detail: LocalizedStringKey) -> some View {
+        let selected = (model.settings.hotspotJoin ?? .manual) == value
         return Button {
             model.update { $0.hotspotJoin = value }
         } label: {
@@ -187,7 +188,10 @@ struct HotspotChoice: View {
                     .foregroundStyle(selected ? BrandColor.indigo : .secondary)
                     .font(.title3)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).fontWeight(selected ? .semibold : .regular)
+                    HStack(spacing: 8) {
+                        Text(title).fontWeight(selected ? .semibold : .regular)
+                        if recommended { RecommendedBadge() }
+                    }
                     Text(detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)

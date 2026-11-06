@@ -266,12 +266,21 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         }
     }
 
+    /// "automatic" or "manual": the choice for the closed lid; the user's own settings are noted first (once) so
+    /// "restore" can write them back when the lid opens. "restore" without a note does nothing.
     func applyHotspotJoin(_ mode: String, reply: @escaping (Data) -> Void) {
+        if mode == "restore" {
+            longWork(reply) { self.restoreOriginal() }
+            return
+        }
         guard let join = HotspotJoin(rawValue: mode) else {
             reply(HelperReply(ok: false, message: "unknown choice").data)
             return
         }
-        longWork(reply) { self.apply(join) }
+        longWork(reply) {
+            if let problem = self.noteOriginal() { return HelperReply(ok: false, message: problem) }
+            return self.apply(join)
+        }
     }
 
     func join(network: String, reply: @escaping (Data) -> Void) {
@@ -331,6 +340,78 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
     }
 
     // MARK: Hotspot settings
+
+    /// The user's own hotspot settings while aOS's lid-closed choice is in effect (root only).
+    static let originalFile = supportFolder.appendingPathComponent("hotspot-before-lid.json")
+
+    private func readHotspotModeString() -> String? {
+        guard let prefs = SCPreferencesCreate(nil, "aos-powerd" as CFString, WiFiPreferences.airportPreferencesID as CFString)
+        else { return nil }
+        return SCPreferencesGetValue(prefs, WiFiPreferences.autoHotspotModeKey as CFString) as? String
+    }
+
+    /// Notes the user's settings unless a note exists already (the lid closed again before it was restored).
+    private func noteOriginal() -> String? {
+        if FileManager.default.fileExists(atPath: Self.originalFile.path) { return nil }
+        guard let store = knownNetworks() else { return "macOS didn't let the helper read the known networks" }
+        let original = WiFiPreferences.original(in: store, hotspotMode: readHotspotModeString())
+        do {
+            try FileManager.default.createDirectory(at: supportFolder, withIntermediateDirectories: true)
+            try JSONEncoder().encode(original).write(to: Self.originalFile, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Self.originalFile.path)
+        } catch {
+            return "couldn't note the current hotspot settings: \(error.localizedDescription)"
+        }
+        log("noted the user's hotspot settings (\(original.autoJoinDisabled.count) hotspots, Ask to join hotspots \(original.hotspotMode ?? "not set"))")
+        return nil
+    }
+
+    /// Writes the noted settings back (the lid opened) and removes the note.
+    private func restoreOriginal() -> HelperReply {
+        guard let data = try? Data(contentsOf: Self.originalFile),
+              let original = try? JSONDecoder().decode(WiFiPreferences.Original.self, from: data) else {
+            return HelperReply(ok: true, message: "nothing to restore", wifi: WiFiRadio.readState())
+        }
+        var problems: [String] = []
+        var changed = false
+        if let store = knownNetworks() {
+            let changes = WiFiPreferences.restoringAutoJoin(in: store, original: original)
+            if !changes.isEmpty {
+                let domain = WiFiPreferences.knownNetworksDomain as CFString
+                for (key, entry) in changes {
+                    CFPreferencesSetValue(key as CFString, entry as CFDictionary, domain, kCFPreferencesAnyUser, kCFPreferencesAnyHost)
+                }
+                if !CFPreferencesSynchronize(domain, kCFPreferencesAnyUser, kCFPreferencesAnyHost) {
+                    problems.append("the known networks couldn't be written")
+                }
+                changed = true
+            }
+        } else {
+            problems.append("macOS didn't let the helper read the known networks")
+        }
+        if readHotspotModeString() != original.hotspotMode {
+            if let saved = original.hotspotMode, let mode = WiFiPreferences.HotspotMode(schemaString: saved) {
+                if !writeHotspotMode(mode) { problems.append("Ask to join hotspots couldn't be written") }
+            } else if !removeHotspotMode() {
+                problems.append("Ask to join hotspots couldn't be reset")
+            }
+            changed = true
+        }
+        if changed { _ = restartAirportd(reason: "the lid opened, the user's hotspot settings again") }
+        if problems.isEmpty { try? FileManager.default.removeItem(at: Self.originalFile) }
+        log("restored the user's hotspot settings" + (problems.isEmpty ? "" : ": " + problems.joined(separator: "; ")))
+        return HelperReply(ok: problems.isEmpty, message: problems.joined(separator: "; "), wifi: WiFiRadio.readState())
+    }
+
+    private func removeHotspotMode() -> Bool {
+        guard let prefs = SCPreferencesCreate(nil, "aos-powerd" as CFString, WiFiPreferences.airportPreferencesID as CFString),
+              SCPreferencesLock(prefs, true) else { return false }
+        defer { SCPreferencesUnlock(prefs) }
+        let key = WiFiPreferences.autoHotspotModeKey as CFString
+        if SCPreferencesGetValue(prefs, key) == nil { return true }
+        guard SCPreferencesRemoveValue(prefs, key) else { return false }
+        return SCPreferencesCommitChanges(prefs) && SCPreferencesApplyChanges(prefs)
+    }
 
     private func knownNetworks() -> [String: Any]? {
         let domain = WiFiPreferences.knownNetworksDomain as CFString

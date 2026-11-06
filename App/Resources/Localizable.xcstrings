@@ -92,6 +92,7 @@
       }
     },
     "%@ changes this in macOS's Wi-Fi settings for you." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -528,6 +529,26 @@
         }
       }
     },
+    "Another service on this Mac already keeps it awake and looks after Wi-Fi. %@ leaves both alone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderer Dienst auf diesem Mac hält ihn schon wach und kümmert sich ums WLAN. %@ lässt beides in Ruhe."
+          }
+        }
+      }
+    },
+    "Another service takes care of this" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darum kümmert sich schon ein anderer Dienst"
+          }
+        }
+      }
+    },
     "aOS keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again." : {
       "localizations" : {
         "de" : {
@@ -669,6 +690,7 @@
       }
     },
     "Automatically (uses more energy)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1081,6 +1103,16 @@
         }
       }
     },
+    "Claude Code doesn't trust the session folder yet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code vertraut dem Ordner der Sitzung noch nicht"
+          }
+        }
+      }
+    },
     "Claude Code is not installed" : {
       "localizations" : {
         "de" : {
@@ -1107,6 +1139,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claude Code ist nicht angemeldet. Melde dich einmal im Terminal an: claude"
+          }
+        }
+      }
+    },
+    "Claude Code trusts the session folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code vertraut dem Ordner der Sitzung"
           }
         }
       }
@@ -1184,6 +1226,7 @@
       }
     },
     "Cloupi's own service keeps this Mac awake and looks after Wi-Fi. %@ leaves both alone." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1264,6 +1307,16 @@
         }
       }
     },
+    "Connect automatically" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch verbinden"
+          }
+        }
+      }
+    },
     "Connect your agent" : {
       "localizations" : {
         "de" : {
@@ -1330,6 +1383,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unterhaltungen"
+          }
+        }
+      }
+    },
+    "Conversations active within" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterhaltungen aktiv in"
           }
         }
       }
@@ -1661,6 +1724,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erster Start der Sitzung"
+          }
+        }
+      }
+    },
+    "First: Remote Login" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuerst: Entfernte Anmeldung"
           }
         }
       }
@@ -2168,6 +2241,7 @@
       }
     },
     "macOS joins your hotspot whenever it can and may switch it on by itself when there's no Wi-Fi. That keeps your iPhone's hotspot busy and uses its battery." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2178,6 +2252,7 @@
       }
     },
     "macOS never joins or wakes your hotspot by itself. Switch it on and %@ connects (with the lid closed as soon as your iPhone sends it); switch it off and the Mac stays disconnected. Meanwhile the Mac keeps looking for known Wi-Fi." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2188,6 +2263,7 @@
       }
     },
     "Managed by Cloupi" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2508,6 +2584,16 @@
         }
       }
     },
+    "Not signed in yet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht angemeldet"
+          }
+        }
+      }
+    },
     "not started" : {
       "localizations" : {
         "de" : {
@@ -2685,11 +2771,22 @@
       }
     },
     "Only when I switch it on on the iPhone" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nur wenn ich ihn am iPhone einschalte"
+          }
+        }
+      }
+    },
+    "Only with the lid closed. With the lid open everything stays as you set it in macOS." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gilt nur bei geschlossenem Deckel. Bei offenem Deckel bleibt alles so, wie du es in macOS eingestellt hast."
           }
         }
       }
@@ -2859,6 +2956,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iPhone koppeln …"
+          }
+        }
+      }
+    },
+    "Pair your iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone koppeln"
           }
         }
       }
@@ -3039,6 +3146,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bereit: Der Mac bleibt wach, wenn du den Deckel zuklappst."
+          }
+        }
+      }
+    },
+    "Recommended" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfohlen"
+          }
+        }
+      }
+    },
+    "Remote Control is on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Control ist an"
+          }
+        }
+      }
+    },
+    "Remote Control isn't confirmed yet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Control ist noch nicht bestätigt"
           }
         }
       }
@@ -3364,6 +3501,16 @@
         }
       }
     },
+    "Show …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anzeigen …"
+          }
+        }
+      }
+    },
     "Show in Finder" : {
       "localizations" : {
         "de" : {
@@ -3400,6 +3547,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmelden"
+          }
+        }
+      }
+    },
+    "Sign In …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmelden …"
           }
         }
       }
@@ -3515,6 +3672,16 @@
         }
       }
     },
+    "Signed in to Bitwarden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Bitwarden angemeldet"
+          }
+        }
+      }
+    },
     "Signed in to Claude Code" : {
       "localizations" : {
         "de" : {
@@ -3561,6 +3728,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Überspringen"
+          }
+        }
+      }
+    },
+    "Skip (not recommended)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überspringen (nicht empfohlen)"
           }
         }
       }
@@ -3803,6 +3980,16 @@
         }
       }
     },
+    "Switch the hotspot on on your iPhone and the Mac connects; switch it off and the Mac stays disconnected. Meanwhile it keeps looking for known Wi-Fi." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltest du den Hotspot auf dem iPhone ein, verbindet sich der Mac. Schaltest du ihn aus, bleibt der Mac getrennt. Dabei sucht er weiter nach bekanntem WLAN."
+          }
+        }
+      }
+    },
     "Sync Now" : {
       "localizations" : {
         "de" : {
@@ -3919,6 +4106,76 @@
         }
       }
     },
+    "The iPhone connects to this Mac over SSH: encrypted, and only with its own key. Switch on Remote Login in System Settings, then come back here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das iPhone verbindet sich über SSH mit diesem Mac: verschlüsselt und nur mit seinem eigenen Schlüssel. Schalte in den Systemeinstellungen „Entfernte Anmeldung“ ein und komm dann hierher zurück."
+          }
+        }
+      }
+    },
+    "the last %lld hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "den letzten %lld Stunden"
+          }
+        }
+      }
+    },
+    "the last 2 days" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "den letzten 2 Tagen"
+          }
+        }
+      }
+    },
+    "the last 2 weeks" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "den letzten 2 Wochen"
+          }
+        }
+      }
+    },
+    "the last 6 hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "den letzten 6 Stunden"
+          }
+        }
+      }
+    },
+    "the last day" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dem letzten Tag"
+          }
+        }
+      }
+    },
+    "the last week" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der letzten Woche"
+          }
+        }
+      }
+    },
     "The Mac also stays awake with the lid closed, on battery too. Meanwhile %@ freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. Below 10 percent battery, or when it gets too hot, the Mac sleeps." : {
       "localizations" : {
         "de" : {
@@ -3946,6 +4203,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac ist zu heiß: Er darf jetzt schlafen."
+          }
+        }
+      }
+    },
+    "The Mac joins your hotspot by itself and switches it on when there's no Wi-Fi. That uses more energy, mostly your iPhone's." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac verbindet sich selbst mit deinem Hotspot und schaltet ihn ein, wenn kein WLAN da ist. Das braucht mehr Energie, vor allem auf dem iPhone."
           }
         }
       }
@@ -4404,6 +4671,16 @@
         }
       }
     },
+    "When a website needs a sign-in, your agent asks. You pick one of your Bitwarden logins and approve it; %@ gets just that login from Bitwarden and types it into the workspace. Your agent never sees it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht eine Website eine Anmeldung, fragt dein Agent. Du wählst eine deiner Bitwarden-Anmeldungen und gibst sie frei. %@ holt nur diese eine von Bitwarden und tippt sie in den Arbeitsplatz. Dein Agent sieht sie nie."
+          }
+        }
+      }
+    },
     "When macOS asks for a password, aOS enters it, type nothing. aOS notices by itself when it worked." : {
       "localizations" : {
         "de" : {
@@ -4436,7 +4713,18 @@
         }
       }
     },
+    "When needed: you switch it on on the iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Bedarf: du schaltest ihn auf dem iPhone ein"
+          }
+        }
+      }
+    },
     "When should this Mac join your iPhone's hotspot?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4508,6 +4796,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Solange der Deckel offen ist"
+          }
+        }
+      }
+    },
+    "With %@ on your iPhone you approve your agent's sign-ins with Face ID, get a notice when it needs you, and look at the workspace on the go. Without it, you approve everything here on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit %@ auf dem iPhone gibst du die Anmeldungen deines Agents mit Face ID frei, bekommst eine Mitteilung, wenn er dich braucht, und schaust unterwegs in den Arbeitsplatz. Ohne iPhone gibst du alles hier am Mac frei."
           }
         }
       }
@@ -4622,12 +4920,32 @@
         }
       }
     },
+    "Your iPhone's hotspot with the lid closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein iPhone-Hotspot bei geschlossenem Deckel"
+          }
+        }
+      }
+    },
     "Your master password goes to Bitwarden's command line tool once and isn't stored. If Bitwarden asks for a code (two-step login, or because %@ is a new device for your account), you enter it here." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Master-Passwort geht einmal an das Befehlszeilenprogramm von Bitwarden und wird nicht gespeichert. Fragt Bitwarden nach einem Code (zweistufige Anmeldung, oder weil %@ ein neues Gerät für dein Konto ist), gibst du ihn hier ein."
+          }
+        }
+      }
+    },
+    "Your master password goes to Bitwarden's own command line tool once and isn't stored. If Bitwarden asks for a code or a check, you answer it in the same window." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Master-Passwort geht einmal an das Befehlszeilenprogramm von Bitwarden und wird nicht gespeichert. Fragt Bitwarden nach einem Code oder einer Prüfung, beantwortest du sie im selben Fenster."
           }
         }
       }

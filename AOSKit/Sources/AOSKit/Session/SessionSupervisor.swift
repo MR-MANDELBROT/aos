@@ -294,6 +294,23 @@ public final class SessionSupervisor: @unchecked Sendable {
 /// Finding Claude Code and facts about it. The app never installs a copy of its own or touches credentials:
 /// the user installs Claude Code with Anthropic's installer and signs in through Claude Code's own flow.
 public enum ClaudeCode {
+    /// Whether Claude Code would start in `folder` without asking: the folder (or one above it) is trusted, and the
+    /// one-time Remote Control question was answered. Reads only these two flags from ~/.claude.json, nothing else.
+    public static func readiness(folder: URL, configFile: URL? = nil) -> (trusted: Bool, remoteControl: Bool) {
+        let file = configFile ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude.json")
+        guard let data = try? Data(contentsOf: file),
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return (false, false) }
+        let projects = root["projects"] as? [String: Any] ?? [:]
+        var trusted = false
+        var path = folder.standardizedFileURL.path
+        while !trusted {
+            if let entry = projects[path] as? [String: Any], entry["hasTrustDialogAccepted"] as? Bool == true { trusted = true }
+            if path == "/" || path.isEmpty { break }
+            path = (path as NSString).deletingLastPathComponent
+        }
+        return (trusted, root["remoteDialogSeen"] as? Bool == true)
+    }
+
     public static func executable() -> URL? {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         for p in ["\(home)/.local/bin/claude", "/opt/homebrew/bin/claude", "/usr/local/bin/claude"] {

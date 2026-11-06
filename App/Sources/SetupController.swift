@@ -11,7 +11,7 @@ import Virtualization
 @MainActor
 final class SetupController: ObservableObject {
     enum Step: Int, CaseIterable, Identifiable {
-        case requirements, agents, download, install, prepare, screenSharing, connect, session, done
+        case requirements, agents, download, install, prepare, screenSharing, connect, session, pair, bitwarden, done
         var id: Int { rawValue }
         var title: String {
             switch self {
@@ -23,6 +23,8 @@ final class SetupController: ObservableObject {
             case .screenSharing: return String(localized: "Turn on screen sharing")
             case .connect: return String(localized: "Connect your agent")
             case .session: return String(localized: "Reach it from your phone")
+            case .pair: return String(localized: "Pair your iPhone")
+            case .bitwarden: return String(localized: "Sign in to Bitwarden")
             case .done: return String(localized: "Ready")
             }
         }
@@ -513,8 +515,21 @@ final class SetupController: ObservableObject {
             step = .session
             checkClaudeSignIn()
         } else {
-            finish()
+            toPairing()
         }
+    }
+
+    private func toPairing() {
+        step = .pair
+        AppModel.shared.refreshPhone()
+    }
+
+    // MARK: 9. The iPhone
+
+    /// Paired, or skipped (not recommended: without the phone, approvals only happen at the Mac).
+    func continueAfterPair() {
+        AppModel.shared.stopPairing()
+        step = .bitwarden
     }
 
     // MARK: 8. Always-on session (Claude Code)
@@ -531,7 +546,7 @@ final class SetupController: ObservableObject {
             try SessionAgent.enable()
             self.saveSettings { $0.sessionEnabled = true }
             self.note("session runs in the background")
-            self.finish()
+            self.toPairing()
         }
     }
 
@@ -539,6 +554,14 @@ final class SetupController: ObservableObject {
         saveSettings { $0.sessionEnabled = false }
         // The background process stays if it keeps conversations reachable
         if !workspace.settings.keepReachable { try? SessionAgent.disable() }
+        toPairing()
+    }
+
+    // MARK: 10. Bitwarden
+
+    /// Signed in, or later (the agent's sign-ins then have no logins to offer until the user signs in in the
+    /// settings).
+    func continueAfterBitwarden() {
         finish()
     }
 

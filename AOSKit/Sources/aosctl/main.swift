@@ -81,6 +81,8 @@ func runCommand() async {
                 provisioning = p
             }
             host.onPhaseChange = { print("vm: \($0.rawValue)") }
+            // --no-restart: a shutdown inside the guest ends the run instead of booting again.
+            host.restartsAfterGuestStop = !args.contains("--no-restart")
             var vnc: HypervisorVNC?
             let vncPassword = String(UUID().uuidString.prefix(8))
             if args.contains("--vnc") {

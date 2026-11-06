@@ -88,6 +88,8 @@ struct PhoneSettings: View {
 struct PairingView: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    /// Inside the setup page instead of a sheet: no Cancel/Done button (the page has its own).
+    var inline = false
 
     var body: some View {
         VStack(spacing: 18) {
@@ -133,11 +135,14 @@ struct PairingView: View {
                 ProgressView()
                 Text("Preparing …").foregroundStyle(.secondary)
             }
-            Button(isPaired ? "Done" : "Cancel") { dismiss() }
-                .buttonStyle(.glass).keyboardShortcut(isPaired ? .defaultAction : .cancelAction)
+            if !inline {
+                Button(isPaired ? "Done" : "Cancel") { dismiss() }
+                    .buttonStyle(.glass).keyboardShortcut(isPaired ? .defaultAction : .cancelAction)
+            }
         }
-        .padding(28)
-        .frame(width: 400)
+        .padding(inline ? 8 : 28)
+        .frame(width: inline ? nil : 400)
+        .frame(maxWidth: inline ? .infinity : nil)
         .onAppear { model.startPairing() }
     }
 
