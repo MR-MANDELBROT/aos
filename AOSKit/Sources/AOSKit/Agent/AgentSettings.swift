@@ -46,6 +46,10 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// Folder new chats start in (empty: the home folder).
     public var newChatsFolder: String = ""
 
+    /// Bitwarden locks again this many hours after it was unlocked in aOS (earlier when the Mac sleeps or restarts).
+    public var bitwardenLockHours: Int = 8
+    public static let bitwardenLockChoices = [1, 4, 8, 24]
+
     // The workspace
     /// Which websites forget their sign-in when the workspace closes.
     public var signOutWebsites: SignOutWebsites = .allExcept
@@ -66,6 +70,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case setupFinished
         case keepReachable, keepAutomatic, keepHours, keepTerminal, keepMax, keptConversations, skippedConversations
         case newChats, newChatsFolder, signOutWebsites, shareApplications
+        case bitwardenLockHours
     }
 
     /// Keys of earlier versions, read once and written in their new form.
@@ -102,6 +107,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         signOutWebsites = try c.decodeIfPresent(SignOutWebsites.self, forKey: .signOutWebsites)
             ?? (expireSignIns ? .allExcept : .none)
         shareApplications = try c.decodeIfPresent(Bool.self, forKey: .shareApplications) ?? d.shareApplications
+        bitwardenLockHours = min(max(try c.decodeIfPresent(Int.self, forKey: .bitwardenLockHours) ?? d.bitwardenLockHours, 1), 24)
     }
 
     /// The folder new chats from the Claude app start in.

@@ -35,6 +35,8 @@ public struct AgentRequest: Codable, Sendable {
     public var username: String?
     public var password: String?
     public var totp: String?
+    /// signin.answer: the Bitwarden login the user approved (its id; aOS gets the secrets from Bitwarden).
+    public var login: String?
     public var decline: Bool?
     public var allowed: Bool?
     /// companion.events: the last sequence number the companion has seen.

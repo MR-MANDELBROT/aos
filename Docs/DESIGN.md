@@ -192,9 +192,59 @@ See Docs/COMPANION.md for the protocol. On the Mac:
 ## Signing in for the agent
 
 - **sign_in** (MCP tool): the agent clicks into a user name, password or code field and calls it. The workspace helper
-  reports the focused field's kind and the page's host; aOS locks the agent's other tools, posts the request
-  (iPhone) and shows the sign-in window on the Mac when no phone is connected (user name and password fields with
-  AutoFill, so a password manager on the Mac fills them). Whoever answers first wins; 3 minutes.
+  reports the focused field's kind and the page's host; aOS asks Bitwarden for the logins that match the host (below),
+  locks the agent's other tools, posts the request with those logins (name and user name only) to the iPhone and shows
+  the sign-in window on the Mac when no phone is connected (the same logins to choose from, plus user name and
+  password fields with AutoFill for another password manager). Whoever answers first wins; 3 minutes. An approved
+  Bitwarden login is read from Bitwarden only then, checked against the host once more, and handed to the helper.
+- **Bitwarden** (`AOSKit/Sources/AOSKit/Bitwarden`): the passwords live in the user's own Bitwarden account; aOS
+  keeps none (Docs/COMPANION.md, "Decisions"). aOS talks to Bitwarden only through Bitwarden's official command line
+  tool `bw`, run as a program of its own: Bitwarden's SDK license forbids offering an app built with it to others,
+  so aOS links nothing of Bitwarden and ships nothing of it.
+  - *The tool* (`BitwardenTool`): the user's own `bw` from the usual places (PATH, /opt/homebrew/bin, /usr/local/bin,
+    ~/.local/bin, ~/bin) if it is Bitwarden's signed build; otherwise aOS downloads it when the user signs in.
+    Bitwarden's official link (`https://vault.bitwarden.com/download/?app=cli&platform=macos`, from
+    bitwarden.com/help/cli) redirects to the newest release on GitHub (`bw-macos-<version>.zip`, Intel); aOS takes
+    the Apple silicon build of the same release (`bw-macos-arm64-<version>.zip`), falls back to the Intel one,
+    unpacks it with ditto and puts it into `~/Library/Application Support/aOS/bin/bw` (0700). Before every use the
+    file is checked with macOS's code signing: a Developer ID signature of Bitwarden Inc, team `LTZ2PFU5D6`
+    (Bitwarden's build workflow signs the macOS CLI with "Developer ID Application: Bitwarden Inc" and notarizes it;
+    the desktop app's notarization names that identity's team, LTZ2PFU5D6), strictly validated for all
+    architectures; the result is kept while the file's inode, size and time stay the same. A download that fails the check is deleted. Homebrew's and npm's `bw` are
+    Node scripts without a signature and aren't used. Settings > Bitwarden can download the newest version again.
+  - *Running it* (`BitwardenCLI`): a small environment of its own (no inherited secrets), English messages, JSON
+    answers (`BW_RESPONSE=true`), `BW_NOINTERACTION=true` for everything but the sign-in, and
+    `BITWARDENCLI_APPDATA_DIR=~/Library/Application Support/aOS/Bitwarden`, so aOS's sign-in is apart from the
+    user's own `bw`. The master password goes in only through `--passwordenv` (the variable's name is on the command
+    line, the password in the child's environment), the session key only as `BW_SESSION`; item ids (UUIDs only),
+    the email and the server address are checked before they reach a command line. Nothing `bw` prints is logged;
+    errors carry Bitwarden's own message.
+  - *Signing in* (`bw login <email> --passwordenv`): `bw` asks its questions with inquirer on a terminal, so
+    aOS runs it with stdin and stderr on a pseudo terminal and stdout on a pipe (`Subprocess.interactive`), reads the
+    questions from the terminal (escape sequences removed) and asks the user in Settings > Bitwarden: the two-step
+    method when the account has several ("Two-step login method:", a list answered with arrow keys and Return;
+    the CLI supports authenticator app, email and YubiKey OTP, not Duo or passkeys), the code ("Two-step login
+    code:"; for email Bitwarden sends it when the method is chosen), and the code Bitwarden emails when aOS is a new
+    device for an account without two-step login ("New device verification required. Enter OTP sent to login
+    email:"; the CLI has no option for it, only this question). Any other question is shown as `bw` asked it. The
+    answer, without line breaks, is typed into the terminal. The server (bitwarden.com, bitwarden.eu or the
+    user's own) is set with `bw config server` before. The result is the session key (`raw` in the JSON answer).
+  - *The session key* stays in a generic password item of the login keychain (service `dev.marquart.aos.bitwarden`,
+    not synchronized). macOS puts the program that created an item on its access list, so another program can only
+    read it after the person allows it in macOS's own dialog. Unlocking later: `bw unlock --passwordenv`.
+  - *When it locks again*: `bitwardenLockHours` after unlocking (setting: 1, 4, 8 (default) or 24 hours, counted
+    from unlocking, not from the last use), when the Mac goes to sleep (NSWorkspace notification, and the kernel's
+    `kern.sleeptime` checked before every use, which also covers a sleep while aOS wasn't running), when it restarts
+    (`kern.boottime`), and on demand (Settings, menu). Locking forgets the key in memory and the keychain and runs
+    `bw lock`, so the old key opens nothing. Quitting aOS alone doesn't lock: an update or a restart of aOS shouldn't
+    need the master password again. Open requests are offered again (same request id) whenever this changes.
+  - *Logins for a request*: `bw list items --url https://<host>` (Bitwarden's matching), narrowed by
+    `HostMatching` (Docs/COMPANION.md, "Matching logins"), without logins that have "master password re-prompt",
+    the login used last for the host first; a stale vault (last sync over 5 minutes ago) is synced while the
+    request waits. The answer may only name an offered login; right before filling, aOS reads it with `bw get item`
+    (user name and password) and checks its URIs against the host again; for a code request it runs `bw get totp`
+    (Bitwarden computes the code; it needs premium or an organization that allows it, otherwise the user types the
+    code). Bitwarden records these reads as "viewed" in an organization's event log, like any Bitwarden client.
 - **The helper** (`AOSHelper.app`, LaunchAgent in the guest, Accessibility permission) fills only into the real
   Google Chrome (checked by code signature, Google's team EQHXZ8M8AV, not by name) started without command line
   switches (they could turn off certificate checks or log traffic), only into a field of the tab's own page (not a
@@ -223,7 +273,11 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   the workspace from the inside with programs of its own can't be ruled out completely (for example Chrome's
   JavaScript from Apple Events: Chrome has no policy for it; the helper refuses while a profile has it on, but can
   only see the profile files, not a running Chrome's memory). So: approve sign-ins for agents you trust
-  with the account, and prefer accounts with two-factor sign-in. Open hardening steps: a key only the signed helper
+  with the account, and prefer accounts with two-factor sign-in. On the Mac's side: while `bw` runs for a sign-in
+  or an unlock (seconds), the master password is in its environment, which other programs of the same macOS user
+  could read; the session key is in the keychain behind macOS's access list, and in `bw`'s environment while it
+  runs. That is the CLI's own model (`--passwordenv`, `BW_SESSION`); the workspace (the agent's account in the VM)
+  reaches none of it. Open hardening steps: a key only the signed helper
   can use, so the request is encrypted to it (instead of trusting the socket's peer), and a check of Chrome's profile
   settings before each sign-in.
 

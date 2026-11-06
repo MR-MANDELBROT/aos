@@ -15,10 +15,15 @@ public struct CompanionEvent: Codable, Sendable, Equatable {
     public var expires: Date?
     public var result: String?
     public var state: String?
+    /// For sign-ins: the Bitwarden logins that match the site (never a password).
+    public var logins: [CompanionLogin]?
+    /// For sign-ins: Bitwarden in aOS: "unlocked" (`logins` are what it has for the site), "locked" (the user
+    /// unlocks it on the Mac first), "off" (no Bitwarden account in aOS), "unavailable" (it didn't answer).
+    public var bitwarden: String?
 
     public init(event: String, request: String? = nil, agent: String? = nil, host: String? = nil, field: String? = nil,
                 purpose: String? = nil, minutes: Int? = nil, expires: Date? = nil, result: String? = nil,
-                state: String? = nil) {
+                state: String? = nil, logins: [CompanionLogin]? = nil, bitwarden: String? = nil) {
         self.event = event
         self.request = request
         self.agent = agent
@@ -29,6 +34,29 @@ public struct CompanionEvent: Codable, Sendable, Equatable {
         self.expires = expires
         self.result = result
         self.state = state
+        self.logins = logins
+        self.bitwarden = bitwarden
+    }
+}
+
+/// A Bitwarden login as a sign-in request shows it: which one, never its password or authenticator key.
+public struct CompanionLogin: Codable, Sendable, Equatable, Identifiable {
+    /// Bitwarden's item id (the answer names it).
+    public var id: String
+    public var name: String
+    public var username: String
+    /// Bitwarden has an authenticator key for it: aOS can fill its current one-time code.
+    public var totp: Bool
+
+    public init(id: String, name: String, username: String, totp: Bool) {
+        self.id = id
+        self.name = name
+        self.username = username
+        self.totp = totp
+    }
+
+    public init(_ item: BitwardenCLI.Item) {
+        self.init(id: item.id, name: item.name, username: item.username, totp: item.hasTOTP)
     }
 }
 

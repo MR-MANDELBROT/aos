@@ -87,7 +87,12 @@ actor CompanionClient {
         return endpoint
     }
 
-    /// Sends the sign-in. The values only pass through; nothing here keeps or logs them.
+    /// Approves one of the request's Bitwarden logins: the Mac gets it from Bitwarden.
+    func answerSignIn(request id: String, login: String) async throws {
+        _ = try await request(.signInLogin(request: id, login: login))
+    }
+
+    /// Sends a sign-in from another password app. The values only pass through; nothing here keeps or logs them.
     func answerSignIn(request id: String, username: String, password: String, totp: String?) async throws {
         _ = try await request(.signInAnswer(request: id, username: username, password: password, totp: totp))
     }

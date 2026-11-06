@@ -119,6 +119,7 @@ while let line = readLine(strippingNewline: true) {
                 q.username = r["username"] as? String
                 q.password = r["password"] as? String
                 q.totp = r["totp"] as? String
+                q.login = r["login"] as? String
                 q.decline = r["decline"] as? Bool
                 q.device = device
             }

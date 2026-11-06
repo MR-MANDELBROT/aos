@@ -31,16 +31,6 @@
         }
       }
     },
-    "„%@“ still contains all your passwords unencrypted. Delete it, and empty „Recently Deleted“ in Files afterwards." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„%@“ enthält noch alle deine Passwörter unverschlüsselt. Lösche die Datei und leere danach „Zuletzt gelöscht“ in der Dateien-App."
-          }
-        }
-      }
-    },
     "%@ answered with a different SSH key (%@). If the Mac was set up again, pair it again." : {
       "localizations" : {
         "de" : {
@@ -205,26 +195,6 @@
         }
       }
     },
-    "%lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld"
-          }
-        }
-      }
-    },
-    "%lld s" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld s"
-          }
-        }
-      }
-    },
     "%lld:%@ left" : {
       "localizations" : {
         "de" : {
@@ -241,42 +211,22 @@
         }
       }
     },
-    "1. Open Tools > Export vault." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1. Öffne Werkzeuge > Tresor exportieren."
-          }
-        }
-      }
-    },
-    "2. Choose the format „.json“ or „.csv“, not the encrypted one." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Wähle das Format „.json“ oder „.csv“, nicht das verschlüsselte."
-          }
-        }
-      }
-    },
-    "3. Save the file in Files (On My iPhone)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Sichere die Datei in der Dateien-App (Auf meinem iPhone)."
-          }
-        }
-      }
-    },
     "A Mac of its own for your coding agent." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ein eigener Mac für deinen Coding-Agent."
+          }
+        }
+      }
+    },
+    "A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with Face ID or your passcode." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Anmeldeanfrage zeigt, welche deiner Bitwarden-Anmeldungen zur Website passen, mit Name und Benutzername, nie mit Passwort. Du gibst eine mit Face ID oder deinem Code frei."
           }
         }
       }
@@ -291,32 +241,12 @@
         }
       }
     },
-    "Add" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hinzufügen"
-          }
-        }
-      }
-    },
     "Add a computer" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rechner hinzufügen"
-          }
-        }
-      }
-    },
-    "Add a login" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmeldung hinzufügen"
           }
         }
       }
@@ -361,16 +291,6 @@
         }
       }
     },
-    "after %lld s" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "nach %lld s"
-          }
-        }
-      }
-    },
     "After 1 hour" : {
       "localizations" : {
         "de" : {
@@ -397,16 +317,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erlaubt. Der Arbeitsplatz öffnet sich."
-          }
-        }
-      }
-    },
-    "Already in the vault: %lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schon im Tresor: %lld"
           }
         }
       }
@@ -467,16 +377,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS ist auf dem Mac nicht mehr dort installiert, wo es beim Koppeln war. Öffne aOS auf dem Mac und kopple neu."
-          }
-        }
-      }
-    },
-    "aOS may not delete it there. Delete it in the Files app." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aOS darf sie dort nicht löschen. Lösche sie in der Dateien-App."
           }
         }
       }
@@ -601,12 +501,42 @@
         }
       }
     },
+    "aOS on your Mac gets the current code from Bitwarden and fills it in." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf deinem Mac holt den aktuellen Code aus Bitwarden und trägt ihn ein."
+          }
+        }
+      }
+    },
+    "aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither the iPhone nor the Mac keeps it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf deinem Mac holt dann genau diese Anmeldung aus Bitwarden und tippt sie in den Arbeitsplatz. Weder das iPhone noch der Mac behält sie."
+          }
+        }
+      }
+    },
     "aOS remembers the key and warns you if it ever changes." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS merkt sich den Schlüssel und warnt dich, falls er sich je ändert."
+          }
+        }
+      }
+    },
+    "Approve the sign-in for %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung für %@ freigeben"
           }
         }
       }
@@ -621,12 +551,22 @@
         }
       }
     },
-    "Approved sign-ins go once, encrypted over SSH, to aOS on your Mac, which types them into the workspace. Neither the app nor the Mac keeps them." : {
+    "Approved. aOS on your Mac gets this login from Bitwarden and fills it in." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Freigegebene Anmeldungen gehen einmal verschlüsselt über SSH an aOS auf deinem Mac, das sie im Arbeitsplatz einträgt. Weder die App noch der Mac behalten sie."
+            "value" : "Freigegeben. aOS auf deinem Mac holt diese Anmeldung aus Bitwarden und trägt sie ein."
+          }
+        }
+      }
+    },
+    "Approving a sign-in always needs Face ID, whether or not the app itself is locked." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Anmeldung freizugeben braucht immer Face ID, ob die App selbst gesperrt ist oder nicht."
           }
         }
       }
@@ -661,12 +601,22 @@
         }
       }
     },
-    "Bring your logins from Bitwarden" : {
+    "Bitwarden didn't answer on your Mac" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hol deine Anmeldungen aus Bitwarden"
+            "value" : "Bitwarden hat auf deinem Mac nicht geantwortet"
+          }
+        }
+      }
+    },
+    "Bitwarden is locked on your Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden ist auf deinem Mac gesperrt"
           }
         }
       }
@@ -707,26 +657,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prüfe den Schlüssel des Macs"
-          }
-        }
-      }
-    },
-    "Choose the export file" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exportdatei wählen"
-          }
-        }
-      }
-    },
-    "Clear copied passwords" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopierte Passwörter löschen"
           }
         }
       }
@@ -831,42 +761,12 @@
         }
       }
     },
-    "Copied. The clipboard forgets it after %lld seconds." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopiert. Die Zwischenablage vergisst es nach %lld Sekunden."
-          }
-        }
-      }
-    },
-    "Copy" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopieren"
-          }
-        }
-      }
-    },
     "Copy the public key" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffentlichen Schlüssel kopieren"
-          }
-        }
-      }
-    },
-    "Copy user name" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benutzername kopieren"
           }
         }
       }
@@ -917,36 +817,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Löschen"
-          }
-        }
-      }
-    },
-    "Delete „%@“?" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„%@“ löschen?"
-          }
-        }
-      }
-    },
-    "Delete login" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmeldung löschen"
-          }
-        }
-      }
-    },
-    "Delete the file now" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Datei jetzt löschen"
           }
         }
       }
@@ -1031,36 +901,6 @@
         }
       }
     },
-    "Edit login" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmeldung bearbeiten"
-          }
-        }
-      }
-    },
-    "Every look at a password and every approval needs Face ID or your passcode." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jeder Blick auf ein Passwort und jede Freigabe braucht Face ID oder deinen Code."
-          }
-        }
-      }
-    },
-    "Every look at a password needs Face ID or your passcode." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jeder Blick auf ein Passwort braucht Face ID oder deinen Code."
-          }
-        }
-      }
-    },
     "Expired" : {
       "localizations" : {
         "de" : {
@@ -1081,22 +921,22 @@
         }
       }
     },
-    "Fill in from %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aus %@ einsetzen"
-          }
-        }
-      }
-    },
     "Fill in the code for %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Code für %@ einsetzen"
+          }
+        }
+      }
+    },
+    "Fill in the code from %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code aus %@ einsetzen"
           }
         }
       }
@@ -1171,12 +1011,12 @@
         }
       }
     },
-    "From your vault" : {
+    "From Bitwarden" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aus deinem Tresor"
+            "value" : "Aus Bitwarden"
           }
         }
       }
@@ -1191,32 +1031,12 @@
         }
       }
     },
-    "Has a one-time code" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit Einmalcode"
-          }
-        }
-      }
-    },
     "Help in the workspace" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hilfe im Arbeitsplatz"
-          }
-        }
-      }
-    },
-    "Hide" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ausblenden"
           }
         }
       }
@@ -1237,66 +1057,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "So erreicht ihn das iPhone"
-          }
-        }
-      }
-    },
-    "If it was in iCloud Drive, also empty „Recently Deleted“ in Files." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lag sie in iCloud Drive, leere auch „Zuletzt gelöscht“ in der Dateien-App."
-          }
-        }
-      }
-    },
-    "Import" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importieren"
-          }
-        }
-      }
-    },
-    "Import from Bitwarden" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aus Bitwarden importieren"
-          }
-        }
-      }
-    },
-    "Import the logins" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmeldungen importieren"
-          }
-        }
-      }
-    },
-    "Imported logins stay on this iPhone, locked with Face ID." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importierte Anmeldungen bleiben auf diesem iPhone, geschützt mit Face ID."
-          }
-        }
-      }
-    },
-    "In Bitwarden" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In Bitwarden"
           }
         }
       }
@@ -1421,26 +1181,6 @@
         }
       }
     },
-    "Left out, not logins (notes, cards, identities): %lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weggelassen, keine Anmeldungen (Notizen, Karten, Identitäten): %lld"
-          }
-        }
-      }
-    },
-    "Left out, without user name and password: %lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Weggelassen, ohne Benutzername und Passwort: %lld"
-          }
-        }
-      }
-    },
     "Lock again" : {
       "localizations" : {
         "de" : {
@@ -1471,52 +1211,12 @@
         }
       }
     },
-    "Login deleted" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmeldung gelöscht"
-          }
-        }
-      }
-    },
-    "Logins found: %lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gefundene Anmeldungen: %lld"
-          }
-        }
-      }
-    },
-    "Logins imported: %lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importierte Anmeldungen: %lld"
-          }
-        }
-      }
-    },
     "Mac" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac"
-          }
-        }
-      }
-    },
-    "Make a strong password" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Starkes Passwort erzeugen"
           }
         }
       }
@@ -1571,16 +1271,6 @@
         }
       }
     },
-    "New login" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue Anmeldung"
-          }
-        }
-      }
-    },
     "New password (empty keeps the old one)" : {
       "localizations" : {
         "de" : {
@@ -1611,22 +1301,22 @@
         }
       }
     },
-    "No login for %@ in your vault" : {
+    "No login for %@ in Bitwarden" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keine Anmeldung für %@ in deinem Tresor"
+            "value" : "Keine Anmeldung für %@ in Bitwarden"
           }
         }
       }
     },
-    "No logins yet" : {
+    "No login with a one-time code for %@ in Bitwarden" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Noch keine Anmeldungen"
+            "value" : "Keine Anmeldung mit Einmalcode für %@ in Bitwarden"
           }
         }
       }
@@ -1721,26 +1411,6 @@
         }
       }
     },
-    "Notes" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notizen"
-          }
-        }
-      }
-    },
-    "Now delete the export file" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lösche jetzt die Exportdatei"
-          }
-        }
-      }
-    },
     "OK" : {
       "localizations" : {
         "de" : {
@@ -1781,32 +1451,12 @@
         }
       }
     },
-    "One per line. The login is offered for these sites and their subdomains." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eine pro Zeile. Die Anmeldung wird für diese Websites und ihre Subdomains angeboten."
-          }
-        }
-      }
-    },
     "One-time code" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einmalcode"
-          }
-        }
-      }
-    },
-    "One-time codes (optional)" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einmalcodes (optional)"
           }
         }
       }
@@ -1851,22 +1501,22 @@
         }
       }
     },
+    "Or type the code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oder tippe den Code ein"
+          }
+        }
+      }
+    },
     "Other computers" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weitere Rechner"
-          }
-        }
-      }
-    },
-    "otpauth://… or the secret" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "otpauth://… oder das Geheimnis"
           }
         }
       }
@@ -1987,16 +1637,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort"
-          }
-        }
-      }
-    },
-    "Passwords in the vault always need Face ID, whether or not the app itself is locked." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passwörter im Tresor brauchen immer Face ID, ob die App selbst gesperrt ist oder nicht."
           }
         }
       }
@@ -2161,26 +1801,6 @@
         }
       }
     },
-    "Search logins" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmeldungen durchsuchen"
-          }
-        }
-      }
-    },
-    "Seconds left: %lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbleibende Sekunden: %lld"
-          }
-        }
-      }
-    },
     "Secure Enclave" : {
       "localizations" : {
         "de" : {
@@ -2207,16 +1827,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Code senden"
-          }
-        }
-      }
-    },
-    "Send the sign-in for %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmeldung für %@ senden"
           }
         }
       }
@@ -2261,12 +1871,12 @@
         }
       }
     },
-    "Set a passcode for this iPhone first (Settings > Face ID & Passcode). The vault needs it." : {
+    "Set a passcode for this iPhone first (Settings > Face ID & Passcode). Approving a sign-in needs Face ID or the passcode." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leg zuerst einen Code für dieses iPhone fest (Einstellungen > Face ID & Code). Der Tresor braucht ihn."
+            "value" : "Leg zuerst einen Code für dieses iPhone fest (Einstellungen > Face ID & Code). Eine Anmeldung freizugeben braucht Face ID oder den Code."
           }
         }
       }
@@ -2287,46 +1897,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffentlichen Schlüssel teilen"
-          }
-        }
-      }
-    },
-    "Show" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeigen"
-          }
-        }
-      }
-    },
-    "Show code" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Code zeigen"
-          }
-        }
-      }
-    },
-    "Show notes" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notizen zeigen"
-          }
-        }
-      }
-    },
-    "Show the login for %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmeldung für %@ zeigen"
           }
         }
       }
@@ -2541,16 +2111,6 @@
         }
       }
     },
-    "That isn't a valid secret for one-time codes." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das ist kein gültiges Geheimnis für Einmalcodes."
-          }
-        }
-      }
-    },
     "The agent gets only this code. aOS types it into the field it chose, only on this site." : {
       "localizations" : {
         "de" : {
@@ -2621,46 +2181,6 @@
         }
       }
     },
-    "The export contains all your passwords unencrypted. aOS reads it once; afterwards you delete it." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Export enthält alle deine Passwörter unverschlüsselt. aOS liest ihn einmal, danach löschst du ihn."
-          }
-        }
-      }
-    },
-    "The export file is deleted." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Exportdatei ist gelöscht."
-          }
-        }
-      }
-    },
-    "The file contains no logins." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Datei enthält keine Anmeldungen."
-          }
-        }
-      }
-    },
-    "The file couldn't be read." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Datei ließ sich nicht lesen."
-          }
-        }
-      }
-    },
     "The iPhone accepts the Mac only with exactly this key, now and later." : {
       "localizations" : {
         "de" : {
@@ -2717,16 +2237,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Schlüssel dieses Rechners hat sich geändert"
-          }
-        }
-      }
-    },
-    "The login is removed from this iPhone. This can't be undone." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Anmeldung wird von diesem iPhone entfernt. Das lässt sich nicht rückgängig machen."
           }
         }
       }
@@ -3021,12 +2531,12 @@
         }
       }
     },
-    "They stay on this iPhone, in its keychain, only on this device. They aren't synced to iCloud and aren't part of backups." : {
+    "They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden's own command line tool; this iPhone never talks to Bitwarden." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sie bleiben auf diesem iPhone, in seinem Schlüsselbund, nur auf diesem Gerät. Sie werden nicht mit iCloud synchronisiert und sind in keinem Backup."
+            "value" : "Sie bleiben in deinem Bitwarden-Konto. aOS auf deinem Mac meldet sich dort mit dem eigenen Befehlszeilenprogramm von Bitwarden an; dieses iPhone spricht nie mit Bitwarden."
           }
         }
       }
@@ -3037,26 +2547,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Code stammt von einem neueren aOS. Aktualisiere die App auf diesem iPhone."
-          }
-        }
-      }
-    },
-    "This export is encrypted. Export again and choose „.json“ or „.csv“ without encryption." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieser Export ist verschlüsselt. Exportiere erneut und wähle „.json“ oder „.csv“ ohne Verschlüsselung."
-          }
-        }
-      }
-    },
-    "This file doesn't look like a Bitwarden export." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diese Datei sieht nicht nach einem Bitwarden-Export aus."
           }
         }
       }
@@ -3107,16 +2597,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Schlüssel dieses iPhones ließ sich nicht erzeugen: %@"
-          }
-        }
-      }
-    },
-    "This login's password is missing on this iPhone." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Passwort dieser Anmeldung fehlt auf diesem iPhone."
           }
         }
       }
@@ -3231,6 +2711,16 @@
         }
       }
     },
+    "Type the code below, or decline." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe den Code unten ein, oder lehne ab."
+          }
+        }
+      }
+    },
     "Unlock aOS" : {
       "localizations" : {
         "de" : {
@@ -3241,22 +2731,22 @@
         }
       }
     },
+    "Unlock it in aOS on the Mac. The logins for this website then appear here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperre es in aOS auf dem Mac. Die Anmeldungen für diese Website erscheinen dann hier."
+          }
+        }
+      }
+    },
     "Unlock the login for the screen of %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldung für den Bildschirm von %@ entsperren"
-          }
-        }
-      }
-    },
-    "Unlock the password" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passwort entsperren"
           }
         }
       }
@@ -3351,32 +2841,12 @@
         }
       }
     },
-    "User name" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benutzername"
-          }
-        }
-      }
-    },
     "User name or email" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzername oder E-Mail"
-          }
-        }
-      }
-    },
-    "Vault" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tresor"
           }
         }
       }
@@ -3401,16 +2871,6 @@
         }
       }
     },
-    "Websites" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Websites"
-          }
-        }
-      }
-    },
     "What is where" : {
       "localizations" : {
         "de" : {
@@ -3421,32 +2881,12 @@
         }
       }
     },
-    "When your agent needs to sign in somewhere, aOS finds the login here and asks you first." : {
+    "Without Bitwarden, your password app's AutoFill fills the fields in the request; aOS sends them once, encrypted over SSH, and doesn't keep them." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Muss sich dein Agent irgendwo anmelden, findet aOS die Anmeldung hier und fragt dich vorher."
-          }
-        }
-      }
-    },
-    "With a secret here, aOS sends the current code together with the password." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit einem Geheimnis hier schickt aOS den aktuellen Code zusammen mit dem Passwort."
-          }
-        }
-      }
-    },
-    "With one-time codes: %lld" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit Einmalcodes: %lld"
+            "value" : "Ohne Bitwarden füllt das automatische Ausfüllen deiner Passwort-App die Felder der Anfrage; aOS sendet sie einmal, verschlüsselt über SSH, und behält sie nicht."
           }
         }
       }
@@ -3511,16 +2951,6 @@
         }
       }
     },
-    "Your agent never sees them. aOS fills them in for it after you approve." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein Agent sieht sie nie. aOS trägt sie für ihn ein, nachdem du freigegeben hast."
-          }
-        }
-      }
-    },
     "Your Mac" : {
       "localizations" : {
         "de" : {
@@ -3551,12 +2981,12 @@
         }
       }
     },
-    "Your password app (Bitwarden, 1Password, Passwords) fills these fields with its own Face ID. aOS sends them once and doesn't keep them." : {
+    "Your password app (1Password, Passwords, Bitwarden's app) fills these fields with its own Face ID. aOS sends them once and doesn't keep them." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine Passwort-App (Bitwarden, 1Password, Passwörter) füllt diese Felder mit ihrem eigenen Face ID. aOS sendet sie einmal und behält sie nicht."
+            "value" : "Deine Passwort-App (1Password, Passwörter, die App von Bitwarden) füllt diese Felder mit ihrem eigenen Face ID. aOS sendet sie einmal und behält sie nicht."
           }
         }
       }
@@ -3571,22 +3001,22 @@
         }
       }
     },
-    "Your passwords stay on this iPhone, in its keychain. They aren't synced or backed up." : {
+    "Your passwords stay in Bitwarden. aOS on your Mac gets only the login you approve, right before it fills it in." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine Passwörter bleiben auf diesem iPhone, in seinem Schlüsselbund. Sie werden weder synchronisiert noch gesichert."
+            "value" : "Deine Passwörter bleiben in Bitwarden. aOS auf deinem Mac holt nur die Anmeldung, die du freigibst, direkt bevor es sie einträgt."
           }
         }
       }
     },
-    "Your passwords stay on this iPhone, locked with Face ID." : {
+    "Your passwords stay in Bitwarden. You approve every sign-in with Face ID." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deine Passwörter bleiben auf diesem iPhone, geschützt mit Face ID."
+            "value" : "Deine Passwörter bleiben in Bitwarden. Jede Anmeldung gibst du mit Face ID frei."
           }
         }
       }

@@ -41,9 +41,6 @@ struct RootView: View {
             Tab("Screen", systemImage: "display", value: AppModel.Tab.screen) {
                 ScreenTab()
             }
-            Tab("Vault", systemImage: "key.horizontal", value: AppModel.Tab.vault) {
-                VaultTab()
-            }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         // No requests and no pairing above the lock screen
@@ -65,7 +62,7 @@ struct RootView: View {
         .overlay {
             if model.lock.isLocked {
                 LockView().transition(.opacity)
-            } else if scenePhase != .active && (model.settings.requireUnlock || model.tab == .vault) {
+            } else if scenePhase != .active && model.settings.requireUnlock {
                 // Nothing secret in the app switcher
                 PrivacyCover()
             }

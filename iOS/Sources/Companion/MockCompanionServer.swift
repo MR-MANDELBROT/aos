@@ -155,6 +155,11 @@ final class MockCompanionServer: @unchecked Sendable {
                                                "purpose": .string(r.purpose)]
             if let expires = r.expires { object["expires"] = .string(ISO8601.format(expires)) }
             object["field"] = .string(r.field.rawValue)
+            object["bitwarden"] = .string(r.bitwarden.rawValue)
+            object["logins"] = .array(r.logins.map {
+                .object(["id": .string($0.id), "name": .string($0.name), "username": .string($0.username),
+                         "totp": .bool($0.hasCode)])
+            })
             return encode(object)
         case .signInClosed(let request, let result):
             return encode(["event": .string("signin.closed"), "request": .string(request),

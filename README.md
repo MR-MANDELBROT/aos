@@ -6,12 +6,13 @@ keyboard and browser, separate from yours. Bring your own agent: Claude Code, Co
 when a task needs a website or an app, the agent asks to open its workspace, and you approve it.
 
 When a website needs a sign-in, the agent asks and you approve on your iPhone or Mac; aOS fills it in, and the
-agent never sees the password. With Claude Code, aOS keeps your conversations reachable from the Claude app on your
+agent never sees the password. Your passwords stay in your own Bitwarden account: you sign in to Bitwarden once in
+aOS, a request shows which of your logins fit the website, and aOS asks Bitwarden for exactly the one you approve. With Claude Code, aOS keeps your conversations reachable from the Claude app on your
 phone even after the window or terminal that ran them closed (Remote Control).
 
-**aOS for iPhone** (in `iOS/`) pairs with the Mac by QR code: approve sign-ins with Face ID (from its own vault, or
-from your password manager through AutoFill), open your Mac's terminal, and watch and control your Mac and the
-workspace.
+**aOS for iPhone** (in `iOS/`) pairs with the Mac by QR code: approve sign-ins with Face ID (one of your Bitwarden
+logins, or from another password manager through AutoFill; the iPhone never talks to Bitwarden), open your Mac's
+terminal, and watch and control your Mac and the workspace.
 
 aOS is not made by or affiliated with Anthropic, OpenAI, Google, Microsoft or any other agent's maker.
 
@@ -34,7 +35,10 @@ aOS is not made by or affiliated with Anthropic, OpenAI, Google, Microsoft or an
    session of its own. You sign in through Claude Code's own flow; aOS never sees credentials. Optionally the Mac
    stays awake with the lid closed (your other apps freeze meanwhile), and you choose how it joins your iPhone's
    hotspot: automatically, or only when you switch the hotspot on.
-7. Optional: pair aOS for iPhone (Settings > iPhone, scan the QR code; needs Remote Login on the Mac).
+7. Optional: sign in to your Bitwarden account (Settings > Bitwarden: email, master password, and the code Bitwarden
+   asks for). aOS downloads Bitwarden's official command line tool from Bitwarden for this and checks Bitwarden's
+   signature.
+8. Optional: pair aOS for iPhone (Settings > iPhone, scan the QR code; needs Remote Login on the Mac).
 
 ## Approval
 
@@ -54,6 +58,7 @@ Opening the workspace always needs the user's yes:
 | `aos-session` | LaunchAgent: keeps Claude Code conversations reachable (resumes them with Remote Control when no other process has them) and the optional always-on session |
 | `aos-companion` | What the iPhone app runs over SSH: requests and events between the phone and the app |
 | `aos-powerd` | Optional privileged helper (LaunchDaemon you allow once in Login Items): keeps the Mac awake with the lid closed (`pmset disablesleep`, as a lease aOS renews), sets your iPhone hotspot's join settings, rejoins known networks. Only aOS may talk to it; it stays out of the way of Cloupi's own wake service |
+| Bitwarden's `bw` | Bitwarden's official command line tool, not part of aOS: downloaded from Bitwarden when you sign in (or yours, if it is Bitwarden's signed build), checked by its signature before every use; aOS runs it to sign in to your Bitwarden account and to get the login you approve |
 | Guest kit | Scripts and the helper that run inside the VM: SSH lock-down, Chrome policies, orderly shutdown, sign-ins (aOS Helper) |
 | `iOS/` | aOS for iPhone |
 
@@ -73,6 +78,11 @@ Details: [Docs/DESIGN.md](Docs/DESIGN.md).
   never to type passwords or codes itself and never to solve captchas. An agent that deliberately attacks its own
   workspace with programs of its own can't be ruled out completely (Docs/DESIGN.md, "What this does and doesn't
   promise"): approve sign-ins for agents you trust with the account.
+- Bitwarden: your master password goes to Bitwarden's tool when you sign in or unlock and is never stored. aOS keeps
+  only Bitwarden's session key, in a keychain item of its own, and asks Bitwarden for a login only after you approved
+  it, checking again that it belongs to the website. Bitwarden locks again 8 hours after unlocking (a setting), when
+  the Mac sleeps or restarts, or when you lock it. The iPhone sees names and user names of your logins, never a
+  password.
 - Files cross only through the exchange folder. Links planted by the guest are refused; files from the workspace are
   treated as untrusted. Credentials and key folders of your Mac can't be put into the workspace.
 - aOS does not collect, store or forward any agent's credentials and has no server of its own.

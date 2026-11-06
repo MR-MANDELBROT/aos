@@ -11,6 +11,16 @@
         }
       }
     },
+    " · with one-time code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · mit Einmalcode"
+          }
+        }
+      }
+    },
     "·" : {
       "localizations" : {
         "de" : {
@@ -41,12 +51,42 @@
         }
       }
     },
+    "%@ · the current code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · der aktuelle Code"
+          }
+        }
+      }
+    },
     "%@ adds its tools to your agents. Opening the workspace always needs your approval: in the agent if it asks for tool permissions, otherwise here on your Mac." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ trägt seine Werkzeuge in deine Agents ein. Das Öffnen des Arbeitsplatzes braucht immer dein Ja: im Agent, wenn er nach Werkzeug-Erlaubnissen fragt, sonst hier auf dem Mac."
+          }
+        }
+      }
+    },
+    "%@ asks Bitwarden for exactly the login you approve; your passwords stay in Bitwarden." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ fragt Bitwarden nur nach der Anmeldung, die du freigibst; deine Passwörter bleiben in Bitwarden."
+          }
+        }
+      }
+    },
+    "%@ asks for a one-time code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ bittet um einen Einmalcode"
           }
         }
       }
@@ -127,6 +167,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ gekoppelt, gerade nicht verbunden"
+          }
+        }
+      }
+    },
+    "%@ runs Bitwarden's official command line tool as a program of its own and checks Bitwarden's signature before using it. It isn't part of %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ startet das offizielle Befehlszeilenprogramm von Bitwarden als eigenes Programm und prüft vor der Verwendung die Signatur von Bitwarden. Es ist kein Teil von %2$@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ runs Bitwarden's official command line tool as a program of its own and checks Bitwarden's signature before using it. It isn't part of %2$@."
           }
         }
       }
@@ -281,6 +337,16 @@
         }
       }
     },
+    "Account" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konto"
+          }
+        }
+      }
+    },
     "Active within the last %lld hours" : {
       "localizations" : {
         "de" : {
@@ -297,6 +363,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "von Hand eintragen"
+          }
+        }
+      }
+    },
+    "After %lld hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach %lld Stunden"
+          }
+        }
+      }
+    },
+    "After 1 hour" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach 1 Stunde"
           }
         }
       }
@@ -521,6 +607,16 @@
         }
       }
     },
+    "Authenticator app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authenticator-App"
+          }
+        }
+      }
+    },
     "Automatic" : {
       "localizations" : {
         "de" : {
@@ -581,6 +677,162 @@
         }
       }
     },
+    "Bitwarden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden"
+          }
+        }
+      }
+    },
+    "Bitwarden asks: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden fragt: %@"
+          }
+        }
+      }
+    },
+    "Bitwarden CLI" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden CLI"
+          }
+        }
+      }
+    },
+    "Bitwarden CLI %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden CLI %@"
+          }
+        }
+      }
+    },
+    "Bitwarden didn't answer in time. Check the internet connection and try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden hat nicht rechtzeitig geantwortet. Prüfe die Internetverbindung und versuche es noch einmal."
+          }
+        }
+      }
+    },
+    "Bitwarden didn't answer. Fill in from another password app, or ask your agent to try again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden hat nicht geantwortet. Füll die Felder aus einer anderen Passwort-App aus oder bitte deinen Agent, es noch einmal zu versuchen."
+          }
+        }
+      }
+    },
+    "Bitwarden doesn't have this login (any more)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Anmeldung gibt es in Bitwarden nicht (mehr)."
+          }
+        }
+      }
+    },
+    "Bitwarden emailed you a code. Enter it here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden hat dir einen Code per E-Mail geschickt. Gib ihn hier ein."
+          }
+        }
+      }
+    },
+    "Bitwarden is locked" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden ist gesperrt"
+          }
+        }
+      }
+    },
+    "Bitwarden is locked." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden ist gesperrt."
+          }
+        }
+      }
+    },
+    "Bitwarden sent a verification code to %@. It asks for it because %@ signs in from a new device." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitwarden hat einen Bestätigungscode an %1$@ geschickt. Es fragt danach, weil sich %2$@ von einem neuen Gerät aus anmeldet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Bitwarden sent a verification code to %1$@. It asks for it because %2$@ signs in from a new device."
+          }
+        }
+      }
+    },
+    "Bitwarden's command line tool answered unexpectedly (%@)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Befehlszeilenprogramm von Bitwarden hat unerwartet geantwortet (%@)."
+          }
+        }
+      }
+    },
+    "Bitwarden's command line tool could not be downloaded (%@)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Befehlszeilenprogramm von Bitwarden konnte nicht geladen werden (%@)."
+          }
+        }
+      }
+    },
+    "Bitwarden's command line tool could not be started (%@)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Befehlszeilenprogramm von Bitwarden konnte nicht gestartet werden (%@)."
+          }
+        }
+      }
+    },
+    "Bitwarden's download link didn't lead to a release (%@)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Download-Link von Bitwarden führte zu keiner Version (%@)."
+          }
+        }
+      }
+    },
     "Build %@, about 26 GB. If you quit %@ or lose the connection, the download continues where it stopped." : {
       "localizations" : {
         "de" : {
@@ -603,6 +855,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abbrechen"
+          }
+        }
+      }
+    },
+    "Cancelled." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgebrochen."
           }
         }
       }
@@ -674,6 +936,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diesen Mac prüfen"
+          }
+        }
+      }
+    },
+    "Checking …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfe …"
           }
         }
       }
@@ -778,6 +1050,16 @@
         }
       }
     },
+    "Click into the field and touch your YubiKey." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klick in das Feld und berühre deinen YubiKey."
+          }
+        }
+      }
+    },
     "Click Open System Settings if macOS asks, then switch on aOS Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once." : {
       "localizations" : {
         "de" : {
@@ -838,6 +1120,26 @@
         }
       }
     },
+    "Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code"
+          }
+        }
+      }
+    },
+    "Code from Bitwarden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code aus Bitwarden"
+          }
+        }
+      }
+    },
     "Come back here and click Check." : {
       "localizations" : {
         "de" : {
@@ -848,12 +1150,32 @@
         }
       }
     },
+    "Command line tool" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befehlszeilenprogramm"
+          }
+        }
+      }
+    },
     "configure by hand" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "von Hand einrichten"
+          }
+        }
+      }
+    },
+    "Connect" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden"
           }
         }
       }
@@ -948,6 +1270,16 @@
         }
       }
     },
+    "Counted from unlocking. Bitwarden also locks when this Mac goes to sleep or restarts. While it is locked, sign-in requests show no Bitwarden logins until you unlock it here or in the sign-in window." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gezählt ab dem Entsperren. Bitwarden sperrt sich auch, wenn dieser Mac in den Ruhezustand geht oder neu startet. Solange es gesperrt ist, zeigen Anmeldeanfragen keine Bitwarden-Anmeldungen, bis du es hier oder im Anmeldefenster entsperrst."
+          }
+        }
+      }
+    },
     "Create the workspace" : {
       "localizations" : {
         "de" : {
@@ -1028,6 +1360,36 @@
         }
       }
     },
+    "Downloaded from Bitwarden, signed by Bitwarden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von Bitwarden geladen, von Bitwarden signiert"
+          }
+        }
+      }
+    },
+    "Downloading Bitwarden's command line tool …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade das Befehlszeilenprogramm von Bitwarden …"
+          }
+        }
+      }
+    },
+    "Downloading Bitwarden's command line tool from Bitwarden and checking its signature …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lade das Befehlszeilenprogramm von Bitwarden und prüfe seine Signatur …"
+          }
+        }
+      }
+    },
     "Downloading macOS %@" : {
       "localizations" : {
         "de" : {
@@ -1058,12 +1420,42 @@
         }
       }
     },
+    "Email" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail"
+          }
+        }
+      }
+    },
+    "Enter the code from your authenticator app." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib den Code aus deiner Authenticator-App ein."
+          }
+        }
+      }
+    },
     "Enter the workspace password" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort des Arbeitsplatzes eingeben"
+          }
+        }
+      }
+    },
+    "Enter your two-step login code (from your authenticator app, the email Bitwarden sent, or your YubiKey)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib deinen Code für die zweistufige Anmeldung ein (aus deiner Authenticator-App, aus der E-Mail von Bitwarden oder von deinem YubiKey)."
           }
         }
       }
@@ -1124,6 +1516,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dateien kommen nur über ihn in den Arbeitsplatz hinein und heraus."
+          }
+        }
+      }
+    },
+    "Fill In" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einsetzen"
           }
         }
       }
@@ -1214,6 +1616,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aus dem Terminal"
+          }
+        }
+      }
+    },
+    "From another password app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus einer anderen Passwort-App"
+          }
+        }
+      }
+    },
+    "From Bitwarden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Bitwarden"
           }
         }
       }
@@ -1379,6 +1801,16 @@
         }
       }
     },
+    "Last sync" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt synchronisiert"
+          }
+        }
+      }
+    },
     "Lid closed: %lld apps frozen until you open it." : {
       "localizations" : {
         "de" : {
@@ -1405,6 +1837,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deckel zu: Der Mac bleibt wach."
+          }
+        }
+      }
+    },
+    "Lock" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sperren"
+          }
+        }
+      }
+    },
+    "Lock again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wieder sperren"
+          }
+        }
+      }
+    },
+    "Lock Now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt sperren"
+          }
+        }
+      }
+    },
+    "Locked" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesperrt"
+          }
+        }
+      }
+    },
+    "Locking" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sperren"
           }
         }
       }
@@ -1515,6 +1997,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Von Cloupi verwaltet"
+          }
+        }
+      }
+    },
+    "Master password" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Master-Passwort"
           }
         }
       }
@@ -1669,6 +2161,26 @@
         }
       }
     },
+    "No login for this website in Bitwarden." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Anmeldung für diese Website in Bitwarden."
+          }
+        }
+      }
+    },
+    "No login with a one-time code for this website in Bitwarden." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Anmeldung mit Einmalcode für diese Website in Bitwarden."
+          }
+        }
+      }
+    },
     "No request waiting." : {
       "localizations" : {
         "de" : {
@@ -1775,6 +2287,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "nicht eingerichtet"
+          }
+        }
+      }
+    },
+    "Not signed in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht angemeldet"
+          }
+        }
+      }
+    },
+    "Not signed in to Bitwarden." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht bei Bitwarden angemeldet."
           }
         }
       }
@@ -2421,12 +2953,42 @@
         }
       }
     },
+    "Self-hosted" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selbst gehostet"
+          }
+        }
+      }
+    },
     "Separate from your Mac" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Getrennt von deinem Mac"
+          }
+        }
+      }
+    },
+    "Server" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        }
+      }
+    },
+    "Server address" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveradresse"
           }
         }
       }
@@ -2551,6 +3113,16 @@
         }
       }
     },
+    "Sign in to Bitwarden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Bitwarden anmelden"
+          }
+        }
+      }
+    },
     "Sign in to Claude" : {
       "localizations" : {
         "de" : {
@@ -2577,6 +3149,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "bei Claude Code anmelden (Sitzung öffnen)"
+          }
+        }
+      }
+    },
+    "Sign Out" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abmelden"
           }
         }
       }
@@ -2622,6 +3204,26 @@
         }
       }
     },
+    "Sign-ins for your agent from your Bitwarden account: you approve one login, %@ gets exactly that one from Bitwarden." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldungen für deinen Agent aus deinem Bitwarden-Konto: Du gibst eine Anmeldung frei, %@ holt genau diese aus Bitwarden."
+          }
+        }
+      }
+    },
+    "Signed in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angemeldet"
+          }
+        }
+      }
+    },
     "Signed in to Claude Code" : {
       "localizations" : {
         "de" : {
@@ -2638,6 +3240,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmelden"
+          }
+        }
+      }
+    },
+    "Signing in …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde an …"
+          }
+        }
+      }
+    },
+    "Signing in to Bitwarden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung bei Bitwarden"
           }
         }
       }
@@ -2752,6 +3374,16 @@
         }
       }
     },
+    "Status" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        }
+      }
+    },
     "Stay awake with the lid closed" : {
       "localizations" : {
         "de" : {
@@ -2828,12 +3460,42 @@
         }
       }
     },
+    "Sync Now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt synchronisieren"
+          }
+        }
+      }
+    },
+    "Talking to Bitwarden …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spreche mit Bitwarden …"
+          }
+        }
+      }
+    },
     "Tap “Pair with your Mac”." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippe auf „Mit deinem Mac koppeln“."
+          }
+        }
+      }
+    },
+    "That isn't an email address." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist keine E-Mail-Adresse."
           }
         }
       }
@@ -2854,6 +3516,32 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Code gilt bis %@ und nur einmal."
+          }
+        }
+      }
+    },
+    "The download isn't Bitwarden's signed command line tool (%@), so %@ deleted it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Download ist nicht das signierte Befehlszeilenprogramm von Bitwarden (%1$@), deshalb hat %2$@ ihn gelöscht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The download isn't Bitwarden's signed command line tool (%1$@), so %2$@ deleted it."
+          }
+        }
+      }
+    },
+    "The first time, %@ downloads Bitwarden's official command line tool from Bitwarden (about 45 MB) and checks that Bitwarden signed it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim ersten Mal lädt %@ das offizielle Befehlszeilenprogramm von Bitwarden (etwa 45 MB) und prüft, dass Bitwarden es signiert hat."
           }
         }
       }
@@ -2919,6 +3607,16 @@
         }
       }
     },
+    "The master password isn't right." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Master-Passwort stimmt nicht."
+          }
+        }
+      }
+    },
     "The workspace is off" : {
       "localizations" : {
         "de" : {
@@ -2977,6 +3675,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz startet zum ersten Mal, ohne Einrichtungsassistent. %@ legt sein Konto an, erlaubt Fernzugriff nur von diesem Mac, installiert Google Chrome und schaltet Ruhezustand und automatische Updates aus."
+          }
+        }
+      }
+    },
+    "This Bitwarden item isn't a login." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Bitwarden-Eintrag ist keine Anmeldung."
           }
         }
       }
@@ -3061,6 +3769,16 @@
         }
       }
     },
+    "Type the code yourself" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code selbst eingeben"
+          }
+        }
+      }
+    },
     "unknown" : {
       "localizations" : {
         "de" : {
@@ -3071,12 +3789,82 @@
         }
       }
     },
+    "Unlock" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperren"
+          }
+        }
+      }
+    },
+    "Unlock Bitwarden so sign-in requests can offer your logins. The master password goes to Bitwarden's tool and isn't stored." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperre Bitwarden, damit Anmeldeanfragen deine Anmeldungen anbieten können. Das Master-Passwort geht an das Programm von Bitwarden und wird nicht gespeichert."
+          }
+        }
+      }
+    },
+    "Unlock it to see your logins for this website." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperre es, um deine Anmeldungen für diese Website zu sehen."
+          }
+        }
+      }
+    },
+    "Unlocked" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperrt"
+          }
+        }
+      }
+    },
+    "Unlocked until %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperrt bis %@"
+          }
+        }
+      }
+    },
+    "Update" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisieren"
+          }
+        }
+      }
+    },
     "User name or email" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzername oder E-Mail"
+          }
+        }
+      }
+    },
+    "Verification code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestätigungscode"
           }
         }
       }
@@ -3247,6 +4035,16 @@
         }
       }
     },
+    "When your agent needs to sign in, you see which of your Bitwarden logins fit the website and approve one on your iPhone or here. %@ then gets that one login from Bitwarden and types it into the workspace. Your agent never sees it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muss sich dein Agent anmelden, siehst du, welche deiner Bitwarden-Anmeldungen zur Website passen, und gibst eine auf dem iPhone oder hier frei. %@ holt dann genau diese Anmeldung aus Bitwarden und tippt sie in den Arbeitsplatz. Dein Agent sieht sie nie."
+          }
+        }
+      }
+    },
     "Which agent should use the workspace? %@ adds itself to the agent's settings as an MCP server. You can connect more than one." : {
       "localizations" : {
         "de" : {
@@ -3293,6 +4091,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Du entscheidest"
+          }
+        }
+      }
+    },
+    "Your account has several ways to confirm it's you. Which one do you want to use?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Konto kennt mehrere Wege, zu bestätigen, dass du es bist. Welchen möchtest du nehmen?"
           }
         }
       }
@@ -3357,12 +4165,52 @@
         }
       }
     },
+    "your email address" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "deine E-Mail-Adresse"
+          }
+        }
+      }
+    },
     "Your home folder" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Benutzerordner"
+          }
+        }
+      }
+    },
+    "Your master password goes to Bitwarden's command line tool once and isn't stored. If Bitwarden asks for a code (two-step login, or because %@ is a new device for your account), you enter it here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Master-Passwort geht einmal an das Befehlszeilenprogramm von Bitwarden und wird nicht gespeichert. Fragt Bitwarden nach einem Code (zweistufige Anmeldung, oder weil %@ ein neues Gerät für dein Konto ist), gibst du ihn hier ein."
+          }
+        }
+      }
+    },
+    "Yours (%@), signed by Bitwarden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deins (%@), von Bitwarden signiert"
+          }
+        }
+      }
+    },
+    "YubiKey (one-time password)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YubiKey (Einmalpasswort)"
           }
         }
       }

@@ -44,7 +44,9 @@ let package = Package(
         .executableTarget(name: "aos-powerd", dependencies: ["AOSKit"], path: "Sources/aos-powerd"),
         // Runs inside the workspace (its own app bundle there, see project.yml); depends on nothing of aOS.
         .executableTarget(name: "aos-guest-helper", path: "Sources/aos-guest-helper"),
-        .testTarget(name: "AOSKitTests", dependencies: ["AOSKit", "AOSRFB"], path: "Tests/AOSKitTests"),
+        // Fixtures/fake-bw stands in for Bitwarden's command line tool in the tests.
+        .testTarget(name: "AOSKitTests", dependencies: ["AOSKit", "AOSRFB"], path: "Tests/AOSKitTests",
+                    resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v5]
 )

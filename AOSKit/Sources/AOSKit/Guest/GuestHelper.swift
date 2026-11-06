@@ -76,22 +76,45 @@ public enum GuestHelperError: LocalizedError {
     }
 }
 
-/// The user's answer to a sign-in request.
+enum SignInError: LocalizedError {
+    case notOffered, noCode
+    var errorDescription: String? {
+        switch self {
+        case .notOffered: return "This login wasn't offered for this sign-in."
+        case .noCode: return "This login has no one-time code in Bitwarden."
+        }
+    }
+}
+
+/// The user's answer to a sign-in request: a Bitwarden login (aOS gets its secrets from Bitwarden), or what the
+/// user filled in themselves (another password app's AutoFill, a code they typed), or no.
 public struct SignInAnswer: Sendable {
     public var username: String?
     public var password: String?
     public var code: String?
+    /// The Bitwarden login the user approved (its id, one of those offered with the request).
+    public var login: String?
     public var declined: Bool
     /// Where the answer came from ("mac" or the phone's name), for the log.
     public var from: String
 
-    public init(username: String?, password: String?, code: String?, declined: Bool, from: String) {
+    public init(username: String? = nil, password: String? = nil, code: String? = nil, login: String? = nil,
+                declined: Bool = false, from: String) {
         self.username = username
         self.password = password
         self.code = code
+        self.login = login
         self.declined = declined
         self.from = from
     }
+}
+
+/// What a sign-in request offered from Bitwarden (the answer may only name one of these logins).
+struct SignInOffer {
+    var host: String
+    var field: String
+    var logins: [CompanionLogin]
+    var bitwarden: String
 }
 
 extension WorkspaceController {
@@ -119,8 +142,20 @@ extension WorkspaceController {
         // The lease must not run out while the user decides.
         if let l = lease { lease = (max(l.until, Date().addingTimeInterval(10 * 60)), l.purpose) }
         log("sign-in: \(agent) asks for \(site) (\(kind))")
+        // Bitwarden's logins for the site go with the request (names and user names only); the answer names one.
+        let offer = await bitwarden.offer(for: site)
+        let logins = offer.logins.map(CompanionLogin.init)
+        signInOffers[id] = SignInOffer(host: site, field: kind, logins: logins, bitwarden: offer.state)
+        defer { signInOffers[id] = nil }
+        if case .unavailable(let reason) = offer { log("sign-in: Bitwarden didn't answer (\(reason))") }
         companion.post(CompanionEvent(event: "signin", request: id, agent: agent, host: site, field: kind,
-                                      purpose: purpose.isEmpty ? nil : purpose, expires: expires))
+                                      purpose: purpose.isEmpty ? nil : purpose, expires: expires, logins: logins,
+                                      bitwarden: offer.state))
+        // A login added in Bitwarden a minute ago should be there too: sync if it's been a while, then offer again.
+        Task { @MainActor [weak self] in
+            guard let self, await self.bitwarden.syncIfStale() else { return }
+            await self.refreshSignInOffers()
+        }
         let answer: SignInAnswer? = await withCheckedContinuation { cont in
             pendingSignIns[id] = cont
             Task { @MainActor [weak self] in
@@ -140,11 +175,24 @@ extension WorkspaceController {
                                  text: "The user declined the sign-in for \(site). Don't try again unless they ask you to.")
         }
         do {
-            let result = try await helper.fill(host: site, kind: kind, username: answer.username,
-                                               password: answer.password, code: answer.code)
+            var username = answer.username, password = answer.password, code = answer.code
+            if let login = answer.login {
+                // The login the user approved, straight from Bitwarden, checked against the site once more.
+                guard let chosen = signInOffers[id]?.logins.first(where: { $0.id == login }) else {
+                    throw SignInError.notOffered
+                }
+                if kind == "code" {
+                    guard chosen.totp else { throw SignInError.noCode }
+                    code = try await bitwarden.totp(id: login, host: site)
+                } else {
+                    (username, password) = try await bitwarden.credentials(id: login, host: site)
+                }
+            }
+            let result = try await helper.fill(host: site, kind: kind, username: username, password: password, code: code)
             guard result.ok else { throw GuestHelperError.unavailable(result.error ?? "the fields could not be filled") }
+            if let login = answer.login { bitwarden.remember(login: login, host: site) }
             companion.post(CompanionEvent(event: "signin.closed", request: id, result: "filled"))
-            log("sign-in for \(site) filled (\((result.filled ?? []).joined(separator: ", ")), approved on \(answer.from))")
+            log("sign-in for \(site) filled (\((result.filled ?? []).joined(separator: ", ")), approved on \(answer.from)\(answer.login != nil ? ", from Bitwarden" : ""))")
             let fields = (result.filled ?? []).map { $0 == "username" ? "user name" : $0 }
             let what = fields.isEmpty ? "The sign-in" : "The " + fields.joined(separator: " and ")
             let verb = fields.count > 1 ? "were" : "was"
@@ -168,6 +216,21 @@ extension WorkspaceController {
     /// The open sign-in requests (for the Mac window).
     public var openSignIns: [CompanionEvent] {
         companion.open.values.filter { $0.event == "signin" }.sorted { $0.seq < $1.seq }
+    }
+
+    /// Offers Bitwarden's logins again for the requests still open (after Bitwarden was unlocked, locked or synced):
+    /// the request goes out again with the same id, and the phone and the Mac window show the new logins.
+    public func refreshSignInOffers() async {
+        for (id, old) in signInOffers {
+            let offer = await bitwarden.offer(for: old.host)
+            let logins = offer.logins.map(CompanionLogin.init)
+            guard signInOffers[id] != nil, logins != old.logins || offer.state != old.bitwarden,
+                  var event = companion.open[id], event.event == "signin" else { continue }
+            signInOffers[id] = SignInOffer(host: old.host, field: old.field, logins: logins, bitwarden: offer.state)
+            event.logins = logins
+            event.bitwarden = offer.state
+            companion.post(event)
+        }
     }
 
     // MARK: Companion
@@ -206,7 +269,13 @@ extension WorkspaceController {
             guard let id = r.request, pendingSignIns[id] != nil else {
                 return .failure(r.id, "This sign-in request is no longer open.")
             }
-            answerSignIn(id, SignInAnswer(username: r.username, password: r.password, code: r.totp,
+            if let login = r.login, r.decline != true {
+                guard let offer = signInOffers[id], let chosen = offer.logins.first(where: { $0.id == login }) else {
+                    return .failure(r.id, SignInError.notOffered.localizedDescription)
+                }
+                if offer.field == "code" && !chosen.totp { return .failure(r.id, SignInError.noCode.localizedDescription) }
+            }
+            answerSignIn(id, SignInAnswer(username: r.username, password: r.password, code: r.totp, login: r.login,
                                           declined: r.decline ?? false, from: r.device ?? "iPhone"))
             return AgentResponse(id: r.id, ok: true, text: "ok")
         case "companion.type":

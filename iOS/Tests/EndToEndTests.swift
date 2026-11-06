@@ -62,6 +62,16 @@ struct EndToEndTests {
         companion.emit(.signInClosed(request: "e2e", result: .filled))
         try await waitUntil { model.signInResults["e2e"] == .filled }
 
+        // One of the person's Bitwarden logins: the answer names it, no password leaves the iPhone
+        companion.emit(.signIn(SignInRequest(id: "e2e-bw", agent: "Claude Code", host: "github.com", purpose: "Push",
+                                             expires: Date().addingTimeInterval(120),
+                                             logins: [BitwardenLogin(id: "b1", name: "GitHub", username: "max", hasCode: true)],
+                                             bitwarden: .unlocked)))
+        try await waitUntil { model.signIns.contains { $0.id == "e2e-bw" && $0.logins.count == 1 } }
+        try await connection.answerSignIn(request: "e2e-bw", login: "b1")
+        #expect(companion.received.last?.fields["login"] == .string("b1"))
+        #expect(companion.received.last?.fields["password"] == nil)
+
         // A one-time code: only the code goes out
         companion.emit(.signIn(SignInRequest(id: "e2e-code", agent: "Claude Code", host: "github.com", purpose: "2FA",
                                              expires: nil, field: .code)))

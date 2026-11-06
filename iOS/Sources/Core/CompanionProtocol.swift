@@ -59,7 +59,10 @@ enum CompanionRequest: Sendable, Equatable {
     case status
     case subscribe
     case screen(target: ScreenTarget)
-    /// The sign-in for a request. Never logged, never stored.
+    /// A Bitwarden login the person approved (its id): the Mac gets it from Bitwarden and fills it (for a code
+    /// request: its current one-time code).
+    case signInLogin(request: String, login: String)
+    /// A sign-in from another password app (AutoFill). Never logged, never stored.
     case signInAnswer(request: String, username: String, password: String, totp: String?)
     case signInDecline(request: String)
     /// A one-time code, for a request whose field is `code` (only `totp` goes out).
@@ -76,7 +79,7 @@ enum CompanionRequest: Sendable, Equatable {
         case .status: "status"
         case .subscribe: "subscribe"
         case .screen: "screen"
-        case .signInAnswer, .signInDecline, .signInCode: "signin.answer"
+        case .signInLogin, .signInAnswer, .signInDecline, .signInCode: "signin.answer"
         case .helpDone: "help.done"
         case .approvalAnswer: "approval.answer"
         case .type: "type"
@@ -94,6 +97,9 @@ enum CompanionRequest: Sendable, Equatable {
             break
         case .screen(let target):
             object["target"] = .string(target.rawValue)
+        case .signInLogin(let request, let login):
+            object["request"] = .string(request)
+            object["login"] = .string(login)
         case .signInAnswer(let request, let username, let password, let totp):
             object["request"] = .string(request)
             object["username"] = .string(username)
@@ -159,6 +165,34 @@ struct SignInRequest: Identifiable, Equatable, Sendable {
     var purpose: String
     var expires: Date?
     var field: Field = .password
+    /// The person's Bitwarden logins for the site, as the Mac found them (never a password).
+    var logins: [BitwardenLogin] = []
+    var bitwarden: BitwardenState = .off
+
+    /// The logins that can answer this request: all of them, for a code those with an authenticator key.
+    var choices: [BitwardenLogin] { field == .code ? logins.filter(\.hasCode) : logins }
+}
+
+/// A Bitwarden login the Mac offers for a sign-in: which one, never its password or authenticator key.
+struct BitwardenLogin: Identifiable, Equatable, Sendable {
+    /// Bitwarden's id; the answer names it.
+    var id: String
+    var name: String
+    var username: String
+    /// Bitwarden has an authenticator key for it: the Mac fills its current one-time code.
+    var hasCode: Bool
+}
+
+/// Bitwarden in aOS on the Mac, as a sign-in request reports it.
+enum BitwardenState: String, Sendable, Equatable {
+    /// Unlocked: the request's logins are its matches for the site (maybe none).
+    case unlocked
+    /// Signed in, but locked: the person unlocks it in aOS on the Mac first.
+    case locked
+    /// No Bitwarden account in aOS (or a Mac from before Bitwarden): another password app's AutoFill only.
+    case off
+    /// Bitwarden didn't answer on the Mac.
+    case unavailable
 }
 
 enum SignInResult: String, Sendable, Equatable {
@@ -230,11 +264,18 @@ enum CompanionMessage: Equatable, Sendable {
         switch name {
         case "signin":
             guard !request.isEmpty, let host = object["host"]?.string, !host.isEmpty else { return .ignored }
+            let logins: [BitwardenLogin] = (object["logins"]?.array ?? []).compactMap { value in
+                guard let o = value.object, let id = o["id"]?.string, !id.isEmpty else { return nil }
+                return BitwardenLogin(id: id, name: o["name"]?.string ?? "", username: o["username"]?.string ?? "",
+                                      hasCode: o["totp"]?.bool ?? false)
+            }
             return .event(.signIn(SignInRequest(
                 id: request, agent: object["agent"]?.string ?? "", host: host,
                 purpose: object["purpose"]?.string ?? "",
                 expires: object["expires"]?.string.flatMap(ISO8601.parse),
-                field: SignInRequest.Field(rawValue: object["field"]?.string ?? "") ?? .password)))
+                field: SignInRequest.Field(rawValue: object["field"]?.string ?? "") ?? .password,
+                logins: logins,
+                bitwarden: BitwardenState(rawValue: object["bitwarden"]?.string ?? "") ?? .off)))
         case "signin.closed":
             guard !request.isEmpty else { return .ignored }
             return .event(.signInClosed(request: request,
