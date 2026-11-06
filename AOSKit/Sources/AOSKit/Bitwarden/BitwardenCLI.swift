@@ -14,13 +14,18 @@ public struct BitwardenCLI: Sendable {
     /// How long one command may take (a sync of a large vault takes a while).
     public var timeout: TimeInterval = 90
 
-    /// The environment variable that carries the master password (only its name is on the command line).
     /// Where `bw` reads the master password: descriptor 3, a pipe from aOS (Subprocess `secret`).
     static let secretFile = "/dev/fd/3"
+    /// Stands for the session key the helper keeps (it never leaves the helper; see BitwardenRunner).
+    public static let heldSession = "aOSHelperKeepsTheSessionKey"
 
-    public init(executable: String, dataDirectory: URL) {
+    /// How `bw` is started: directly, or through aOS's helper as its hidden user (BitwardenRunner).
+    public let runner: BitwardenRunner
+
+    public init(executable: String, dataDirectory: URL, runner: BitwardenRunner? = nil) {
         self.executable = executable
         self.dataDirectory = dataDirectory
+        self.runner = runner ?? LocalBitwardenRunner(executable: executable)
     }
 
     // MARK: Account
@@ -52,8 +57,8 @@ public struct BitwardenCLI: Sendable {
 
     /// `bw --version`, for the settings.
     public func version() async -> String? {
-        guard let result = try? await Subprocess.run(executable, ["--version"], environment: environment(interactive: false),
-                                                     timeout: 30), result.status == 0 else { return nil }
+        guard let result = try? await runner.run(["--version"], environment: environment(interactive: false), secret: nil,
+                                                 timeout: 30), result.status == 0 else { return nil }
         let text = String(decoding: result.stdout, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         return text.range(of: #"^[0-9][0-9A-Za-z.\-]{0,30}$"#, options: .regularExpression) != nil ? text : nil
     }
@@ -61,11 +66,11 @@ public struct BitwardenCLI: Sendable {
     /// Starts `bw login`: the master password goes in through a pipe of its own (descriptor 3), never the
     /// environment or the arguments (other processes of the user can read both); the questions Bitwarden asks next
     /// (two-step method and code, new device code) come through the returned conversation.
-    public func startLogin(email: String, password: String) throws -> BitwardenLoginConversation {
+    public func startLogin(email: String, password: String) async throws -> BitwardenLoginConversation {
         guard Self.isEmail(email) else { throw BitwardenError.invalidEmail }
-        let process = try Subprocess.interactive(executable, ["login", email, "--passwordfile", Self.secretFile],
-                                                 environment: environment(interactive: true),
-                                                 secret: Data(password.utf8), timeout: BitwardenLoginConversation.timeout)
+        let process = try await runner.interactive(["login", email, "--passwordfile", Self.secretFile],
+                                                   environment: environment(interactive: true),
+                                                   secret: Data(password.utf8), timeout: BitwardenLoginConversation.timeout)
         return BitwardenLoginConversation(process: process, email: email)
     }
 
@@ -195,8 +200,8 @@ public struct BitwardenCLI: Sendable {
         await BitwardenSerial.shared.acquire(key)
         let result: Subprocess.Result
         do {
-            result = try await Subprocess.run(executable, arguments, environment: env,
-                                              secret: password.map { Data($0.utf8) }, timeout: timeout ?? self.timeout)
+            result = try await runner.run(arguments, environment: env, secret: password.map { Data($0.utf8) },
+                                          timeout: timeout ?? self.timeout)
         } catch {
             await BitwardenSerial.shared.release(key)
             throw BitwardenError.notRunnable(error.localizedDescription)
@@ -342,6 +347,13 @@ public enum BitwardenServer: Equatable, Sendable, Hashable {
     private static func isHost(_ host: String) -> Bool {
         host.range(of: #"^[A-Za-z0-9]([A-Za-z0-9\-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9\-]*[A-Za-z0-9])?)*$"#,
                    options: .regularExpression) != nil
+    }
+
+    /// What may follow `bw config server` (the helper checks it): the two clouds or an https address as above.
+    static func isAllowedConfigValue(_ value: String) -> Bool {
+        if value == "bitwarden.com" || value == euURL { return true }
+        guard let server = selfHosted(address: value), case .selfHosted(let url) = server else { return false }
+        return url == value
     }
 
     /// For the settings: "bitwarden.com", "bitwarden.eu" or the server's host.

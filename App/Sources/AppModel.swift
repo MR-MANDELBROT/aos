@@ -341,6 +341,7 @@ final class AppModel: ObservableObject {
             changed(\.sessionAgentStatus, SessionAgent.service.status)
             power.refreshHelperStatus()
         }
+        syncBitwardenHelper()
         setup.refreshCompletion()
         if !Self.isPreview { power.update(settings: settings, needed: reachabilityNeeded) }
         updateActivationPolicy()

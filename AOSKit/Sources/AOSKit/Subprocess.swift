@@ -25,16 +25,25 @@ public enum Subprocess {
         }
     }
 
+    /// Another user to run the program as (only for a root process). The child gives up its rights before the
+    /// program starts and checks that they are gone; if not it ends with status 126 and the program never runs.
+    public struct RunAs: Sendable, Equatable {
+        public var uid: uid_t
+        public var gid: gid_t
+        public init(uid: uid_t, gid: gid_t) { self.uid = uid; self.gid = gid }
+    }
+
     /// Async: the waiting happens on a thread of its own, never on a Swift concurrency thread.
     /// `secret`: handed to the child as file descriptor 3 (a pipe it reads, e.g. `--passwordfile /dev/fd/3`), never
     /// through its environment or arguments, which other processes of the same user can read.
     public static func run(_ path: String, _ arguments: [String], environment: [String: String]? = nil,
-                           cwd: String? = nil, input: Data? = nil, secret: Data? = nil, timeout: TimeInterval) async throws -> Result {
+                           cwd: String? = nil, input: Data? = nil, secret: Data? = nil, runAs: RunAs? = nil,
+                           timeout: TimeInterval) async throws -> Result {
         let outcome: Swift.Result<Result, Error> = await withCheckedContinuation { continuation in
             Thread.detachNewThread {
                 continuation.resume(returning: Swift.Result {
                     try runBlocking(path, arguments, environment: environment, cwd: cwd, input: input, secret: secret,
-                                    timeout: timeout)
+                                    runAs: runAs, timeout: timeout)
                 })
             }
         }
@@ -43,7 +52,7 @@ public enum Subprocess {
 
     /// Blocks the calling thread until the program ended (or the timeout ended it).
     public static func runBlocking(_ path: String, _ arguments: [String], environment: [String: String]? = nil,
-                                   cwd: String? = nil, input: Data? = nil, secret: Data? = nil,
+                                   cwd: String? = nil, input: Data? = nil, secret: Data? = nil, runAs: RunAs? = nil,
                                    timeout: TimeInterval) throws -> Result {
         // All six ends close on exec right away: a fork elsewhere in the process (a pseudo terminal for a session)
         // must not inherit them, or the reader here would wait for an end that never comes.
@@ -91,7 +100,10 @@ public enum Subprocess {
             env.forEach { free($0) }
         }
         var pid: pid_t = 0
-        let rc = posix_spawn(&pid, path, &actions, &attributes, argv, env)
+        var fdPlan: [(Int32, Int32)] = [(inRead, 0), (outPipe.1, 1), (errPipe.1, 2)]
+        if let secretPipe { fdPlan.append((secretPipe.0, 3)) }
+        let rc = runAs.map { forkExec(&pid, path, argv, env, fdPlan, cwd, $0) }
+            ?? posix_spawn(&pid, path, &actions, &attributes, argv, env)
         close(inRead); close(outPipe.1); close(errPipe.1)
         if let secretPipe { close(secretPipe.0) }
         guard rc == 0 else {
@@ -134,6 +146,56 @@ public enum Subprocess {
         guard waitError == 0 else { throw Failure.wait(path, waitError) }
         let code: Int32 = (status & 0x7f) == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f)
         return Result(status: code, stdout: output.out, stderr: output.err, timedOut: state.timedOut)
+    }
+
+    private typealias Fork = @convention(c) () -> pid_t
+
+    /// Starts `path` as another user (root only): fork, then in the child only async-signal-safe calls (descriptors
+    /// onto 0 to 3, everything else closed, signals at their defaults, groups, group and user given up and checked),
+    /// then exec. Swift hides fork() at compile time; it is the same system call forkpty uses for the sessions.
+    /// Returns 0 or an errno like posix_spawn.
+    private static func forkExec(_ pid: inout pid_t, _ path: String, _ argv: [UnsafeMutablePointer<CChar>?],
+                                 _ env: [UnsafeMutablePointer<CChar>?], _ fds: [(Int32, Int32)], _ cwd: String?,
+                                 _ who: RunAs) -> Int32 {
+        guard let handle = dlopen(nil, RTLD_NOW), let symbol = dlsym(handle, "fork") else { return ENOSYS }
+        let fork = unsafeBitCast(symbol, to: Fork.self)
+        // Everything the child needs, prepared before the fork (no allocation after it).
+        let cPath = strdup(path)
+        let cDir = cwd.map { strdup($0) } ?? nil
+        defer { free(cPath); if let cDir { free(cDir) } }
+        let sources = fds.map { $0.0 }, targets = fds.map { $0.1 }
+        // Sources moved above every target first, so a dup2 never overwrites a source still needed.
+        var moved = [Int32](repeating: -1, count: fds.count)
+        for (k, fd) in sources.enumerated() {
+            moved[k] = fcntl(fd, F_DUPFD_CLOEXEC, 10)
+            if moved[k] < 0 { moved.filter { $0 >= 0 }.forEach { close($0) }; return errno }
+        }
+        defer { moved.forEach { close($0) } }
+        let maxFD = Int32(getdtablesize())
+        let asRoot = getuid() == 0
+        var group = who.gid
+        var all = sigset_t()
+        sigemptyset(&all)
+        let child = fork()
+        if child == 0 {
+            for sig in 1..<NSIG { signal(sig, SIG_DFL) }
+            sigprocmask(SIG_SETMASK, &all, nil)
+            for k in 0..<moved.count where dup2(moved[k], targets[k]) == -1 { _exit(125) }
+            var fd: Int32 = 4
+            while fd < maxFD { close(fd); fd += 1 }
+            if let cDir, chdir(cDir) != 0 { _exit(125) }
+            if asRoot {
+                guard setgroups(1, &group) == 0, setgid(who.gid) == 0, setuid(who.uid) == 0 else { _exit(126) }
+            }
+            // Became (or already was) exactly that user, and can't go back.
+            guard getuid() == who.uid, geteuid() == who.uid, getgid() == who.gid, getegid() == who.gid,
+                  who.uid == 0 || setuid(0) != 0 else { _exit(126) }
+            execve(cPath, argv, env)
+            _exit(127)
+        }
+        if child < 0 { return errno }
+        pid = child
+        return 0
     }
 
     /// The pipe for a secret: both ends close on exec and sit above 3, so the dup2 onto 3 always makes a new
@@ -242,7 +304,8 @@ public enum Subprocess {
     /// arrives apart from the prompts. Read the terminal with `terminal`, answer with `send`, collect the end with
     /// `result()`. Nothing here keeps or logs what passes through.
     public static func interactive(_ path: String, _ arguments: [String], environment: [String: String]? = nil,
-                                   cwd: String? = nil, secret: Data? = nil, timeout: TimeInterval) throws -> Interactive {
+                                   cwd: String? = nil, secret: Data? = nil, runAs: RunAs? = nil,
+                                   timeout: TimeInterval) throws -> Interactive {
         var master: Int32 = -1, slave: Int32 = -1
         var size = winsize(ws_row: 40, ws_col: 120, ws_xpixel: 0, ws_ypixel: 0)
         guard openpty(&master, &slave, nil, nil, &size) == 0 else { throw Failure.spawn(path, errno) }
@@ -295,7 +358,10 @@ public enum Subprocess {
             env.forEach { free($0) }
         }
         var pid: pid_t = 0
-        let rc = posix_spawn(&pid, path, &actions, &attributes, argv, env)
+        var fdPlan: [(Int32, Int32)] = [(slave, 0), (out.1, 1), (slave, 2)]
+        if let secretPipe { fdPlan.append((secretPipe.0, 3)) }
+        let rc = runAs.map { forkExec(&pid, path, argv, env, fdPlan, cwd, $0) }
+            ?? posix_spawn(&pid, path, &actions, &attributes, argv, env)
         close(slave); close(out.1)
         if let secretPipe { close(secretPipe.0) }
         guard rc == 0 else {

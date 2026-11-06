@@ -218,14 +218,23 @@ See Docs/COMPANION.md for the protocol. On the Mac:
     the desktop app's notarization names that identity's team, LTZ2PFU5D6), strictly validated for all
     architectures; the result is kept while the file's inode, size and time stay the same. A download that fails the check is deleted. Homebrew's and npm's `bw` are
     Node scripts without a signature and aren't used. Settings > Bitwarden can download the newest version again.
-  - *Running it* (`BitwardenCLI`): a small environment of its own (no inherited secrets), English messages, JSON
-    answers (`BW_RESPONSE=true`), `BW_NOINTERACTION=true` for everything but the sign-in, and
-    `BITWARDENCLI_APPDATA_DIR=~/Library/Application Support/aOS/Bitwarden`, so aOS's sign-in is apart from the
-    user's own `bw`. The master password goes in only through `--passwordenv` (the variable's name is on the command
-    line, the password in the child's environment), the session key only as `BW_SESSION`; item ids (UUIDs only),
-    the email and the server address are checked before they reach a command line. Nothing `bw` prints is logged;
-    errors carry Bitwarden's own message.
-  - *Signing in* (`bw login <email> --passwordenv`): `bw` asks its questions with inquirer on a terminal, so
+  - *Where it runs* (since build 9, `BitwardenRunner`, `BitwardenVaultHost`): never as the user. Any process of the
+    user (a coding agent with a terminal) can read the environment of the user's own processes (`ps eww`, checked)
+    but not of another user's, and arguments of everyone's. So aOS's root helper (aos-powerd, XPC that only aOS may
+    open) runs `bw` as the hidden user `_aosvault` (dscl, number 360 to 399, no shell, no home, no password), from
+    `/Library/Application Support/aOS/bin/bw` (root, 0755: nobody else can replace it; downloaded and checked there
+    by the helper), with its files in `/Library/Application Support/aOS/Bitwarden` (0700 for `_aosvault`). The
+    child gives up root itself (fork, then only async-signal-safe calls: descriptors, signals, setgroups, setgid,
+    setuid, a check that root can't come back, exec) and ends with 126 if that fails. Only the commands aOS uses
+    pass, each argument checked (`BitwardenVaultHost.allowed`: no `export`, no search, no raw output); from the
+    app's environment only `BW_RESPONSE`, `BW_NOINTERACTION` and `TERM` (no proxies, no `NODE_OPTIONS`).
+    Without the helper allowed there is no Bitwarden (the settings ask to allow it); `bw` never runs as the user.
+    Bitwarden's earlier files as the user are removed when the helper takes over (one more sign-in).
+  - *Running it* (`BitwardenCLI`): English messages, JSON answers (`BW_RESPONSE=true`), `BW_NOINTERACTION=true` for
+    everything but the sign-in. The master password goes in through a pipe `bw` reads as `--passwordfile /dev/fd/3`
+    (never the environment or a command line); item ids (UUIDs only), the email and the server address are checked
+    before they reach a command line. Nothing `bw` prints is logged; errors carry Bitwarden's own message.
+  - *Signing in* (`bw login <email> --passwordfile /dev/fd/3`): `bw` asks its questions with inquirer on a terminal, so
     aOS runs it with stdin and stderr on a pseudo terminal and stdout on a pipe (`Subprocess.interactive`), reads the
     questions from the terminal (escape sequences removed) and asks the user in Settings > Bitwarden: the two-step
     method when the account has several ("Two-step login method:", a list answered with arrow keys and Return;
@@ -235,11 +244,14 @@ See Docs/COMPANION.md for the protocol. On the Mac:
     email:"; the CLI has no option for it, only this question). Any other question is shown as `bw` asked it. The
     answer, without line breaks, is typed into the terminal. The server (bitwarden.com, bitwarden.eu or the
     user's own) is set with `bw config server` before. The result is the session key (`raw` in the JSON answer).
-  - *The session key* stays in a generic password item of the login keychain (service `dev.marquart.aos.bitwarden`,
-    not synchronized). macOS puts the program that created an item on its access list, so another program can only
-    read it after the person allows it in macOS's own dialog. Unlocking later: `bw unlock --passwordenv`.
-  - *When it locks again*: `bitwardenLockHours` after unlocking (setting: 1, 4, 8 (default) or 24 hours, counted
-    from unlocking, not from the last use), when the Mac goes to sleep (NSWorkspace notification, and the kernel's
+  - *The session key* never leaves the helper: it keeps it in `/Library/Application Support/aOS/bitwarden-session`
+    (root, 0600), puts it into `bw`'s environment itself and replaces it in replies with the marker
+    `BitwardenCLI.heldSession`, which is all the app (and its keychain item) ever holds. `bw lock`, `bw logout` and
+    a lock from the app make the helper forget it. Unlocking later: `bw unlock --passwordfile /dev/fd/3`.
+  - *When it locks again*: never by itself (the default since build 7: sign-ins should always work; the session
+    key is out of the user's reach, and every login still needs the person's approval), or `bitwardenLockHours`
+    after unlocking (setting: 1, 4, 8 or 24 hours, counted from unlocking, not from the last use) and then also when
+    the Mac goes to sleep (NSWorkspace notification, and the kernel's
     `kern.sleeptime` checked before every use, which also covers a sleep while aOS wasn't running), when it restarts
     (`kern.boottime`), and on demand (Settings, menu). Locking forgets the key in memory and the keychain and runs
     `bw lock`, so the old key opens nothing. Quitting aOS alone doesn't lock: an update or a restart of aOS shouldn't
@@ -267,10 +279,12 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   closed (`chrome://*` except new tab, downloads, history, settings and a few more; `chrome://net-export` could
   otherwise record a filled sign-in).
 - **The permission**: once, right after screen sharing in the setup (or Settings > General > Signing in). aOS
-  starts the helper's request, opens Privacy & Security > Accessibility in the guest; during the first setup (no
-  agent has used the workspace yet) it enters the workspace account's password itself when macOS asks (the dialog is
-  recognized by its program's path). Later the person clicks "Enter the workspace password" themselves while looking
-  at the dialog: an agent could have left programs that wait for exactly this moment. A finished workspace's account
+  starts the helper's request, opens Privacy & Security > Accessibility in the guest; when macOS asks for the
+  password the person clicks "Enter Password" in the workspace window's bar (aOS never types it by itself: macOS's
+  dialog can't be told apart from outside, System Settings hosts it in its own window and the dialog's service keeps
+  running after it closed, so typing "by itself" went into other windows; and the person wants the control).
+- **Approving on the Mac**: a Bitwarden login needs Touch ID or the Mac's password (LocalAuthentication, macOS's own
+  dialog no other program can answer); Return doesn't approve. A finished workspace's account
   is a standard user: it becomes an administrator for that moment and a standard user again (`prepare.sh` demotes it
   at the next start should that be interrupted). TCC keeps the permission across helper updates (same signature).
 - **What this does and doesn't promise.** aOS keeps the password away from the agent's tools and its normal ways of
@@ -279,13 +293,13 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   the workspace from the inside with programs of its own can't be ruled out completely (for example Chrome's
   JavaScript from Apple Events: Chrome has no policy for it; the helper refuses while a profile has it on, but can
   only see the profile files, not a running Chrome's memory). So: approve sign-ins for agents you trust
-  with the account, and prefer accounts with two-factor sign-in. On the Mac's side: while `bw` runs for a sign-in
-  or an unlock (seconds), the master password is in its environment, which other programs of the same macOS user
-  could read; the session key is in the keychain behind macOS's access list, and in `bw`'s environment while it
-  runs. That is the CLI's own model (`--passwordenv`, `BW_SESSION`); the workspace (the agent's account in the VM)
-  reaches none of it. Open hardening steps: a key only the signed helper
-  can use, so the request is encrypted to it (instead of trusting the socket's peer), and a check of Chrome's profile
-  settings before each sign-in.
+  with the account, and prefer accounts with two-factor sign-in. On the Mac's side (since build 9): Bitwarden's
+  files, its session key and the master password are out of reach of the user's other programs (above), and
+  `put_file` refuses aOS's data, Bitwarden's folders and the browsers' profiles. Still open against a program that
+  runs as the user with a shell (a coding agent): the workspace's keys (`aOS/Keys`: the maintenance SSH key, the
+  workspace account's password) are files of the user, so such a program could take over the workspace and watch
+  a login that the person approved being typed there; moving them into the helper is the next step. The vault as a
+  whole, other logins and the master password stay out of its reach.
 
 ## New chats from the Claude app (server mode)
 

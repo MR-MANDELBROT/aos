@@ -121,7 +121,7 @@ final class BitwardenCLITests: XCTestCase {
 
     func testLoginWithoutQuestions() async throws {
         let fake = try FakeBitwarden(scenario: FakeBitwarden.scenario())
-        let conversation = try fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
+        let conversation = try await fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
         let log = StepLog()
         conversation.onStep = { log.append($0) }
         let key = try await conversation.run()
@@ -142,7 +142,7 @@ final class BitwardenCLITests: XCTestCase {
             "codes": ["Authenticator App": "000000", "Email": "135790"],
             "newdevice": true, "newdeviceCode": "246810",
         ]))
-        let conversation = try fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
+        let conversation = try await fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
         let log = StepLog()
         conversation.onStep = { [weak conversation] step in
             log.append(step)
@@ -166,7 +166,7 @@ final class BitwardenCLITests: XCTestCase {
     func testSingleMethodIsChosenByItself() async throws {
         let fake = try FakeBitwarden(scenario: FakeBitwarden.scenario([
             "twostep": ["Authenticator App"], "codes": ["Authenticator App": "111222"]]))
-        let conversation = try fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
+        let conversation = try await fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
         let log = StepLog()
         conversation.onStep = { [weak conversation] step in
             log.append(step)
@@ -179,7 +179,7 @@ final class BitwardenCLITests: XCTestCase {
     func testWrongCodeAndWrongPassword() async throws {
         let fake = try FakeBitwarden(scenario: FakeBitwarden.scenario([
             "twostep": ["Email"], "codes": ["Email": "135790"]]))
-        let conversation = try fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
+        let conversation = try await fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
         conversation.onStep = { [weak conversation] step in
             if case .twoStepCode = step { conversation?.answer("999999") }
         }
@@ -189,20 +189,24 @@ final class BitwardenCLITests: XCTestCase {
         } catch BitwardenError.failed(let message) {
             XCTAssertEqual(message, "Two-step token is invalid. Try again.")
         }
-        let wrong = try fake.cli.startLogin(email: "max@example.com", password: "nope")
+        let wrong = try await fake.cli.startLogin(email: "max@example.com", password: "nope")
         do {
             _ = try await wrong.run()
             XCTFail("a wrong password signed in")
         } catch BitwardenError.failed(let message) {
             XCTAssertTrue(message.hasPrefix("Invalid master password."))
         }
-        XCTAssertThrowsError(try fake.cli.startLogin(email: "--apikey", password: "x"))
-        XCTAssertThrowsError(try fake.cli.startLogin(email: "no address", password: "x"))
+        for bad in ["--apikey", "no address"] {
+            do {
+                _ = try await fake.cli.startLogin(email: bad, password: "x")
+                XCTFail("\(bad) was taken as an email address")
+            } catch {}
+        }
     }
 
     func testCancellingASignIn() async throws {
         let fake = try FakeBitwarden(scenario: FakeBitwarden.scenario(["newdevice": true, "newdeviceCode": "1"]))
-        let conversation = try fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
+        let conversation = try await fake.cli.startLogin(email: "max@example.com", password: FakeBitwarden.password)
         conversation.onStep = { [weak conversation] step in
             if step == .newDeviceCode { conversation?.cancel() }
         }
@@ -683,5 +687,105 @@ final class InteractiveSubprocessTests: XCTestCase {
         let result = await process.result()
         XCTAssertNotEqual(result.status, 0)
         XCTAssertLessThan(Date().timeIntervalSince(start), 5)
+    }
+}
+
+/// The helper's vault: the same vault code, `bw` behind `BitwardenVaultHost` (here without another user).
+final class BitwardenVaultHostTests: XCTestCase {
+    @MainActor
+    func testSessionKeyStaysWithTheHelper() async throws {
+        let fake = try FakeBitwarden(scenario: FakeBitwarden.scenario(), state: ["state": "locked", "email": "max@example.com"])
+        let base = fake.folder.appendingPathComponent("helper-base", isDirectory: true)
+        let host = BitwardenVaultHost(layout: .init(base: base), account: { nil }, executable: fake.executable)
+        try host.makeFolders(owner: nil)
+        for name in ["scenario.json", "state.json"] {
+            try FileManager.default.copyItem(at: fake.folder.appendingPathComponent(name),
+                                             to: host.layout.data.appendingPathComponent(name))
+        }
+        let runner = HelperBitwardenRunner { await host.handle($0) }
+        let cli = BitwardenCLI(executable: "/nonexistent/bw", dataDirectory: fake.folder, runner: runner)
+        let store = MemorySessionStore()
+        let vault = BitwardenVault(paths: Paths(root: fake.folder), store: store, cli: cli)
+        await vault.refresh()
+        XCTAssertEqual(vault.phase, .locked)
+        await vault.unlock(password: FakeBitwarden.password)
+        XCTAssertEqual(vault.phase, .unlocked)
+        // The app keeps only the marker; the real key is the helper's.
+        XCTAssertEqual(store.load()?.key, BitwardenCLI.heldSession)
+        let real = try XCTUnwrap(host.storedSession())
+        XCTAssertNotEqual(real, BitwardenCLI.heldSession)
+        let offer = await vault.offer(for: "campus.tum.de")
+        XCTAssertEqual(offer.logins.map(\.name), ["TUM", "TUMonline"])
+        let credentials = try await vault.credentials(id: FakeBitwarden.campus, host: "campus.tum.de")
+        XCTAssertEqual(credentials.password, "campus-pw")
+        await vault.lock(reason: "test")
+        XCTAssertNil(host.storedSession())
+        XCTAssertTrue(fake.leaks.isEmpty, fake.leaks)
+    }
+
+    @MainActor
+    func testSignInWithQuestionsThroughTheHelper() async throws {
+        let fake = try FakeBitwarden(scenario: FakeBitwarden.scenario([
+            "twostep": ["Authenticator App"], "codes": ["Authenticator App": "000111"],
+            "newdevice": true, "newdeviceCode": "246810"]))
+        let base = fake.folder.appendingPathComponent("helper-base", isDirectory: true)
+        let host = BitwardenVaultHost(layout: .init(base: base), account: { nil }, executable: fake.executable)
+        try host.makeFolders(owner: nil)
+        for name in ["scenario.json", "state.json"] {
+            try FileManager.default.copyItem(at: fake.folder.appendingPathComponent(name),
+                                             to: host.layout.data.appendingPathComponent(name))
+        }
+        let cli = BitwardenCLI(executable: "/nonexistent/bw", dataDirectory: fake.folder,
+                               runner: HelperBitwardenRunner { await host.handle($0) })
+        let store = MemorySessionStore()
+        let vault = BitwardenVault(paths: Paths(root: fake.folder), store: store, cli: cli)
+        var asked: [BitwardenLoginConversation.Step] = []
+        vault.onChange = { [weak vault] in
+            guard let vault, case .signingIn(let step) = vault.phase, step != .working, asked.last != step else { return }
+            asked.append(step)
+            switch step {
+            case .twoStepCode: vault.answer("000111")
+            case .newDeviceCode: vault.answer("246810")
+            default: break
+            }
+        }
+        await vault.refresh()
+        await vault.signIn(email: "max@example.com", password: FakeBitwarden.password, server: .eu)
+        XCTAssertNil(vault.problem)
+        XCTAssertEqual(vault.phase, .unlocked)
+        XCTAssertEqual(asked, [.twoStepCode(method: nil), .newDeviceCode])
+        XCTAssertEqual(store.load()?.key, BitwardenCLI.heldSession)
+        XCTAssertNotNil(host.storedSession())
+        XCTAssertFalse(host.hasRunningLogin)
+    }
+
+    func testOnlyTheCommandsAOSUses() {
+        let id = "0f8fad5b-d9cb-469f-a165-70867728950e"
+        for ok in [["status"], ["sync"], ["lock"], ["logout"], ["--version"], ["unlock", "--passwordfile", "/dev/fd/3"],
+                   ["login", "max@example.com", "--passwordfile", "/dev/fd/3"], ["list", "items", "--url", "https://campus.tum.de"],
+                   ["get", "item", id], ["get", "totp", id], ["config", "server", "bitwarden.com"],
+                   ["config", "server", "https://vault.bitwarden.eu"], ["config", "server", "https://vault.example.org"]] {
+            XCTAssertTrue(BitwardenVaultHost.allowed(ok), "\(ok)")
+        }
+        for bad in [["export"], ["export", "--format", "json"], ["list", "items"], ["list", "items", "--search", "a"],
+                    ["get", "item", "--raw"], ["get", "notes", id], ["unlock", "--raw"], ["login", "--apikey"],
+                    ["login", "max@example.com", "--passwordenv", "X"], ["config", "server", "http://evil"],
+                    ["serve"], ["status", "--session", "x"], ["list", "items", "--url", "https://evil example"], []] {
+            XCTAssertFalse(BitwardenVaultHost.allowed(bad), "\(bad)")
+        }
+    }
+
+    func testOnlyTheMarkerBecomesTheKeyAndNothingElseOfTheAppsEnvironmentPasses() throws {
+        let base = FileManager.default.temporaryDirectory.appendingPathComponent("aos-vh-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let host = BitwardenVaultHost(layout: .init(base: base), account: { nil }, executable: "/usr/bin/true")
+        try host.makeFolders(owner: nil)
+        let env = host.environment(["BW_SESSION": "someone-elses-key", "NODE_OPTIONS": "--require /tmp/x.js",
+                                    "HTTPS_PROXY": "http://evil", "BW_RESPONSE": "true"], who: nil)
+        XCTAssertNil(env["BW_SESSION"])
+        XCTAssertNil(env["NODE_OPTIONS"])
+        XCTAssertNil(env["HTTPS_PROXY"])
+        XCTAssertEqual(env["BW_RESPONSE"], "true")
+        XCTAssertEqual(env["BITWARDENCLI_APPDATA_DIR"], host.layout.data.path)
     }
 }

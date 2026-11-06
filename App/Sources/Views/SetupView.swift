@@ -563,10 +563,18 @@ private struct StepPage: View {
                             Button("Sign In …") { showBitwarden = true }.buttonStyle(.glassProminent)
                         }
                     }
-                    Text("Your master password goes to Bitwarden's own command line tool once and isn't stored. If Bitwarden asks for a code or a check, you answer it in the same window.")
-                        .font(.callout).foregroundStyle(.secondary)
+                    if model.bitwarden.phase == .needsHelper {
+                        Divider()
+                        HStack(spacing: 12) {
+                            Text("Bitwarden runs in aOS's background helper. macOS asks you once to allow it in Login Items.")
+                                .font(.callout)
+                            Spacer()
+                            Button("Allow …") { model.allowHelperForBitwarden() }.buttonStyle(.glass)
+                        }
+                    }
                 }
             }
+            BitwardenSafetyNote()
         }
     }
 

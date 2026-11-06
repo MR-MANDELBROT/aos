@@ -40,6 +40,8 @@ struct BitwardenSettings: View {
                 .padding(.vertical, 4)
             }
 
+            Section { BitwardenSafetyNote(inForm: true).padding(.vertical, 4) }
+
             // What went wrong last, above the fields where the user tries again
             if let problem = vault.problem {
                 Section {
@@ -59,6 +61,18 @@ struct BitwardenSettings: View {
                         Text("Downloading Bitwarden's command line tool from Bitwarden and checking its signature …")
                             .foregroundStyle(.secondary)
                     }
+                }
+            case .needsHelper:
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Bitwarden runs in aOS's background helper", systemImage: "lock.shield")
+                            .font(.headline)
+                        Text("There, Bitwarden's tool runs as a hidden user of its own, so your other programs (also a coding agent with a terminal) can't read its data, its session or your master password. macOS asks you once to allow the helper in Login Items.")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        Button("Allow the Background Helper …") { model.allowHelperForBitwarden() }
+                            .buttonStyle(.glassProminent)
+                    }
+                    .padding(.vertical, 4)
                 }
             case .noTool, .signedOut:
                 signInSection(firstTime: vault.phase == .noTool)
@@ -346,5 +360,32 @@ struct BitwardenSettings: View {
 
     func binding<T>(_ path: WritableKeyPath<AgentSettings, T>) -> Binding<T> {
         Binding(get: { model.settings[keyPath: path] }, set: { v in model.update { $0[keyPath: path] = v } })
+    }
+}
+
+/// How the Bitwarden sign-in works and why the account is safe (setup and settings). Only what aOS really does.
+struct BitwardenSafetyNote: View {
+    /// In a settings form: without the card.
+    var inForm = false
+
+    var body: some View {
+        if inForm { content } else { GlassCard { content } }
+    }
+
+    var content: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("How it works", systemImage: "lock.shield").font(.headline)
+                point("key", "You sign in once, here on your Mac. Your master password goes straight to Bitwarden's own tool, signed by Bitwarden and checked by aOS, and is stored nowhere.")
+                point("person.badge.shield.checkmark", "Bitwarden's tool runs in aOS's background helper as a hidden user of its own. Your other programs, a coding agent with a terminal too, can't read its data or its session.")
+                point("checkmark.shield", "Every sign-in needs your yes: on your iPhone with Face ID or here with Touch ID or your Mac's password. aOS then fills in only that one login, in the workspace.")
+                point("rectangle.portrait.and.arrow.right", "Lock it or sign out any time in the settings. Signing out removes Bitwarden's data from this Mac.")
+            }
+    }
+
+    func point(_ symbol: String, _ text: LocalizedStringKey) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: symbol).foregroundStyle(BrandColor.indigo).frame(width: 20)
+            Text(text).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
     }
 }

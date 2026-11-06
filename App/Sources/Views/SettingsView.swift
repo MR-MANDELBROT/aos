@@ -252,8 +252,13 @@ struct ReachableSettings: View {
                     }
                 }
                 if model.settings.keepReachable {
-                    Toggle("Automatically: conversations from the Claude app", isOn: binding(\.keepAutomatic))
-                    if model.settings.keepAutomatic {
+                    Picker("Which conversations", selection: Binding(get: { keepChoice }, set: { setKeepChoice($0) })) {
+                        Text("Only pinned ones").tag(KeepChoice.pinned)
+                        Text("From the Claude app (recommended)").tag(KeepChoice.app)
+                        Text("From the Claude app and the terminal").tag(KeepChoice.appAndTerminal)
+                    }
+                    Text(keepChoiceText).font(.caption).foregroundStyle(.secondary)
+                    if keepChoice != .pinned {
                         Picker("Active within", selection: binding(\.keepHours)) {
                             Text("the last 6 hours").tag(6)
                             Text("the last day").tag(24)
@@ -264,24 +269,33 @@ struct ReachableSettings: View {
                                 Text("the last \(model.settings.keepHours) hours").tag(model.settings.keepHours)
                             }
                         }
-                        Toggle("Also conversations started in a terminal", isOn: binding(\.keepTerminal))
                     }
-                    Stepper("At most \(model.settings.keepMax) at once", value: binding(\.keepMax), in: 1...12)
-                    Text("Each kept conversation is a Claude Code process with about 250 MB of memory. Pinned ones are kept regardless of age.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Picker("At most at once", selection: binding(\.keepMax)) {
+                        ForEach([1, 2, 3, 4, 6, 8, 10, 12], id: \.self) { n in Text("\(n)").tag(n) }
+                        if ![1, 2, 3, 4, 6, 8, 10, 12].contains(model.settings.keepMax) {
+                            Text("\(model.settings.keepMax)").tag(model.settings.keepMax)
+                        }
+                    }
+                    Label(memoryText, systemImage: memoryLevel == .ok ? "memorychip" : "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(memoryLevel == .ok ? Color.secondary : (memoryLevel == .high ? Color.yellow : Color.red))
                 }
             } header: {
                 Text("Reachable from your phone")
             }
 
             if model.settings.keepReachable {
-                Section("Conversations") {
+                Section {
                     if model.conversations.isEmpty {
                         Text("No conversations in the last days.").foregroundStyle(.secondary)
                     }
-                    ForEach(model.conversations) { c in
+                    ForEach(sortedConversations) { c in
                         ConversationRow(conversation: c, entry: model.keeper?.entries.first { $0.id == c.id })
                     }
+                } header: {
+                    Text("Conversations")
+                } footer: {
+                    Text("Newest activity first; pinned ones on top.").font(.caption).foregroundStyle(.secondary)
                 }
             }
 
@@ -293,6 +307,59 @@ struct ReachableSettings: View {
         }
         .onDisappear(perform: saveName)
         .onReceive(timer) { _ in if model.settings.keepReachable { model.loadConversations() } }
+    }
+
+    /// Pinned ones first, then by the newest activity (the order they come in).
+    var sortedConversations: [ClaudeConversation] {
+        let pinned = Set(model.settings.keptConversations)
+        return model.conversations.filter { pinned.contains($0.id) } + model.conversations.filter { !pinned.contains($0.id) }
+    }
+
+    enum KeepChoice: Hashable { case pinned, app, appAndTerminal }
+
+    var keepChoice: KeepChoice {
+        guard model.settings.keepAutomatic else { return .pinned }
+        return model.settings.keepTerminal ? .appAndTerminal : .app
+    }
+
+    func setKeepChoice(_ c: KeepChoice) {
+        model.update { s in
+            s.keepAutomatic = c != .pinned
+            s.keepTerminal = c == .appAndTerminal
+        }
+    }
+
+    var keepChoiceText: String {
+        switch keepChoice {
+        case .pinned:
+            return String(localized: "Pin a conversation in the list below and aOS keeps it reachable; nothing else.")
+        case .app:
+            return String(localized: "Conversations you used from the Claude app stay reachable when the app on the Mac closes them. Pinned ones too.")
+        case .appAndTerminal:
+            return String(localized: "Also conversations from a terminal. Not recommended: when you close a terminal on purpose, the conversation keeps running anyway.")
+        }
+    }
+
+    enum MemoryLevel { case ok, high, tooMuch }
+
+    /// About 250 MB per kept conversation, against this Mac's memory.
+    var memoryShare: Double {
+        Double(model.settings.keepMax) * 250 * 1_048_576 / Double(ProcessInfo.processInfo.physicalMemory)
+    }
+
+    var memoryLevel: MemoryLevel { memoryShare < 0.08 ? .ok : (memoryShare < 0.15 ? .high : .tooMuch) }
+
+    var memoryText: String {
+        let gb = Double(model.settings.keepMax) * 0.25
+        let amount = gb.formatted(.number.precision(.fractionLength(gb < 1 ? 2 : 1)))
+        switch memoryLevel {
+        case .ok:
+            return String(localized: "Each kept conversation is a Claude Code process with about 250 MB of memory; at most about \(amount) GB. Pinned ones are kept regardless of age.")
+        case .high:
+            return String(localized: "Up to about \(amount) GB of memory for kept conversations. That's a lot for this Mac; fewer is better.")
+        case .tooMuch:
+            return String(localized: "Up to about \(amount) GB of memory: not a good idea on this Mac. It gets slow and uses more battery. Choose fewer.")
+        }
     }
 
     var folderText: String {
@@ -356,7 +423,7 @@ struct ConversationRow: View {
                     Text(stateText).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     Text("·").font(.caption).foregroundStyle(.tertiary)
                     Text(URL(fileURLWithPath: conversation.cwd).lastPathComponent).font(.caption).foregroundStyle(.tertiary)
-                    Text(conversation.lastActivity, style: .relative).font(.caption).foregroundStyle(.tertiary)
+                    Text("active \(conversation.lastActivity.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.tertiary)
                 }
             }
             Spacer(minLength: 8)

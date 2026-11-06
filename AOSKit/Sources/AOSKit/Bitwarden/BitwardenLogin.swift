@@ -120,7 +120,7 @@ public final class BitwardenLoginConversation: @unchecked Sendable {
     /// How long a sign-in may take (an email code can take a few minutes to arrive).
     static let timeout: TimeInterval = 15 * 60
 
-    let process: Subprocess.Interactive
+    let process: BitwardenTerminal
     let email: String
     private let lock = NSLock()
     private var answered = Set<String>()
@@ -132,7 +132,7 @@ public final class BitwardenLoginConversation: @unchecked Sendable {
     /// Called with every new step (on some thread; hop to the main actor yourself). Set it before `run()`.
     public var onStep: (@Sendable (Step) -> Void)?
 
-    init(process: Subprocess.Interactive, email: String) {
+    init(process: BitwardenTerminal, email: String) {
         self.process = process
         self.email = email
     }

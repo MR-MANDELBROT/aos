@@ -251,6 +251,9 @@ final class PowerController: ObservableObject {
         SMAppService.openSystemSettingsLoginItems()
     }
 
+    /// Bitwarden's `bw` through the helper (as its hidden user).
+    func vault(_ request: VaultRequest) async -> VaultReply { await helper.vault(request) }
+
     /// The lease: renewed every 30 s while wanted; released at once when not.
     private func updateLease(_ want: Bool, now: Date) {
         if want {

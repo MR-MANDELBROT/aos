@@ -19,6 +19,8 @@ public final class BitwardenVault {
         /// Downloading and checking Bitwarden's command line tool.
         case installing
         case signedOut
+        /// aOS's background helper isn't allowed yet: Bitwarden runs only there (macOS asks once in Login Items).
+        case needsHelper
         /// Signing in: what Bitwarden asks right now.
         case signingIn(BitwardenLoginConversation.Step)
         case locked
@@ -79,6 +81,14 @@ public final class BitwardenVault {
         await lock(reason: "the Mac goes to sleep")
     }
     public var onChange: (() -> Void)?
+    /// The helper that runs `bw` as its hidden user (the app sets it once the helper is allowed). Without one, and
+    /// without `helperNeeded`, `bw` runs here (tests, development).
+    public var helper: HelperBitwardenRunner? {
+        didSet { helperPrepared = false }
+    }
+    /// The helper isn't allowed yet: no Bitwarden until it is (never `bw` as the user instead).
+    public var helperNeeded = false
+    private var helperPrepared = false
     /// The logins Bitwarden can offer may have changed (unlocked, locked, synced): open requests are offered again.
     public var onOffersChanged: (() -> Void)?
     public var log: (String) -> Void = { _ in }
@@ -121,7 +131,7 @@ public final class BitwardenVault {
         loadSession()
         guard conversation == nil, phase != .installing else { return }
         guard let cli = await currentCLI() else {
-            phase = .noTool
+            phase = helperNeeded ? .needsHelper : .noTool
             changed()
             return
         }
@@ -177,7 +187,7 @@ public final class BitwardenVault {
                 try? await cli.logout()
             }
             if BitwardenServer(serverURL: status.serverURL) != server { try await cli.setServer(server) }
-            let conversation = try cli.startLogin(email: address, password: password)
+            let conversation = try await cli.startLogin(email: address, password: password)
             conversation.onStep = { [weak self, weak conversation] step in
                 Task { @MainActor in
                     guard let self, let conversation, self.conversation === conversation else { return }
@@ -264,6 +274,7 @@ public final class BitwardenVault {
         // Bitwarden's files for aOS go too (its encrypted vault and the account's tokens), also when its tool
         // couldn't run: signed out means nothing of the account stays on this Mac.
         try? FileManager.default.removeItem(at: paths.bitwarden)
+        if let helper { _ = await helper.erase() }
         email = nil
         lastSync = nil
         phase = .signedOut
@@ -297,9 +308,18 @@ public final class BitwardenVault {
     /// Downloads Bitwarden's newest command line tool again (Settings).
     public func updateTool() async {
         problem = nil
+        phase = .installing
+        changed()
+        if let helper {
+            let reply = await helper.update()
+            if reply.ok { toolVersion = reply.version; log("Bitwarden's command line tool updated") } else {
+                problem = BitwardenError.notRunnable(reply.message ?? "aOS's helper didn't answer")
+            }
+            phase = .unknown
+            await refresh()
+            return
+        }
         do {
-            phase = .installing
-            changed()
             tool = try await BitwardenTool.install(paths)
             toolVersion = nil
             log("Bitwarden's command line tool updated")
@@ -444,6 +464,8 @@ public final class BitwardenVault {
 
     private func currentCLI() async -> BitwardenCLI? {
         if let fixedCLI { return fixedCLI }
+        if helperNeeded { return nil }
+        if let helper { return await helperCLI(helper) }
         if let tool, BitwardenTool.verify(tool.path) == nil {
             return BitwardenCLI(executable: tool.path, dataDirectory: paths.bitwarden)
         }
@@ -453,9 +475,45 @@ public final class BitwardenVault {
         return tool.map { BitwardenCLI(executable: $0.path, dataDirectory: paths.bitwarden) }
     }
 
+    /// `bw` in the helper: the first time the helper sets up its hidden user, folders and tool (it downloads `bw`
+    /// from Bitwarden if needed, which takes a moment).
+    private func helperCLI(_ helper: HelperBitwardenRunner) async -> BitwardenCLI? {
+        if !helperPrepared {
+            let before = phase
+            if toolVersion == nil { phase = .installing; changed() }
+            let reply = await helper.prepare()
+            if phase == .installing { phase = before }
+            guard reply.ok else {
+                problem = BitwardenError.notRunnable(reply.message ?? "aOS's helper didn't answer")
+                return nil
+            }
+            helperPrepared = true
+            toolVersion = reply.version
+            tool = BitwardenTool.Located(path: "/Library/Application Support/\(Brand.name)/bin/bw", downloaded: true)
+            leaveLocalData()
+        }
+        return BitwardenCLI(executable: tool?.path ?? "bw", dataDirectory: paths.bitwarden, runner: helper)
+    }
+
+    /// Bitwarden as the user (before the helper ran it): its files and session key go; the account signs in once
+    /// more, now in the helper.
+    private func leaveLocalData() {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: paths.bitwarden.path) else { return }
+        try? fm.removeItem(at: paths.bitwarden)
+        if session?.key != BitwardenCLI.heldSession {
+            session = nil
+            store.delete()
+        }
+        try? fm.removeItem(at: URL(fileURLWithPath: BitwardenTool.installedPath(paths)))
+        log("Bitwarden runs in aOS's helper now; its files as this user are gone (sign in once more)")
+    }
+
     /// The tool, downloaded from Bitwarden first if there is none yet.
     private func ensureTool() async throws -> BitwardenCLI {
         if let cli = await currentCLI() { return cli }
+        if helperNeeded { throw BitwardenError.notRunnable("aOS's background helper isn't allowed yet") }
+        if helper != nil { throw problem ?? BitwardenError.notRunnable("aOS's helper isn't ready") }
         phase = .installing
         changed()
         log("downloading Bitwarden's command line tool")

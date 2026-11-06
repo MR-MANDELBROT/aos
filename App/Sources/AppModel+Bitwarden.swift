@@ -6,8 +6,34 @@ import Foundation
 extension AppModel {
     var bitwarden: BitwardenVault { workspace.bitwarden }
 
+    /// Bitwarden runs only in aOS's background helper (as its hidden user): handed to the vault once macOS allowed
+    /// the helper, taken away when it isn't allowed (then the vault shows that it needs it).
+    func syncBitwardenHelper() {
+        if Self.isPreview { return }
+        let allowed = power.helperStatus == .enabled
+        let vault = bitwarden
+        if allowed, vault.helper == nil || vault.helperNeeded {
+            let power = self.power
+            vault.helper = HelperBitwardenRunner { await power.vault($0) }
+            vault.helperNeeded = false
+            Task { await vault.refresh() }
+        } else if !allowed, !vault.helperNeeded {
+            vault.helper = nil
+            vault.helperNeeded = true
+            Task { await vault.refresh() }
+        }
+    }
+
+    /// Asks macOS to allow the background helper (Bitwarden runs only there): it shows up in Login Items.
+    func allowHelperForBitwarden() {
+        power.ensureHelperRegistered()
+        power.refreshHelperStatus()
+        if power.helperStatus != .enabled { power.openLoginItems() }
+    }
+
     /// At launch: the account's state, and locking when the Mac goes to sleep.
     func startBitwarden() {
+        syncBitwardenHelper()
         sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { _ in
             Task { @MainActor in await AppModel.shared.bitwarden.lockForSleep() }
@@ -49,6 +75,7 @@ extension AppModel {
         case .signingIn: return String(localized: "Signing in …")
         case .installing: return String(localized: "Downloading Bitwarden's command line tool …")
         case .signedOut, .noTool: return String(localized: "Not signed in")
+        case .needsHelper: return String(localized: "Needs aOS's background helper")
         case .unknown: return String(localized: "Checking …")
         }
     }

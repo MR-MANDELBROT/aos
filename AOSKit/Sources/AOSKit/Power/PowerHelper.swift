@@ -17,6 +17,9 @@ import Foundation
     func join(network: String, reply: @escaping (Data) -> Void)
     /// "restartAirportd" or "cycleWiFi" (off and on), for network care with the lid closed.
     func recover(_ step: String, reply: @escaping (Data) -> Void)
+    /// Bitwarden's `bw` as the hidden user `_aosvault` (a `VaultRequest`, answered with a `VaultReply`; see
+    /// BitwardenRunner and BitwardenVaultHost).
+    func vault(_ request: Data, reply: @escaping (Data) -> Void)
 }
 
 public enum PowerHelperService {
@@ -27,7 +30,7 @@ public enum PowerHelperService {
     /// Xcode signs a command line tool with its file name as identifier.
     public static let helperIdentifier = "aos-powerd"
     /// Bumped when the interface changes.
-    public static let version = 1
+    public static let version = 2
 
     /// Only aOS may talk to the helper.
     public static var appRequirement: String {
@@ -152,6 +155,22 @@ public final class PowerHelperClient: @unchecked Sendable {
         await call(timeout: 90) { $0.applyHotspotJoin("restore", reply: $1) }
     }
     public func join(network: String) async -> HelperReply { await call(timeout: 60) { $0.join(network: network, reply: $1) } }
+    /// Bitwarden through the helper (`HelperBitwardenRunner(send:)` uses this).
+    public func vault(_ request: VaultRequest) async -> VaultReply {
+        await withCheckedContinuation { (continuation: CheckedContinuation<VaultReply, Never>) in
+            let once = Once()
+            let finish: (VaultReply) -> Void = { r in if once.claim() { continuation.resume(returning: r) } }
+            guard let p = proxy({ error in finish(VaultReply(ok: false, message: error.localizedDescription)) }) else {
+                finish(VaultReply(ok: false, message: "no connection to the helper"))
+                return
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + (request.timeout ?? 120) + 15) {
+                finish(VaultReply(ok: false, message: "the helper didn't answer"))
+            }
+            p.vault(request.data) { data in finish(VaultReply.decode(data)) }
+        }
+    }
+
     public func recover(_ step: PowerHelperService.Recovery) async -> HelperReply {
         await call(timeout: 45) { $0.recover(step.rawValue, reply: $1) }
     }

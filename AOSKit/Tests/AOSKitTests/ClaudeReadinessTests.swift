@@ -135,3 +135,23 @@ final class ExchangeBlocklistTests: XCTestCase {
         XCTAssertFalse(blocked("/Users/max/Library/Application Support/Some App/export.csv"))
     }
 }
+
+final class RunAsTests: XCTestCase {
+    func testOwnUserWorksAndAnotherUserIsRefusedWithoutRoot() throws {
+        let me = Subprocess.RunAs(uid: getuid(), gid: getgid())
+        let r = try Subprocess.runBlocking("/usr/bin/id", ["-u"], environment: [:], runAs: me, timeout: 10)
+        XCTAssertEqual(String(decoding: r.stdout, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines), "\(getuid())")
+        if getuid() != 0 {
+            // Without root the child can't become another user: it ends before the program runs.
+            let nobody = Subprocess.RunAs(uid: 4_294_967_294, gid: 4_294_967_294)
+            let refused = try Subprocess.runBlocking("/usr/bin/id", ["-u"], environment: [:], runAs: nobody, timeout: 10)
+            XCTAssertEqual(refused.status, 126)
+            XCTAssertTrue(refused.stdout.isEmpty)
+        }
+        // Descriptor 3 (the secret) reaches the program; nothing else above 2 does.
+        let fds = try Subprocess.runBlocking("/bin/sh", ["-c", "cat <&3; ls /dev/fd | tr '\\n' ' '"], environment: [:],
+                                             secret: Data("s3cret".utf8), runAs: me, timeout: 10)
+        let text = String(decoding: fds.stdout, as: UTF8.self)
+        XCTAssertTrue(text.hasPrefix("s3cret"), text)
+    }
+}

@@ -15,6 +15,9 @@ import SystemConfiguration
 // touches pmset (Docs/DESIGN.md, "Staying awake, freezing and the hotspot").
 
 let supportFolder = URL(fileURLWithPath: "/Library/Application Support/\(Brand.name)", isDirectory: true)
+/// Bitwarden for aOS: `bw` as the hidden user `_aosvault` (created the first time it is needed).
+let vaultHost = BitwardenVaultHost(layout: .init(base: supportFolder), account: { try VaultAccount.ensure() },
+                                   log: { log($0) })
 let holdMarker = supportFolder.appendingPathComponent("powerd-holding")
 let wifiMarker = supportFolder.appendingPathComponent("powerd-wifi-off")
 let logURL = URL(fileURLWithPath: "/Library/Logs/\(Brand.name)/powerd.log")
@@ -137,7 +140,8 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         ticks += 1
         enforce()
         let leaseOver = leaseUntil.map { $0 <= Date() } ?? true
-        if !holding && leaseOver && !busy && Date().timeIntervalSince(lastActivity) > Self.idleExitSeconds {
+        if !holding && leaseOver && !busy && !vaultHost.hasRunningLogin
+            && Date().timeIntervalSince(lastActivity) > Self.idleExitSeconds {
             log("idle, exiting")
             exit(0)
         }
@@ -268,6 +272,19 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
 
     /// "automatic" or "manual": the choice for the closed lid; the user's own settings are noted first (once) so
     /// "restore" can write them back when the lid opens. "restore" without a note does nothing.
+    func vault(_ request: Data, reply: @escaping (Data) -> Void) {
+        queue.async { self.lastActivity = Date() }
+        guard let parsed = VaultRequest.decode(request) else {
+            reply(VaultReply(ok: false, message: "unreadable request").data)
+            return
+        }
+        Task {
+            let answer = await vaultHost.handle(parsed)
+            self.queue.async { self.lastActivity = Date() }
+            reply(answer.data)
+        }
+    }
+
     func applyHotspotJoin(_ mode: String, reply: @escaping (Data) -> Void) {
         if mode == "restore" {
             longWork(reply) { self.restoreOriginal() }

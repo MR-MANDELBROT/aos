@@ -123,10 +123,14 @@ public enum BitwardenTool {
 
     /// Downloads Bitwarden's newest command line tool for macOS (the Apple silicon build where there is one),
     /// checks its signature and puts it into aOS's folder. Nothing that fails the check stays on disk.
-    public static func install(_ paths: Paths) async throws -> Located {
+    /// `shared`: for aOS's helper (root): folder and tool executable for everyone (0755, owned by root, so only root
+    /// can change them), because `bw` then runs as the helper's hidden user.
+    public static func install(_ paths: Paths, shared: Bool = false) async throws -> Located {
+        let mode: Int = shared ? 0o755 : 0o700
         let candidates = try await releaseDownloads()
         let fm = FileManager.default
-        try fm.createDirectory(at: paths.bin, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        try fm.createDirectory(at: paths.bin, withIntermediateDirectories: true, attributes: [.posixPermissions: mode])
+        try fm.setAttributes([.posixPermissions: mode], ofItemAtPath: paths.bin.path)
         let work = paths.bin.appendingPathComponent(".download-\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: work, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         defer { try? fm.removeItem(at: work) }
@@ -145,7 +149,7 @@ public enum BitwardenTool {
                 let target = URL(fileURLWithPath: installedPath(paths))
                 let staged = paths.bin.appendingPathComponent(".bw-\(UUID().uuidString)")
                 try fm.moveItem(at: tool, to: staged)
-                try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: staged.path)
+                try fm.setAttributes([.posixPermissions: mode], ofItemAtPath: staged.path)
                 guard rename(staged.path, target.path) == 0 else {
                     try? fm.removeItem(at: staged)
                     throw InstallError.download("could not put it in place (\(String(cString: strerror(errno))))")
