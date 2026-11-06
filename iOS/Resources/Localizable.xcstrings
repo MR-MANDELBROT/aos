@@ -237,6 +237,16 @@
         }
       }
     },
+    "A mouse or trackpad on the iPhone points, clicks and scrolls directly" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Maus oder ein Trackpad am iPhone zeigt, klickt und scrollt direkt"
+          }
+        }
+      }
+    },
     "A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with Face ID or your passcode." : {
       "localizations" : {
         "de" : {
@@ -253,6 +263,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Accountname"
+          }
+        }
+      }
+    },
+    "Actual pixels" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originalpixel"
           }
         }
       }
@@ -557,6 +577,16 @@
         }
       }
     },
+    "App windows" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Fenster"
+          }
+        }
+      }
+    },
     "Approve the sign-in for %@" : {
       "localizations" : {
         "de" : {
@@ -627,12 +657,52 @@
         }
       }
     },
+    "Automatic" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch"
+          }
+        }
+      }
+    },
+    "Automatic shows all colours on Wi-Fi and fewer on a cellular connection. Every quality keeps text sharp." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch zeigt im WLAN alle Farben und im Mobilfunk weniger. Text bleibt in jeder Qualität scharf."
+          }
+        }
+      }
+    },
     "Balanced" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausgewogen"
+          }
+        }
+      }
+    },
+    "Balanced (thousands of colours)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewogen (Tausende Farben)"
+          }
+        }
+      }
+    },
+    "Best (all colours)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beste (alle Farben)"
           }
         }
       }
@@ -723,6 +793,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlauf löschen"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließen"
+          }
+        }
+      }
+    },
+    "Close window" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster schließen"
           }
         }
       }
@@ -827,6 +917,16 @@
         }
       }
     },
+    "Controls" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steuerung"
+          }
+        }
+      }
+    },
     "Copied" : {
       "localizations" : {
         "de" : {
@@ -883,6 +983,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "„%@“ ließ sich nicht tippen."
+          }
+        }
+      }
+    },
+    "Cut" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausschneiden"
+          }
+        }
+      }
+    },
+    "Data saver (4096 colours)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datensparend (4096 Farben)"
           }
         }
       }
@@ -958,6 +1078,7 @@
       }
     },
     "Direct" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -968,6 +1089,7 @@
       }
     },
     "Direct (one finger touches the screen)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1038,11 +1160,42 @@
       }
     },
     "Drag one finger: move the pointer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit einem Finger ziehen: den Zeiger bewegen"
+          }
+        }
+      }
+    },
+    "Drag one finger: move the pointer (faster moves go further)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit einem Finger ziehen: den Zeiger bewegen (schnelle Bewegungen tragen weiter)"
+          }
+        }
+      }
+    },
+    "Drawn on the iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom iPhone gezeichnet"
+          }
+        }
+      }
+    },
+    "Drawn on the iPhone, the pointer moves without delay. From the Mac it also shows where your agent points." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom iPhone gezeichnet bewegt sich der Zeiger ohne Verzögerung. Vom Mac zeigt er auch, wohin dein Agent zeigt."
           }
         }
       }
@@ -1077,6 +1230,16 @@
         }
       }
     },
+    "Ends the screen connection" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beendet die Verbindung zum Bildschirm"
+          }
+        }
+      }
+    },
     "Escape" : {
       "localizations" : {
         "de" : {
@@ -1097,12 +1260,32 @@
         }
       }
     },
+    "Extra keys above the keyboard" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zusatztasten über der Tastatur"
+          }
+        }
+      }
+    },
     "Failed" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "Fill" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füllen"
           }
         }
       }
@@ -1123,6 +1306,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Code aus %@ einsetzen"
+          }
+        }
+      }
+    },
+    "Find" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suchen"
           }
         }
       }
@@ -1167,6 +1360,16 @@
         }
       }
     },
+    "Force quit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sofort beenden"
+          }
+        }
+      }
+    },
     "Forget the login for the Mac's screen" : {
       "localizations" : {
         "de" : {
@@ -1207,12 +1410,62 @@
         }
       }
     },
+    "From the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom Mac"
+          }
+        }
+      }
+    },
+    "Full screen, with the trackpad or touch." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Vollbild, mit Trackpad oder per Berührung."
+          }
+        }
+      }
+    },
+    "Function keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funktionstasten"
+          }
+        }
+      }
+    },
     "Gestures" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gesten"
+          }
+        }
+      }
+    },
+    "Gray (least data)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grau (am wenigsten Daten)"
+          }
+        }
+      }
+    },
+    "Haptic feedback" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haptisches Feedback"
           }
         }
       }
@@ -1247,6 +1500,16 @@
         }
       }
     },
+    "Hide the toolbar by itself" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeugleiste von selbst ausblenden"
+          }
+        }
+      }
+    },
     "Home" : {
       "localizations" : {
         "de" : {
@@ -1263,6 +1526,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "So erreicht ihn das iPhone"
+          }
+        }
+      }
+    },
+    "In the iPhone's shape" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Form des iPhones"
           }
         }
       }
@@ -1368,11 +1641,22 @@
       }
     },
     "Keyboard: type; ⌘ ⌥ ⌃ ⇧ in the key bar apply to the next key" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tastatur: tippen; ⌘ ⌥ ⌃ ⇧ in der Tastenleiste gelten für die nächste Taste"
+          }
+        }
+      }
+    },
+    "Keyboard: type; ⌘ ⌥ ⌃ ⇧ in the key bar apply to the next key, tapped twice they stay on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastatur: tippen; ⌘ ⌥ ⌃ ⇧ in der Tastenleiste gelten für die nächste Taste, zweimal getippt bleiben sie an"
           }
         }
       }
@@ -1457,6 +1741,26 @@
         }
       }
     },
+    "Mission Control" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mission Control"
+          }
+        }
+      }
+    },
+    "More" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehr"
+          }
+        }
+      }
+    },
     "Moves the pointer (trackpad)" : {
       "localizations" : {
         "de" : {
@@ -1497,6 +1801,16 @@
         }
       }
     },
+    "Natural scrolling" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Natürliches Scrollen"
+          }
+        }
+      }
+    },
     "Needs your attention" : {
       "localizations" : {
         "de" : {
@@ -1513,6 +1827,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neues Passwort (leer behält das alte)"
+          }
+        }
+      }
+    },
+    "New tab" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Tab"
           }
         }
       }
@@ -1673,6 +1997,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        }
+      }
+    },
+    "On" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An"
           }
         }
       }
@@ -1997,6 +2331,16 @@
         }
       }
     },
+    "Picture" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild"
+          }
+        }
+      }
+    },
     "Picture rate" : {
       "localizations" : {
         "de" : {
@@ -2007,7 +2351,28 @@
         }
       }
     },
+    "Picture rate and data" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildrate und Datenmenge"
+          }
+        }
+      }
+    },
+    "Pinch: zoom, moving the fingers moves the picture. Three fingers: move the zoomed picture" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zusammenziehen: zoomen, Fingerbewegung verschiebt das Bild. Drei Finger: das vergrößerte Bild verschieben"
+          }
+        }
+      }
+    },
     "Pinch: zoom. Three fingers: move the zoomed picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2037,6 +2402,26 @@
         }
       }
     },
+    "Pointer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeiger"
+          }
+        }
+      }
+    },
+    "Pointer speed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigertempo"
+          }
+        }
+      }
+    },
     "Port" : {
       "localizations" : {
         "de" : {
@@ -2057,12 +2442,52 @@
         }
       }
     },
+    "Quality" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualität"
+          }
+        }
+      }
+    },
+    "Quit app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App beenden"
+          }
+        }
+      }
+    },
+    "Reload" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu laden"
+          }
+        }
+      }
+    },
     "Remote screen" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entfernter Bildschirm"
+          }
+        }
+      }
+    },
+    "Retina sharpness" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina-Schärfe"
           }
         }
       }
@@ -2157,6 +2582,16 @@
         }
       }
     },
+    "Screen settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm-Einstellungen"
+          }
+        }
+      }
+    },
     "Screen Sharing must be on, on the Mac: System Settings > General > Sharing." : {
       "localizations" : {
         "de" : {
@@ -2177,6 +2612,26 @@
         }
       }
     },
+    "Screen statistics" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm-Statistik"
+          }
+        }
+      }
+    },
+    "Screenshot of an area" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmfoto eines Bereichs"
+          }
+        }
+      }
+    },
     "Secure Enclave" : {
       "localizations" : {
         "de" : {
@@ -2193,6 +2648,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sicherheit"
+          }
+        }
+      }
+    },
+    "Select all" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles auswählen"
           }
         }
       }
@@ -2307,6 +2772,16 @@
         }
       }
     },
+    "Shortcuts" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkürzel"
+          }
+        }
+      }
+    },
     "Show Keyboard" : {
       "localizations" : {
         "de" : {
@@ -2333,6 +2808,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm von %@ zeigen"
+          }
+        }
+      }
+    },
+    "Show the screen's toolbar" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeugleiste des Bildschirms zeigen"
           }
         }
       }
@@ -2377,6 +2862,16 @@
         }
       }
     },
+    "Size" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größe"
+          }
+        }
+      }
+    },
     "Smaller" : {
       "localizations" : {
         "de" : {
@@ -2403,6 +2898,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Flüssig"
+          }
+        }
+      }
+    },
+    "Spotlight" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotlight"
           }
         }
       }
@@ -2507,7 +3012,18 @@
         }
       }
     },
+    "Switch app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App wechseln"
+          }
+        }
+      }
+    },
     "Switches how one finger works on the screen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2538,6 +3054,7 @@
       }
     },
     "Tap: click where the pointer is" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2547,12 +3064,33 @@
         }
       }
     },
+    "Tap: click where the pointer is. Tap twice: double click" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippen: dort klicken, wo der Zeiger ist. Zweimal tippen: Doppelklick"
+          }
+        }
+      }
+    },
     "Tap: click where you tap" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippen: dort klicken, wo du tippst"
+          }
+        }
+      }
+    },
+    "Tap: click where you tap. Tap twice: double click" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippen: dort klicken, wo du tippst. Zweimal tippen: Doppelklick"
           }
         }
       }
@@ -2977,6 +3515,16 @@
         }
       }
     },
+    "The workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz"
+          }
+        }
+      }
+    },
     "The workspace didn't accept the screen sharing login." : {
       "localizations" : {
         "de" : {
@@ -3127,6 +3675,46 @@
         }
       }
     },
+    "Touch" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berührung"
+          }
+        }
+      }
+    },
+    "Touch (one finger touches the screen)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berührung (ein Finger berührt den Bildschirm)"
+          }
+        }
+      }
+    },
+    "Touch and hold, then move: drag (select, move windows)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halten, dann bewegen: ziehen (auswählen, Fenster bewegen)"
+          }
+        }
+      }
+    },
+    "Touch and hold: right click" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halten: Rechtsklick"
+          }
+        }
+      }
+    },
     "Touches directly" : {
       "localizations" : {
         "de" : {
@@ -3198,6 +3786,7 @@
       }
     },
     "Two fingers: scroll" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3207,12 +3796,33 @@
         }
       }
     },
+    "Two fingers: scroll (it glides on after a flick)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwei Finger: scrollen (nach einem Wischer gleitet es weiter)"
+          }
+        }
+      }
+    },
     "Two-finger tap or long press: right click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit zwei Fingern tippen oder lange drücken: Rechtsklick"
+          }
+        }
+      }
+    },
+    "Two-finger tap: right click" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit zwei Fingern tippen: Rechtsklick"
           }
         }
       }
@@ -3223,6 +3833,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippe den Code unten ein, oder lehne ab."
+          }
+        }
+      }
+    },
+    "Undo" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widerrufen"
           }
         }
       }
@@ -3377,6 +3997,16 @@
         }
       }
     },
+    "Viewer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ansicht"
+          }
+        }
+      }
+    },
     "Waiting for you" : {
       "localizations" : {
         "de" : {
@@ -3393,6 +4023,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Was ist wo"
+          }
+        }
+      }
+    },
+    "While you watch, the workspace's screen takes the shape of your iPhone, upright or sideways. It gets its own size back when you stop. Retina draws twice the pixels: sharper, more data." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während du zusiehst, nimmt der Bildschirm des Arbeitsplatzes die Form deines iPhones an, hochkant oder quer. Wenn du aufhörst, bekommt er seine eigene Größe zurück. Retina zeichnet doppelt so viele Pixel: schärfer, mehr Daten."
           }
         }
       }
@@ -3487,6 +4127,16 @@
         }
       }
     },
+    "Your Mac's screen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm deines Macs"
+          }
+        }
+      }
+    },
     "your network (%@)" : {
       "localizations" : {
         "de" : {
@@ -3533,6 +4183,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deine Passwörter bleiben in Bitwarden. Jede Anmeldung gibst du mit Face ID frei."
+          }
+        }
+      }
+    },
+    "Zoom out" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herauszoomen"
           }
         }
       }

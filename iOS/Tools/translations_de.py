@@ -489,7 +489,7 @@ DE.update({
     'From the Mac': 'Vom Mac',
     'Natural scrolling': 'Natürliches Scrollen',
     'Haptic feedback': 'Haptisches Feedback',
-    'Control': 'Steuerung',
+    'Controls': 'Steuerung',
     'Drawn on the iPhone, the pointer moves without delay. From the Mac it also shows where your agent points.':
         'Vom iPhone gezeichnet bewegt sich der Zeiger ohne Verzögerung. Vom Mac zeigt er auch, wohin dein Agent zeigt.',
     'Viewer': 'Ansicht',

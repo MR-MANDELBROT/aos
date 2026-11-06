@@ -292,7 +292,7 @@ struct ScreenSettingsForm: View {
                 Toggle("Natural scrolling", isOn: $settings.naturalScrolling)
                 Toggle("Haptic feedback", isOn: $settings.haptics)
             } header: {
-                Text("Control")
+                Text("Controls")
             } footer: {
                 Text("Drawn on the iPhone, the pointer moves without delay. From the Mac it also shows where your agent points.")
             }
