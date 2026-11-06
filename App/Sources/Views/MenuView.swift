@@ -4,6 +4,7 @@ import SwiftUI
 /// The menu bar window: what the workspace and the session are doing, and the few actions that matter.
 struct MenuView: View {
     @EnvironmentObject var model: AppModel
+    @EnvironmentObject var power: PowerController
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
 
@@ -28,6 +29,11 @@ struct MenuView: View {
             } else if !model.setup.isComplete {
                 attention(symbol: "sparkles", title: "Finish setting up \(Brand.name)", detail: String(localized: "A few steps are left.")) {
                     openWindow(id: WindowID.setup); NSApp.activate()
+                }
+            } else if model.settings.stayAwake == .lidClosed && power.helperStatus == .requiresApproval && !power.cloupiPresent {
+                attention(symbol: "lock.shield", title: "Allow \(Brand.name)'s background helper",
+                          detail: String(localized: "So the Mac stays awake with the lid closed: Login Items & Extensions, \"Allow in the Background\".")) {
+                    power.openLoginItems()
                 }
             }
 

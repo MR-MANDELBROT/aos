@@ -14,6 +14,7 @@ struct SettingsView: View {
         }
         .frame(width: 640)
         .environmentObject(model)
+        .environmentObject(model.power)
     }
 }
 
@@ -65,10 +66,9 @@ struct GeneralSettings: View {
             Section("Mac") {
                 Toggle("Start \(Brand.name) at login", isOn: Binding(
                     get: { model.loginItemEnabled }, set: { model.setLoginItem($0) }))
-                Toggle("Keep this Mac awake while something must stay reachable", isOn: binding(\.keepAwake))
-                Text("The Mac doesn't go to sleep by itself while a session or a kept conversation runs. Closing a laptop's lid still puts it to sleep.")
-                    .font(.caption).foregroundStyle(.secondary)
             }
+            StayAwakeSection()
+            HotspotSection()
             Section("Folders") {
                 LabeledContent("Exchange") {
                     Button("Show in Finder") { NSWorkspace.shared.open(model.paths.exchange) }

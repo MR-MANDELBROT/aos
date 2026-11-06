@@ -28,6 +28,13 @@ term.setEventHandler {
     DispatchQueue.main.asyncAfter(deadline: .now() + 6) { exit(0) }
 }
 term.resume()
+// With the lid closed aOS freezes other apps (SIGSTOP). Should aOS end without continuing them (a crash, a kill),
+// they would stay stopped: every 15 s a record whose owner process is gone gets thawed here.
+let frozenRecord = FrozenRecord.url(paths)
+let thawWatch = DispatchSource.makeTimerSource(queue: .main)
+thawWatch.schedule(deadline: .now() + 3, repeating: 15, leeway: .seconds(2))
+thawWatch.setEventHandler { Freezer.thawOrphans(recordURL: frozenRecord, log: supervisor.log) }
+thawWatch.resume()
 supervisor.run()
 keeper.run()
 dispatchMain()

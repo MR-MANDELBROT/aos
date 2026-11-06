@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>dev.marquart.aos.powerd</string>
+	<key>BundleProgram</key>
+	<string>Contents/MacOS/aos-powerd</string>
+	<key>AssociatedBundleIdentifiers</key>
+	<array>
+		<string>dev.marquart.aos</string>
+	</array>
+	<key>MachServices</key>
+	<dict>
+		<key>dev.marquart.aos.powerd</key>
+		<true/>
+	</dict>
+	<!-- Runs once at boot to undo a hold an earlier run couldn't release (pmset disablesleep survives a restart),
+	     then on demand; it exits when idle. -->
+	<key>RunAtLoad</key>
+	<true/>
+	<key>ProcessType</key>
+	<string>Adaptive</string>
+</dict>
+</plist>

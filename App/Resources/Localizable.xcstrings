@@ -51,6 +51,16 @@
         }
       }
     },
+    "%@ changes this in macOS's Wi-Fi settings for you." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ stellt das für dich in den WLAN-Einstellungen von macOS um."
+          }
+        }
+      }
+    },
     "%@ connected" : {
       "localizations" : {
         "de" : {
@@ -311,12 +321,32 @@
         }
       }
     },
+    "Allow %@'s background helper" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrunddienst von %@ erlauben"
+          }
+        }
+      }
+    },
     "Allow the %@ helper below" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erlaube unten den Helfer von %@"
+          }
+        }
+      }
+    },
+    "Allowed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaubt"
           }
         }
       }
@@ -337,6 +367,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auch vom Handy erreichbar"
+          }
+        }
+      }
+    },
+    "Also with the lid closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch mit geschlossenem Deckel"
           }
         }
       }
@@ -411,6 +451,16 @@
         }
       }
     },
+    "Ask to Join" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragen"
+          }
+        }
+      }
+    },
     "Ask your agent for something that needs a website, for example \"look up the opening hours of the city library\". It asks to open its workspace; you approve, and you can watch in the workspace window." : {
       "localizations" : {
         "de" : {
@@ -451,6 +501,26 @@
         }
       }
     },
+    "Automatic" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch"
+          }
+        }
+      }
+    },
+    "Automatically (uses more energy)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch (braucht mehr Energie)"
+          }
+        }
+      }
+    },
     "Automatically: conversations from the Claude app" : {
       "localizations" : {
         "de" : {
@@ -467,6 +537,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Außerhalb deines WLANs erreicht das iPhone diesen Mac über ein VPN wie Tailscale. Ist es auf beiden Geräten an, findet die App den Mac von selbst."
+          }
+        }
+      }
+    },
+    "Background helper" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrunddienst"
+          }
+        }
+      }
+    },
+    "Battery below 10 percent: the Mac may sleep now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akku unter 10 Prozent: Der Mac darf jetzt schlafen."
           }
         }
       }
@@ -503,6 +593,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Änderungen an den Anmeldungen gelten ab dem nächsten Start des Arbeitsplatzes."
+          }
+        }
+      }
+    },
+    "Changing the Wi-Fi settings. Wi-Fi reconnects for a moment." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ändere die WLAN-Einstellungen. Das WLAN verbindet sich kurz neu."
           }
         }
       }
@@ -647,6 +747,16 @@
         }
       }
     },
+    "Cloupi's own service keeps this Mac awake and looks after Wi-Fi. %@ leaves both alone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloupis eigener Dienst hält diesen Mac wach und kümmert sich ums WLAN. %@ lässt beides in Ruhe."
+          }
+        }
+      }
+    },
     "Come back here and click Check." : {
       "localizations" : {
         "de" : {
@@ -733,6 +843,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unterhaltungen"
+          }
+        }
+      }
+    },
+    "Conversations and agents keep working with the lid closed, also on battery. Meanwhile %@ freezes your other apps; they continue when you open the lid." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterhaltungen und Agents arbeiten mit geschlossenem Deckel weiter, auch im Akkubetrieb. Solange friert %@ deine anderen Apps ein; sie laufen weiter, wenn du den Deckel aufklappst."
           }
         }
       }
@@ -1077,6 +1197,16 @@
         }
       }
     },
+    "iPhone hotspot" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone-Hotspot"
+          }
+        }
+      }
+    },
     "It starts when your agent opens it." : {
       "localizations" : {
         "de" : {
@@ -1117,12 +1247,63 @@
         }
       }
     },
+    "Keep this Mac awake" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Mac wach halten"
+          }
+        }
+      }
+    },
     "Keep this Mac awake while something must stay reachable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac wach halten, solange etwas erreichbar bleiben muss"
+          }
+        }
+      }
+    },
+    "Keeps the Mac awake with the lid closed and changes Wi-Fi settings for you." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hält den Mac mit geschlossenem Deckel wach und ändert WLAN-Einstellungen für dich."
+          }
+        }
+      }
+    },
+    "Lid closed: %lld apps frozen until you open it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel zu: %lld Apps eingefroren, bis du ihn aufklappst."
+          }
+        }
+      }
+    },
+    "Lid closed: 1 app frozen until you open it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel zu: 1 App eingefroren, bis du ihn aufklappst."
+          }
+        }
+      }
+    },
+    "Lid closed: the Mac stays awake." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel zu: Der Mac bleibt wach."
           }
         }
       }
@@ -1177,6 +1358,76 @@
         }
       }
     },
+    "macOS asks you once to allow %@'s background helper." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS fragt dich einmal, ob du den Hintergrunddienst von %@ erlaubst."
+          }
+        }
+      }
+    },
+    "macOS asks you once: switch on %@ under Login Items & Extensions, \"Allow in the Background\"." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS fragt dich einmal: Schalte %@ unter „Anmeldeobjekte & Erweiterungen“ bei „Im Hintergrund erlauben“ ein."
+          }
+        }
+      }
+    },
+    "macOS didn't take the change." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS hat die Änderung nicht übernommen."
+          }
+        }
+      }
+    },
+    "macOS joins your hotspot whenever it can and may switch it on by itself when there's no Wi-Fi. That keeps your iPhone's hotspot busy and uses its battery." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS verbindet sich mit deinem Hotspot, wann immer es geht, und schaltet ihn ohne WLAN auch selbst ein. Das hält den Hotspot deines iPhones belegt und kostet seinen Akku."
+          }
+        }
+      }
+    },
+    "macOS never joins or wakes your hotspot by itself. Switch it on and %@ connects (with the lid closed as soon as your iPhone sends it); switch it off and the Mac stays disconnected. Meanwhile the Mac keeps looking for known Wi-Fi." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS verbindet sich nie von selbst mit deinem Hotspot und weckt ihn nicht auf. Schaltest du ihn ein, verbindet sich %@ (mit geschlossenem Deckel, sobald dein iPhone ihn sendet); schaltest du ihn aus, bleibt der Mac getrennt. Solange sucht der Mac weiter nach bekannten WLANs."
+          }
+        }
+      }
+    },
+    "Managed by Cloupi" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von Cloupi verwaltet"
+          }
+        }
+      }
+    },
+    "mixed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gemischt"
+          }
+        }
+      }
+    },
     "Move aOS to the Applications folder?" : {
       "localizations" : {
         "de" : {
@@ -1203,6 +1454,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Name in der Claude-App"
+          }
+        }
+      }
+    },
+    "Needed to keep the Mac awake with the lid closed. macOS asks you once to allow it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nötig, damit der Mac mit geschlossenem Deckel wach bleibt. macOS fragt dich einmal, ob du ihn erlaubst."
+          }
+        }
+      }
+    },
+    "Never" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie"
           }
         }
       }
@@ -1263,6 +1534,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Unterhaltungen in den letzten Tagen."
+          }
+        }
+      }
+    },
+    "No iPhone hotspot known to this Mac yet: join yours once from the Wi-Fi menu. Ask to join hotspots: %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesem Mac ist noch kein iPhone-Hotspot bekannt: Verbinde dich einmal über das WLAN-Menü mit deinem. Fragen, ob Hotspots verbunden werden sollen: %@."
           }
         }
       }
@@ -1387,6 +1668,32 @@
         }
       }
     },
+    "Nothing to keep reachable right now: the Mac sleeps as usual." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerade muss nichts erreichbar bleiben: Der Mac schläft wie gewohnt."
+          }
+        }
+      }
+    },
+    "Now in macOS: auto-join for your hotspot %@, Ask to join hotspots: %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt in macOS: Automatisch verbinden für deinen Hotspot %@, Fragen, ob Hotspots verbunden werden sollen: %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Now in macOS: auto-join for your hotspot %1$@, Ask to join hotspots: %2$@."
+          }
+        }
+      }
+    },
     "off" : {
       "localizations" : {
         "de" : {
@@ -1413,6 +1720,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aus, startet bei Bedarf"
+          }
+        }
+      }
+    },
+    "on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "an"
           }
         }
       }
@@ -1497,6 +1814,16 @@
         }
       }
     },
+    "Only when I switch it on on the iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur wenn ich ihn am iPhone einschalte"
+          }
+        }
+      }
+    },
     "Open %@ on the iPhone: it connects to this Mac now." : {
       "localizations" : {
         "de" : {
@@ -1537,6 +1864,16 @@
         }
       }
     },
+    "Open Login Items" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldeobjekte öffnen"
+          }
+        }
+      }
+    },
     "Open Sharing settings again" : {
       "localizations" : {
         "de" : {
@@ -1573,6 +1910,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffne das Fenster des Arbeitsplatzes. Dort sind die Systemeinstellungen schon bei Allgemein > Teilen geöffnet."
+          }
+        }
+      }
+    },
+    "Open Wi-Fi Settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WLAN-Einstellungen öffnen"
           }
         }
       }
@@ -1773,6 +2120,16 @@
         }
       }
     },
+    "Ready: the Mac stays awake when you close the lid." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereit: Der Mac bleibt wach, wenn du den Deckel zuklappst."
+          }
+        }
+      }
+    },
     "Remote Control turned off" : {
       "localizations" : {
         "de" : {
@@ -1949,6 +2306,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sitzung „%@“"
+          }
+        }
+      }
+    },
+    "Set Up" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichten"
           }
         }
       }
@@ -2133,6 +2500,16 @@
         }
       }
     },
+    "So the Mac stays awake with the lid closed: Login Items & Extensions, \"Allow in the Background\"." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Damit der Mac mit geschlossenem Deckel wach bleibt: „Anmeldeobjekte & Erweiterungen“, „Im Hintergrund erlauben“."
+          }
+        }
+      }
+    },
     "Start %@ at login" : {
       "localizations" : {
         "de" : {
@@ -2203,12 +2580,32 @@
         }
       }
     },
+    "Stay awake with the lid closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit geschlossenem Deckel wach bleiben"
+          }
+        }
+      }
+    },
     "Stay signed in on" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Angemeldet bleiben bei"
+          }
+        }
+      }
+    },
+    "Staying awake" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wach bleiben"
           }
         }
       }
@@ -2309,12 +2706,43 @@
         }
       }
     },
+    "The Mac also stays awake with the lid closed, on battery too. Meanwhile %@ freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. Below 10 percent battery, or when it gets too hot, the Mac sleeps." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac bleibt auch mit geschlossenem Deckel wach, auch im Akkubetrieb. Solange friert %@ deine anderen Apps ein und schaltet den Bildschirm aus; klappst du ihn auf, läuft alles weiter. Claude, Terminals, Code-Editoren und deine Agents laufen weiter. Unter 10 Prozent Akku oder wenn er zu heiß wird, schläft der Mac."
+          }
+        }
+      }
+    },
     "The Mac doesn't go to sleep by itself while a session or a kept conversation runs. Closing a laptop's lid still puts it to sleep." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac schläft nicht von selbst ein, solange eine Sitzung oder eine gehaltene Unterhaltung läuft. Zuklappen schickt ein MacBook trotzdem in den Ruhezustand."
+          }
+        }
+      }
+    },
+    "The Mac is too hot: it may sleep now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist zu heiß: Er darf jetzt schlafen."
+          }
+        }
+      }
+    },
+    "The Mac sleeps as usual. Sessions, kept conversations and the workspace pause while it sleeps." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac schläft wie gewohnt. Sitzungen, gehaltene Unterhaltungen und der Arbeitsplatz pausieren, solange er schläft."
           }
         }
       }
@@ -2439,6 +2867,16 @@
         }
       }
     },
+    "unknown" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unbekannt"
+          }
+        }
+      }
+    },
     "User name or email" : {
       "localizations" : {
         "de" : {
@@ -2539,6 +2977,16 @@
         }
       }
     },
+    "When should this Mac join your iPhone's hotspot?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wann soll sich dieser Mac mit dem Hotspot deines iPhones verbinden?"
+          }
+        }
+      }
+    },
     "When the Claude app or a terminal closes a conversation, %@ keeps it running in the background, so you can continue it from the Claude app on your phone. Open it on the Mac again and %@ hands it back at once." : {
       "localizations" : {
         "de" : {
@@ -2571,6 +3019,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Welcher Agent soll den Arbeitsplatz nutzen? %@ trägt sich in seinen Einstellungen als MCP-Server ein. Du kannst mehrere verbinden."
+          }
+        }
+      }
+    },
+    "While a session, a kept conversation or the workspace runs, the Mac doesn't go to sleep by itself. Closing the lid puts it to sleep." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange eine Sitzung, eine gehaltene Unterhaltung oder der Arbeitsplatz läuft, schläft der Mac nicht von selbst ein. Zuklappen schickt ihn in den Ruhezustand."
+          }
+        }
+      }
+    },
+    "While the lid is open" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange der Deckel offen ist"
           }
         }
       }

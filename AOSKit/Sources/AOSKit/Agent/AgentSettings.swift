@@ -13,9 +13,13 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     public var sessionName: String = Brand.defaultSessionName
     /// Keep the Claude Code session running in the background (only once it was set up).
     public var sessionEnabled: Bool = true
-    /// Keep the Mac from going to sleep while idle, so the session stays reachable (closing the lid of a laptop
-    /// still puts it to sleep).
-    public var keepAwake: Bool = true
+    /// Keep the Mac awake while something must stay reachable: not at all, while the lid is open (idle sleep
+    /// prevented), or also with the lid closed (aOS's background helper; other apps freeze meanwhile).
+    /// Settings written before this existed carry `keepAwake` (true: while the lid is open).
+    public var stayAwake: StayAwake = .lidOpen
+    /// How the Mac joins the user's iPhone hotspot; nil until the user answered the question (then aOS leaves
+    /// macOS's own settings alone).
+    public var hotspotJoin: HotspotJoin?
     /// Agents connected during setup (ids of AgentIntegration).
     public var agents: [String] = []
     /// The setup ran to the end once.
@@ -37,9 +41,13 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     public var skippedConversations: [String] = []
 
     private enum CodingKeys: String, CodingKey {
-        case expireSignIns, keepSignedIn, idleMinutes, sessionName, sessionEnabled, keepAwake, agents, setupFinished
+        case expireSignIns, keepSignedIn, idleMinutes, sessionName, sessionEnabled, stayAwake, hotspotJoin, agents
+        case setupFinished
         case keepReachable, keepAutomatic, keepHours, keepTerminal, keepMax, keptConversations, skippedConversations
     }
+
+    /// Keys of earlier versions, read once and written in their new form.
+    private enum LegacyKeys: String, CodingKey { case keepAwake }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -49,7 +57,14 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         idleMinutes = try c.decodeIfPresent(Int.self, forKey: .idleMinutes) ?? d.idleMinutes
         sessionName = try c.decodeIfPresent(String.self, forKey: .sessionName) ?? d.sessionName
         sessionEnabled = try c.decodeIfPresent(Bool.self, forKey: .sessionEnabled) ?? d.sessionEnabled
-        keepAwake = try c.decodeIfPresent(Bool.self, forKey: .keepAwake) ?? d.keepAwake
+        if let mode = try? c.decodeIfPresent(StayAwake.self, forKey: .stayAwake) {
+            stayAwake = mode
+        } else if let old = try decoder.container(keyedBy: LegacyKeys.self).decodeIfPresent(Bool.self, forKey: .keepAwake) {
+            stayAwake = old ? .lidOpen : .off
+        } else {
+            stayAwake = d.stayAwake
+        }
+        hotspotJoin = try? c.decodeIfPresent(HotspotJoin.self, forKey: .hotspotJoin)
         agents = try c.decodeIfPresent([String].self, forKey: .agents) ?? d.agents
         setupFinished = try c.decodeIfPresent(Bool.self, forKey: .setupFinished) ?? d.setupFinished
         keepReachable = try c.decodeIfPresent(Bool.self, forKey: .keepReachable) ?? d.keepReachable

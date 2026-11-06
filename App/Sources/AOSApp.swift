@@ -10,6 +10,7 @@ struct AOSApp: App {
         MenuBarExtra {
             MenuView()
                 .environmentObject(model)
+                .environmentObject(model.power)
         } label: {
             // The label is the one view that exists from launch on: it hands over the openers.
             Image(systemName: model.menuSymbol)
@@ -24,6 +25,7 @@ struct AOSApp: App {
                 .registersOpeners()
                 .environmentObject(model)
                 .environmentObject(model.setup)
+                .environmentObject(model.power)
         }
         .defaultSize(width: 920, height: 660)
         .windowResizability(.contentMinSize)
@@ -66,6 +68,7 @@ struct AOSApp: App {
             SettingsView()
                 .registersOpeners()
                 .environmentObject(model)
+                .environmentObject(model.power)
         }
     }
 }
