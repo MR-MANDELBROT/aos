@@ -36,6 +36,7 @@ struct AOSApp: App {
             WorkspaceWindow()
                 .registersOpeners()
                 .environmentObject(model)
+                .environmentObject(model.setup)
         }
         .defaultSize(width: 1280, height: 860)
 

@@ -547,4 +547,7 @@ DE.update({
     'Restarting': 'Startet neu',
     'Restarting the workspace once': 'Arbeitsplatz startet einmal neu',
     'Shutting down': 'Fährt herunter',
+    'Start the workspace': 'Arbeitsplatz starten',
+    'The workspace is starting': 'Der Arbeitsplatz startet',
+    'Then System Settings opens there at Sharing, for the next step.': 'Danach öffnen sich dort die Systemeinstellungen bei Teilen, für den nächsten Schritt.',
 })

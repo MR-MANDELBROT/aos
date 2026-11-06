@@ -5,6 +5,8 @@ import SwiftUI
 /// The workspace screen. Shows the agent's help requests on top, and the setup's screen sharing step.
 struct WorkspaceWindow: View {
     @EnvironmentObject var model: AppModel
+    /// Observed here too, so the setup's banners follow its step and activity.
+    @EnvironmentObject var setup: SetupController
     @State private var coordinator: VMDisplay.Coordinator?
 
     var body: some View {
@@ -39,24 +41,37 @@ struct WorkspaceWindow: View {
             } else if model.helperState == .allowing {
                 banner(symbol: "person.badge.key.fill", tint: BrandColor.indigo,
                        title: "Allow the \(Brand.name) helper below",
-                       detail: model.setup.isComplete
+                       detail: setup.isComplete
                            ? String(localized: "Click Open System Settings if macOS asks, then switch on aOS Helper. When macOS asks for the password to allow aOS Helper, click Enter the workspace password. Only then: if another window asks, click Not Now.")
                            : String(localized: "Click Open System Settings if macOS asks, then switch on aOS Helper. If notices at the top right cover the switch, close them with their x first. \(Brand.name) enters the password itself. This happens only once.")) {
                     Button("Not Now") { Task { await model.cancelHelperPermission() } }
                         .buttonStyle(.glass)
-                    Button("Enter the workspace password") { model.setup.typeGuestPassword(into: coordinator) }
+                    Button("Enter the workspace password") { setup.typeGuestPassword(into: coordinator) }
                         .buttonStyle(.glassProminent)
                 }
-            } else if model.setup.step == .screenSharing && !model.setup.isComplete {
+            } else if setup.step == .screenSharing && !setup.isComplete
+                        && model.workspace.host.virtualMachine == nil {
+                banner(symbol: "power", tint: BrandColor.indigo,
+                       title: setup.isBusy ? "The workspace is starting" : "The workspace is off",
+                       detail: startDetail) {
+                    if setup.isBusy {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button("Start the workspace") { setup.startWorkspaceIfOff() }
+                            .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                    }
+                }
+            } else if setup.step == .screenSharing && !setup.isComplete {
                 banner(symbol: "rectangle.on.rectangle", tint: BrandColor.indigo,
                        title: "Switch on Screen Sharing below",
                        detail: String(localized: "When macOS asks for a password, let \(Brand.name) enter it.")) {
-                    Button("Enter the workspace password") { model.setup.typeGuestPassword(into: coordinator) }
+                    Button("Enter the workspace password") { setup.typeGuestPassword(into: coordinator) }
                         .buttonStyle(.glassProminent)
                 }
             }
         }
         .frame(minWidth: 800, minHeight: 540)
+        .onAppear { setup.startWorkspaceIfOff() }
         // The user working in the window keeps the workspace open like the agent's requests do.
         .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { _ in
             guard coordinator?.view?.window?.isKeyWindow == true,
@@ -75,6 +90,11 @@ struct WorkspaceWindow: View {
         }
         .navigationTitle(Text("Workspace"))
         .navigationSubtitle(statusText)
+    }
+
+    var startDetail: String {
+        if case .failed(let why) = setup.activity { return why }
+        return String(localized: "Then System Settings opens there at Sharing, for the next step.")
     }
 
     var statusText: String {

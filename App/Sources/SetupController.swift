@@ -322,6 +322,17 @@ final class SetupController: ObservableObject {
         }
     }
 
+    var isBusy: Bool {
+        switch activity { case .working, .progress: return true; default: return false }
+    }
+
+    /// The screen sharing step happens on the workspace's screen: boots it if it is off (the app was quit, or it
+    /// was closed) and opens the Sharing settings there.
+    func startWorkspaceIfOff() {
+        guard step == .screenSharing, !isComplete, workspace.host.virtualMachine == nil else { return }
+        openSharingSettingsAgain()
+    }
+
     func openSharingSettingsAgain() {
         run(String(localized: "Opening the Sharing settings")) {
             let ip = try await self.startedWorkspace()

@@ -20,6 +20,7 @@ struct SetupView: View {
             if setup.step == .requirements { setup.checkRequirements() }
             if setup.step == .agents { setup.detectAgents() }
             if setup.step == .session { setup.checkClaudeSignIn() }
+            if setup.step == .screenSharing { setup.startWorkspaceIfOff() }
         }
     }
 }
@@ -477,7 +478,10 @@ private struct StepPage: View {
         case .download:
             if setup.restoreInfo == nil { Button("Look up the newest macOS") { setup.lookUpRestoreImage() }.buttonStyle(.glass).disabled(busy) }
         case .screenSharing:
-            Button("Open the workspace window") { openWindow(id: WindowID.workspace) }.buttonStyle(.glass)
+            Button("Open the workspace window") {
+                openWindow(id: WindowID.workspace)
+                setup.startWorkspaceIfOff()
+            }.buttonStyle(.glass)
             Button("Open Sharing settings again") { setup.openSharingSettingsAgain() }.buttonStyle(.glass).disabled(busy)
         case .connect:
             Button("Connect again") { setup.connectAgents() }.buttonStyle(.glass).disabled(busy)

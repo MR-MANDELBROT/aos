@@ -3395,6 +3395,16 @@
         }
       }
     },
+    "Start the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz starten"
+          }
+        }
+      }
+    },
     "starting" : {
       "localizations" : {
         "de" : {
@@ -3698,6 +3708,16 @@
         }
       }
     },
+    "The workspace is starting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz startet"
+          }
+        }
+      }
+    },
     "The workspace is suspended after each use and continues exactly where it was, signed in everywhere." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3746,6 +3766,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz startet zum ersten Mal, ohne Einrichtungsassistent. %@ legt sein Konto an, erlaubt Fernzugriff nur von diesem Mac, installiert Google Chrome und schaltet Ruhezustand und automatische Updates aus."
+          }
+        }
+      }
+    },
+    "Then System Settings opens there at Sharing, for the next step." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Danach öffnen sich dort die Systemeinstellungen bei Teilen, für den nächsten Schritt."
           }
         }
       }
