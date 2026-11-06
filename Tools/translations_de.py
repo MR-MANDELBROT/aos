@@ -669,4 +669,6 @@ DE.update({
     "Which conversations": "Welche Unterhaltungen",
     "You sign in once, here on your Mac. Your master password goes straight to Bitwarden's own tool, signed by Bitwarden and checked by aOS, and is stored nowhere.": "Du meldest dich einmal hier am Mac an. Dein Master-Passwort geht direkt an Bitwardens eigenes Programm, von Bitwarden signiert und von aOS geprüft, und wird nirgends gespeichert.",
     "active %@": "aktiv %@",
+    "macOS doesn't let aOS into the local network yet. Under Local Network, switch aOS off and on once (after every update), then click Check.": "macOS lässt aOS noch nicht ins lokale Netzwerk. Schalte aOS unter „Lokales Netzwerk“ einmal aus und wieder ein (nach jedem Update), dann klicke „Prüfen“.",
+    "Open Local Network": "Lokales Netzwerk öffnen",
 })

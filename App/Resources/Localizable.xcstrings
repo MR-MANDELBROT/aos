@@ -2529,6 +2529,16 @@
         }
       }
     },
+    "macOS doesn't let aOS into the local network yet. Under Local Network, switch aOS off and on once (after every update), then click Check." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS lässt aOS noch nicht ins lokale Netzwerk. Schalte aOS unter „Lokales Netzwerk“ einmal aus und wieder ein (nach jedem Update), dann klicke „Prüfen“."
+          }
+        }
+      }
+    },
     "macOS isn't asking for the password right now." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3178,6 +3188,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In der Claude-App geöffnet"
+          }
+        }
+      }
+    },
+    "Open Local Network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokales Netzwerk öffnen"
           }
         }
       }

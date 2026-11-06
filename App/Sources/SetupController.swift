@@ -319,7 +319,13 @@ final class SetupController: ObservableObject {
         let booting = !host.isRunning
         if booting { try await host.start() }
         let ip = try await host.waitForAddress(timeout: 300)
-        if booting || prepare { try await workspace.provisioner.prepareSession(host: ip) }
+        if booting || prepare {
+            // A workspace set up by an earlier aOS gets this version's scripts first (language fix and the like).
+            try? await workspace.provisioner.updateIfNeeded(host: ip) { [weak self] line in
+                Task { @MainActor in self?.note(line) }
+            }
+            try await workspace.provisioner.prepareSession(host: ip)
+        }
         workspace.noteActivity()
         return ip
     }
@@ -354,6 +360,8 @@ final class SetupController: ObservableObject {
     @Published var sharingPhase: SharingPhase = .starting
     /// Why the last check failed (shown in the workspace window's bar).
     @Published var sharingProblem: String?
+    /// The check failed because macOS keeps aOS out of the local network (the bar offers the setting).
+    @Published var localNetworkBlocked = false
     /// The workspace window's screen, for typing the password (set by the window).
     weak var display: VMDisplay.Coordinator?
     private var sharingWatch: Task<Void, Never>?
@@ -411,6 +419,7 @@ final class SetupController: ObservableObject {
         sharingWatch = nil
         sharingPhase = .checking
         sharingProblem = nil
+        localNetworkBlocked = false
         run(String(localized: "Checking screen sharing")) {
             do {
                 let ip = try await self.startedWorkspace()
@@ -440,7 +449,15 @@ final class SetupController: ObservableObject {
                 self.showSetup()
             } catch {
                 self.sharingPhase = .waitingForSwitch
-                self.sharingProblem = error.localizedDescription
+                let blocked: Bool
+                switch error {
+                case RFBError.localNetworkDenied, WorkspaceError.localNetworkDenied: blocked = true
+                default: blocked = false
+                }
+                self.localNetworkBlocked = blocked
+                self.sharingProblem = blocked
+                    ? String(localized: "macOS doesn't let aOS into the local network yet. Under Local Network, switch aOS off and on once (after every update), then click Check.")
+                    : error.localizedDescription
                 if let ip = try? self.workspace.host.guestAddress() { self.watchScreenSharing(ip: ip, checkWhenOn: false) }
                 throw error
             }

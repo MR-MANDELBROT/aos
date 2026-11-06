@@ -121,6 +121,13 @@ struct WorkspaceWindow: View {
                 detail: setup.sharingProblem.map { String(localized: "That didn't work yet: \($0)") }
                     ?? String(localized: "When macOS asks for the password, click Enter Password. aOS notices by itself when screen sharing is on."),
                 warning: setup.sharingProblem != nil) {
+                if setup.localNetworkBlocked {
+                    Button("Open Local Network") {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocalNetwork") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                }
                 Button("Enter Password") { setup.typeGuestPassword(into: coordinator) }
                     .buttonStyle(.borderedProminent)
                 Button("Check") { setup.checkScreenSharing() }.disabled(setup.isBusy)
