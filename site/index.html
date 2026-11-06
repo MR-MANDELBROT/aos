@@ -20,6 +20,7 @@
     <div class="links">
       <a href="#how">How it works</a>
       <a href="#trust">Trust</a>
+      <a href="#phone">iPhone</a>
       <a href="#faq">FAQ</a>
       <a class="lang" href="de/">Deutsch</a>
       <a class="button small" href="https://github.com/MR-MANDELBROT/annex/releases">Download</a>
@@ -76,11 +77,24 @@
       <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div>
         <h3>Fresh every time</h3><p>When the workspace closes, websites forget their sign-ins, except the few you choose to keep.</p></div>
       <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0"/></svg></div>
-        <h3>It asks, you sign in</h3><p>Your agent never types passwords or solves captchas. It asks you, and you do it in the workspace window.</p></div>
+        <h3>It asks, you approve</h3><p>Your agent never types passwords or solves captchas. When it needs a sign-in it asks; you approve on your iPhone or Mac and Annex fills it in.</p></div>
       <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <h3>No server, no tracking</h3><p>Annex runs on your Mac only. It sends no data anywhere and never touches your agent's credentials.</p></div>
       <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
-        <h3>Reach it from your phone</h3><p>With Claude Code, Annex keeps a session running that you reach from the Claude app, wherever you are.</p></div>
+        <h3>Reach it from your phone</h3><p>With Claude Code, your conversations stay in the Claude app on your phone, even after the window that ran them closed.</p></div>
+    </div>
+  </section>
+
+  <section id="phone">
+    <h2>Your Mac, in your pocket.</h2>
+    <p class="section-lead">Annex for iPhone pairs with your Mac by QR code. No account, no cloud of ours: it talks to your Mac directly, encrypted with SSH.</p>
+    <div class="grid">
+      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.85 12.15 7.65-7.65M18 5l2 2M15 8l2 2"/></svg></div>
+        <h3>Sign-ins with Face ID</h3><p>A website needs a sign-in? Your agent asks, you approve with Face ID, Annex fills it in. Your agent never sees the password. From Annex's own vault or your password manager.</p></div>
+      <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6M12 19h8"/></svg></div>
+        <h3>Terminal</h3><p>A full SSH terminal to your Mac, and to any other host you add.</p></div>
+      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+        <h3>Screen</h3><p>Watch and control your Mac and the workspace live. Help requests from your agent open right there.</p></div>
     </div>
   </section>
 
@@ -102,7 +116,8 @@
           <li>See the screen, click, type, scroll and drag</li>
           <li>Use any website in Chrome, and Mac apps</li>
           <li>Bring files in and results out through the exchange folder</li>
-          <li>Ask you to step in, for sign-ins and captchas</li>
+          <li>Sign in on websites once you approve, without seeing the password</li>
+          <li>Ask you to step in, for captchas</li>
         </ul>
       </div>
       <div class="panel glass">
@@ -123,6 +138,8 @@
     <details class="glass"><summary>What does it cost?</summary><p>Annex is free. Your agent's subscription or API usage is between you and its provider.</p></details>
     <details class="glass"><summary>Why a whole Mac and not just a browser?</summary><p>Some tasks need apps, downloads or a desktop. A real macOS behaves like a person's Mac, which also means fewer captchas.</p></details>
     <details class="glass"><summary>Does the workspace slow my Mac down?</summary><p>It only runs while your agent works and shuts down afterwards. While it runs it uses about 4 GB of memory.</p></details>
+    <details class="glass"><summary>Does my agent see my passwords?</summary><p>No. Your agent only clicks into the sign-in field and asks. You approve on your iPhone or Mac; Annex's helper in the workspace types it into exactly that field on that website. The agent gets "signed in", never the password.</p></details>
+    <details class="glass"><summary>Do I need the iPhone app?</summary><p>No. Everything works from the Mac. The iPhone app adds approvals with Face ID, the terminal and the screen of your Mac on the go.</p></details>
     <details class="glass"><summary>Is it affiliated with Anthropic, OpenAI or Google?</summary><p>No. Annex is an independent app that works with their agents through MCP, the open standard for agent tools.</p></details>
   </section>
 

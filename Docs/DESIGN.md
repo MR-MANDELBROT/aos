@@ -47,6 +47,79 @@ Claude app (phone) ──Remote Control──▶ claude (pty) ◀── annex-se
   there allows `mcp__annex__*` and asks for `mcp__annex__workspace_open`; `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS=0`
   keeps long tool calls (help requests) in the foreground.
 
+## Keeping conversations reachable (SessionKeeper)
+
+The Claude desktop app runs a local Code session only while it works on it; once its process ends, the session goes
+offline in the Claude app on the phone (Remote Control needs a running local process). `annex-session` also hosts
+the keeper, when "keep conversations reachable" is on:
+
+- **Which**: conversations from `~/.claude/projects` (title from `custom-title`/`ai-title` records, start folder and
+  `entrypoint` from the start of the transcript, `bridge-session` = used Remote Control) that were started in the
+  Claude app, used Remote Control and were active within `keepHours` (48 h); pinned ones always; at most `keepMax`
+  (6). Never: archived or scheduled ones of the desktop app (its records in
+  `~/Library/Application Support/Claude/claude-code-sessions`), ones with Remote Control switched off, ones the user
+  excluded, Annex's own session folder, automation (`sdk-cli`). Terminal conversations only when pinned or with
+  `keepTerminal`: tools like Cloupi manage their own terminal sessions.
+- **How**: `claude --resume <id> --remote-control <title>` in the start folder, through the user's login shell
+  (`exec`, so PATH is like a new terminal and the pid stays Claude Code's), in a pseudo terminal whose output is
+  drained; the desktop app's permission mode is carried over, except bypassing permissions.
+- **Never twice**: Claude Code's registry (`~/.claude/sessions/<pid>.json`, watched with a file system source) shows
+  every running process with its session id. When another process (the desktop app, a terminal) opens the same
+  conversation, the keeper ends its copy at once and takes over only 60 s after that process ended; "Remote Control
+  not started here" in the output means the same. Children of an earlier keeper (run/keeper-children.json) are ended
+  at start.
+- **Ending**: SIGHUP (what closing a terminal sends, Claude Code exits cleanly on it), SIGTERM after 5 s, SIGKILL after
+  15 s. Quick exits back off from 10 s to 30 min.
+- Status in `run/keeper.json`; the app's settings (Claude Code tab) list the conversations with their state, pin and
+  exclude.
+
+## Annex for iPhone (companion)
+
+See Docs/COMPANION.md for the protocol. On the Mac:
+
+- **Pairing** (`PairingSession`): a TCP listener on a random port with Bonjour `_annex-pair._tcp`, 3 minutes, one
+  pairing, five wrong proofs end it. The QR code carries the Mac's addresses, the SHA-256 fingerprint of its ed25519
+  host key and a 16-byte code; the phone proves the code with HMAC-SHA256 over its key and name, the Mac appends the
+  key to `~/.ssh/authorized_keys` (`no-agent-forwarding,no-X11-forwarding`, marked `annex-companion:<id>`). Remote
+  Login must be on; Settings > iPhone checks it and lists and removes paired phones.
+- **annex-companion serve** is what the phone runs over SSH: JSON lines, relayed to the app's agent socket; a second
+  connection long-polls `companion.events`. Companion requests are not agent activity (they don't keep the workspace
+  open).
+- **CompanionHub** collects the events (sign-in, help, approval requests and their end); a phone that connects gets
+  the open questions first. The menu shows whether a phone is connected (it asked within 45 s).
+
+## Signing in for the agent
+
+- **sign_in** (MCP tool): the agent clicks into a user name, password or code field and calls it. The workspace helper
+  reports the focused field's kind and the page's host; Annex locks the agent's other tools, posts the request
+  (iPhone) and shows the sign-in window on the Mac when no phone is connected (user name and password fields with
+  AutoFill, so a password manager on the Mac fills them). Whoever answers first wins; 3 minutes.
+- **The helper** (`AnnexHelper.app`, LaunchAgent in the guest, Accessibility permission) checks right before typing
+  that the focus is still the field on that host, types with Unicode key events from its own event source (Command
+  pressed and released properly), finds the password field after the user name (same page, or after "Next" on the
+  same host), and submits. Annex reaches it as root over SSH through its own client mode, which accepts only the
+  installed helper binary as the peer of its socket (so nothing else in the guest can receive a password). Chrome's
+  web accessibility tree is asked for with `AXManualAccessibility` and `AXEnhancedUserInterface` (VoiceOver's way);
+  the frontmost app comes from LaunchServices plus `kAXFrontmostAttribute` (the system-wide element sometimes has no
+  focused app, and a background app's NSWorkspace doesn't follow activations). DevTools are off, so a filled password
+  can't be read back.
+- **The permission**: once, right after screen sharing in the setup (or Settings > General > Signing in). Annex
+  starts the helper's request, opens Privacy & Security > Accessibility in the guest, and when macOS asks for the
+  password (LocalAuthenticationUI on macOS 27, SecurityAgent before) enters the workspace account's password itself:
+  the user only flips the switch. A finished workspace's account is a standard user: it becomes an administrator for
+  that moment and a standard user again (`prepare.sh` demotes it at the next start should that be interrupted). TCC
+  keeps the permission across helper updates (same signature).
+
+## Two traps found on the way
+
+- **Foundation's Process**: `waitUntilExit` (and the termination handler) notice the exit through the run loop of the
+  thread that started the process. On Swift concurrency threads that run loop doesn't run, and an SSH call waited
+  forever for an ssh that had long ended. `Subprocess` starts programs with posix_spawn (only stdin, stdout and stderr
+  inherited), reads output as it comes (no 64 KB pipe stall) and reaps with its own waitpid on threads of its own.
+- **FileHandle.AsyncBytes**: all instances share one serial queue; a connection waiting for its next line (the phone's
+  long poll, an agent between calls) blocked reading on every other connection. The socket server now gives each
+  connection a thread with plain reads.
+
 ## Anthropic's terms
 
 From Claude Code's legal page (2026-11): third-party apps may not offer Claude.ai login, collect or intermediate
@@ -137,7 +210,8 @@ item (a link created by the guest would point at the Mac's files).
 
 ## Not in version 1
 
-- Companion (BW Agent): sign-ins from a password manager, live view and help on the phone.
+- Push notifications on the phone while its app is closed (planned: CloudKit, no server of our own). Until then the
+  phone sees requests while the app is open; the Mac window and notification cover the rest.
 - Staying reachable with the lid closed (needs a privileged helper for `pmset disablesleep`); version 1 only prevents
   idle sleep.
 - Automating the screen sharing switch (blind keyboard navigation of System Settings).

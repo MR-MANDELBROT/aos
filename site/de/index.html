@@ -20,6 +20,7 @@
     <div class="links">
       <a href="#how">So geht’s</a>
       <a href="#trust">Vertrauen</a>
+      <a href="#phone">iPhone</a>
       <a href="#faq">Fragen</a>
       <a class="lang" href="../">English</a>
       <a class="button small" href="https://github.com/MR-MANDELBROT/annex/releases">Laden</a>
@@ -76,11 +77,24 @@
       <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div>
         <h3>Jedes Mal frisch</h3><p>Schließt der Arbeitsplatz, vergessen Websites ihre Anmeldungen, außer den wenigen, die du behalten willst.</p></div>
       <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0"/></svg></div>
-        <h3>Er fragt, du meldest an</h3><p>Dein Agent tippt nie Passwörter und löst keine Captchas. Er fragt dich, und du erledigst es im Fenster des Arbeitsplatzes.</p></div>
+        <h3>Er fragt, du gibst frei</h3><p>Dein Agent tippt nie Passwörter und löst keine Captchas. Braucht er eine Anmeldung, fragt er; du gibst auf dem iPhone oder Mac frei, Annex trägt sie ein.</p></div>
       <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <h3>Kein Server, kein Tracking</h3><p>Annex läuft nur auf deinem Mac. Es schickt keine Daten weg und fasst die Zugangsdaten deines Agents nie an.</p></div>
       <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
-        <h3>Vom Handy erreichbar</h3><p>Mit Claude Code hält Annex eine Sitzung am Laufen, die du aus der Claude-App erreichst, wo immer du bist.</p></div>
+        <h3>Vom Handy erreichbar</h3><p>Mit Claude Code bleiben deine Unterhaltungen in der Claude-App auf dem Handy, auch wenn das Fenster am Mac sie schon geschlossen hat.</p></div>
+    </div>
+  </section>
+
+  <section id="phone">
+    <h2>Dein Mac in der Hosentasche.</h2>
+    <p class="section-lead">Annex für iPhone koppelst du per QR-Code mit deinem Mac. Kein Konto, keine Cloud von uns: Es spricht direkt mit deinem Mac, verschlüsselt über SSH.</p>
+    <div class="grid">
+      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.85 12.15 7.65-7.65M18 5l2 2M15 8l2 2"/></svg></div>
+        <h3>Anmelden mit Face ID</h3><p>Eine Website braucht eine Anmeldung? Dein Agent fragt, du gibst mit Face ID frei, Annex trägt sie ein. Dein Agent sieht das Passwort nie. Aus dem Tresor von Annex oder aus deinem Passwortmanager.</p></div>
+      <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6M12 19h8"/></svg></div>
+        <h3>Terminal</h3><p>Ein echtes SSH-Terminal zu deinem Mac und zu jedem anderen Rechner, den du hinzufügst.</p></div>
+      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+        <h3>Bildschirm</h3><p>Sieh und steuere deinen Mac und den Arbeitsplatz live. Bittet dein Agent um Hilfe, öffnet sie sich genau dort.</p></div>
     </div>
   </section>
 
@@ -102,7 +116,8 @@
           <li>Den Bildschirm sehen, klicken, tippen, scrollen und ziehen</li>
           <li>Jede Website in Chrome nutzen, dazu Mac-Apps</li>
           <li>Dateien über den Austauschordner hinein- und Ergebnisse herausbringen</li>
-          <li>Dich bei Anmeldungen und Captchas um Hilfe bitten</li>
+          <li>Sich nach deiner Freigabe auf Websites anmelden, ohne das Passwort zu sehen</li>
+          <li>Dich bei Captchas um Hilfe bitten</li>
         </ul>
       </div>
       <div class="panel glass">
@@ -123,6 +138,8 @@
     <details class="glass"><summary>Was kostet es?</summary><p>Annex ist kostenlos. Das Abo oder die API-Nutzung deines Agents läuft zwischen dir und seinem Anbieter.</p></details>
     <details class="glass"><summary>Warum ein ganzer Mac und nicht nur ein Browser?</summary><p>Manche Aufgaben brauchen Apps, Downloads oder einen Schreibtisch. Ein echtes macOS verhält sich wie der Mac eines Menschen, das heißt auch: weniger Captchas.</p></details>
     <details class="glass"><summary>Bremst der Arbeitsplatz meinen Mac?</summary><p>Er läuft nur, solange dein Agent arbeitet, und fährt danach herunter. Während er läuft, braucht er etwa 4 GB Arbeitsspeicher.</p></details>
+    <details class="glass"><summary>Sieht mein Agent meine Passwörter?</summary><p>Nein. Dein Agent klickt nur in das Anmeldefeld und fragt. Du gibst auf dem iPhone oder Mac frei, und der Helfer von Annex im Arbeitsplatz trägt die Anmeldung genau in dieses Feld auf dieser Website ein. Der Agent erfährt „angemeldet“, nie das Passwort.</p></details>
+    <details class="glass"><summary>Brauche ich die iPhone-App?</summary><p>Nein. Alles geht auch vom Mac aus. Die iPhone-App bringt Freigaben mit Face ID, das Terminal und den Bildschirm deines Macs für unterwegs.</p></details>
     <details class="glass"><summary>Gehört Annex zu Anthropic, OpenAI oder Google?</summary><p>Nein. Annex ist eine unabhängige App, die über MCP mit deren Agents arbeitet, dem offenen Standard für Agent-Werkzeuge.</p></details>
   </section>
 
