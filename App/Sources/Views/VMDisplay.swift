@@ -31,6 +31,7 @@ struct VMDisplay: NSViewRepresentable {
         weak var view: VZVirtualMachineView?
 
         /// Types letters, digits and Return as key presses on a US/ABC layout (the workspace uses ABC).
+        /// Checked against the guest: AbCdEf xyZ QW 123 Mm arrives unchanged.
         func type(_ text: String) {
             guard let view, let window = view.window else { return }
             window.makeKeyAndOrderFront(nil)
@@ -61,12 +62,18 @@ struct VMDisplay: NSViewRepresentable {
                                     isARepeat: false, keyCode: code)
         }
 
+        /// A real left Shift as macOS reports it: the device-independent .shift plus NX_DEVICELSHIFTKEYMASK (0x2) and
+        /// 0x100. The VM view goes by the device bits: with .shift alone, Shift never reaches the guest and capitals
+        /// arrive as small letters (measured, Tools: aosctl typev).
+        static let shiftDown = NSEvent.ModifierFlags(rawValue: 0x20102)
+        static let shiftUp = NSEvent.ModifierFlags(rawValue: 0x100)
+
         private static func press(code: UInt16, shift: Bool, in view: NSView) {
-            let flags: NSEvent.ModifierFlags = shift ? [.shift] : []
-            if shift, let e = event(.flagsChanged, code: 0x38, flags: .shift, chars: "", in: view) { view.flagsChanged(with: e) }
+            let flags = shift ? shiftDown : shiftUp
+            if shift, let e = event(.flagsChanged, code: 0x38, flags: shiftDown, chars: "", in: view) { view.flagsChanged(with: e) }
             if let down = event(.keyDown, code: code, flags: flags, chars: "", in: view) { view.keyDown(with: down) }
             if let up = event(.keyUp, code: code, flags: flags, chars: "", in: view) { view.keyUp(with: up) }
-            if shift, let e = event(.flagsChanged, code: 0x38, flags: [], chars: "", in: view) { view.flagsChanged(with: e) }
+            if shift, let e = event(.flagsChanged, code: 0x38, flags: shiftUp, chars: "", in: view) { view.flagsChanged(with: e) }
         }
 
         static let letters: [Character: UInt16] = [

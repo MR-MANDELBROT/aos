@@ -511,6 +511,11 @@ final class VMWindow: NSObject {
             guard let pw = try? GuestSecrets(paths: paths).adminPassword(createIfMissing: false) else { return "no password" }
             KeyTyper.type(pw + "\n", into: view)
             return "typed"
+        case "typev":
+            // typev <plain|device|slow|deviceslow> <text>: variants of the Shift events, to compare in the guest.
+            guard parts.count >= 3 else { return "bad" }
+            KeyTyper.type(parts.dropFirst(2).joined(separator: " "), into: view, mode: parts[1])
+            return "typed"
         case "type":
             KeyTyper.type(parts.dropFirst().joined(separator: " "), into: view)
             return "typed"
@@ -520,7 +525,7 @@ final class VMWindow: NSObject {
     }
 }
 
-/// Same key mapping as the app's VMDisplay (US/ABC key codes, Shift for capitals).
+/// Same key mapping as the app's VMDisplay (US/ABC key codes, Shift with the device bits for capitals).
 @MainActor
 enum KeyTyper {
     static let codes: [Character: UInt16] = [
@@ -531,26 +536,33 @@ enum KeyTyper {
         "\n": 0x24, " ": 0x31,
     ]
 
-    static func type(_ text: String, into view: NSView) {
+    static func type(_ text: String, into view: NSView, mode: String = "device") {
         guard let window = view.window else { return }
         window.makeFirstResponder(view)
+        let device = mode.contains("device")
+        let step = mode.contains("slow") ? 0.03 : 0.0
+        // A real left Shift: device-independent .shift plus NX_DEVICELSHIFTKEYMASK (0x2) and 0x100.
+        let down: NSEvent.ModifierFlags = device ? NSEvent.ModifierFlags(rawValue: 0x20102) : .shift
+        let up: NSEvent.ModifierFlags = device ? NSEvent.ModifierFlags(rawValue: 0x100) : []
         var delay = 0.0
         for ch in text {
             let lower = Character(ch.lowercased())
             guard let code = codes[ch] ?? codes[lower] else { continue }
             let shift = ch.isUppercase
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                func key(_ t: NSEvent.EventType, _ c: UInt16, _ f: NSEvent.ModifierFlags) -> NSEvent? {
-                    NSEvent.keyEvent(with: t, location: .zero, modifierFlags: f, timestamp: ProcessInfo.processInfo.systemUptime,
-                                     windowNumber: window.windowNumber, context: nil, characters: "", charactersIgnoringModifiers: "",
-                                     isARepeat: false, keyCode: c)
-                }
-                if shift, let e = key(.flagsChanged, 0x38, .shift) { view.flagsChanged(with: e) }
-                if let e = key(.keyDown, code, shift ? .shift : []) { view.keyDown(with: e) }
-                if let e = key(.keyUp, code, shift ? .shift : []) { view.keyUp(with: e) }
-                if shift, let e = key(.flagsChanged, 0x38, []) { view.flagsChanged(with: e) }
+            func at(_ offset: Double, _ body: @escaping () -> Void) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay + offset, execute: body)
             }
-            delay += 0.06
+            func key(_ t: NSEvent.EventType, _ c: UInt16, _ f: NSEvent.ModifierFlags) -> NSEvent? {
+                NSEvent.keyEvent(with: t, location: .zero, modifierFlags: f, timestamp: ProcessInfo.processInfo.systemUptime,
+                                 windowNumber: window.windowNumber, context: nil, characters: "", charactersIgnoringModifiers: "",
+                                 isARepeat: false, keyCode: c)
+            }
+            let flags = shift ? down : up
+            if shift { at(0) { if let e = key(.flagsChanged, 0x38, down) { view.flagsChanged(with: e) } } }
+            at(step) { if let e = key(.keyDown, code, flags) { view.keyDown(with: e) } }
+            at(step * 2) { if let e = key(.keyUp, code, flags) { view.keyUp(with: e) } }
+            if shift { at(step * 3) { if let e = key(.flagsChanged, 0x38, up) { view.flagsChanged(with: e) } } }
+            delay += 0.06 + step * 3
         }
     }
 }
