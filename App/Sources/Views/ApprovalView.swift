@@ -1,4 +1,4 @@
-import AnnexKit
+import AOSKit
 import SwiftUI
 
 /// "<Agent> wants to open its workspace": shown when the agent itself can't ask the user.

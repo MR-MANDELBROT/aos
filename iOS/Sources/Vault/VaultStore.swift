@@ -46,8 +46,8 @@ protocol VaultStoring: Sendable {
 /// The vault in the keychain: the index readable while the iPhone is unlocked, every login's secret part in its own
 /// item behind user presence (`kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly`, never synchronized).
 struct KeychainVaultStore: VaultStoring {
-    private let indexService = "dev.marquart.annex.vault.index"
-    private let secretService = "dev.marquart.annex.vault"
+    private let indexService = "dev.marquart.aos.vault.index"
+    private let secretService = "dev.marquart.aos.vault"
 
     func loadIndex() throws -> [VaultEntry] {
         try Keychain.getJSON([VaultEntry].self, service: indexService, account: "index") ?? []

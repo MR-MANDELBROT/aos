@@ -40,7 +40,7 @@ struct ApprovalSheet: View {
                     .padding()
                 }
             }
-            .annexBackground()
+            .aosBackground()
             .navigationTitle("Workspace request")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

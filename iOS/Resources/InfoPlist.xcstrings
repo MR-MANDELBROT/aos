@@ -8,13 +8,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         }
       }
@@ -26,13 +26,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         }
       }
@@ -44,13 +44,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Kamera liest den Kopplungscode, den Annex auf deinem Mac zeigt."
+            "value" : "Die Kamera liest den Kopplungscode, den aOS auf deinem Mac zeigt."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "The camera scans the pairing code that Annex shows on your Mac."
+            "value" : "The camera scans the pairing code that aOS shows on your Mac."
           }
         }
       }
@@ -80,13 +80,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex verbindet sich in deinem Netzwerk mit deinem Mac: zum Koppeln und über SSH. Sonst wird nichts in deinem Netzwerk kontaktiert."
+            "value" : "aOS verbindet sich in deinem Netzwerk mit deinem Mac: zum Koppeln und über SSH. Sonst wird nichts in deinem Netzwerk kontaktiert."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Annex connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted."
+            "value" : "aOS connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted."
           }
         }
       }

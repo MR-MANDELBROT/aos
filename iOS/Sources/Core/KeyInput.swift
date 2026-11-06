@@ -1,4 +1,4 @@
-import AnnexRFB
+import AOSRFB
 import Foundation
 
 /// One key press on the remote screen: an X11 key symbol and whether Shift is held for it (US/ABC layout).

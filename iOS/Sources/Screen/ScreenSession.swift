@@ -1,10 +1,10 @@
-import AnnexRFB
+import AOSRFB
 import CoreGraphics
 import Foundation
 import Observation
 import os
 
-private let log = Logger(subsystem: "dev.marquart.annex.ios", category: "screen")
+private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "screen")
 
 /// A live screen: the Mac's own or the workspace's, through the SSH connection (direct-tcpip to its screen sharing
 /// port, bridged to a loopback listener for `RFBClient`).

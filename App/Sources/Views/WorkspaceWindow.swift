@@ -1,4 +1,4 @@
-import AnnexKit
+import AOSKit
 import SwiftUI
 
 /// The workspace screen. Shows the agent's help requests on top, and the setup's screen sharing step.
@@ -39,8 +39,8 @@ struct WorkspaceWindow: View {
                 banner(symbol: "person.badge.key.fill", tint: BrandColor.indigo,
                        title: "Allow the \(Brand.name) helper below",
                        detail: model.setup.isComplete
-                           ? String(localized: "Click Open System Settings if macOS asks, then switch on Annex Helper. When macOS asks for the password to allow Annex Helper, click Enter the workspace password. Only then: if another window asks, click Not Now.")
-                           : String(localized: "Click Open System Settings if macOS asks, then switch on Annex Helper. If notices at the top right cover the switch, close them with their x first. \(Brand.name) enters the password itself. This happens only once.")) {
+                           ? String(localized: "Click Open System Settings if macOS asks, then switch on aOS Helper. When macOS asks for the password to allow aOS Helper, click Enter the workspace password. Only then: if another window asks, click Not Now.")
+                           : String(localized: "Click Open System Settings if macOS asks, then switch on aOS Helper. If notices at the top right cover the switch, close them with their x first. \(Brand.name) enters the password itself. This happens only once.")) {
                     Button("Not Now") { Task { await model.cancelHelperPermission() } }
                         .buttonStyle(.glass)
                     Button("Enter the workspace password") { model.setup.typeGuestPassword(into: coordinator) }

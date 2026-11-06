@@ -1,12 +1,12 @@
-# Annex brand
+# aOS brand
 
-*Annex* is a working title. Everything that carries the name is listed at the end, so a rename stays one afternoon of
+*aOS* is a working title. Everything that carries the name is listed at the end, so a rename stays one afternoon of
 work.
 
 ## Idea
 
-An annex is the extra building next to the main house. Annex is the extra Mac next to yours: your agent works there,
-you stay in your own. The icon shows exactly that: a window, a second window behind it (the annex), and a pointer (the
+An aos is the extra building next to the main house. aOS is the extra Mac next to yours: your agent works there,
+you stay in your own. The icon shows exactly that: a window, a second window behind it (the aos), and a pointer (the
 agent at work).
 
 **Tagline:** A Mac of its own for your coding agent. / Ein eigener Mac für deinen Coding-Agent.
@@ -51,6 +51,6 @@ app. No custom fonts.
 
 ## Where the name appears
 
-`AnnexKit/Sources/AnnexKit/Brand.swift`, `project.yml` (target, product and bundle names, `NSLocalNetworkUsageDescription`,
-`SUFeedURL`), `App/LaunchAgents/*.plist` (label), the guest paths (`/usr/local/libexec/annex`, guest account `annex`,
+`AOSKit/Sources/AOSKit/Brand.swift`, `project.yml` (target, product and bundle names, `NSLocalNetworkUsageDescription`,
+`SUFeedURL`), `App/LaunchAgents/*.plist` (label), the guest paths (`/usr/local/libexec/aos`, guest account `aos`,
 only internal), `Tools/release.sh`, `site/`, `README.md`, `Docs/`.

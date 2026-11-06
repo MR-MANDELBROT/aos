@@ -1,7 +1,7 @@
-# Annex design
+# aOS design
 
-Annex productizes a setup that ran by hand on one Mac (a Tart VM, a Python MCP server, shell installers and a launchd
-supervisor around Claude Code). It is an extension for the user's own coding agent: Annex brings the workspace and an
+aOS productizes a setup that ran by hand on one Mac (a Tart VM, a Python MCP server, shell installers and a launchd
+supervisor around Claude Code). It is an extension for the user's own coding agent: aOS brings the workspace and an
 MCP server; the agent (Claude Code, Codex CLI, Gemini CLI, VS Code, Cursor, Windsurf, opencode, anything with MCP)
 brings the model and the account. Goals for version 1: one download, a setup that a non-developer finishes in about an
 hour (most of it waiting for the macOS download), no Terminal, no sudo, no server of our own.
@@ -9,13 +9,13 @@ hour (most of it waiting for the macOS download), no Terminal, no sudo, no serve
 ## Agents and approval
 
 `AgentIntegration` knows how each agent adds an MCP server: Claude Code (`claude mcp add --scope user` plus rules in
-`~/.claude/settings.json`: allow `mcp__annex__*`, ask `mcp__annex__workspace_open`), Codex (`codex mcp add`, then
+`~/.claude/settings.json`: allow `mcp__aos__*`, ask `mcp__aos__workspace_open`), Codex (`codex mcp add`, then
 `tool_timeout_sec = 900` in `config.toml`, Codex waits only 60 s by default), Gemini CLI (`gemini mcp add --scope
 user --timeout`), VS Code (`code --add-mcp`), Cursor, Windsurf and opencode (their JSON files, merged, with a backup;
 files with comments are left alone and the user gets a snippet), anything else (snippet to copy). The server's
-environment carries `ANNEX_AGENT` and `ANNEX_APPROVAL`.
+environment carries `AOS_AGENT` and `AOS_APPROVAL`.
 
-Opening the workspace needs the user's yes, one of three ways (`ANNEX_APPROVAL`):
+Opening the workspace needs the user's yes, one of three ways (`AOS_APPROVAL`):
 - `agent`: the agent asks itself (Claude Code's ask rule, which Remote Control forwards to the phone; VS Code's tool
   confirmation).
 - `auto`: the MCP server asks through the agent with MCP elicitation (`elicitation/create`, a yes/no form) if the
@@ -26,31 +26,31 @@ The app also asks on the Mac for any request that doesn't say how it was approve
 ## Processes (with the optional Claude Code session)
 
 ```
-Claude app (phone) ──Remote Control──▶ claude (pty) ◀── annex-session (LaunchAgent, KeepAlive)
+Claude app (phone) ──Remote Control──▶ claude (pty) ◀── aos-session (LaunchAgent, KeepAlive)
                                           │ stdio
                                           ▼
-                                      annex-mcp ──unix socket (0600, peer uid checked)──▶ Annex.app
+                                      aos-mcp ──unix socket (0600, peer uid checked)──▶ aOS.app
                                                                                          ├─ VMHost (Virtualization.framework)
                                                                                          ├─ RFBClient ──VNC──▶ screensharingd (guest)
                                                                                          └─ SSH (root, keys) ──▶ guest kit
 ```
 
-- **Annex.app** is a menu bar app (LSUIElement), registered as login item (`SMAppService.mainApp`). It hosts the VM, so
+- **aOS.app** is a menu bar app (LSUIElement), registered as login item (`SMAppService.mainApp`). It hosts the VM, so
   its windows can show the guest with `VZVirtualMachineView` (setup step, help requests).
-- **annex-session** is registered with `SMAppService.agent` from `Contents/Library/LaunchAgents`. It runs
+- **aos-session** is registered with `SMAppService.agent` from `Contents/Library/LaunchAgents`. It runs
   `claude --remote-control <name>` (plus `--continue` once a conversation exists) in the session folder
-  (`~/Library/Application Support/Annex/Session`), waits for `api.anthropic.com:443` first, restarts with back-off
+  (`~/Library/Application Support/aOS/Session`), waits for `api.anthropic.com:443` first, restarts with back-off
   (5 s to 2 min; after five quick exits it stops and waits for the app), and relays the terminal over
   `run/session.sock`. It recognizes Claude Code's questions (sign-in, trust, Remote Control) and reports them in
   `run/session.json`; the app then asks the user to open the session window and answer there.
-- **annex-mcp** is registered by `claude mcp add --scope local` for the session folder. `.claude/settings.local.json`
-  there allows `mcp__annex__*` and asks for `mcp__annex__workspace_open`; `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS=0`
+- **aos-mcp** is registered by `claude mcp add --scope local` for the session folder. `.claude/settings.local.json`
+  there allows `mcp__aos__*` and asks for `mcp__aos__workspace_open`; `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS=0`
   keeps long tool calls (help requests) in the foreground.
 
 ## Keeping conversations reachable (SessionKeeper)
 
 The Claude desktop app runs a local Code session only while it works on it; once its process ends, the session goes
-offline in the Claude app on the phone (Remote Control needs a running local process). `annex-session` also hosts
+offline in the Claude app on the phone (Remote Control needs a running local process). `aos-session` also hosts
 the keeper, when "keep conversations reachable" is on:
 
 - **Which**: conversations from `~/.claude/projects` (title from `custom-title`/`ai-title` records, start folder and
@@ -58,7 +58,7 @@ the keeper, when "keep conversations reachable" is on:
   Claude app, used Remote Control and were active within `keepHours` (48 h); pinned ones always; at most `keepMax`
   (6). Never: archived or scheduled ones of the desktop app (its records in
   `~/Library/Application Support/Claude/claude-code-sessions`), ones with Remote Control switched off, ones the user
-  excluded, Annex's own session folder, automation (`sdk-cli`). Terminal conversations only when pinned or with
+  excluded, aOS's own session folder, automation (`sdk-cli`). Terminal conversations only when pinned or with
   `keepTerminal`: tools like Cloupi manage their own terminal sessions.
 - **How**: `claude --resume <id> --remote-control <title>` in the start folder, through the user's login shell
   (`exec`, so PATH is like a new terminal and the pid stays Claude Code's), in a pseudo terminal whose output is
@@ -73,16 +73,16 @@ the keeper, when "keep conversations reachable" is on:
 - Status in `run/keeper.json`; the app's settings (Claude Code tab) list the conversations with their state, pin and
   exclude.
 
-## Annex for iPhone (companion)
+## aOS for iPhone (companion)
 
 See Docs/COMPANION.md for the protocol. On the Mac:
 
-- **Pairing** (`PairingSession`): a TCP listener on a random port with Bonjour `_annex-pair._tcp`, 3 minutes, one
+- **Pairing** (`PairingSession`): a TCP listener on a random port with Bonjour `_aos-pair._tcp`, 3 minutes, one
   pairing, five wrong proofs end it. The QR code carries the Mac's addresses, the SHA-256 fingerprint of its ed25519
   host key and a 16-byte code; the phone proves the code with HMAC-SHA256 over its key and name, the Mac appends the
-  key to `~/.ssh/authorized_keys` (`no-agent-forwarding,no-X11-forwarding`, marked `annex-companion:<id>`). Remote
+  key to `~/.ssh/authorized_keys` (`no-agent-forwarding,no-X11-forwarding`, marked `aos-companion:<id>`). Remote
   Login must be on; Settings > iPhone checks it and lists and removes paired phones.
-- **annex-companion serve** is what the phone runs over SSH: JSON lines, relayed to the app's agent socket; a second
+- **aos-companion serve** is what the phone runs over SSH: JSON lines, relayed to the app's agent socket; a second
   connection long-polls `companion.events`. Companion requests are not agent activity (they don't keep the workspace
   open).
 - **CompanionHub** collects the events (sign-in, help, approval requests and their end); a phone that connects gets
@@ -91,10 +91,10 @@ See Docs/COMPANION.md for the protocol. On the Mac:
 ## Signing in for the agent
 
 - **sign_in** (MCP tool): the agent clicks into a user name, password or code field and calls it. The workspace helper
-  reports the focused field's kind and the page's host; Annex locks the agent's other tools, posts the request
+  reports the focused field's kind and the page's host; aOS locks the agent's other tools, posts the request
   (iPhone) and shows the sign-in window on the Mac when no phone is connected (user name and password fields with
   AutoFill, so a password manager on the Mac fills them). Whoever answers first wins; 3 minutes.
-- **The helper** (`AnnexHelper.app`, LaunchAgent in the guest, Accessibility permission) fills only into the real
+- **The helper** (`AOSHelper.app`, LaunchAgent in the guest, Accessibility permission) fills only into the real
   Google Chrome (checked by code signature, Google's team EQHXZ8M8AV, not by name) started without command line
   switches (they could turn off certificate checks or log traffic), only into a field of the tab's own page (not a
   frame of another page) and only on an https website with a domain name (no address, no localhost: a page the
@@ -103,20 +103,20 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   focus meanwhile gets nothing), and right before Return checks again: if the focus moved, it deletes what it typed
   and submits nothing. It types Unicode key events from its own event source (Command pressed and released
   properly), finds the password field after the user name (same page, or after "Next" on the same host).
-  Annex reaches it as root over SSH through its own client mode, which checks the peer of its socket by code
+  aOS reaches it as root over SSH through its own client mode, which checks the peer of its socket by code
   signature through the kernel's audit token. Chrome's web accessibility tree is asked for with
   `AXManualAccessibility` and `AXEnhancedUserInterface` (VoiceOver's way); the frontmost app comes from LaunchServices
   plus `kAXFrontmostAttribute`. Chrome policies keep DevTools, extensions, `javascript:` URLs and Chrome's own pages
   closed (`chrome://*` except new tab, downloads, history, settings and a few more; `chrome://net-export` could
   otherwise record a filled sign-in).
-- **The permission**: once, right after screen sharing in the setup (or Settings > General > Signing in). Annex
+- **The permission**: once, right after screen sharing in the setup (or Settings > General > Signing in). aOS
   starts the helper's request, opens Privacy & Security > Accessibility in the guest; during the first setup (no
   agent has used the workspace yet) it enters the workspace account's password itself when macOS asks (the dialog is
   recognized by its program's path). Later the person clicks "Enter the workspace password" themselves while looking
   at the dialog: an agent could have left programs that wait for exactly this moment. A finished workspace's account
   is a standard user: it becomes an administrator for that moment and a standard user again (`prepare.sh` demotes it
   at the next start should that be interrupted). TCC keeps the permission across helper updates (same signature).
-- **What this does and doesn't promise.** Annex keeps the password away from the agent's tools and its normal ways of
+- **What this does and doesn't promise.** aOS keeps the password away from the agent's tools and its normal ways of
   working: the agent gets only the result, its screenshots show dots, the clipboard isn't used, and the obvious
   side doors are closed (above). The account Chrome runs in is still the agent's: an agent that deliberately attacks
   the workspace from the inside with programs of its own can't be ruled out completely (for example Chrome's
@@ -142,8 +142,8 @@ From Claude Code's legal page (2026-11): third-party apps may not offer Claude.a
 credentials, or bundle ("preinstall") Claude Code without commercial terms; an end user signing in to the unmodified
 binary with their own subscription is allowed, including where a platform hosts Claude Code. Therefore:
 
-- Claude Code is installed with Anthropic's own installer, run visibly in a terminal inside Annex.
-- Sign-in runs `claude auth login` visibly; Annex reads only `claude auth status` (exit code and auth method).
+- Claude Code is installed with Anthropic's own installer, run visibly in a terminal inside aOS.
+- Sign-in runs `claude auth login` visibly; aOS reads only `claude auth status` (exit code and auth method).
 - The supervisor starts the unmodified `claude` and never answers its questions; the user answers them in the
   session window.
 - The product name and icon must not use "Claude" or "Anthropic".
@@ -159,7 +159,7 @@ binary with their own subscription is allowed, including where a platform hosts 
   audio, no USB.
 - **Install**: `VZMacOSRestoreImage.latestSupported` gives Apple's IPSW URL; a resumable download (HTTP range) puts it
   into `RestoreImages/`; `VZMacOSInstaller` installs; the IPSW is deleted afterwards.
-- **First boot**: `VZMacGuestProvisioningOptions` (macOS 27) creates the account `annex` (administrator, random
+- **First boot**: `VZMacGuestProvisioningOptions` (macOS 27) creates the account `aos` (administrator, random
   32-character password in `Keys/guest-account.pw`), automatic login and SSH. No setup assistant.
 - **Bootstrap** (`Provisioner.bootstrap`): SSH with the password (through `SSH_ASKPASS`), uploads a self-contained
   script (files as base64) and runs it with `sudo -S`. `setup.sh` installs root's `authorized_keys` (maintenance key:
@@ -177,7 +177,7 @@ binary with their own subscription is allowed, including where a platform hosts 
   and its state saved (`saveMachineStateTo`), resumed in seconds next time.
 - **Session preparation** (`prepare.sh`, once per cold boot, before the agent gets the screen): macOS removes
   `/Library/Managed Preferences` at every login, and right after it the guest is so busy that the guest service needs
-  up to half a minute (a single `id` took 14 s) to put the Chrome policies back. Annex waits for the login over the
+  up to half a minute (a single `id` took 14 s) to put the Chrome policies back. aOS waits for the login over the
   maintenance key, has the policies put back, checks them and quits a Chrome that is already running.
 - **Reopen at login**: loginwindow keeps its list of apps to reopen
   (`~/Library/Group Containers/group.com.apple.loginwindow.persistent-apps/persistantApps`) up to date while running

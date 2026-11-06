@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 /// The app's own flow end to end, against servers in the test process: pairing (fake listener), SSH with the
 /// fingerprint from the code, the connection the model keeps up with the pinned key, the companion's events, an
@@ -16,7 +16,7 @@ struct EndToEndTests {
         let rfb = try await FakeRFBServer.start(width: 80, height: 50)
         let companion = MockCompanionServer(keepsSecrets: true)
         companion.update { $0.screens[.workspace] = ScreenEndpoint(host: "127.0.0.1", port: UInt16(rfb.port),
-                                                                   username: "annex", password: "pw") }
+                                                                   username: "aos", password: "pw") }
         let server = try await TestSSHServer.start(allowedKey: key, companion: companion)
         let code = Data((0..<16).map { _ in UInt8.random(in: 0...255) })
         let listener = try await FakePairingListener.start(code: code, behavior: .accept(user: "max",
@@ -79,8 +79,8 @@ struct EndToEndTests {
         #expect(companion.received.last?.fields["allowed"] == .bool(true))
 
         // The Mac app is away for a moment, then back
-        companion.emit(.mac(state: "unavailable", detail: "Annex isn't running"))
-        try await waitUntil { connection.macAppProblem == "Annex isn't running" }
+        companion.emit(.mac(state: "unavailable", detail: "aOS isn't running"))
+        try await waitUntil { connection.macAppProblem == "aOS isn't running" }
         companion.emit(.mac(state: "available", detail: ""))
         try await waitUntil { connection.macAppProblem == nil }
 

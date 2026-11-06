@@ -6,7 +6,7 @@ import NIOCore
 import NIOTransportServices
 import os
 
-private let log = Logger(subsystem: "dev.marquart.annex.ios", category: "ssh")
+private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "ssh")
 
 /// How the server's host key is checked.
 enum HostKeyPolicy: Sendable, Equatable {
@@ -53,7 +53,7 @@ enum SSHConnectError: LocalizedError, Equatable {
             failures.isEmpty ? String(localized: "No address to try.")
                 : String(localized: "Not reachable: \(failures.map(\.host).joined(separator: ", "))")
         case .localNetworkDenied:
-            String(localized: "Annex may not use the local network. Allow it in Settings > Privacy & Security > Local Network.")
+            String(localized: "aOS may not use the local network. Allow it in Settings > Privacy & Security > Local Network.")
         }
     }
 }

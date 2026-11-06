@@ -1,4 +1,4 @@
-import AnnexKit
+import AOSKit
 import AppKit
 import Foundation
 import UserNotifications
@@ -120,11 +120,11 @@ extension AppModel {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Sharing-Settings.extension")!)
     }
 
-    // MARK: Links (annex://)
+    // MARK: Links (aos://)
 
-    /// annex://allow-helper starts the helper permission, annex://pair opens pairing, annex://settings/<tab> a tab.
+    /// aos://allow-helper starts the helper permission, aos://pair opens pairing, aos://settings/<tab> a tab.
     func handle(url: URL) {
-        guard url.scheme == "annex" else { return }
+        guard url.scheme == "aos" else { return }
         switch url.host {
         case "allow-helper":
             Task { await allowHelper() }
@@ -173,7 +173,7 @@ extension AppModel {
         }
     }
 
-    /// Waits for the switch; when macOS asks for the password (its dialog in the guest), Annex enters the workspace
+    /// Waits for the switch; when macOS asks for the password (its dialog in the guest), aOS enters the workspace
     /// account's password itself, so the user only flips the switch.
     private func watchHelper(ip: String) async {
         let deadline = Date().addingTimeInterval(600)

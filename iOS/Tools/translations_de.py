@@ -3,11 +3,11 @@
 # Terms as on the Mac and in Bitwarden: Entfernte Anmeldung, Bildschirmfreigabe, Accountname, Tresor exportieren.
 DE = {
     # Info.plist
-    'CFBundleDisplayName': 'Annex',
-    'CFBundleName': 'Annex',
-    'NSCameraUsageDescription': 'Die Kamera liest den Kopplungscode, den Annex auf deinem Mac zeigt.',
+    'CFBundleDisplayName': 'aOS',
+    'CFBundleName': 'aOS',
+    'NSCameraUsageDescription': 'Die Kamera liest den Kopplungscode, den aOS auf deinem Mac zeigt.',
     'NSFaceIDUsageDescription': 'Face ID entsperrt deine Passwörter und gibt Anmeldungen für deinen Agent frei.',
-    'NSLocalNetworkUsageDescription': 'Annex verbindet sich in deinem Netzwerk mit deinem Mac: zum Koppeln und über SSH. Sonst wird nichts in deinem Netzwerk kontaktiert.',
+    'NSLocalNetworkUsageDescription': 'aOS verbindet sich in deinem Netzwerk mit deinem Mac: zum Koppeln und über SSH. Sonst wird nichts in deinem Netzwerk kontaktiert.',
 
     '': '',
     ' · with one-time code': ' · mit Einmalcode',
@@ -22,9 +22,9 @@ DE = {
     '%lld s': '%lld s',
     'Allow': 'Erlauben',
     'Allowed. The workspace opens.': 'Erlaubt. Der Arbeitsplatz öffnet sich.',
-    "Annex on the Mac isn't answering right now (%@). It keeps trying.":
-        'Annex auf dem Mac antwortet gerade nicht (%@). Es versucht es weiter.',
-    "Annex on the Mac isn't answering right now. It keeps trying.": 'Annex auf dem Mac antwortet gerade nicht. Es versucht es weiter.',
+    "aOS on the Mac isn't answering right now (%@). It keeps trying.":
+        'aOS auf dem Mac antwortet gerade nicht (%@). Es versucht es weiter.',
+    "aOS on the Mac isn't answering right now. It keeps trying.": 'aOS auf dem Mac antwortet gerade nicht. Es versucht es weiter.',
     "Don't Allow": 'Nicht erlauben',
     'Fill in from %@': 'Aus %@ einsetzen',
     'Fill in the code for %@': 'Code für %@ einsetzen',
@@ -32,8 +32,8 @@ DE = {
     'Not allowed. The workspace stays closed.': 'Nicht erlaubt. Der Arbeitsplatz bleibt geschlossen.',
     'Open the workspace': 'Arbeitsplatz öffnen',
     'Send the code': 'Code senden',
-    'The agent gets only this code. Annex types it into the field it chose, only on this site.':
-        'Der Agent bekommt nur diesen Code. Annex tippt ihn in das Feld, das er gewählt hat, nur auf dieser Website.',
+    'The agent gets only this code. aOS types it into the field it chose, only on this site.':
+        'Der Agent bekommt nur diesen Code. aOS tippt ihn in das Feld, das er gewählt hat, nur auf dieser Website.',
     'The page asks for the password.': 'Die Seite fragt nach dem Passwort.',
     'The page asks for the user name.': 'Die Seite fragt nach dem Benutzernamen.',
     'The workspace is a Mac of its own in a virtual machine, separate from yours. It closes again when the time is up.':
@@ -46,7 +46,7 @@ DE = {
     '%@ is new. Its key: %@': '%1$@ ist neu. Sein Schlüssel: %2$@',
     '%@ now presents %@. That happens when the computer was set up again, but it can also mean that someone is in between. Only continue if you know why it changed.':
         '%1$@ zeigt jetzt %2$@. Das passiert, wenn der Rechner neu eingerichtet wurde, kann aber auch heißen, dass jemand dazwischen sitzt. Mach nur weiter, wenn du weißt, warum er sich geändert hat.',
-    '%@ to open Annex': '%@ zum Öffnen von Annex',
+    '%@ to open aOS': '%@ zum Öffnen von aOS',
     '%@@%@': '%1$@@%2$@',
     '%lld': '%lld',
     '%lld:%@ left': 'noch %1$lld:%2$@',
@@ -66,29 +66,29 @@ DE = {
     'After 1 hour': 'Nach 1 Stunde',
     'Already in the vault: %lld': 'Schon im Tresor: %lld',
     'Always': 'Immer',
-    'Annex': 'Annex',
-    'Annex %@ on the Mac answers.': 'Annex %@ auf dem Mac antwortet.',
-    "Annex couldn't fill it in. The agent can ask again.": 'Annex konnte sie nicht eintragen. Der Agent kann noch einmal fragen.',
-    'Annex is locked': 'Annex ist gesperrt',
-    "Annex isn't installed on the Mac where it was paired. Open Annex on the Mac and pair again.":
-        'Annex ist auf dem Mac nicht mehr dort installiert, wo es beim Koppeln war. Öffne Annex auf dem Mac und kopple neu.',
-    'Annex may not delete it there. Delete it in the Files app.': 'Annex darf sie dort nicht löschen. Lösche sie in der Dateien-App.',
-    'Annex may not use the local network. Allow it in Settings > Privacy & Security > Local Network, then try again.':
-        'Annex darf das lokale Netzwerk nicht nutzen. Erlaube es unter Einstellungen > Datenschutz & Sicherheit > Lokales Netzwerk und versuch es dann noch einmal.',
-    'Annex may not use the local network. Allow it in Settings > Privacy & Security > Local Network.':
-        'Annex darf das lokale Netzwerk nicht nutzen. Erlaube es unter Einstellungen > Datenschutz & Sicherheit > Lokales Netzwerk.',
-    "Annex on the Mac didn't answer in time.": 'Annex auf dem Mac hat nicht rechtzeitig geantwortet.',
-    "Annex on the Mac doesn't answer.": 'Annex auf dem Mac antwortet nicht.',
-    "Annex on the Mac isn't ready: %@": 'Annex auf dem Mac ist nicht bereit: %@',
-    'Annex on the Mac lists paired devices by this name.': 'Unter diesem Namen führt Annex auf dem Mac die gekoppelten Geräte auf.',
-    'Annex on the Mac said no.': 'Annex auf dem Mac hat abgelehnt.',
-    "Annex on the Mac sent an answer this app doesn't understand.": 'Annex auf dem Mac hat eine Antwort geschickt, die diese App nicht versteht.',
-    'Annex on the Mac stopped answering.': 'Annex auf dem Mac antwortet nicht mehr.',
-    'Annex on your iPhone': 'Annex auf deinem iPhone',
-    'Annex remembers the key and warns you if it ever changes.': 'Annex merkt sich den Schlüssel und warnt dich, falls er sich je ändert.',
+    'aOS': 'aOS',
+    'aOS %@ on the Mac answers.': 'aOS %@ auf dem Mac antwortet.',
+    "aOS couldn't fill it in. The agent can ask again.": 'aOS konnte sie nicht eintragen. Der Agent kann noch einmal fragen.',
+    'aOS is locked': 'aOS ist gesperrt',
+    "aOS isn't installed on the Mac where it was paired. Open aOS on the Mac and pair again.":
+        'aOS ist auf dem Mac nicht mehr dort installiert, wo es beim Koppeln war. Öffne aOS auf dem Mac und kopple neu.',
+    'aOS may not delete it there. Delete it in the Files app.': 'aOS darf sie dort nicht löschen. Lösche sie in der Dateien-App.',
+    'aOS may not use the local network. Allow it in Settings > Privacy & Security > Local Network, then try again.':
+        'aOS darf das lokale Netzwerk nicht nutzen. Erlaube es unter Einstellungen > Datenschutz & Sicherheit > Lokales Netzwerk und versuch es dann noch einmal.',
+    'aOS may not use the local network. Allow it in Settings > Privacy & Security > Local Network.':
+        'aOS darf das lokale Netzwerk nicht nutzen. Erlaube es unter Einstellungen > Datenschutz & Sicherheit > Lokales Netzwerk.',
+    "aOS on the Mac didn't answer in time.": 'aOS auf dem Mac hat nicht rechtzeitig geantwortet.',
+    "aOS on the Mac doesn't answer.": 'aOS auf dem Mac antwortet nicht.',
+    "aOS on the Mac isn't ready: %@": 'aOS auf dem Mac ist nicht bereit: %@',
+    'aOS on the Mac lists paired devices by this name.': 'Unter diesem Namen führt aOS auf dem Mac die gekoppelten Geräte auf.',
+    'aOS on the Mac said no.': 'aOS auf dem Mac hat abgelehnt.',
+    "aOS on the Mac sent an answer this app doesn't understand.": 'aOS auf dem Mac hat eine Antwort geschickt, die diese App nicht versteht.',
+    'aOS on the Mac stopped answering.': 'aOS auf dem Mac antwortet nicht mehr.',
+    'aOS on your iPhone': 'aOS auf deinem iPhone',
+    'aOS remembers the key and warns you if it ever changes.': 'aOS merkt sich den Schlüssel und warnt dich, falls er sich je ändert.',
     'Approve with %@': 'Mit %@ freigeben',
-    'Approved sign-ins go once, encrypted over SSH, to Annex on your Mac, which types them into the workspace. Neither the app nor the Mac keeps them.':
-        'Freigegebene Anmeldungen gehen einmal verschlüsselt über SSH an Annex auf deinem Mac, das sie im Arbeitsplatz einträgt. Weder die App noch der Mac behalten sie.',
+    'Approved sign-ins go once, encrypted over SSH, to aOS on your Mac, which types them into the workspace. Neither the app nor the Mac keeps them.':
+        'Freigegebene Anmeldungen gehen einmal verschlüsselt über SSH an aOS auf deinem Mac, das sie im Arbeitsplatz einträgt. Weder die App noch der Mac behalten sie.',
     'Asking the Mac': 'Frage den Mac',
     "At %@ a different computer answered, or the Mac's SSH key changed. If you set the Mac up again, pair it again.":
         'Unter %@ hat ein anderer Rechner geantwortet, oder der SSH-Schlüssel des Macs hat sich geändert. Hast du den Mac neu eingerichtet, kopple ihn neu.',
@@ -203,23 +203,23 @@ DE = {
     'Notes': 'Notizen',
     'Now delete the export file': 'Lösche jetzt die Exportdatei',
     'OK': 'OK',
-    "On the Mac: click Annex in the menu bar, then “Pair” next to iPhone. Annex uses the Mac's Remote Login for this, nothing else.":
-        'Auf dem Mac: Klicke in der Menüleiste auf Annex, dann bei „iPhone“ auf „Koppeln“. Annex nutzt dafür die entfernte Anmeldung des Macs, sonst nichts.',
+    "On the Mac: click aOS in the menu bar, then “Pair” next to iPhone. aOS uses the Mac's Remote Login for this, nothing else.":
+        'Auf dem Mac: Klicke in der Menüleiste auf aOS, dann bei „iPhone“ auf „Koppeln“. aOS nutzt dafür die entfernte Anmeldung des Macs, sonst nichts.',
     'One finger': 'Ein Finger',
     'One per line. The login is offered for these sites and their subdomains.':
         'Eine pro Zeile. Die Anmeldung wird für diese Websites und ihre Subdomains angeboten.',
     'One-time code': 'Einmalcode',
     'One-time codes (optional)': 'Einmalcodes (optional)',
     'Open': 'Geöffnet',
-    'On your Mac, click Annex in the menu bar, then “Pair” next to iPhone. Then scan the code it shows.':
-        'Klicke auf deinem Mac in der Menüleiste auf Annex, dann bei „iPhone“ auf „Koppeln“. Scanne dann den Code, den es zeigt.',
+    'On your Mac, click aOS in the menu bar, then “Pair” next to iPhone. Then scan the code it shows.':
+        'Klicke auf deinem Mac in der Menüleiste auf aOS, dann bei „iPhone“ auf „Koppeln“. Scanne dann den Code, den es zeigt.',
     'Open until %@': 'Geöffnet bis %@',
     'Or paste the link': 'Oder füge den Link ein',
     'Other computers': 'Weitere Rechner',
     'Overview': 'Übersicht',
     'Pair': 'Koppeln',
-    "Pair only with your own Mac. Annex on the Mac adds this iPhone's key to your user's SSH keys there.":
-        'Kopple nur mit deinem eigenen Mac. Annex auf dem Mac trägt den Schlüssel dieses iPhones dort bei den SSH-Schlüsseln deines Benutzers ein.',
+    "Pair only with your own Mac. aOS on the Mac adds this iPhone's key to your user's SSH keys there.":
+        'Kopple nur mit deinem eigenen Mac. aOS auf dem Mac trägt den Schlüssel dieses iPhones dort bei den SSH-Schlüsseln deines Benutzers ein.',
     'Pair with a Mac': 'Mit einem Mac koppeln',
     'Pair with your Mac': 'Mit deinem Mac koppeln',
     "The answer didn't come from the Mac that shows this code. Pair again, on a network you trust.":
@@ -263,7 +263,7 @@ DE = {
     'Send the sign-in for %@': 'Anmeldung für %@ senden',
     'Send this sign-in': 'Diese Anmeldung senden',
     'Sending …': 'Sende …',
-    'Sent. Annex fills it into the workspace.': 'Gesendet. Annex trägt sie im Arbeitsplatz ein.',
+    'Sent. aOS fills it into the workspace.': 'Gesendet. aOS trägt sie im Arbeitsplatz ein.',
     'Set a passcode for this iPhone first (Settings > Face ID & Passcode).':
         'Leg zuerst einen Code für dieses iPhone fest (Einstellungen > Face ID & Code).',
     'Set a passcode for this iPhone first (Settings > Face ID & Passcode). The vault needs it.':
@@ -280,7 +280,7 @@ DE = {
     'Sign-in requests and help requests from this Mac no longer reach this iPhone.':
         'Anmelde- und Hilfeanfragen von diesem Mac erreichen dieses iPhone dann nicht mehr.',
     'Sign-ins for your agent': 'Anmeldungen für deinen Agent',
-    'Signed in. Annex filled it into the workspace.': 'Angemeldet. Annex hat sie im Arbeitsplatz eingetragen.',
+    'Signed in. aOS filled it into the workspace.': 'Angemeldet. aOS hat sie im Arbeitsplatz eingetragen.',
     'Smooth': 'Flüssig',
     'Starting': 'Startet',
     "Stay in touch with your agent's Mac, wherever you are.": 'Bleib mit dem Mac deines Agents in Verbindung, wo immer du bist.',
@@ -289,7 +289,7 @@ DE = {
     'Tap: click where the pointer is': 'Tippen: dort klicken, wo der Zeiger ist',
     'Tap: click where you tap': 'Tippen: dort klicken, wo du tippst',
     'Terminal': 'Terminal',
-    "That isn't a pairing code of Annex.": 'Das ist kein Kopplungscode von Annex.',
+    "That isn't a pairing code of aOS.": 'Das ist kein Kopplungscode von aOS.',
     "That isn't a valid secret for one-time codes.": 'Das ist kein gültiges Geheimnis für Einmalcodes.',
     "The Mac account name and password for its screen stay on this iPhone behind Face ID and only go to the Mac's screen sharing.":
         'Accountname und Passwort für den Bildschirm des Macs bleiben auf diesem iPhone hinter Face ID und gehen nur an die Bildschirmfreigabe des Macs.',
@@ -303,25 +303,25 @@ DE = {
         'Der Mac hat das Koppeln beendet. Lass dir auf dem Mac einen neuen Kopplungscode zeigen und scanne ihn.',
     "The Mac isn't reachable. Outside your home network you need Tailscale or another VPN to reach it.":
         'Der Mac ist nicht erreichbar. Außerhalb deines Heimnetzes brauchst du Tailscale oder ein anderes VPN, um ihn zu erreichen.',
-    'The Mac no longer accepts this iPhone. Pair again in Annex on the Mac.':
-        'Der Mac nimmt dieses iPhone nicht mehr an. Kopple es über Annex auf dem Mac neu.',
+    'The Mac no longer accepts this iPhone. Pair again in aOS on the Mac.':
+        'Der Mac nimmt dieses iPhone nicht mehr an. Kopple es über aOS auf dem Mac neu.',
     'The Mac refused the pairing: %@': 'Der Mac hat das Koppeln abgelehnt: %@',
     'The Mac refused to start %@.': 'Der Mac hat %@ nicht gestartet.',
     "The Mac's SSH key": 'SSH-Schlüssel des Macs',
-    "The Mac's answer wasn't understood. Update Annex on the Mac and on this iPhone.":
-        'Die Antwort des Macs war nicht zu verstehen. Aktualisiere Annex auf dem Mac und auf diesem iPhone.',
+    "The Mac's answer wasn't understood. Update aOS on the Mac and on this iPhone.":
+        'Die Antwort des Macs war nicht zu verstehen. Aktualisiere aOS auf dem Mac und auf diesem iPhone.',
     "The Mac's key is unknown.": 'Der Schlüssel des Macs ist unbekannt.',
     "The Mac's screen isn't shared. Turn on Screen Sharing on the Mac in System Settings > General > Sharing.":
         'Der Bildschirm des Macs ist nicht freigegeben. Schalte auf dem Mac die Bildschirmfreigabe ein: Systemeinstellungen > Allgemein > Teilen.',
-    'The agent never sees the password. Annex types it into the sign-in page in the workspace, only on this site.':
-        'Der Agent sieht das Passwort nie. Annex tippt es im Arbeitsplatz in die Anmeldeseite, nur auf dieser Website.',
-    "The camera isn't available here. Paste the pairing link instead: on the Mac, Annex can copy it.":
-        'Die Kamera ist hier nicht verfügbar. Füge stattdessen den Kopplungslink ein: Annex auf dem Mac kann ihn kopieren.',
+    'The agent never sees the password. aOS types it into the sign-in page in the workspace, only on this site.':
+        'Der Agent sieht das Passwort nie. aOS tippt es im Arbeitsplatz in die Anmeldeseite, nur auf dieser Website.',
+    "The camera isn't available here. Paste the pairing link instead: on the Mac, aOS can copy it.":
+        'Die Kamera ist hier nicht verfügbar. Füge stattdessen den Kopplungslink ein: aOS auf dem Mac kann ihn kopieren.',
     'The connection': 'Die Verbindung',
-    'The connection to Annex on the Mac ended.': 'Die Verbindung zu Annex auf dem Mac ist beendet.',
+    'The connection to aOS on the Mac ended.': 'Die Verbindung zu aOS auf dem Mac ist beendet.',
     'The connection to the Mac ended.': 'Die Verbindung zum Mac ist beendet.',
-    'The export contains all your passwords unencrypted. Annex reads it once; afterwards you delete it.':
-        'Der Export enthält alle deine Passwörter unverschlüsselt. Annex liest ihn einmal, danach löschst du ihn.',
+    'The export contains all your passwords unencrypted. aOS reads it once; afterwards you delete it.':
+        'Der Export enthält alle deine Passwörter unverschlüsselt. aOS liest ihn einmal, danach löschst du ihn.',
     'The export file is deleted.': 'Die Exportdatei ist gelöscht.',
     'The file contains no logins.': 'Die Datei enthält keine Anmeldungen.',
     "The file couldn't be read.": 'Die Datei ließ sich nicht lesen.',
@@ -358,13 +358,13 @@ DE = {
         'Dazwischen steht kein Server von uns. Außerhalb deines Heimnetzes brauchst du Tailscale oder ein anderes VPN, um den Mac zu erreichen.',
     "They stay on this iPhone, in its keychain, only on this device. They aren't synced to iCloud and aren't part of backups.":
         'Sie bleiben auf diesem iPhone, in seinem Schlüsselbund, nur auf diesem Gerät. Sie werden nicht mit iCloud synchronisiert und sind in keinem Backup.',
-    'This code is from a newer Annex. Update the app on this iPhone.': 'Dieser Code stammt von einem neueren Annex. Aktualisiere die App auf diesem iPhone.',
+    'This code is from a newer aOS. Update the app on this iPhone.': 'Dieser Code stammt von einem neueren aOS. Aktualisiere die App auf diesem iPhone.',
     'This export is encrypted. Export again and choose „.json“ or „.csv“ without encryption.':
         'Dieser Export ist verschlüsselt. Exportiere erneut und wähle „.json“ oder „.csv“ ohne Verschlüsselung.',
     "This file doesn't look like a Bitwarden export.": 'Diese Datei sieht nicht nach einem Bitwarden-Export aus.',
     'This iPhone': 'Dieses iPhone',
-    "This iPhone forgets the Mac. To remove the iPhone's key from the Mac too, open Annex on the Mac and remove it from the paired devices.":
-        'Dieses iPhone vergisst den Mac. Um den Schlüssel des iPhones auch vom Mac zu entfernen, öffne Annex auf dem Mac und entferne es aus den gekoppelten Geräten.',
+    "This iPhone forgets the Mac. To remove the iPhone's key from the Mac too, open aOS on the Mac and remove it from the paired devices.":
+        'Dieses iPhone vergisst den Mac. Um den Schlüssel des iPhones auch vom Mac zu entfernen, öffne aOS auf dem Mac und entferne es aus den gekoppelten Geräten.',
     'This iPhone makes its own key. Only its public half goes to the Mac.':
         'Dieses iPhone erzeugt einen eigenen Schlüssel. Nur seine öffentliche Hälfte geht an den Mac.',
     "This iPhone's key": 'Schlüssel dieses iPhones',
@@ -379,10 +379,10 @@ DE = {
     'Trust and connect': 'Vertrauen und verbinden',
     'Try again': 'Erneut versuchen',
     'Try anyway': 'Trotzdem versuchen',
-    'Turn on Face ID for Annex': 'Face ID für Annex einschalten',
+    'Turn on Face ID for aOS': 'Face ID für aOS einschalten',
     'Two fingers: scroll': 'Zwei Finger: scrollen',
     'Two-finger tap or long press: right click': 'Mit zwei Fingern tippen oder lange drücken: Rechtsklick',
-    'Unlock Annex': 'Annex entsperren',
+    'Unlock aOS': 'aOS entsperren',
     'Unlock the login for the screen of %@': 'Anmeldung für den Bildschirm von %@ entsperren',
     'Unlock the password': 'Passwort entsperren',
     'Unlock the password for %@': 'Passwort für %@ entsperren',
@@ -401,10 +401,10 @@ DE = {
     'Waiting for you': 'Wartet auf dich',
     'Websites': 'Websites',
     'What is where': 'Was ist wo',
-    'When your agent needs to sign in somewhere, Annex finds the login here and asks you first.':
-        'Muss sich dein Agent irgendwo anmelden, findet Annex die Anmeldung hier und fragt dich vorher.',
-    'With a secret here, Annex sends the current code together with the password.':
-        'Mit einem Geheimnis hier schickt Annex den aktuellen Code zusammen mit dem Passwort.',
+    'When your agent needs to sign in somewhere, aOS finds the login here and asks you first.':
+        'Muss sich dein Agent irgendwo anmelden, findet aOS die Anmeldung hier und fragt dich vorher.',
+    'With a secret here, aOS sends the current code together with the password.':
+        'Mit einem Geheimnis hier schickt aOS den aktuellen Code zusammen mit dem Passwort.',
     'With one-time codes: %lld': 'Mit Einmalcodes: %lld',
     'Workspace': 'Arbeitsplatz',
     'Your Mac': 'Dein Mac',
@@ -412,12 +412,12 @@ DE = {
     'Your agent': 'Dein Agent',
     'Your agent asks, you approve with Face ID. It never sees the password.':
         'Dein Agent fragt, du gibst mit Face ID frei. Er sieht das Passwort nie.',
-    'Your agent never sees a password. Annex fills it into the workspace for you.':
-        'Dein Agent sieht nie ein Passwort. Annex trägt es für dich im Arbeitsplatz ein.',
-    'Your agent never sees them. Annex fills them in for it after you approve.':
-        'Dein Agent sieht sie nie. Annex trägt sie für ihn ein, nachdem du freigegeben hast.',
-    "Your password app (Bitwarden, 1Password, Passwords) fills these fields with its own Face ID. Annex sends them once and doesn't keep them.":
-        'Deine Passwort-App (Bitwarden, 1Password, Passwörter) füllt diese Felder mit ihrem eigenen Face ID. Annex sendet sie einmal und behält sie nicht.',
+    'Your agent never sees a password. aOS fills it into the workspace for you.':
+        'Dein Agent sieht nie ein Passwort. aOS trägt es für dich im Arbeitsplatz ein.',
+    'Your agent never sees them. aOS fills them in for it after you approve.':
+        'Dein Agent sieht sie nie. aOS trägt sie für ihn ein, nachdem du freigegeben hast.',
+    "Your password app (Bitwarden, 1Password, Passwords) fills these fields with its own Face ID. aOS sends them once and doesn't keep them.":
+        'Deine Passwort-App (Bitwarden, 1Password, Passwörter) füllt diese Felder mit ihrem eigenen Face ID. aOS sendet sie einmal und behält sie nicht.',
     'Your passwords': 'Deine Passwörter',
     "Your passwords stay on this iPhone, in its keychain. They aren't synced or backed up.":
         'Deine Passwörter bleiben auf diesem iPhone, in seinem Schlüsselbund. Sie werden weder synchronisiert noch gesichert.',

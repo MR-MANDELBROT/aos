@@ -225,7 +225,7 @@ struct HostKeyPrompt: View {
                         .textSelection(.enabled)
                     Text("It must show:")
                     KeyText(text: fingerprint, font: .callout.monospaced().weight(.semibold))
-                    Text("Annex remembers the key and warns you if it ever changes.")
+                    Text("aOS remembers the key and warns you if it ever changes.")
                         .font(.footnote).foregroundStyle(.secondary)
                     Button {
                         trust()

@@ -1,5 +1,5 @@
 import Testing
-@testable import Annex
+@testable import aOS
 
 struct HostMatchingTests {
     @Test func examplesFromTheDesign() {

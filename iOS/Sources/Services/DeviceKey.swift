@@ -18,7 +18,7 @@ struct DeviceKey: Sendable {
     let publicKey: String
     let fingerprint: String
 
-    private static let service = "dev.marquart.annex.devicekey"
+    private static let service = "dev.marquart.aos.devicekey"
     private static let account = "ssh-p256"
 
     /// The key of this iPhone, created on first use.

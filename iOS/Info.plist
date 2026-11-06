@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Annex</string>
+	<string>aOS</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,10 +22,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>dev.marquart.annex.pair</string>
+			<string>dev.marquart.aos.pair</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>annex-pair</string>
+				<string>aos-pair</string>
 			</array>
 		</dict>
 	</array>
@@ -37,15 +37,15 @@
 	<string>public.app-category.productivity</string>
 	<key>NSBonjourServices</key>
 	<array>
-		<string>_annex-pair._tcp</string>
+		<string>_aos-pair._tcp</string>
 		<string>_ssh._tcp</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>The camera scans the pairing code that Annex shows on your Mac.</string>
+	<string>The camera scans the pairing code that aOS shows on your Mac.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Face ID unlocks your passwords and approves sign-ins for your agent.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Annex connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted.</string>
+	<string>aOS connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

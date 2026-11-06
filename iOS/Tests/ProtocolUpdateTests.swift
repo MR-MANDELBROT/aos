@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 /// The Mac side's additions (Docs/COMPANION.md on main, e1d6a2e and later): sign-in fields, approvals, mac
 /// availability, typing into the workspace.
@@ -40,8 +40,8 @@ struct ProtocolUpdateTests {
                 == .event(.approvalClosed(request: "a1", result: .allowed)))
         #expect(try CompanionMessage.decode(line: Data(#"{"event":"approval.closed","request":"a1","result":"declined"}"#.utf8))
                 == .event(.approvalClosed(request: "a1", result: .declined)))
-        #expect(try CompanionMessage.decode(line: Data(#"{"event":"mac","state":"unavailable","detail":"Annex isn't running"}"#.utf8))
-                == .event(.mac(state: "unavailable", detail: "Annex isn't running")))
+        #expect(try CompanionMessage.decode(line: Data(#"{"event":"mac","state":"unavailable","detail":"aOS isn't running"}"#.utf8))
+                == .event(.mac(state: "unavailable", detail: "aOS isn't running")))
         #expect(try CompanionMessage.decode(line: Data(#"{"event":"approval","agent":"x"}"#.utf8)) == .ignored)  // no id
     }
 

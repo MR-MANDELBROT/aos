@@ -40,7 +40,7 @@ struct SignInSheet: View {
                                 if request.field == .code { codeChooser } else { chooser }
                             case .sending: ProgressView("Sending …").frame(maxWidth: .infinity)
                             case .sent:
-                                notice(symbol: "paperplane.fill", text: "Sent. Annex fills it into the workspace.", tint: BrandColor.mint)
+                                notice(symbol: "paperplane.fill", text: "Sent. aOS fills it into the workspace.", tint: BrandColor.mint)
                             case .declined:
                                 notice(symbol: "hand.raised.fill", text: "Declined. The agent gets no sign-in.", tint: .secondary)
                             }
@@ -52,7 +52,7 @@ struct SignInSheet: View {
                     .padding()
                 }
             }
-            .annexBackground()
+            .aosBackground()
             .navigationTitle("Sign-in request")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -189,7 +189,7 @@ struct SignInSheet: View {
                     }
                     .buttonStyle(.glass)
                     .disabled(otherPassword.isEmpty || phase == .sending)
-                    Text("Your password app (Bitwarden, 1Password, Passwords) fills these fields with its own Face ID. Annex sends them once and doesn't keep them.")
+                    Text("Your password app (Bitwarden, 1Password, Passwords) fills these fields with its own Face ID. aOS sends them once and doesn't keep them.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 .textFieldStyle(.roundedBorder)
@@ -200,17 +200,17 @@ struct SignInSheet: View {
             .padding(14)
             .glassEffect(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
-            FactRow(symbol: "eye.slash", text: "The agent never sees the password. Annex types it into the sign-in page in the workspace, only on this site.")
+            FactRow(symbol: "eye.slash", text: "The agent never sees the password. aOS types it into the sign-in page in the workspace, only on this site.")
         }
     }
 
     private func outcome(_ result: SignInResult) -> some View {
         switch result {
-        case .filled: notice(symbol: "checkmark.circle.fill", text: "Signed in. Annex filled it into the workspace.", tint: .green)
+        case .filled: notice(symbol: "checkmark.circle.fill", text: "Signed in. aOS filled it into the workspace.", tint: .green)
         case .declined: notice(symbol: "hand.raised.fill", text: "Declined.", tint: .secondary)
         case .expired: notice(symbol: "clock.badge.xmark", text: "This request has expired.", tint: .secondary)
         case .failed, .unknown:
-            notice(symbol: "exclamationmark.triangle.fill", text: "Annex couldn't fill it in. The agent can ask again.", tint: .orange)
+            notice(symbol: "exclamationmark.triangle.fill", text: "aOS couldn't fill it in. The agent can ask again.", tint: .orange)
         }
     }
 
@@ -295,7 +295,7 @@ struct SignInSheet: View {
             .buttonStyle(.glass)
             .controlSize(.large)
 
-            FactRow(symbol: "number.square", text: "The agent gets only this code. Annex types it into the field it chose, only on this site.")
+            FactRow(symbol: "number.square", text: "The agent gets only this code. aOS types it into the field it chose, only on this site.")
         }
     }
 

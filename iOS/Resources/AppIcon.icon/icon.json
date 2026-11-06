@@ -1,6 +1,19 @@
 {
   "fill": {
-    "automatic-gradient": "srgb:0.30196,0.31765,0.87843,1.00000"
+    "linear-gradient": [
+      "srgb:0.37647,0.40000,0.96078,1",
+      "srgb:0.47059,0.25098,0.82353,1"
+    ],
+    "orientation": {
+      "start": {
+        "x": 0.5,
+        "y": 0
+      },
+      "stop": {
+        "x": 0.5,
+        "y": 0.7
+      }
+    }
   },
   "groups": [
     {
@@ -8,18 +21,18 @@
         {
           "glass": true,
           "hidden": false,
-          "image-name": "pointer.svg",
-          "name": "pointer",
+          "image-name": "mini.svg",
+          "name": "mini",
           "fill-specializations": [
             {
               "value": {
-                "solid": "srgb:0.23922,0.85098,0.70588,1.00000"
+                "automatic-gradient": "srgb:0.36,1.00,0.82,1"
               }
             },
             {
               "appearance": "dark",
               "value": {
-                "solid": "srgb:0.55686,0.92549,0.82745,1.00000"
+                "automatic-gradient": "srgb:0.62,1.00,0.88,1"
               }
             }
           ],
@@ -33,8 +46,34 @@
         }
       ],
       "shadow": {
-        "kind": "layer-color",
-        "opacity": 0.5
+        "kind": "none",
+        "opacity": 0.0
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0.5
+      }
+    },
+    {
+      "layers": [
+        {
+          "glass": false,
+          "hidden": false,
+          "image-name": "halo.png",
+          "name": "glow",
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          },
+          "blend-mode": "plus-lighter"
+        }
+      ],
+      "shadow": {
+        "kind": "none",
+        "opacity": 0.0
       },
       "translucency": {
         "enabled": false,
@@ -46,18 +85,18 @@
         {
           "glass": true,
           "hidden": false,
-          "image-name": "window-front.svg",
-          "name": "window front",
+          "image-name": "spark.svg",
+          "name": "spark",
           "fill-specializations": [
             {
               "value": {
-                "solid": "srgb:1.00000,1.00000,1.00000,1.00000"
+                "automatic-gradient": "srgb:1,1,1,1"
               }
             },
             {
               "appearance": "dark",
               "value": {
-                "solid": "srgb:0.81176,0.83137,1.00000,1.00000"
+                "automatic-gradient": "srgb:0.81176,0.83137,1,1"
               }
             }
           ],
@@ -72,49 +111,11 @@
       ],
       "shadow": {
         "kind": "neutral",
-        "opacity": 0.45
+        "opacity": 0.5
       },
       "translucency": {
         "enabled": true,
-        "value": 0.35
-      }
-    },
-    {
-      "layers": [
-        {
-          "glass": true,
-          "hidden": false,
-          "image-name": "window-back.svg",
-          "name": "window back",
-          "fill-specializations": [
-            {
-              "value": {
-                "solid": "srgb:0.69804,0.72549,1.00000,1.00000"
-              }
-            },
-            {
-              "appearance": "dark",
-              "value": {
-                "solid": "srgb:0.40000,0.42353,0.86275,1.00000"
-              }
-            }
-          ],
-          "position": {
-            "scale": 1,
-            "translation-in-points": [
-              0,
-              0
-            ]
-          }
-        }
-      ],
-      "shadow": {
-        "kind": "neutral",
-        "opacity": 0.3
-      },
-      "translucency": {
-        "enabled": true,
-        "value": 0.6
+        "value": 0.2
       }
     }
   ],

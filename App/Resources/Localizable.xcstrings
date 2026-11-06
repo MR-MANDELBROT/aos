@@ -351,22 +351,22 @@
         }
       }
     },
-    "Annex keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annex arbeitet im Hintergrund und trägt sich bei deinen Agenten und deinem iPhone ein. Dafür braucht es einen festen Platz. Es kopiert sich dorthin und öffnet sich neu."
-          }
-        }
-      }
-    },
     "Another agent" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anderer Agent"
+          }
+        }
+      }
+    },
+    "aOS keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS arbeitet im Hintergrund und trägt sich bei deinen Agenten und deinem iPhone ein. Dafür braucht es einen festen Platz. Es kopiert sich dorthin und öffnet sich neu."
           }
         }
       }
@@ -597,22 +597,22 @@
         }
       }
     },
-    "Click Open System Settings if macOS asks, then switch on Annex Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once." : {
+    "Click Open System Settings if macOS asks, then switch on aOS Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fragt macOS, klicke auf „Systemeinstellungen öffnen“, dann schalte „Annex Helper“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie vorher mit ihrem x. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig."
+            "value" : "Fragt macOS, klicke auf „Systemeinstellungen öffnen“, dann schalte „aOS Helper“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie vorher mit ihrem x. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig."
           }
         }
       }
     },
-    "Click Open System Settings if macOS asks, then switch on Annex Helper. When macOS asks for the password to allow Annex Helper, click Enter the workspace password. Only then: if another window asks, click Not Now." : {
+    "Click Open System Settings if macOS asks, then switch on aOS Helper. When macOS asks for the password to allow aOS Helper, click Enter the workspace password. Only then: if another window asks, click Not Now." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klicke auf „Systemeinstellungen öffnen“, falls macOS fragt, und schalte dann „Annex Helper“ ein. Fragt macOS nach dem Passwort, um Annex Helper zu erlauben, klicke auf „Passwort des Arbeitsplatzes eingeben“. Nur dann: Fragt ein anderes Fenster, klicke auf „Nicht jetzt“."
+            "value" : "Klicke auf „Systemeinstellungen öffnen“, falls macOS fragt, und schalte dann „aOS Helper“ ein. Fragt macOS nach dem Passwort, um aOS Helper zu erlauben, klicke auf „Passwort des Arbeitsplatzes eingeben“. Nur dann: Fragt ein anderes Fenster, klicke auf „Nicht jetzt“."
           }
         }
       }
@@ -1027,12 +1027,12 @@
         }
       }
     },
-    "In the workspace: switch on Annex Helper (Annex enters the password)" : {
+    "In the workspace: switch on aOS Helper (aOS enters the password)" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Im Arbeitsplatz „Annex Helper“ einschalten (Annex gibt das Passwort ein)"
+            "value" : "Im Arbeitsplatz „aOS Helper“ einschalten (aOS gibt das Passwort ein)"
           }
         }
       }
@@ -1177,12 +1177,12 @@
         }
       }
     },
-    "Move Annex to the Applications folder?" : {
+    "Move aOS to the Applications folder?" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex in den Ordner „Programme“ bewegen?"
+            "value" : "aOS in den Ordner „Programme“ bewegen?"
           }
         }
       }
@@ -1823,12 +1823,12 @@
         }
       }
     },
-    "Right after, the workspace asks once more: switch on Annex Helper. %@ enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password." : {
+    "Right after, the workspace asks once more: switch on aOS Helper. %@ enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gleich danach fragt der Arbeitsplatz noch einmal: Schalte „Annex Helper“ ein. Das Passwort gibt %@ selbst ein. Damit kann sich dein Agent nach deiner Freigabe auf Websites anmelden, ohne je das Passwort zu sehen."
+            "value" : "Gleich danach fragt der Arbeitsplatz noch einmal: Schalte „aOS Helper“ ein. Das Passwort gibt %@ selbst ein. Damit kann sich dein Agent nach deiner Freigabe auf Websites anmelden, ohne je das Passwort zu sehen."
           }
         }
       }
@@ -2229,12 +2229,12 @@
         }
       }
     },
-    "Switch on Annex Helper in the workspace window." : {
+    "Switch on aOS Helper in the workspace window." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Schalte „Annex Helper“ im Fenster des Arbeitsplatzes ein."
+            "value" : "Schalte „aOS Helper“ im Fenster des Arbeitsplatzes ein."
           }
         }
       }
@@ -2399,12 +2399,12 @@
         }
       }
     },
-    "This Mac can't run virtual machines. Annex needs a Mac with Apple silicon and can't run inside a virtual machine itself." : {
+    "This Mac can't run virtual machines. aOS needs a Mac with Apple silicon and can't run inside a virtual machine itself." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dieser Mac kann keine virtuellen Maschinen ausführen. Annex braucht einen Mac mit Apple Silicon und kann nicht selbst in einer virtuellen Maschine laufen."
+            "value" : "Dieser Mac kann keine virtuellen Maschinen ausführen. aOS braucht einen Mac mit Apple Silicon und kann nicht selbst in einer virtuellen Maschine laufen."
           }
         }
       }

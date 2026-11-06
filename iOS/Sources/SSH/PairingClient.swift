@@ -2,7 +2,7 @@ import Foundation
 import Network
 import os
 
-private let log = Logger(subsystem: "dev.marquart.annex.ios", category: "pairing")
+private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "pairing")
 
 /// Talks to the Mac's pairing listener: one JSON line out, one JSON line back (Docs/COMPANION.md, "Pairing").
 enum PairingClient {
@@ -23,11 +23,11 @@ enum PairingClient {
             case .unreachable:
                 String(localized: "The Mac didn't answer. Check that the iPhone is on the same network as the Mac and that the pairing code is still shown.")
             case .localNetworkDenied:
-                String(localized: "Annex may not use the local network. Allow it in Settings > Privacy & Security > Local Network, then try again.")
+                String(localized: "aOS may not use the local network. Allow it in Settings > Privacy & Security > Local Network, then try again.")
             case .noAnswer:
                 String(localized: "The Mac ended the pairing. Show a new pairing code on the Mac and scan it again.")
             case .invalidAnswer:
-                String(localized: "The Mac's answer wasn't understood. Update Annex on the Mac and on this iPhone.")
+                String(localized: "The Mac's answer wasn't understood. Update aOS on the Mac and on this iPhone.")
             case .refused(let reason):
                 String(localized: "The Mac refused the pairing: \(reason)")
             case .notAuthentic:
@@ -75,7 +75,7 @@ enum PairingClient {
     /// Sends the line on an open connection and reads up to the first newline.
     private static func exchange(_ line: Data, on connection: NWConnection, timeout: TimeInterval) async -> Exchange {
         defer { connection.cancel() }
-        let queue = connection.queue ?? DispatchQueue(label: "dev.marquart.annex.pairing")
+        let queue = connection.queue ?? DispatchQueue(label: "dev.marquart.aos.pairing")
         return await withCheckedContinuation { (continuation: CheckedContinuation<Exchange, Never>) in
             let once = Once()
             let finish: @Sendable (Exchange) -> Void = { result in once.run { continuation.resume(returning: result) } }
@@ -110,10 +110,10 @@ enum PairingClient {
         }
     }
 
-    /// Looks for the Mac's pairing listener over Bonjour (`_annex-pair._tcp`), preferring one named like the Mac.
+    /// Looks for the Mac's pairing listener over Bonjour (`_aos-pair._tcp`), preferring one named like the Mac.
     private static func browse(name: String, timeout: TimeInterval) async -> NWEndpoint? {
-        let browser = NWBrowser(for: .bonjour(type: "_annex-pair._tcp", domain: nil), using: NWParameters())
-        let queue = DispatchQueue(label: "dev.marquart.annex.pairing.browse")
+        let browser = NWBrowser(for: .bonjour(type: "_aos-pair._tcp", domain: nil), using: NWParameters())
+        let queue = DispatchQueue(label: "dev.marquart.aos.pairing.browse")
         defer { browser.cancel() }
         return await withCheckedContinuation { (continuation: CheckedContinuation<NWEndpoint?, Never>) in
             let once = Once()
@@ -139,7 +139,7 @@ private final class ConnectRace: @unchecked Sendable {
     struct Outcome {
         var connection: NWConnection?
         var index: Int?
-        /// Some endpoint was refused because Annex may not use the local network.
+        /// Some endpoint was refused because aOS may not use the local network.
         var denied = false
     }
 
@@ -153,7 +153,7 @@ private final class ConnectRace: @unchecked Sendable {
     static func first(of endpoints: [NWEndpoint], timeout: TimeInterval, stagger: TimeInterval = 0.3) async -> Outcome {
         guard !endpoints.isEmpty else { return Outcome() }
         let race = ConnectRace()
-        let queue = DispatchQueue(label: "dev.marquart.annex.pairing.connect")
+        let queue = DispatchQueue(label: "dev.marquart.aos.pairing.connect")
         return await withCheckedContinuation { continuation in
             race.lock.withLock { race.continuation = continuation }
             for (index, endpoint) in endpoints.enumerated() {

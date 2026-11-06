@@ -4,7 +4,7 @@ import os
 import SwiftUI
 import UIKit
 
-private let log = Logger(subsystem: "dev.marquart.annex.ios", category: "app")
+private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "app")
 
 /// The app's state: paired Macs, added hosts, requests from the agent, and the sessions the tabs show.
 @MainActor @Observable
@@ -72,7 +72,7 @@ final class AppModel {
 
     // Pairing
     var isPairingPresented = false
-    /// A pairing link that opened the app (annex-pair://).
+    /// A pairing link that opened the app (aos-pair://).
     var incomingPairingLink: String?
 
     var deviceName: String {
@@ -157,7 +157,7 @@ final class AppModel {
             guard !isDemo, backgroundTask == nil else { return }
             // Keep the connection for a short while (a quick switch to another app), then let it go: iOS suspends
             // the app anyway, and a fresh connection on return is better than a dead one.
-            let identifier = UIApplication.shared.beginBackgroundTask(withName: "Annex connection") {}
+            let identifier = UIApplication.shared.beginBackgroundTask(withName: "aOS connection") {}
             backgroundTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(25))
                 if !Task.isCancelled {

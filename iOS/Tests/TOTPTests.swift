@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 struct TOTPTests {
     // RFC 6238, Appendix B: the seeds are ASCII "1234567890" repeated to 20, 32 and 64 bytes; 8 digits, 30 s.

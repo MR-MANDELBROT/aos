@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import SwiftUI
 
-/// "Require Face ID to open Annex": locks at launch and after the chosen time in the background.
+/// "Require Face ID to open aOS": locks at launch and after the chosen time in the background.
 @MainActor @Observable
 final class AppLock {
     private(set) var isLocked: Bool
@@ -34,7 +34,7 @@ final class AppLock {
         isUnlocking = true
         defer { isUnlocking = false }
         do {
-            let context = try await Biometrics.authenticate(reason: String(localized: "Unlock Annex"))
+            let context = try await Biometrics.authenticate(reason: String(localized: "Unlock aOS"))
             context.invalidate()
             isLocked = false
             failureMessage = nil
@@ -56,7 +56,7 @@ final class AppLock {
     func setRequired(_ required: Bool) async -> Bool {
         if required {
             do {
-                let context = try await Biometrics.authenticate(reason: String(localized: "Turn on Face ID for Annex"))
+                let context = try await Biometrics.authenticate(reason: String(localized: "Turn on Face ID for aOS"))
                 context.invalidate()
             } catch {
                 return false

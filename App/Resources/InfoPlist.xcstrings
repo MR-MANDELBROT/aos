@@ -8,13 +8,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         }
       }
@@ -26,13 +26,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         }
       }
@@ -62,13 +62,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex verbindet sich mit seinem Arbeitsplatz, einem virtuellen Mac, den macOS als Gerät in deinem lokalen Netzwerk zählt. Sonst wird in deinem Netzwerk nichts angesprochen."
+            "value" : "aOS verbindet sich mit seinem Arbeitsplatz, einem virtuellen Mac, den macOS als Gerät in deinem lokalen Netzwerk zählt. Sonst wird in deinem Netzwerk nichts angesprochen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network, and lets your iPhone find this Mac when you pair it. Nothing else on your network is contacted."
+            "value" : "aOS connects to its workspace, a virtual Mac that macOS counts as a device on your local network, and lets your iPhone find this Mac when you pair it. Nothing else on your network is contacted."
           }
         }
       }

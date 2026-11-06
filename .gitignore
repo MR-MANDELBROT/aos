@@ -4,6 +4,6 @@ DerivedData/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 .swiftpm/
-Annex.xcodeproj/
+aOS.xcodeproj/
 .DS_Store
 .claude/

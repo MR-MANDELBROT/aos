@@ -8,13 +8,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Annex Helper"
+            "value" : "aOS Helper"
           }
         }
       }
@@ -26,13 +26,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annex"
+            "value" : "aOS"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "AnnexHelper"
+            "value" : "AOSHelper"
           }
         }
       }

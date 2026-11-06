@@ -1,7 +1,7 @@
 import SwiftUI
 import VisionKit
 
-/// Pairing with a Mac: scan (or paste) the code Annex on the Mac shows, check what it says, pair.
+/// Pairing with a Mac: scan (or paste) the code aOS on the Mac shows, check what it says, pair.
 struct PairingView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -76,14 +76,14 @@ struct PairingView: View {
                     GlassCard {
                         HStack(spacing: 14) {
                             HeroSymbol(systemName: "qrcode.viewfinder", size: 52)
-                            Text("The camera isn't available here. Paste the pairing link instead: on the Mac, Annex can copy it.")
+                            Text("The camera isn't available here. Paste the pairing link instead: on the Mac, aOS can copy it.")
                                 .font(.subheadline).foregroundStyle(.secondary)
                         }
                     }
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Or paste the link").font(.headline)
-                    TextField(text: $pasted, prompt: Text(verbatim: "annex-pair://v1?…"), axis: .vertical) {
+                    TextField(text: $pasted, prompt: Text(verbatim: "aos-pair://v1?…"), axis: .vertical) {
                         Text("Or paste the link")
                     }
                         .textInputAutocapitalization(.never)
@@ -107,13 +107,13 @@ struct PairingView: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    FactRow(symbol: "desktopcomputer", text: "On the Mac: click Annex in the menu bar, then \u{201C}Pair\u{201D} next to iPhone. Annex uses the Mac's Remote Login for this, nothing else.")
+                    FactRow(symbol: "desktopcomputer", text: "On the Mac: click aOS in the menu bar, then \u{201C}Pair\u{201D} next to iPhone. aOS uses the Mac's Remote Login for this, nothing else.")
                     FactRow(symbol: "key", text: "This iPhone makes its own key. Only its public half goes to the Mac.")
                 }
             }
             .padding()
         }
-        .annexBackground()
+        .aosBackground()
     }
 
     private func accept(_ text: String) {
@@ -122,9 +122,9 @@ struct PairingView: View {
             parseError = nil
             step = .confirm(link)
         } catch PairingLink.ParseError.newerVersion {
-            parseError = String(localized: "This code is from a newer Annex. Update the app on this iPhone.")
+            parseError = String(localized: "This code is from a newer aOS. Update the app on this iPhone.")
         } catch {
-            parseError = String(localized: "That isn't a pairing code of Annex.")
+            parseError = String(localized: "That isn't a pairing code of aOS.")
         }
     }
 
@@ -143,7 +143,7 @@ struct PairingView: View {
                 }
                 .padding(.vertical, 4)
             } footer: {
-                Text("Pair only with your own Mac. Annex on the Mac adds this iPhone's key to your user's SSH keys there.")
+                Text("Pair only with your own Mac. aOS on the Mac adds this iPhone's key to your user's SSH keys there.")
             }
             Section("How the iPhone reaches it") {
                 ForEach(link.hosts, id: \.self) { host in
@@ -163,7 +163,7 @@ struct PairingView: View {
             } header: {
                 Text("Name of this iPhone")
             } footer: {
-                Text("Annex on the Mac lists paired devices by this name.")
+                Text("aOS on the Mac lists paired devices by this name.")
             }
             Section {
                 Button {
@@ -205,7 +205,7 @@ struct PairingView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .annexBackground()
+        .aosBackground()
     }
 
     private func doneView(_ mac: PairedMac) -> some View {
@@ -225,7 +225,7 @@ struct PairingView: View {
             .controlSize(.large)
         }
         .padding()
-        .annexBackground()
+        .aosBackground()
     }
 
     private func failedView(_ link: PairingLink, _ message: String) -> some View {
@@ -246,7 +246,7 @@ struct PairingView: View {
                 .buttonStyle(.glass)
         }
         .padding()
-        .annexBackground()
+        .aosBackground()
     }
 }
 
@@ -266,7 +266,7 @@ private struct ProgressLine: View {
     }
 }
 
-/// VisionKit's live scanner for QR codes; reports the first `annex-pair:` code it sees.
+/// VisionKit's live scanner for QR codes; reports the first `aos-pair:` code it sees.
 struct QRScanner: UIViewControllerRepresentable {
     let onCode: (String) -> Void
 

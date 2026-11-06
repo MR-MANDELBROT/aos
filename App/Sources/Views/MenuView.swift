@@ -1,4 +1,4 @@
-import AnnexKit
+import AOSKit
 import SwiftUI
 
 /// The menu bar window: what the workspace and the session are doing, and the few actions that matter.

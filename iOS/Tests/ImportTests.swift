@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 struct BitwardenImportTests {
     /// Shaped like Bitwarden's "JSON" export (unencrypted), with a login, a note, a card, a login with custom fields

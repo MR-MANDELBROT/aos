@@ -19,7 +19,7 @@ struct VaultTab: View {
                     list
                 }
             }
-            .annexBackground()
+            .aosBackground()
             .navigationTitle("Vault")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -75,7 +75,7 @@ struct VaultTab: View {
             VStack(spacing: 20) {
                 HeroSymbol(systemName: "key.horizontal", size: 76).padding(.top, 40)
                 Text("No logins yet").font(.title2.weight(.semibold))
-                Text("When your agent needs to sign in somewhere, Annex finds the login here and asks you first.")
+                Text("When your agent needs to sign in somewhere, aOS finds the login here and asks you first.")
                     .foregroundStyle(.secondary).multilineTextAlignment(.center)
                 VStack(spacing: 12) {
                     Button {
@@ -105,7 +105,7 @@ struct PromiseList: View {
         VStack(alignment: .leading, spacing: 10) {
             FactRow(symbol: "iphone", text: "Your passwords stay on this iPhone, in its keychain. They aren't synced or backed up.")
             FactRow(symbol: "faceid", text: "Every look at a password needs Face ID or your passcode.")
-            FactRow(symbol: "eye.slash", text: "Your agent never sees them. Annex fills them in for it after you approve.")
+            FactRow(symbol: "eye.slash", text: "Your agent never sees them. aOS fills them in for it after you approve.")
         }
     }
 }
@@ -400,7 +400,7 @@ struct VaultEditorView: View {
                     if totpProblem {
                         Text("That isn't a valid secret for one-time codes.").foregroundStyle(.red)
                     } else {
-                        Text("With a secret here, Annex sends the current code together with the password.")
+                        Text("With a secret here, aOS sends the current code together with the password.")
                     }
                 }
                 Section("Notes") {

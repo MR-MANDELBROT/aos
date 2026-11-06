@@ -1,9 +1,9 @@
 import Foundation
 import os
 
-private let log = Logger(subsystem: "dev.marquart.annex.ios", category: "companion")
+private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "companion")
 
-/// The byte pipe the companion API runs over: the exec channel of `annex-companion serve`, or memory in tests.
+/// The byte pipe the companion API runs over: the exec channel of `aos-companion serve`, or memory in tests.
 protocol CompanionTransport: Sendable {
     func send(_ data: Data) async throws
     /// What arrives, in chunks of any size. Called once.
@@ -25,10 +25,10 @@ enum CompanionError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .closed: String(localized: "The connection to Annex on the Mac ended.")
-        case .timeout: String(localized: "Annex on the Mac didn't answer in time.")
+        case .closed: String(localized: "The connection to aOS on the Mac ended.")
+        case .timeout: String(localized: "aOS on the Mac didn't answer in time.")
         case .refused(let message): message
-        case .invalidAnswer: String(localized: "Annex on the Mac sent an answer this app doesn't understand.")
+        case .invalidAnswer: String(localized: "aOS on the Mac sent an answer this app doesn't understand.")
         }
     }
 }
@@ -137,7 +137,7 @@ actor CompanionClient {
         }
         guard response.ok else {
             log.notice("Companion \(op, privacy: .public) refused: \(response.error ?? "", privacy: .public)")
-            throw CompanionError.refused(response.error ?? String(localized: "Annex on the Mac said no."))
+            throw CompanionError.refused(response.error ?? String(localized: "aOS on the Mac said no."))
         }
         return response
     }

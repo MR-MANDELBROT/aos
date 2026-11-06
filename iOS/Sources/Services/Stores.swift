@@ -12,7 +12,7 @@ struct PairedMac: Codable, Identifiable, Equatable, Sendable {
     /// The Mac's SSH host key (`ssh-ed25519 AAAA...`), pinned at pairing.
     var hostKey: String
     var hostKeyFingerprint: String
-    /// Path of `annex-companion` on the Mac.
+    /// Path of `aos-companion` on the Mac.
     var companionPath: String
     var pairedAt = Date()
     /// The address that worked last time; tried first.
@@ -48,8 +48,8 @@ struct SSHHost: Codable, Identifiable, Equatable, Hashable, Sendable {
 
 /// The lists of paired Macs and added hosts.
 enum ConfigStore {
-    private static let macsService = "dev.marquart.annex.macs"
-    private static let hostsService = "dev.marquart.annex.hosts"
+    private static let macsService = "dev.marquart.aos.macs"
+    private static let hostsService = "dev.marquart.aos.hosts"
 
     static func loadMacs() -> [PairedMac] {
         (try? Keychain.getJSON([PairedMac].self, service: macsService, account: "list")) ?? []
@@ -71,8 +71,8 @@ enum ConfigStore {
 /// Secrets that open other computers: SSH passwords of added hosts and the Mac account for the Mac's own screen.
 /// Every read needs Face ID (or the passcode).
 enum SecretStore {
-    private static let hostPasswordService = "dev.marquart.annex.hostpassword"
-    private static let screenService = "dev.marquart.annex.macscreen"
+    private static let hostPasswordService = "dev.marquart.aos.hostpassword"
+    private static let screenService = "dev.marquart.aos.macscreen"
 
     struct ScreenLogin: Codable, Equatable, Sendable {
         var username: String

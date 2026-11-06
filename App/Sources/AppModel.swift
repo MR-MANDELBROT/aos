@@ -1,4 +1,4 @@
-import AnnexKit
+import AOSKit
 import Foundation
 import ServiceManagement
 import Sparkle
@@ -34,7 +34,7 @@ final class AppModel: ObservableObject {
     @Published var settings: AgentSettings
     @Published var loginItemEnabled = false
     @Published var sessionAgentStatus: SMAppService.Status = .notRegistered
-    /// What the session keeper does (run/keeper.json, written by annex-session).
+    /// What the session keeper does (run/keeper.json, written by aos-session).
     @Published var keeper: KeeperStatus?
     /// Recent Claude Code conversations, for the settings (filled while the settings show them).
     @Published var conversations: [ClaudeConversation] = []
@@ -134,9 +134,9 @@ final class AppModel: ObservableObject {
 
     // MARK: Lifecycle
 
-    /// Design review without a workspace: ANNEX_PREVIEW=step:<n> | approval | help | done shows that state.
+    /// Design review without a workspace: AOS_PREVIEW=step:<n> | approval | help | done shows that state.
     func applyPreview() {
-        guard let preview = ProcessInfo.processInfo.environment["ANNEX_PREVIEW"] else { return }
+        guard let preview = ProcessInfo.processInfo.environment["AOS_PREVIEW"] else { return }
         let parts = preview.split(separator: ":").map(String.init)
         if parts.first != "step" {
             // Only the window being reviewed
@@ -177,16 +177,16 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// A design preview (ANNEX_PREVIEW): no agent socket, no background process, no timers. Run it with ANNEX_HOME
+    /// A design preview (AOS_PREVIEW): no agent socket, no background process, no timers. Run it with AOS_HOME
     /// pointing elsewhere; it must not register or remove the real background process.
-    static let isPreview = ProcessInfo.processInfo.environment["ANNEX_PREVIEW"] != nil
+    static let isPreview = ProcessInfo.processInfo.environment["AOS_PREVIEW"] != nil
     private var previewWindows: [NSWindow] = []
 
     func launched() {
         if Self.isPreview {
-            if ProcessInfo.processInfo.environment["ANNEX_APPEARANCE"] == "dark" {
+            if ProcessInfo.processInfo.environment["AOS_APPEARANCE"] == "dark" {
                 NSApp.appearance = NSAppearance(named: .darkAqua)
-            } else if ProcessInfo.processInfo.environment["ANNEX_APPEARANCE"] == "light" {
+            } else if ProcessInfo.processInfo.environment["AOS_APPEARANCE"] == "light" {
                 NSApp.appearance = NSAppearance(named: .aqua)
             }
             refresh(loginItems: false)
@@ -237,10 +237,10 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// ANNEX_SNAPSHOT=<folder>: a few seconds after the preview, every visible window is drawn into
+    /// AOS_SNAPSHOT=<folder>: a few seconds after the preview, every visible window is drawn into
     /// <folder>/<title>.png and the app quits (design review where screen recording isn't allowed).
     private func snapshotIfAsked() {
-        guard let folder = ProcessInfo.processInfo.environment["ANNEX_SNAPSHOT"] else { return }
+        guard let folder = ProcessInfo.processInfo.environment["AOS_SNAPSHOT"] else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
             let dir = URL(fileURLWithPath: folder, isDirectory: true)
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -292,13 +292,13 @@ final class AppModel: ObservableObject {
             sessionAgentStatus = SessionAgent.service.status
         }
         setup.refreshCompletion()
-        // Awake while something must stay reachable: Annex's own session or kept conversations.
+        // Awake while something must stay reachable: aOS's own session or kept conversations.
         let ownSession = settings.sessionEnabled && ClaudeCode.isConfigured(session: paths.session)
         keepAwake.set(settings.keepAwake && sessionAgentStatus == .enabled && (ownSession || reachableCount > 0))
         updateActivationPolicy()
     }
 
-    /// A Dock icon (and an entry in the app switcher) while one of Annex's windows is open; menu bar only otherwise.
+    /// A Dock icon (and an entry in the app switcher) while one of aOS's windows is open; menu bar only otherwise.
     func updateActivationPolicy() {
         let windowOpen = NSApp.windows.contains { $0.isVisible && $0.canBecomeMain && !($0.className.contains("MenuBarExtra")) }
         let wanted: NSApplication.ActivationPolicy = windowOpen ? .regular : .accessory
@@ -328,7 +328,7 @@ final class AppModel: ObservableObject {
         } catch { append("settings: \(error.localizedDescription)") }
     }
 
-    /// The background process (annex-session) runs while it has something to do: Annex's own session once it is set
+    /// The background process (aos-session) runs while it has something to do: aOS's own session once it is set
     /// up, or keeping conversations reachable.
     func updateSessionAgent() {
         let needed = settings.keepReachable
@@ -432,7 +432,7 @@ extension SessionStatus {
 
 /// The LaunchAgent that keeps the Claude Code session running (App/LaunchAgents).
 enum SessionAgent {
-    static let plistName = "dev.marquart.annex.session.plist"
+    static let plistName = "dev.marquart.aos.session.plist"
     static var service: SMAppService { SMAppService.agent(plistName: plistName) }
 
     static func enable() throws {
@@ -448,7 +448,7 @@ enum SessionAgent {
     static func restart(paths: Paths) {
         let sock = paths.run.appendingPathComponent("session.sock")
         guard let client = try? RawSocket(path: sock) else { return }
-        client.send(Data("\u{1B}]annex;restart\u{07}".utf8))
+        client.send(Data("\u{1B}]aos;restart\u{07}".utf8))
         client.close()
     }
 }

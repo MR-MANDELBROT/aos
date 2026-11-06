@@ -2,16 +2,16 @@
 import Foundation
 import UIKit
 
-/// Sample data for screenshots and UI work: start the app with `-AnnexDemo YES` (debug builds only).
-/// `-AnnexDemoTab overview|terminal|screen|vault` picks the tab, `-AnnexDemoSheet signin|help|pairing|settings` opens
+/// Sample data for screenshots and UI work: start the app with `-AOSDemo YES` (debug builds only).
+/// `-AOSDemoTab overview|terminal|screen|vault` picks the tab, `-AOSDemoSheet signin|help|pairing|settings` opens
 /// a request or sheet. Nothing here touches the keychain or the network.
 enum Demo {
-    static var isRequested: Bool { UserDefaults.standard.bool(forKey: "AnnexDemo") }
-    static var tab: String? { UserDefaults.standard.string(forKey: "AnnexDemoTab") }
-    static var sheet: String? { UserDefaults.standard.string(forKey: "AnnexDemoSheet") }
-    /// `-AnnexDemoUnpaired YES`: the welcome page; `-AnnexDemoEmptyVault YES`: the vault before the first login.
-    static var unpaired: Bool { UserDefaults.standard.bool(forKey: "AnnexDemoUnpaired") }
-    static var emptyVault: Bool { UserDefaults.standard.bool(forKey: "AnnexDemoEmptyVault") }
+    static var isRequested: Bool { UserDefaults.standard.bool(forKey: "AOSDemo") }
+    static var tab: String? { UserDefaults.standard.string(forKey: "AOSDemoTab") }
+    static var sheet: String? { UserDefaults.standard.string(forKey: "AOSDemoSheet") }
+    /// `-AOSDemoUnpaired YES`: the welcome page; `-AOSDemoEmptyVault YES`: the vault before the first login.
+    static var unpaired: Bool { UserDefaults.standard.bool(forKey: "AOSDemoUnpaired") }
+    static var emptyVault: Bool { UserDefaults.standard.bool(forKey: "AOSDemoEmptyVault") }
 
     struct Content {
         var mac: PairedMac
@@ -97,13 +97,13 @@ enum Demo {
 
     static let terminalText = """
     Last login: Thu Nov  6 08:12:44 on ttys002\r
-    \u{1B}[1;32mmax@Maxs-MacBook-Pro\u{1B}[0m \u{1B}[1;34m~\u{1B}[0m % cd Developer/annex\r
-    \u{1B}[1;32mmax@Maxs-MacBook-Pro\u{1B}[0m \u{1B}[1;34m~/Developer/annex\u{1B}[0m % git status --short\r
+    \u{1B}[1;32mmax@Maxs-MacBook-Pro\u{1B}[0m \u{1B}[1;34m~\u{1B}[0m % cd Developer/aos\r
+    \u{1B}[1;32mmax@Maxs-MacBook-Pro\u{1B}[0m \u{1B}[1;34m~/Developer/aos\u{1B}[0m % git status --short\r
      M iOS/Sources/App/AppModel.swift\r
     ?? iOS/Sources/Screen/\r
-    \u{1B}[1;32mmax@Maxs-MacBook-Pro\u{1B}[0m \u{1B}[1;34m~/Developer/annex\u{1B}[0m % uptime\r
+    \u{1B}[1;32mmax@Maxs-MacBook-Pro\u{1B}[0m \u{1B}[1;34m~/Developer/aos\u{1B}[0m % uptime\r
     08:15  up 3 days, 22:41, 2 users, load averages: 1.42 1.37 1.29\r
-    \u{1B}[1;32mmax@Maxs-MacBook-Pro\u{1B}[0m \u{1B}[1;34m~/Developer/annex\u{1B}[0m %
+    \u{1B}[1;32mmax@Maxs-MacBook-Pro\u{1B}[0m \u{1B}[1;34m~/Developer/aos\u{1B}[0m %
     """
 
     // MARK: Pictures

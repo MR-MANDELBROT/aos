@@ -1,13 +1,13 @@
-# Annex for iPhone: notes
+# aOS for iPhone: notes
 
-Design: `Docs/COMPANION.md`. This file holds what the Mac side has to match, requests for AnnexRFB (not changed from
+Design: `Docs/COMPANION.md`. This file holds what the Mac side has to match, requests for AOSRFB (not changed from
 here), what was learned about the libraries, and what is open.
 
 ## Layout
 
 ```
 iOS/
-  project.yml, generate.sh      XcodeGen spec (target Annex, dev.marquart.annex.ios, iOS 27, Swift 6); generate.sh
+  project.yml, generate.sh      XcodeGen spec (target aOS, dev.marquart.aos.ios, iOS 27, Swift 6); generate.sh
                                 also copies the Mac app's Icon Composer icon (platform iOS) and Package.resolved
   Package.resolved              exact package revisions (the generated project is gitignored)
   Sources/Core                  pure logic: pairing link and proof, OpenSSH key format, matching rule, TOTP, CSV,
@@ -16,14 +16,14 @@ iOS/
   Sources/SSH                   SSHConnection (Citadel over Network.framework), SessionChannel (exec, PTY),
                                 LocalForwarder (127.0.0.1 listener -> direct-tcpip), PairingClient
   Sources/Companion             CompanionClient (actor), MockCompanionServer (tests and demo), command line
-  Sources/App                   AnnexApp, AppModel, MacConnection (reconnects), settings, lock, demo data (debug)
+  Sources/App                   AOSApp, AppModel, MacConnection (reconnects), settings, lock, demo data (debug)
   Sources/{Overview,Pairing,Terminal,Screen,Vault,SignIn,Settings,Design}   the UI
   Tests                         unit and integration tests (in-process SSH, RFB and pairing servers)
   Tools                         test.sh, sim.sh, screenshots.sh, localize.sh (+ translations_de.py), render-icon.sh
 ```
 
-Run the tests: `iOS/Tools/test.sh`. Run the app with sample data: `iOS/Tools/sim.sh -AnnexDemo YES` (debug builds
-only; `-AnnexDemoTab vault`, `-AnnexDemoSheet signin|help|pairing|settings|lock|...`, see `Sources/App/Demo.swift`).
+Run the tests: `iOS/Tools/test.sh`. Run the app with sample data: `iOS/Tools/sim.sh -AOSDemo YES` (debug builds
+only; `-AOSDemoTab vault`, `-AOSDemoSheet signin|help|pairing|settings|lock|...`, see `Sources/App/Demo.swift`).
 Screenshots of every screen, light and dark: `iOS/Tools/screenshots.sh de` (or `en`), into `build/ios-screenshots`.
 Strings: write English in code, German in `Tools/translations_de.py`, then `iOS/Tools/localize.sh`; it refuses
 nothing but reports missing German, mismatched format specifiers and dashes used as punctuation.
@@ -35,7 +35,7 @@ deployment target for that build only when the simulator is older. The app uses 
 
 Pairing (`Sources/Core/PairingLink.swift`, tests in `Tests/PairingTests.swift`):
 
-- URL `annex-pair://v1?n=&h=&p=&s=&u=&k=&c=`. Percent-encode every value with only the unreserved characters left
+- URL `aos-pair://v1?n=&h=&p=&s=&u=&k=&c=`. Percent-encode every value with only the unreserved characters left
   as they are (`A-Z a-z 0-9 - . _ ~`): `+`, `/` and `=` in the fingerprint must become `%2B`, `%2F`, `%3D`, spaces
   `%20` (not `+`; the iPhone does not turn `+` into a space). `h` may separate hosts with a literal `,` or `%2C`.
   `s` defaults to 22, `n` falls back to the first host. A host other than `v1` that looks like `v2`, `v3` makes the
@@ -56,10 +56,10 @@ Pairing (`Sources/Core/PairingLink.swift`, tests in `Tests/PairingTests.swift`):
   (the iPhone already removes control characters and line breaks and cuts it to 64 characters, but the Mac must not
   trust that: a line break in the name would add a line to `authorized_keys`).
 - Answer: one JSON line, then close. The iPhone uses `user` for SSH (falls back to `u`) and `companion` as the path
-  (falls back to `/Applications/Annex.app/Contents/MacOS/annex-companion`). A close without an answer is shown as
+  (falls back to `/Applications/aOS.app/Contents/MacOS/aos-companion`). A close without an answer is shown as
   "the Mac ended the pairing, show a new code".
 - The iPhone connects to the pairing port of each host in `h` in order; if none answers it browses Bonjour for
-  `_annex-pair._tcp` (a service named like `n` wins, otherwise the only one found).
+  `_aos-pair._tcp` (a service named like `n` wins, otherwise the only one found).
 - `authorized_keys` options: the terminal needs a PTY and the screens need port forwarding (direct-tcpip to
   127.0.0.1:5900 and to the VM). `no-agent-forwarding,no-X11-forwarding` as in the design is fine; `restrict` or
   `command=` would break the terminal and the screens.
@@ -79,7 +79,7 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
 - `approval` events get a sheet (who, why, for how long, countdown) with Allow / Don't Allow ->
   `{"op":"approval.answer","request":"…","allowed":true|false}`; `approval.closed` shows the result. Sign-ins and
   approvals share one queue and one sheet, in the order they came; "Later" keeps one waiting in the overview.
-- `{"event":"mac","state":"unavailable","detail":"…"}` shows "Annex on the Mac isn't answering right now (…). It
+- `{"event":"mac","state":"unavailable","detail":"…"}` shows "aOS on the Mac isn't answering right now (…). It
   keeps trying." on the Mac card; any other `mac` state, or a successful heartbeat, clears it.
 - Typing into the workspace screen: text with characters beyond ASCII goes as `{"op":"type","text":"…"}` (all of
   the inserted text), through the same queue as the keys so the order holds; ASCII stays key events over RFB.
@@ -92,9 +92,9 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   `failed`; others as they come.
 - Matching rule: as in the design, plus: IP addresses only match exactly (otherwise `0.0.1` would be a "parent" of
   `10.0.0.1`). The Mac should check the same.
-- Exit status 127 of the exec channel is shown as "Annex isn't installed where it was paired; pair again".
+- Exit status 127 of the exec channel is shown as "aOS isn't installed where it was paired; pair again".
 
-## Requests for AnnexRFB (not changed from here)
+## Requests for AOSRFB (not changed from here)
 
 1. A transport hook: `RFBClient` only connects with NWConnection to host:port, so the iPhone runs a loopback
    listener (`LocalForwarder`) and bridges each connection to a direct-tcpip channel. An initializer that takes a
@@ -137,12 +137,12 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
 
 - Not run on a real iPhone: Secure Enclave key, Face ID prompts and the keychain ACL, camera scanning, the local
   network permission prompt, cellular and VPN behavior. All of that needs a device and Max's signing.
-- Not run against the real Mac side (pairing listener and `annex-companion` were built in parallel): tested
+- Not run against the real Mac side (pairing listener and `aos-companion` were built in parallel): tested
   against the in-process mock, an NIOSSH server and a fake pairing listener. First real run: pair, then watch
-  `log stream --predicate 'subsystem == "dev.marquart.annex.ios"'` on the Mac for the phone's console.
+  `log stream --predicate 'subsystem == "dev.marquart.aos.ios"'` on the Mac for the phone's console.
 - Notifications while the app is closed (phase 2, CloudKit) are not built; requests show while the app is open.
   In the background the connection is kept for 25 s, then dropped and rebuilt on return.
-- Unpairing on the iPhone doesn't remove the key on the Mac (the design leaves that to Annex on the Mac).
+- Unpairing on the iPhone doesn't remove the key on the Mac (the design leaves that to aOS on the Mac).
 - iPhone only (no iPad layout). Landscape works but wasn't tuned.
 - Local network denial is detected for pairing (NWConnection path); for SSH (NIO on Network.framework) it shows as
   "not reachable" with the hint about Tailscale and the local network setting.

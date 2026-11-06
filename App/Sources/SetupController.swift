@@ -1,4 +1,4 @@
-import AnnexKit
+import AOSKit
 import Foundation
 import ServiceManagement
 import UserNotifications
@@ -130,7 +130,7 @@ final class SetupController: ObservableObject {
     func checkRequirements() {
         var problems: [String] = []
         if !VZVirtualMachine.isSupported {
-            problems.append(String(localized: "This Mac can't run virtual machines. Annex needs a Mac with Apple silicon and can't run inside a virtual machine itself."))
+            problems.append(String(localized: "This Mac can't run virtual machines. aOS needs a Mac with Apple silicon and can't run inside a virtual machine itself."))
         }
         let v = ProcessInfo.processInfo.operatingSystemVersion
         if v.majorVersion < 27 { problems.append(String(localized: "macOS 27 or later is required.")) }
@@ -294,9 +294,9 @@ final class SetupController: ObservableObject {
             let image = try await client.screenshot()
             await client.disconnect()
             guard !ScreenCheck.isBlank(image) else { throw SetupError.screenSharingBlank }
-            // Right away the helper for sign-ins: the user flips one switch, Annex enters the password. Skippable:
+            // Right away the helper for sign-ins: the user flips one switch, aOS enters the password. Skippable:
             // it can be set up later in the settings.
-            self.activity = .working(String(localized: "In the workspace: switch on Annex Helper (Annex enters the password)"))
+            self.activity = .working(String(localized: "In the workspace: switch on aOS Helper (aOS enters the password)"))
             await AppModel.shared.allowHelper()
             self.note(AppModel.shared.helperState == .allowed ? "the helper may sign in" : "helper not allowed (later in the settings)")
             try await self.workspace.provisioner.finish(host: ip)
@@ -323,7 +323,7 @@ final class SetupController: ObservableObject {
 
     // MARK: 7. Connect agents
 
-    var mcpBinary: URL { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/annex-mcp") }
+    var mcpBinary: URL { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/aos-mcp") }
 
     func connectAgents() {
         run(String(localized: "Connecting your agents")) {

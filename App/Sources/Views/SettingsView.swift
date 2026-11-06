@@ -1,7 +1,7 @@
-import AnnexKit
+import AOSKit
 import SwiftUI
 
-/// The settings window: one tab per part of Annex. Changes apply at once.
+/// The settings window: one tab per part of aOS. Changes apply at once.
 struct SettingsView: View {
     @EnvironmentObject var model: AppModel
     @AppStorage("settingsTab") private var tab = "general"
@@ -91,7 +91,7 @@ struct GeneralSettings: View {
         case .allowed:
             return String(localized: "When a website needs a sign-in, your agent asks; you approve on your iPhone or Mac and \(Brand.name) fills it in.")
         case .unavailable(let reason): return reason
-        case .allowing: return String(localized: "Switch on Annex Helper in the workspace window.")
+        case .allowing: return String(localized: "Switch on aOS Helper in the workspace window.")
         default:
             return String(localized: "Once: allow \(Brand.name)'s helper in the workspace to see the sign-in field and type into it. Your agent never sees passwords.")
         }

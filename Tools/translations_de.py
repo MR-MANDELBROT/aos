@@ -1,8 +1,8 @@
 # German UI strings (key: English source). Applied by Tools/localize.sh. Style: plain German, real umlauts, no dashes
 # as sentence punctuation.
 DE = {
-    'CFBundleDisplayName': 'Annex',
-    'CFBundleName': 'Annex',
+    'CFBundleDisplayName': 'aOS',
+    'CFBundleName': 'aOS',
     'NSHumanReadableCopyright': '© 2026 Maximilian Marquart',
     '"%@" reachable in the Claude app': '„%@“ in der Claude-App erreichbar',
     '%@ creates the virtual Mac and installs macOS into it. This takes about 10 minutes.':
@@ -193,7 +193,7 @@ DE.update({
 DE.update({
     'macOS asks whether %@ may connect to devices on your local network. Allow it: the workspace counts as such a device.':
         'macOS fragt, ob %@ sich mit Geräten im lokalen Netzwerk verbinden darf. Erlaube es: Der Arbeitsplatz zählt als solches Gerät.',
-    'NSLocalNetworkUsageDescription': 'Annex verbindet sich mit seinem Arbeitsplatz, einem virtuellen Mac, den macOS als Gerät in deinem lokalen Netzwerk zählt. Sonst wird in deinem Netzwerk nichts angesprochen.',
+    'NSLocalNetworkUsageDescription': 'aOS verbindet sich mit seinem Arbeitsplatz, einem virtuellen Mac, den macOS als Gerät in deinem lokalen Netzwerk zählt. Sonst wird in deinem Netzwerk nichts angesprochen.',
 })
 
 DE.update({
@@ -253,8 +253,8 @@ DE.update({
 })
 
 DE.update({
-    "This Mac can't run virtual machines. Annex needs a Mac with Apple silicon and can't run inside a virtual machine itself.":
-        "Dieser Mac kann keine virtuellen Maschinen ausführen. Annex braucht einen Mac mit Apple Silicon und kann nicht selbst in einer virtuellen Maschine laufen.",
+    "This Mac can't run virtual machines. aOS needs a Mac with Apple silicon and can't run inside a virtual machine itself.":
+        "Dieser Mac kann keine virtuellen Maschinen ausführen. aOS braucht einen Mac mit Apple Silicon und kann nicht selbst in einer virtuellen Maschine laufen.",
     # Keeper, iPhone, sign-ins (2026-11-06)
     '%@ connected': '%@ verbunden',
     '%@ is paired.': '%@ ist gekoppelt.',
@@ -280,7 +280,7 @@ DE.update({
     'Automatically: conversations from the Claude app': 'Automatisch: Unterhaltungen aus der Claude-App',
     'Away from your Wi-Fi, the iPhone reaches this Mac through a VPN such as Tailscale. With it on both devices, the app finds the Mac by itself.': 'Außerhalb deines WLANs erreicht das iPhone diesen Mac über ein VPN wie Tailscale. Ist es auf beiden Geräten an, findet die App den Mac von selbst.',
     'Cancel': 'Abbrechen',
-    'Click Open System Settings if macOS asks, then switch on Annex Helper under Accessibility. When macOS asks for a password, let %@ enter it. This happens only once.': 'Fragt macOS, klicke auf „Systemeinstellungen öffnen“ und schalte „Annex Helper“ ein. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig.',
+    'Click Open System Settings if macOS asks, then switch on aOS Helper under Accessibility. When macOS asks for a password, let %@ enter it. This happens only once.': 'Fragt macOS, klicke auf „Systemeinstellungen öffnen“ und schalte „aOS Helper“ ein. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig.',
     'Connected now': 'Gerade verbunden',
     'Conversations': 'Unterhaltungen',
     "Don't Sign In": 'Nicht anmelden',
@@ -288,7 +288,7 @@ DE.update({
     'Folder no longer exists': 'Ordner gibt es nicht mehr',
     'From a terminal': 'Aus dem Terminal',
     'General': 'Allgemein',
-    'In the workspace: switch on Annex Helper (Annex enters the password)': 'Im Arbeitsplatz „Annex Helper“ einschalten (Annex gibt das Passwort ein)',
+    'In the workspace: switch on aOS Helper (aOS enters the password)': 'Im Arbeitsplatz „aOS Helper“ einschalten (aOS gibt das Passwort ein)',
     'Inactive for longer than %lld hours': 'Länger als %lld Stunden inaktiv',
     'Keep conversations reachable': 'Unterhaltungen erreichbar halten',
     'Keep only automatically': 'Nur automatisch halten',
@@ -302,11 +302,11 @@ DE.update({
     'No iPhone paired yet.': 'Noch kein iPhone gekoppelt.',
     'No sign-in waiting.': 'Keine Anmeldung wartet.',
     'Not Now': 'Nicht jetzt',
-    'Click Open System Settings if macOS asks, then switch on Annex Helper. When macOS asks for the password to allow Annex Helper, click Enter the workspace password. Only then: if another window asks, click Not Now.':
-        'Klicke auf „Systemeinstellungen öffnen“, falls macOS fragt, und schalte dann „Annex Helper“ ein. Fragt macOS nach dem Passwort, um Annex Helper zu erlauben, klicke auf „Passwort des Arbeitsplatzes eingeben“. Nur dann: Fragt ein anderes Fenster, klicke auf „Nicht jetzt“.',
-    'Move Annex to the Applications folder?': 'Annex in den Ordner „Programme“ bewegen?',
-    'Annex keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again.':
-        'Annex arbeitet im Hintergrund und trägt sich bei deinen Agenten und deinem iPhone ein. Dafür braucht es einen festen Platz. Es kopiert sich dorthin und öffnet sich neu.',
+    'Click Open System Settings if macOS asks, then switch on aOS Helper. When macOS asks for the password to allow aOS Helper, click Enter the workspace password. Only then: if another window asks, click Not Now.':
+        'Klicke auf „Systemeinstellungen öffnen“, falls macOS fragt, und schalte dann „aOS Helper“ ein. Fragt macOS nach dem Passwort, um aOS Helper zu erlauben, klicke auf „Passwort des Arbeitsplatzes eingeben“. Nur dann: Fragt ein anderes Fenster, klicke auf „Nicht jetzt“.',
+    'Move aOS to the Applications folder?': 'aOS in den Ordner „Programme“ bewegen?',
+    'aOS keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again.':
+        'aOS arbeitet im Hintergrund und trägt sich bei deinen Agenten und deinem iPhone ein. Dafür braucht es einen festen Platz. Es kopiert sich dorthin und öffnet sich neu.',
     'Move to Applications': 'In „Programme“ bewegen',
     'Not connected': 'Nicht verbunden',
     'Not paired yet': 'Noch nicht gekoppelt',
@@ -331,7 +331,7 @@ DE.update({
     'Remote Control turned off': 'Remote Control ausgeschaltet',
     'Remote Login': 'Entfernte Anmeldung',
     'Remove': 'Entfernen',
-    'Right after, the workspace asks once more: switch on Annex Helper. %@ enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password.': 'Gleich danach fragt der Arbeitsplatz noch einmal: Schalte „Annex Helper“ ein. Das Passwort gibt %@ selbst ein. Damit kann sich dein Agent nach deiner Freigabe auf Websites anmelden, ohne je das Passwort zu sehen.',
+    'Right after, the workspace asks once more: switch on aOS Helper. %@ enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password.': 'Gleich danach fragt der Arbeitsplatz noch einmal: Schalte „aOS Helper“ ein. Das Passwort gibt %@ selbst ein. Damit kann sich dein Agent nach deiner Freigabe auf Websites anmelden, ohne je das Passwort zu sehen.',
     'Scan this code with %@ on your iPhone': 'Scanne diesen Code mit %@ auf deinem iPhone',
     'Scheduled task': 'Geplante Aufgabe',
     'Set Up …': 'Einrichten …',
@@ -340,7 +340,7 @@ DE.update({
     'Sign-ins for your agent': 'Anmeldungen für deinen Agenten',
     'Signing in': 'Anmelden',
     'Starting': 'Startet',
-    'Switch on Annex Helper in the workspace window.': 'Schalte „Annex Helper“ im Fenster des Arbeitsplatzes ein.',
+    'Switch on aOS Helper in the workspace window.': 'Schalte „aOS Helper“ im Fenster des Arbeitsplatzes ein.',
     'Tap “Pair with your Mac”.': 'Tippe auf „Mit deinem Mac koppeln“.',
     "%@ isn't on your iPhone yet?": '%@ ist noch nicht auf deinem iPhone?',
     "The Mac doesn't go to sleep by itself while a session or a kept conversation runs. Closing a laptop's lid still puts it to sleep.": 'Der Mac schläft nicht von selbst ein, solange eine Sitzung oder eine gehaltene Unterhaltung läuft. Zuklappen schickt ein MacBook trotzdem in den Ruhezustand.',
@@ -365,6 +365,6 @@ DE.update({
     'on %@. Approve on your iPhone or here on the Mac.': 'bei %@. Gib auf deinem iPhone oder hier am Mac frei.',
     'on %@. Approve on your iPhone or here.': 'bei %@. Gib auf deinem iPhone oder hier frei.',
     '·': '·',
-    'Click Open System Settings if macOS asks, then switch on Annex Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once.': 'Fragt macOS, klicke auf „Systemeinstellungen öffnen“, dann schalte „Annex Helper“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie vorher mit ihrem x. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig.',
+    'Click Open System Settings if macOS asks, then switch on aOS Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once.': 'Fragt macOS, klicke auf „Systemeinstellungen öffnen“, dann schalte „aOS Helper“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie vorher mit ihrem x. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig.',
     'Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x.': 'Schalte „Bildschirmfreigabe“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie mit ihrem x.',
 })

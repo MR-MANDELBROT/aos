@@ -1,7 +1,7 @@
 import Foundation
 import NIOCore
 import NIOPosix
-@testable import Annex
+@testable import aOS
 
 // MARK: - Screen sharing
 
@@ -145,7 +145,7 @@ private final class RFBSession: ChannelInboundHandler, @unchecked Sendable {
 
 // MARK: - Pairing listener
 
-/// The Mac's pairing listener: checks the proof with the code and answers like Annex on the Mac.
+/// The Mac's pairing listener: checks the proof with the code and answers like aOS on the Mac.
 final class FakePairingListener: @unchecked Sendable {
     enum Behavior: Sendable { case accept(user: String, companion: String), tampered(user: String, companion: String), refuse(String), hangUp }
 

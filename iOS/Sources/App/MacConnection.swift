@@ -4,7 +4,7 @@ import Observation
 import os
 import UIKit
 
-private let log = Logger(subsystem: "dev.marquart.annex.ios", category: "mac")
+private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "mac")
 
 /// The connection to the paired Mac: SSH (reconnecting on its own), and inside it the companion API.
 @MainActor @Observable
@@ -23,7 +23,7 @@ final class MacConnection {
         case notStarted
         case starting
         case ready
-        /// SSH works, but Annex on the Mac doesn't answer (not installed, too old, not running).
+        /// SSH works, but aOS on the Mac doesn't answer (not installed, too old, not running).
         case unavailable(String)
     }
 
@@ -32,7 +32,7 @@ final class MacConnection {
     private(set) var companionState: CompanionState = .notStarted
     private(set) var hello: HelloResult?
     private(set) var workspace: WorkspaceStatus?
-    /// Set while `annex-companion` can't reach the Annex app on the Mac (it keeps trying): what it said.
+    /// Set while `aos-companion` can't reach the aOS app on the Mac (it keeps trying): what it said.
     private(set) var macAppProblem: String?
     private(set) var ssh: SSHConnection?
     private(set) var companion: CompanionClient?
@@ -225,13 +225,13 @@ final class MacConnection {
                 heartbeat.cancel()
                 companion = nil
                 macAppProblem = nil
-                if connection.isActive { companionState = .unavailable(String(localized: "Annex on the Mac stopped answering.")) }
+                if connection.isActive { companionState = .unavailable(String(localized: "aOS on the Mac stopped answering.")) }
             } catch {
                 companion = nil
                 companionState = .unavailable(Self.companionMessage(for: error))
                 log.notice("Companion not available: \(String(describing: error), privacy: .public)")
             }
-            // Try the companion again after a while (Annex on the Mac may be starting or updating).
+            // Try the companion again after a while (aOS on the Mac may be starting or updating).
             for _ in 0..<15 where connection.isActive && !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
             }
@@ -278,7 +278,7 @@ final class MacConnection {
             let status = path.status
             Task { @MainActor in self?.pathChanged(to: status) }
         }
-        monitor.start(queue: DispatchQueue(label: "dev.marquart.annex.path"))
+        monitor.start(queue: DispatchQueue(label: "dev.marquart.aos.path"))
         pathMonitor = monitor
     }
 
@@ -316,9 +316,9 @@ final class MacConnection {
         case .hostKeyMismatch(let host, _):
             String(localized: "At \(host) a different computer answered, or the Mac's SSH key changed. If you set the Mac up again, pair it again.")
         case .authenticationFailed:
-            String(localized: "The Mac no longer accepts this iPhone. Pair again in Annex on the Mac.")
+            String(localized: "The Mac no longer accepts this iPhone. Pair again in aOS on the Mac.")
         case .localNetworkDenied:
-            String(localized: "Annex may not use the local network. Allow it in Settings > Privacy & Security > Local Network.")
+            String(localized: "aOS may not use the local network. Allow it in Settings > Privacy & Security > Local Network.")
         case .unreachable:
             String(localized: "The Mac isn't reachable. Outside your home network you need Tailscale or another VPN to reach it.")
         case .unknownHostKey:
@@ -328,11 +328,11 @@ final class MacConnection {
 
     static func companionMessage(for error: Error) -> String {
         if let failure = error as? SessionChannel.Failure, case .exited(let status, _) = failure, status == 127 {
-            return String(localized: "Annex isn't installed on the Mac where it was paired. Open Annex on the Mac and pair again.")
+            return String(localized: "aOS isn't installed on the Mac where it was paired. Open aOS on the Mac and pair again.")
         }
         if let error = error as? CompanionError, error == .timeout {
-            return String(localized: "Annex on the Mac doesn't answer.")
+            return String(localized: "aOS on the Mac doesn't answer.")
         }
-        return String(localized: "Annex on the Mac isn't ready: \(error.localizedDescription)")
+        return String(localized: "aOS on the Mac isn't ready: \(error.localizedDescription)")
     }
 }

@@ -1,4 +1,4 @@
-import AnnexKit
+import AOSKit
 import SwiftUI
 
 struct SetupView: View {
@@ -72,8 +72,8 @@ private struct StepList: View {
                                        ? RoundedRectangle(cornerRadius: 8).fill(BrandColor.indigo.opacity(0.14)) : nil)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        // Design review only (ANNEX_PREVIEW): jump to any step.
-                        if ProcessInfo.processInfo.environment["ANNEX_PREVIEW"] != nil { setup.previewStep(step) }
+                        // Design review only (AOS_PREVIEW): jump to any step.
+                        if ProcessInfo.processInfo.environment["AOS_PREVIEW"] != nil { setup.previewStep(step) }
                     }
                 }
             }
@@ -264,7 +264,7 @@ private struct StepPage: View {
                     numbered(2, "Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x.")
                     numbered(3, "When macOS asks for a password, click \"Enter the workspace password\" in the window.")
                     numbered(4, "Come back here and click Check.")
-                    numbered(5, "Right after, the workspace asks once more: switch on Annex Helper. \(Brand.name) enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password.")
+                    numbered(5, "Right after, the workspace asks once more: switch on aOS Helper. \(Brand.name) enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password.")
                 }
             }
         }

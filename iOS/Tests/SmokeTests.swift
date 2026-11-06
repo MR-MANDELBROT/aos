@@ -1,5 +1,5 @@
 import Testing
-@testable import Annex
+@testable import aOS
 
 @Test func smoke() {
     #expect(1 + 1 == 2)

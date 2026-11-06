@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 rm -rf build/loc
-xcodebuild -exportLocalizations -project Annex.xcodeproj -localizationPath build/loc -exportLanguage de \
+xcodebuild -exportLocalizations -project aOS.xcodeproj -localizationPath build/loc -exportLanguage de \
   -skipPackagePluginValidation -skipMacroValidation >/dev/null 2>&1
 X="build/loc/de.xcloc/Localized Contents/de.xliff"
 python3 - "$X" <<'PY'
@@ -22,5 +22,5 @@ for u in tree.getroot().iter('{%s}trans-unit' % ns):
 tree.write(sys.argv[1], encoding='UTF-8', xml_declaration=True)
 if missing: print("missing German:", *missing, sep="\n  ")
 PY
-xcodebuild -importLocalizations -project Annex.xcodeproj -localizationPath build/loc/de.xcloc -skipPackagePluginValidation -skipMacroValidation >/dev/null 2>&1
+xcodebuild -importLocalizations -project aOS.xcodeproj -localizationPath build/loc/de.xcloc -skipPackagePluginValidation -skipMacroValidation >/dev/null 2>&1
 echo "imported"

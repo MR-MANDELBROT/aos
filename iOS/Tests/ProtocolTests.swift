@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 struct CompanionProtocolTests {
     private func text(_ request: CompanionRequest, id: Int) throws -> String {
@@ -28,10 +28,10 @@ struct CompanionProtocolTests {
     }
 
     @Test func responses() throws {
-        let hello = try CompanionMessage.decode(line: Data(#"{"id":1,"ok":true,"mac":"Max’s MacBook","annex":"0.2.0"}"#.utf8))
+        let hello = try CompanionMessage.decode(line: Data(#"{"id":1,"ok":true,"mac":"Max’s MacBook","aos":"0.2.0"}"#.utf8))
         guard case .response(let r) = hello else { Issue.record("not a response"); return }
         #expect(r.id == 1 && r.ok)
-        #expect(HelloResult(r) == HelloResult(CompanionResponse(id: 1, ok: true, body: ["mac": .string("Max’s MacBook"), "annex": .string("0.2.0")])))
+        #expect(HelloResult(r) == HelloResult(CompanionResponse(id: 1, ok: true, body: ["mac": .string("Max’s MacBook"), "aos": .string("0.2.0")])))
         #expect(HelloResult(r).mac == "Max’s MacBook")
 
         let status = try CompanionMessage.decode(line: Data(#"{"id":2,"ok":true,"workspace":{"state":"open","purpose":"Rechnung laden","until":"2026-11-06T12:30:00Z"},"sessions":[{"title":"Claude Code","state":"running"}]}"#.utf8))
@@ -42,9 +42,9 @@ struct CompanionProtocolTests {
         #expect(ws.until == Date(timeIntervalSince1970: 1_793_968_200))
         #expect(ws.sessions.map(\.title) == ["Claude Code"])
 
-        let screen = try CompanionMessage.decode(line: Data(#"{"id":4,"ok":true,"host":"192.168.64.5","port":5900,"username":"annex","password":"secret"}"#.utf8))
+        let screen = try CompanionMessage.decode(line: Data(#"{"id":4,"ok":true,"host":"192.168.64.5","port":5900,"username":"aos","password":"secret"}"#.utf8))
         guard case .response(let sc) = screen else { Issue.record("not a response"); return }
-        #expect(ScreenEndpoint(sc) == ScreenEndpoint(host: "192.168.64.5", port: 5900, username: "annex", password: "secret"))
+        #expect(ScreenEndpoint(sc) == ScreenEndpoint(host: "192.168.64.5", port: 5900, username: "aos", password: "secret"))
 
         let failed = try CompanionMessage.decode(line: Data(#"{"id":9,"ok":false,"error":"no such request"}"#.utf8))
         #expect(failed == .response(CompanionResponse(id: 9, ok: false, error: "no such request",

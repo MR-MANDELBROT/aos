@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 struct CompanionClientTests {
     private func connected(_ server: MockCompanionServer = MockCompanionServer(keepsSecrets: true)) async -> (CompanionClient, MockCompanionServer) {
@@ -13,7 +13,7 @@ struct CompanionClientTests {
         let (client, server) = await connected()
         let hello = try await client.hello(app: "0.1.0", device: "Test iPhone")
         #expect(hello.mac == "Max’s MacBook Pro")
-        #expect(hello.annex == "0.2.0")
+        #expect(hello.aos == "0.2.0")
         let status = try await client.status()
         #expect(status.state == .open)
         #expect(status.sessions.first?.title == "Claude Code")
@@ -30,7 +30,7 @@ struct CompanionClientTests {
         async let c = client.status()
         let (mac, workspace, status) = try await (a, b, c)
         #expect(mac == ScreenEndpoint(host: "127.0.0.1", port: 5900))
-        #expect(workspace.username == "annex")
+        #expect(workspace.username == "aos")
         #expect(status.state == .open)
         let ids = server.received.compactMap { $0.fields["id"]?.int }
         #expect(Set(ids).count == 3)
@@ -114,7 +114,7 @@ struct CompanionClientTests {
             func send(_ data: Data) async throws {
                 // answer id 1 after some shell noise, split across chunks
                 continuation.yield(Data("Last login: today\n{\"id\":1,".utf8))
-                continuation.yield(Data("\"ok\":true,\"mac\":\"M\",\"annex\":\"1\"}\n".utf8))
+                continuation.yield(Data("\"ok\":true,\"mac\":\"M\",\"aos\":\"1\"}\n".utf8))
             }
             func incoming() -> AsyncThrowingStream<Data, Error> { stream }
             func close() async { continuation.finish() }

@@ -12,7 +12,7 @@ struct ImportedLogin: Equatable, Sendable {
 
 struct ImportResult: Equatable, Sendable {
     var logins: [ImportedLogin]
-    /// Items that are not logins (secure notes, cards, identities, SSH keys); Annex keeps logins only.
+    /// Items that are not logins (secure notes, cards, identities, SSH keys); aOS keeps logins only.
     var skippedOther: Int
     /// Logins without user name and password (passkey-only entries, for example).
     var skippedEmpty: Int

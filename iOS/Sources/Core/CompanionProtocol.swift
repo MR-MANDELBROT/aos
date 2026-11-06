@@ -1,6 +1,6 @@
 import Foundation
 
-// The companion API between the iPhone and `annex-companion serve` on the Mac (Docs/COMPANION.md, "Companion API"):
+// The companion API between the iPhone and `aos-companion serve` on the Mac (Docs/COMPANION.md, "Companion API"):
 // JSON lines in both directions (UTF-8, one object per line). Requests carry an `id`; answers repeat it with `ok` and
 // either a result or `error`. After `subscribe` the Mac sends events without `id` at any time.
 
@@ -49,7 +49,7 @@ enum JSONValue: Codable, Equatable, Sendable {
 enum ScreenTarget: String, Codable, Sendable, CaseIterable {
     /// The paired Mac's own screen (screen sharing on 127.0.0.1:5900 of the Mac).
     case mac
-    /// The Annex workspace, the virtual Mac.
+    /// The aOS workspace, the virtual Mac.
     case workspace
 }
 
@@ -202,7 +202,7 @@ enum CompanionEvent: Equatable, Sendable {
     case helpClosed(request: String)
     case approval(ApprovalRequest)
     case approvalClosed(request: String, result: ApprovalResult)
-    /// `annex-companion` can't reach the Mac app (`unavailable`, it keeps trying), or can again.
+    /// `aos-companion` can't reach the Mac app (`unavailable`, it keeps trying), or can again.
     case mac(state: String, detail: String)
     case workspace(WorkspaceState)
 }
@@ -277,11 +277,11 @@ enum CompanionMessage: Equatable, Sendable {
 
 struct HelloResult: Equatable, Sendable {
     var mac: String
-    var annex: String
+    var aos: String
 
     init(_ r: CompanionResponse) {
         mac = r.body["mac"]?.string ?? ""
-        annex = r.body["annex"]?.string ?? ""
+        aos = r.body["aos"]?.string ?? ""
     }
 }
 

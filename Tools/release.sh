@@ -4,7 +4,7 @@
 #
 # One-time setup by the developer (never in this script, never in the repository):
 #   1. Notarization credentials in the keychain:
-#        xcrun notarytool store-credentials annex-notary --apple-id <Apple ID> --team-id S3725YB7V6
+#        xcrun notarytool store-credentials aos-notary --apple-id <Apple ID> --team-id S3725YB7V6
 #      (asks for an app-specific password, created at account.apple.com)
 #   2. Sparkle EdDSA key in the keychain, public key into project.yml (SUPublicEDKey):
 #        build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys
@@ -14,11 +14,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 TEAM=S3725YB7V6
-PROFILE="${NOTARY_PROFILE:-annex-notary}"
+PROFILE="${NOTARY_PROFILE:-aos-notary}"
 VERSION="$(awk -F': *' '/MARKETING_VERSION/ {print $2; exit}' project.yml | tr -d '"')"
 BUILD="$(awk -F': *' '/CURRENT_PROJECT_VERSION/ {print $2; exit}' project.yml | tr -d '"')"
 OUT="build/release/$VERSION"
-ARCHIVE="$OUT/Annex.xcarchive"
+ARCHIVE="$OUT/aOS.xcarchive"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 say() { echo "==> $*"; }
@@ -32,7 +32,7 @@ say "generating the project"
 Tools/generate.sh >/dev/null
 
 say "archiving $VERSION ($BUILD)"
-xcodebuild -project Annex.xcodeproj -scheme Annex -configuration Release -archivePath "$ARCHIVE" \
+xcodebuild -project aOS.xcodeproj -scheme aOS -configuration Release -archivePath "$ARCHIVE" \
   -derivedDataPath build/DerivedData -skipPackagePluginValidation -skipMacroValidation archive \
   > "$OUT/archive.log" 2>&1 || { tail -30 "$OUT/archive.log"; die "archive failed"; }
 
@@ -49,30 +49,30 @@ EOF
 say "exporting"
 xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$OUT/export" -exportOptionsPlist "$OUT/export.plist" \
   > "$OUT/export.log" 2>&1 || { tail -20 "$OUT/export.log"; die "export failed"; }
-APP="$OUT/export/Annex.app"
+APP="$OUT/export/aOS.app"
 
 say "checking the signature"
 codesign --verify --deep --strict --verbose=2 "$APP" 2>&1 | tail -2
 codesign -dv "$APP" 2>&1 | grep -q "Authority=Developer ID Application: .*($TEAM)" || die "not signed with Developer ID ($TEAM)"
 codesign -d --entitlements - "$APP" 2>/dev/null | grep -q com.apple.security.virtualization || die "virtualization entitlement missing"
-for tool in annex-mcp annex-session; do
+for tool in aos-mcp aos-session; do
   codesign -dv "$APP/Contents/MacOS/$tool" 2>&1 | grep -q "flags=.*runtime" || die "$tool lacks the hardened runtime"
 done
 
 say "notarizing the app"
-ditto -c -k --keepParent "$APP" "$OUT/Annex-notarize.zip"
-xcrun notarytool submit "$OUT/Annex-notarize.zip" --keychain-profile "$PROFILE" --wait | tee "$OUT/notary-app.log"
+ditto -c -k --keepParent "$APP" "$OUT/aOS-notarize.zip"
+xcrun notarytool submit "$OUT/aOS-notarize.zip" --keychain-profile "$PROFILE" --wait | tee "$OUT/notary-app.log"
 grep -q "status: Accepted" "$OUT/notary-app.log" || die "notarization of the app failed"
 xcrun stapler staple "$APP"
-rm -f "$OUT/Annex-notarize.zip"
+rm -f "$OUT/aOS-notarize.zip"
 
 say "building the DMG"
 STAGE="$OUT/dmg"
 mkdir -p "$STAGE"
-ditto "$APP" "$STAGE/Annex.app"
+ditto "$APP" "$STAGE/aOS.app"
 ln -s /Applications "$STAGE/Applications"
-DMG="$OUT/Annex-$VERSION.dmg"
-hdiutil create -volname "Annex $VERSION" -srcfolder "$STAGE" -ov -format ULFO "$DMG" >/dev/null
+DMG="$OUT/aOS-$VERSION.dmg"
+hdiutil create -volname "aOS $VERSION" -srcfolder "$STAGE" -ov -format ULFO "$DMG" >/dev/null
 rm -rf "$STAGE"
 codesign --sign "Developer ID Application: Maximilian Marquart ($TEAM)" --timestamp "$DMG"
 xcrun notarytool submit "$DMG" --keychain-profile "$PROFILE" --wait | tee "$OUT/notary-dmg.log"
@@ -92,7 +92,7 @@ cat > "$OUT/appcast-item.xml" <<EOF
       <sparkle:version>$BUILD</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
-      <enclosure url="https://github.com/MR-MANDELBROT/annex/releases/download/v$VERSION/Annex-$VERSION.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
+      <enclosure url="https://github.com/MR-MANDELBROT/aos/releases/download/v$VERSION/aOS-$VERSION.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
     </item>
 EOF
 shasum -a 256 "$DMG" | tee "$OUT/SHA256SUMS"

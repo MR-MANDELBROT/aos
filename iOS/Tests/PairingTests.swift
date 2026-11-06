@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 /// Reference values computed independently (Python hmac/hashlib, ssh-keygen); see the final report.
 enum Vectors {
@@ -33,7 +33,7 @@ extension Data {
 }
 
 struct PairingLinkTests {
-    let full = "annex-pair://v1?n=Max%E2%80%99s%20MacBook%20Pro&h=Maxs-MacBook-Pro.local,192.168.1.20,maxs-mbp.tail1234.ts.net&p=50123&s=22&u=max&k=SHA256%3AIKIpT5qrBHciGB6LMk%2B7fuTQHDnNluSkoLBSGY4SWMQ&c=AAECAwQFBgcICQoLDA0ODw"
+    let full = "aos-pair://v1?n=Max%E2%80%99s%20MacBook%20Pro&h=Maxs-MacBook-Pro.local,192.168.1.20,maxs-mbp.tail1234.ts.net&p=50123&s=22&u=max&k=SHA256%3AIKIpT5qrBHciGB6LMk%2B7fuTQHDnNluSkoLBSGY4SWMQ&c=AAECAwQFBgcICQoLDA0ODw"
 
     @Test func parsesAllFields() throws {
         let link = try PairingLink(full)
@@ -48,7 +48,7 @@ struct PairingLinkTests {
 
     @Test func toleratesWhitespaceEncodedCommasAndDefaults() throws {
         // Comma percent-encoded, no "s", fingerprint with padding, "+" left unencoded, surrounding white space
-        let text = "  annex-pair://v1?h=mac.local%2C10.0.0.5&p=4000&u=max&k=SHA256:IKIpT5qrBHciGB6LMk+7fuTQHDnNluSkoLBSGY4SWMQ=&c=AAECAwQFBgcICQoLDA0ODw\n"
+        let text = "  aos-pair://v1?h=mac.local%2C10.0.0.5&p=4000&u=max&k=SHA256:IKIpT5qrBHciGB6LMk+7fuTQHDnNluSkoLBSGY4SWMQ=&c=AAECAwQFBgcICQoLDA0ODw\n"
         let link = try PairingLink(text)
         #expect(link.hosts == ["mac.local", "10.0.0.5"])
         #expect(link.sshPort == 22)
@@ -64,7 +64,7 @@ struct PairingLinkTests {
     }
 
     @Test func plainSpacesInAPastedLink() throws {
-        let link = try PairingLink("annex-pair://v1?n=Max MacBook&h=mac.local&p=1&u=max&k=\(Vectors.ed25519Fingerprint)&c=\(Vectors.codeBase64URL)")
+        let link = try PairingLink("aos-pair://v1?n=Max MacBook&h=mac.local&p=1&u=max&k=\(Vectors.ed25519Fingerprint)&c=\(Vectors.codeBase64URL)")
         #expect(link.macName == "Max MacBook")
     }
 
@@ -72,15 +72,15 @@ struct PairingLinkTests {
         let k = "k=SHA256%3AIKIpT5qrBHciGB6LMk%2B7fuTQHDnNluSkoLBSGY4SWMQ"
         let c = "c=AAECAwQFBgcICQoLDA0ODw"
         #expect(throws: PairingLink.ParseError.notAPairingLink) { try PairingLink("https://example.com/?h=a") }
-        #expect(throws: PairingLink.ParseError.newerVersion) { try PairingLink("annex-pair://v2?h=a&p=1&u=m&\(k)&\(c)") }
-        #expect(throws: PairingLink.ParseError.missing("h")) { try PairingLink("annex-pair://v1?p=1&u=m&\(k)&\(c)") }
-        #expect(throws: PairingLink.ParseError.missing("u")) { try PairingLink("annex-pair://v1?h=a&p=1&\(k)&\(c)") }
-        #expect(throws: PairingLink.ParseError.invalid("p")) { try PairingLink("annex-pair://v1?h=a&p=70000&u=m&\(k)&\(c)") }
-        #expect(throws: PairingLink.ParseError.invalid("k")) { try PairingLink("annex-pair://v1?h=a&p=1&u=m&k=MD5:aa&\(c)") }
+        #expect(throws: PairingLink.ParseError.newerVersion) { try PairingLink("aos-pair://v2?h=a&p=1&u=m&\(k)&\(c)") }
+        #expect(throws: PairingLink.ParseError.missing("h")) { try PairingLink("aos-pair://v1?p=1&u=m&\(k)&\(c)") }
+        #expect(throws: PairingLink.ParseError.missing("u")) { try PairingLink("aos-pair://v1?h=a&p=1&\(k)&\(c)") }
+        #expect(throws: PairingLink.ParseError.invalid("p")) { try PairingLink("aos-pair://v1?h=a&p=70000&u=m&\(k)&\(c)") }
+        #expect(throws: PairingLink.ParseError.invalid("k")) { try PairingLink("aos-pair://v1?h=a&p=1&u=m&k=MD5:aa&\(c)") }
         // 15 bytes only
-        #expect(throws: PairingLink.ParseError.invalid("c")) { try PairingLink("annex-pair://v1?h=a&p=1&u=m&\(k)&c=AAECAwQFBgcICQoLDA0O") }
-        #expect(throws: PairingLink.ParseError.invalid("h")) { try PairingLink("annex-pair://v1?h=a/b&p=1&u=m&\(k)&\(c)") }
-        #expect(throws: PairingLink.ParseError.invalid("u")) { try PairingLink("annex-pair://v1?h=a&p=1&u=a%0Ab&\(k)&\(c)") }
+        #expect(throws: PairingLink.ParseError.invalid("c")) { try PairingLink("aos-pair://v1?h=a&p=1&u=m&\(k)&c=AAECAwQFBgcICQoLDA0O") }
+        #expect(throws: PairingLink.ParseError.invalid("h")) { try PairingLink("aos-pair://v1?h=a/b&p=1&u=m&\(k)&\(c)") }
+        #expect(throws: PairingLink.ParseError.invalid("u")) { try PairingLink("aos-pair://v1?h=a&p=1&u=a%0Ab&\(k)&\(c)") }
     }
 }
 
@@ -107,8 +107,8 @@ struct PairingProofTests {
     }
 
     @Test func decodesTheAnswer() throws {
-        let ok = try JSONDecoder().decode(PairingResponse.self, from: Data(#"{"ok":true,"user":"max","companion":"/Applications/Annex.app/Contents/MacOS/annex-companion"}"#.utf8))
-        #expect(ok.ok && ok.user == "max" && ok.companion?.hasSuffix("annex-companion") == true)
+        let ok = try JSONDecoder().decode(PairingResponse.self, from: Data(#"{"ok":true,"user":"max","companion":"/Applications/aOS.app/Contents/MacOS/aos-companion"}"#.utf8))
+        #expect(ok.ok && ok.user == "max" && ok.companion?.hasSuffix("aos-companion") == true)
         let failed = try JSONDecoder().decode(PairingResponse.self, from: Data(#"{"ok":false,"error":"wrong code"}"#.utf8))
         #expect(!failed.ok && failed.error == "wrong code")
     }

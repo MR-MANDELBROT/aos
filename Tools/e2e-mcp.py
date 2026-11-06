@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """End-to-end test through the MCP server: open the workspace, use Chrome, close it.
-Runs annex-mcp like an agent would (approval handled by "the agent", i.e. this script).
+Runs aos-mcp like an agent would (approval handled by "the agent", i.e. this script).
 Usage: Tools/e2e-mcp.py OUT_DIR [MCP_BINARY]"""
 import base64, json, os, subprocess, sys, time
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 elicit = "--elicit" in sys.argv
 out = args[0]
-binary = args[1] if len(args) > 1 else "/Applications/Annex.app/Contents/MacOS/annex-mcp"
+binary = args[1] if len(args) > 1 else "/Applications/aOS.app/Contents/MacOS/aos-mcp"
 os.makedirs(out, exist_ok=True)
-env = dict(os.environ, ANNEX_APPROVAL="auto" if elicit else "agent", ANNEX_AGENT="e2e")
+env = dict(os.environ, AOS_APPROVAL="auto" if elicit else "agent", AOS_AGENT="e2e")
 elicited = []
 p = subprocess.Popen([binary], stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=env, text=True, bufsize=1)
 n = 0

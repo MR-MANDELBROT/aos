@@ -31,7 +31,7 @@ struct ImportView: View {
                 }
                 .padding()
             }
-            .annexBackground()
+            .aosBackground()
             .navigationTitle("Import")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -69,7 +69,7 @@ struct ImportView: View {
                 }
                 .font(.subheadline)
             }
-            FactRow(symbol: "exclamationmark.shield", text: "The export contains all your passwords unencrypted. Annex reads it once; afterwards you delete it.",
+            FactRow(symbol: "exclamationmark.shield", text: "The export contains all your passwords unencrypted. aOS reads it once; afterwards you delete it.",
                     tint: .orange)
             FactRow(symbol: "iphone", text: "Imported logins stay on this iPhone, locked with Face ID.")
             if let error {
@@ -200,7 +200,7 @@ struct ImportView: View {
             try FileManager.default.removeItem(at: url)
             fileDeleted = true
         } catch {
-            deleteError = String(localized: "Annex may not delete it there. Delete it in the Files app.")
+            deleteError = String(localized: "aOS may not delete it there. Delete it in the Files app.")
         }
     }
 }

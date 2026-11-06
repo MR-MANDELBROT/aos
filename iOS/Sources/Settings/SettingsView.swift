@@ -42,7 +42,7 @@ struct SettingsView: View {
                     Toggle(isOn: Binding(get: { settings.requireUnlock }, set: { newValue in
                         Task { _ = await model.lock.setRequired(newValue) }
                     })) {
-                        Label("\(Biometrics.name) to open Annex", systemImage: Biometrics.symbol)
+                        Label("\(Biometrics.name) to open aOS", systemImage: Biometrics.symbol)
                     }
                     if settings.requireUnlock {
                         Picker("Lock again", selection: $settings.autoLockMinutes) {
@@ -159,7 +159,7 @@ struct MacDetailView: View {
             Section {
                 Button("Unpair", systemImage: "link.badge.minus", role: .destructive) { confirmUnpair = true }
             } footer: {
-                Text("This iPhone forgets the Mac. To remove the iPhone's key from the Mac too, open Annex on the Mac and remove it from the paired devices.")
+                Text("This iPhone forgets the Mac. To remove the iPhone's key from the Mac too, open aOS on the Mac and remove it from the paired devices.")
             }
         }
         .navigationTitle(mac.name)
@@ -186,10 +186,10 @@ struct DeviceKeyView: View {
                 Section {
                     KeyText(text: key.publicKey, lineLength: 36)
                     Button(copied ? "Copied" : "Copy the public key", systemImage: copied ? "checkmark" : "doc.on.doc") {
-                        Clipboard.copyPlain(key.publicKey + " annex-iphone")
+                        Clipboard.copyPlain(key.publicKey + " aos-iphone")
                         copied = true
                     }
-                    ShareLink(item: key.publicKey + " annex-iphone") {
+                    ShareLink(item: key.publicKey + " aos-iphone") {
                         Label("Share the public key", systemImage: "square.and.arrow.up")
                     }
                 } header: {
@@ -229,14 +229,14 @@ struct AboutView: View {
                 HStack(spacing: 14) {
                     AppIconImage(size: 60)
                     VStack(alignment: .leading) {
-                        Text("Annex").font(.title2.weight(.bold))
+                        Text("aOS").font(.title2.weight(.bold))
                         Text("A Mac of its own for your coding agent.").foregroundStyle(.secondary)
                     }
                 }
                 AboutSection(title: "Your passwords", symbol: "key.horizontal", lines: [
                     "They stay on this iPhone, in its keychain, only on this device. They aren't synced to iCloud and aren't part of backups.",
                     "Every look at a password and every approval needs Face ID or your passcode.",
-                    "Approved sign-ins go once, encrypted over SSH, to Annex on your Mac, which types them into the workspace. Neither the app nor the Mac keeps them.",
+                    "Approved sign-ins go once, encrypted over SSH, to aOS on your Mac, which types them into the workspace. Neither the app nor the Mac keeps them.",
                 ])
                 AboutSection(title: "Your agent", symbol: "sparkles", lines: [
                     "It asks for a sign-in by naming the site and why. You see the request and decide.",
@@ -253,7 +253,7 @@ struct AboutView: View {
             }
             .padding()
         }
-        .annexBackground()
+        .aosBackground()
         .navigationTitle("What is where")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -285,7 +285,7 @@ struct LockView: View {
             VStack(spacing: 20) {
                 Spacer()
                 AppIconImage(size: 84)
-                Text("Annex is locked").font(.title2.weight(.semibold))
+                Text("aOS is locked").font(.title2.weight(.semibold))
                 if let message = model.lock.failureMessage {
                     Text(message).foregroundStyle(.secondary)
                 }

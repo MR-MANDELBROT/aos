@@ -1,4 +1,4 @@
-import AnnexRFB
+import AOSRFB
 import SwiftUI
 
 struct ScreenTab: View {
@@ -21,7 +21,7 @@ struct ScreenTab: View {
                 stateOverlay
                 KeyCapture(isActive: $keyboard, session: session).frame(width: 1, height: 1).allowsHitTesting(false)
             }
-            .annexBackground()
+            .aosBackground()
             .safeAreaInset(edge: .top, spacing: 0) {
                 if let help = model.activeHelp, model.screenTarget == .workspace {
                     HelpBanner(request: help) { Task { await model.finishHelp(help) } }

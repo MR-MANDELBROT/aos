@@ -114,7 +114,7 @@ struct KeyText: View {
 
 extension View {
     /// The calm grouped background the tabs share.
-    func annexBackground() -> some View {
+    func aosBackground() -> some View {
         background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
     }
 }

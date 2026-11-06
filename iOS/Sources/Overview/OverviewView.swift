@@ -22,8 +22,8 @@ struct OverviewView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 24)
             }
-            .annexBackground()
-            .navigationTitle(model.isPaired ? "Annex" : "")
+            .aosBackground()
+            .navigationTitle(model.isPaired ? "aOS" : "")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Settings", systemImage: "gearshape") { showSettings = true }
@@ -75,8 +75,8 @@ struct MacCard: View {
                     if let problem = connection.macAppProblem {
                         Label {
                             Text(problem.isEmpty
-                                 ? String(localized: "Annex on the Mac isn't answering right now. It keeps trying.")
-                                 : String(localized: "Annex on the Mac isn't answering right now (\(problem)). It keeps trying."))
+                                 ? String(localized: "aOS on the Mac isn't answering right now. It keeps trying.")
+                                 : String(localized: "aOS on the Mac isn't answering right now (\(problem)). It keeps trying."))
                                 .font(.footnote).foregroundStyle(.secondary)
                         } icon: {
                             Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
@@ -87,8 +87,8 @@ struct MacCard: View {
                         } icon: {
                             Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
                         }
-                    } else if let hello = connection.hello, !hello.annex.isEmpty {
-                        Text("Annex \(hello.annex) on the Mac answers.").font(.footnote).foregroundStyle(.secondary)
+                    } else if let hello = connection.hello, !hello.aos.isEmpty {
+                        Text("aOS \(hello.aos) on the Mac answers.").font(.footnote).foregroundStyle(.secondary)
                     }
                 default:
                     EmptyView()
@@ -278,7 +278,7 @@ struct PromiseCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             FactRow(symbol: "faceid", text: "Your passwords stay on this iPhone, locked with Face ID.")
-            FactRow(symbol: "eye.slash", text: "Your agent never sees a password. Annex fills it into the workspace for you.")
+            FactRow(symbol: "eye.slash", text: "Your agent never sees a password. aOS fills it into the workspace for you.")
             FactRow(symbol: "lock", text: "The iPhone talks to your Mac over SSH with a key that never leaves this iPhone.")
         }
         .padding(.horizontal, 4)
@@ -295,7 +295,7 @@ struct WelcomeView: View {
         VStack(spacing: 20) {
             AppIconImage(size: 88)
             VStack(spacing: 8) {
-                Text("Annex on your iPhone").font(.largeTitle.weight(.bold)).multilineTextAlignment(.center)
+                Text("aOS on your iPhone").font(.largeTitle.weight(.bold)).multilineTextAlignment(.center)
                 Text("Stay in touch with your agent's Mac, wherever you are.")
                     .font(.title3).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
@@ -316,7 +316,7 @@ struct WelcomeView: View {
             }
             .buttonStyle(.glassProminent)
             .controlSize(.large)
-            Text("On your Mac, click Annex in the menu bar, then \u{201C}Pair\u{201D} next to iPhone. Then scan the code it shows.")
+            Text("On your Mac, click aOS in the menu bar, then \u{201C}Pair\u{201D} next to iPhone. Then scan the code it shows.")
                 .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
     }

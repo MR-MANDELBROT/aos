@@ -1,8 +1,8 @@
-import AnnexKit
+import AOSKit
 import SwiftUI
 
 /// "<Agent> wants to sign in on <website>": the user fills the sign-in here (AutoFill from their password manager
-/// works in these fields) or approves on their iPhone. Annex types it into the workspace; the agent never sees it.
+/// works in these fields) or approves on their iPhone. aOS types it into the workspace; the agent never sees it.
 struct SignInView: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.dismissWindow) private var dismissWindow

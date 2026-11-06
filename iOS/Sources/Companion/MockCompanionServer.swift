@@ -1,17 +1,17 @@
 import Foundation
 
-/// The Mac's side of the companion API in memory: answers requests the way `annex-companion serve` does
+/// The Mac's side of the companion API in memory: answers requests the way `aos-companion serve` does
 /// (Docs/COMPANION.md) and sends events on demand. Used by the tests and by the app's demo mode.
 final class MockCompanionServer: @unchecked Sendable {
     struct State: Sendable {
         var macName = "Max’s MacBook Pro"
-        var annexVersion = "0.2.0"
+        var aosVersion = "0.2.0"
         var workspace = WorkspaceStatus(state: .open, purpose: "Rechnungen herunterladen",
                                         until: Date().addingTimeInterval(25 * 60),
                                         sessions: [.init(id: 0, title: "Claude Code", state: "running")])
         var screens: [ScreenTarget: ScreenEndpoint] = [
             .mac: ScreenEndpoint(host: "127.0.0.1", port: 5900),
-            .workspace: ScreenEndpoint(host: "192.168.64.5", port: 5900, username: "annex", password: "demo-only"),
+            .workspace: ScreenEndpoint(host: "192.168.64.5", port: 5900, username: "aos", password: "demo-only"),
         ]
         /// Requests the server answers with `ok: false` and this message.
         var refuse: [String: String] = [:]
@@ -119,7 +119,7 @@ final class MockCompanionServer: @unchecked Sendable {
         switch op {
         case "hello":
             body["mac"] = .string(state.macName)
-            body["annex"] = .string(state.annexVersion)
+            body["aos"] = .string(state.aosVersion)
         case "status":
             var workspace: [String: JSONValue] = ["state": .string(Self.raw(state.workspace.state)),
                                                   "purpose": .string(state.workspace.purpose)]

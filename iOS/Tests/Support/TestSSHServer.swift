@@ -3,7 +3,7 @@ import Foundation
 import NIOCore
 import NIOPosix
 @preconcurrency import NIOSSH
-@testable import Annex
+@testable import aOS
 
 // Servers for the network tests, all on 127.0.0.1 inside the test process. Nothing here touches the Mac's own sshd.
 
@@ -26,7 +26,7 @@ final class TestSSHServer: @unchecked Sendable {
     let log = ServerLog()
     private let channel: Channel
 
-    static let companionPath = "/Applications/Annex.app/Contents/MacOS/annex-companion"
+    static let companionPath = "/Applications/aOS.app/Contents/MacOS/aos-companion"
 
     static func start(username: String = "max", allowedKey: DeviceKey?, password: String? = nil,
                       companion: MockCompanionServer = MockCompanionServer(keepsSecrets: true)) async throws -> TestSSHServer {

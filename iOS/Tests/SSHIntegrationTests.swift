@@ -1,8 +1,8 @@
-import AnnexRFB
+import AOSRFB
 import CoreGraphics
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 /// The SSH paths end to end against servers inside the test process (see Support/TestServers.swift).
 @Suite(.serialized)
@@ -115,7 +115,7 @@ struct SSHIntegrationTests {
         try await client.answerSignIn(request: "r9", username: "max", password: "p@ss \"w\" ü", totp: "000111")
         let answer = server.companion.received.last
         #expect(answer?.fields["password"] == .string("p@ss \"w\" ü"))
-        #expect(server.events == ["exec '/Applications/Annex.app/Contents/MacOS/annex-companion' serve"])
+        #expect(server.events == ["exec '/Applications/aOS.app/Contents/MacOS/aos-companion' serve"])
         await client.close()
     }
 
@@ -126,7 +126,7 @@ struct SSHIntegrationTests {
                                                          login: SSHLogin(username: "max", key: key),
                                                          hostKey: .pinned(server.hostKeyLine))
         defer { Task { await connection.close() } }
-        let channel = try await connection.exec(CompanionCommand.serve(path: "/nowhere/annex-companion"))
+        let channel = try await connection.exec(CompanionCommand.serve(path: "/nowhere/aos-companion"))
         let client = CompanionClient(transport: channel)
         await client.start()
         await #expect(throws: (any Error).self) { try await client.hello(app: "1", device: "d") }
@@ -206,13 +206,13 @@ struct PairingClientTests {
 
     @Test func pairsWithAValidProof() async throws {
         let listener = try await FakePairingListener.start(code: Vectors.code,
-                                                           behavior: .accept(user: "max", companion: "/x/annex-companion"))
+                                                           behavior: .accept(user: "max", companion: "/x/aos-companion"))
         defer { Task { await listener.stop() } }
         let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, code: Vectors.code)
         let (response, host) = try await PairingClient.send(request, link: link(listener.port))
         #expect(response.ok)
         #expect(response.user == "max")
-        #expect(response.companion == "/x/annex-companion")
+        #expect(response.companion == "/x/aos-companion")
         #expect(host == "127.0.0.1")
         #expect(listener.requests == [request])
     }
@@ -229,7 +229,7 @@ struct PairingClientTests {
 
     @Test func aChangedAnswerIsRejected() async throws {
         let listener = try await FakePairingListener.start(code: Vectors.code,
-                                                           behavior: .tampered(user: "max", companion: "/x/annex-companion"))
+                                                           behavior: .tampered(user: "max", companion: "/x/aos-companion"))
         defer { Task { await listener.stop() } }
         let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, code: Vectors.code)
         await #expect(throws: PairingClient.Failure.notAuthentic) {
@@ -239,18 +239,18 @@ struct PairingClientTests {
 
     @Test func answerChecks() {
         let code = Vectors.code
-        let mac = PairingResponse.authentication(code: code, user: "max", companion: "/Applications/Annex.app/Contents/MacOS/annex-companion")
-        var r = PairingResponse(ok: true, user: "max", companion: "/Applications/Annex.app/Contents/MacOS/annex-companion",
+        let mac = PairingResponse.authentication(code: code, user: "max", companion: "/Applications/aOS.app/Contents/MacOS/aos-companion")
+        var r = PairingResponse(ok: true, user: "max", companion: "/Applications/aOS.app/Contents/MacOS/aos-companion",
                                 error: nil, mac: mac.base64EncodedString())
         #expect(r.isAuthentic(code: code))
         r.user = "root"
         #expect(!r.isAuthentic(code: code))
         #expect(!PairingResponse.isPlausible(companion: "/bin/sh"))
-        #expect(!PairingResponse.isPlausible(companion: "relative/annex-companion"))
+        #expect(!PairingResponse.isPlausible(companion: "relative/aos-companion"))
         #expect(!PairingResponse.isPlausible(user: "max; rm"))
         // The reference vector the Mac's tests use too
-        #expect(PairingResponse.authentication(code: Data(0..<16), user: "max", companion: "/Applications/Annex.app/Contents/MacOS/annex-companion").base64EncodedString()
-                == "8QYDEJNYuWoqmC0VTGwqq2sI8T0/yVI70PvnQ9jXBK0=")
+        #expect(PairingResponse.authentication(code: Data(0..<16), user: "max", companion: "/Applications/aOS.app/Contents/MacOS/aos-companion").base64EncodedString()
+                == "0jxhZL+aq9pEAtFLHRsylSojkicfFjA8AE3G/gHWyic=")
     }
 
     @Test func aClosedListenerAndAHangUp() async throws {
@@ -278,7 +278,7 @@ struct RealSSHDFingerprintTest {
         }
         do {
             _ = try await SSHConnection.connect(hosts: ["127.0.0.1"], port: 22,
-                                                login: SSHLogin(username: "annex-test-no-login"),
+                                                login: SSHLogin(username: "aos-test-no-login"),
                                                 hostKey: .askFirst, perHostTimeout: 3)
             Issue.record("connected without a host key decision")
         } catch let SSHConnectError.unknownHostKey(_, key, fingerprint) {

@@ -1,6 +1,6 @@
 # XcodeGen spec for the iPhone app (the companion). Generate the project with:  iOS/generate.sh
 # Design: Docs/COMPANION.md. Notes for the Mac side and open points: iOS/NOTES.md.
-name: Annex
+name: aOS
 options:
   bundleIdPrefix: dev.marquart
   deploymentTarget:
@@ -9,9 +9,9 @@ options:
   developmentLanguage: en
 
 packages:
-  # Only the screen sharing client (product AnnexRFB); AnnexKit itself is macOS-only.
-  AnnexKit:
-    path: ../AnnexKit
+  # Only the screen sharing client (product AOSRFB); AOSKit itself is macOS-only.
+  AOSKit:
+    path: ../AOSKit
   # SSH. Pinned to 0.12.0 on purpose: 0.12.1 switched its swift-nio-ssh dependency from the Citadel author's fork
   # (Joannis/swift-nio-ssh, used for years) to a new third-party fork. 0.12.0 has everything this app needs.
   Citadel:
@@ -51,7 +51,7 @@ settings:
       DEAD_CODE_STRIPPING: YES
 
 targets:
-  Annex:
+  aOS:
     type: application
     platform: iOS
     sources:
@@ -63,8 +63,8 @@ targets:
         type: file
         buildPhase: resources
     dependencies:
-      - package: AnnexKit
-        product: AnnexRFB
+      - package: AOSKit
+        product: AOSRFB
       - package: Citadel
       - package: swift-nio-ssh
         product: NIOSSH
@@ -78,7 +78,7 @@ targets:
     info:
       path: Info.plist
       properties:
-        CFBundleDisplayName: Annex
+        CFBundleDisplayName: aOS
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.productivity
@@ -91,52 +91,52 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        # annex-pair:// links from the Mac's QR code (the Camera app offers to open them in Annex)
+        # aos-pair:// links from the Mac's QR code (the Camera app offers to open them in aOS)
         CFBundleURLTypes:
-          - CFBundleURLName: dev.marquart.annex.pair
+          - CFBundleURLName: dev.marquart.aos.pair
             CFBundleURLSchemes:
-              - annex-pair
-        NSLocalNetworkUsageDescription: "Annex connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted."
+              - aos-pair
+        NSLocalNetworkUsageDescription: "aOS connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted."
         NSBonjourServices:
-          - _annex-pair._tcp
+          - _aos-pair._tcp
           - _ssh._tcp
         NSFaceIDUsageDescription: "Face ID unlocks your passwords and approves sign-ins for your agent."
-        NSCameraUsageDescription: "The camera scans the pairing code that Annex shows on your Mac."
+        NSCameraUsageDescription: "The camera scans the pairing code that aOS shows on your Mac."
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.annex.ios
-        PRODUCT_NAME: Annex
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.aos.ios
+        PRODUCT_NAME: aOS
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_UILaunchScreen_Generation: NO
 
-  AnnexTests:
+  AOSTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - path: Tests
     dependencies:
-      - target: Annex
+      - target: aOS
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.annex.ios.tests
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.aos.ios.tests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:
-  Annex:
+  aOS:
     build:
       targets:
-        Annex: all
-        AnnexTests: [test]
+        aOS: all
+        AOSTests: [test]
     run:
       config: Debug
     test:
       config: Debug
       gatherCoverageData: false
       targets:
-        - AnnexTests
+        - AOSTests
       environmentVariables:
         # screensharingd needs a grace period after connecting; the fake server in the tests doesn't.
-        ANNEX_INPUT_GRACE: "0"
+        AOS_INPUT_GRACE: "0"
     archive:
       config: Release

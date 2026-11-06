@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Annex
+@testable import aOS
 
 @MainActor
 struct VaultModelTests {
@@ -70,7 +70,7 @@ struct VaultModelTests {
 
 /// The keychain wrapper against the simulator's keychain, under a service of its own.
 struct KeychainTests {
-    let service = "dev.marquart.annex.tests"
+    let service = "dev.marquart.aos.tests"
 
     @Test func roundTrip() throws {
         defer { Keychain.deleteAll(service: service) }

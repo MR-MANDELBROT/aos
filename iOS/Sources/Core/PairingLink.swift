@@ -1,9 +1,9 @@
 import CryptoKit
 import Foundation
 
-/// The pairing code that Annex on the Mac shows as a QR code (Docs/COMPANION.md, "Pairing"):
+/// The pairing code that aOS on the Mac shows as a QR code (Docs/COMPANION.md, "Pairing"):
 ///
-///     annex-pair://v1?n=<Mac name>&h=<host1>,<host2>&p=<pairing port>&s=22&u=<user>&k=<host key fingerprint>&c=<code>
+///     aos-pair://v1?n=<Mac name>&h=<host1>,<host2>&p=<pairing port>&s=22&u=<user>&k=<host key fingerprint>&c=<code>
 ///
 /// All values are percent-encoded. `c` is a secret: it only lives in the QR code and proves to the Mac that this iPhone
 /// saw the code; it is never sent.
@@ -19,7 +19,7 @@ struct PairingLink: Equatable, Sendable {
     /// The 16 random bytes of `c`.
     var code: Data
 
-    static let scheme = "annex-pair"
+    static let scheme = "aos-pair"
 
     enum ParseError: Error, Equatable {
         case notAPairingLink
@@ -46,7 +46,7 @@ struct PairingLink: Equatable, Sendable {
         guard let components = URLComponents(string: trimmed)
                 ?? URLComponents(string: trimmed.replacingOccurrences(of: " ", with: "%20")),
               components.scheme?.lowercased() == Self.scheme else { throw ParseError.notAPairingLink }
-        // annex-pair://v1?... puts the version in the host position.
+        // aos-pair://v1?... puts the version in the host position.
         guard let version = components.host?.lowercased(), !version.isEmpty else { throw ParseError.notAPairingLink }
         guard version == "v1" else {
             if version.hasPrefix("v"), Int(version.dropFirst()) != nil { throw ParseError.newerVersion }
@@ -96,7 +96,7 @@ struct PairingLink: Equatable, Sendable {
         macName = name.isEmpty ? self.hosts[0] : String(name.prefix(80))
     }
 
-    /// The link as Annex on the Mac writes it (used by the tests and the demo).
+    /// The link as aOS on the Mac writes it (used by the tests and the demo).
     var url: URL {
         var c = URLComponents()
         c.scheme = Self.scheme
@@ -174,7 +174,7 @@ struct PairingRequest: Codable, Equatable, Sendable {
 }
 
 /// The Mac's answer: `{"ok":true,"user":"<user>","companion":"<path>","mac":"<base64>"}` or
-/// `{"ok":false,"error":"..."}`. `mac` is HMAC-SHA256(code, "annex-pair-answer\n" + user + "\n" + companion): only
+/// `{"ok":false,"error":"..."}`. `mac` is HMAC-SHA256(code, "aos-pair-answer\n" + user + "\n" + companion): only
 /// the Mac that shows the code can write it, so nobody on the network can change the answer on its way.
 struct PairingResponse: Codable, Equatable, Sendable {
     var ok: Bool
@@ -184,7 +184,7 @@ struct PairingResponse: Codable, Equatable, Sendable {
     var mac: String?
 
     static func authentication(code: Data, user: String, companion: String) -> Data {
-        let message = Data(("annex-pair-answer\n" + user + "\n" + companion).utf8)
+        let message = Data(("aos-pair-answer\n" + user + "\n" + companion).utf8)
         return Data(HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: code)))
     }
 
@@ -205,7 +205,7 @@ struct PairingResponse: Codable, Equatable, Sendable {
     }
 
     static func isPlausible(companion: String) -> Bool {
-        companion.hasPrefix("/") && companion.hasSuffix("/annex-companion") && companion.count < 1024
+        companion.hasPrefix("/") && companion.hasSuffix("/aos-companion") && companion.count < 1024
             && !companion.unicodeScalars.contains { $0.properties.generalCategory == .control }
             && !companion.contains("/../")
     }

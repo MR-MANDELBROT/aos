@@ -3,19 +3,19 @@ import Network
 import NIOCore
 import os
 
-private let log = Logger(subsystem: "dev.marquart.annex.ios", category: "forward")
+private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "forward")
 
 /// `ssh -L` on the iPhone: a listener on 127.0.0.1 (random port) whose connections each open a direct-tcpip channel
 /// through the SSH connection to `targetHost:targetPort` as seen from the Mac.
 ///
-/// The screen sharing client (AnnexRFB's `RFBClient`) connects with Network.framework to a host and port, so it is
+/// The screen sharing client (AOSRFB's `RFBClient`) connects with Network.framework to a host and port, so it is
 /// pointed at this listener. Only loopback connections are accepted, and the listener lives only while a screen is
 /// open.
 final class LocalForwarder: @unchecked Sendable {
     private let connection: SSHConnection
     private let targetHost: String
     private let targetPort: Int
-    private let queue = DispatchQueue(label: "dev.marquart.annex.forward")
+    private let queue = DispatchQueue(label: "dev.marquart.aos.forward")
     private var listener: NWListener?
     private let lock = NSLock()
     private var bridges: [ObjectIdentifier: Bridge] = [:]

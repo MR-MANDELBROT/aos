@@ -2,15 +2,15 @@
 # Builds the app and its unit tests and runs them in the iOS Simulator.
 #
 #   iOS/Tools/test.sh                      all tests on "iPhone 17 Pro"
-#   iOS/Tools/test.sh AnnexTests/TOTPTests  only some (xcodebuild -only-testing)
+#   iOS/Tools/test.sh AOSTests/TOTPTests  only some (xcodebuild -only-testing)
 #
 # The app targets iOS 27. When the chosen simulator runs an older iOS (only an iOS 26 runtime installed), the
-# deployment target is lowered for this build only, so the tests still run. ANNEX_SIM_DEVICE picks another simulator.
+# deployment target is lowered for this build only, so the tests still run. AOS_SIM_DEVICE picks another simulator.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ./generate.sh >/dev/null
-DEVICE_NAME="${ANNEX_SIM_DEVICE:-iPhone 17 Pro}"
-DERIVED="${ANNEX_DERIVED_DATA:-$(cd .. && pwd)/build/ios-sim}"
+DEVICE_NAME="${AOS_SIM_DEVICE:-iPhone 17 Pro}"
+DERIVED="${AOS_DERIVED_DATA:-$(cd .. && pwd)/build/ios-sim}"
 
 read -r UDID RUNTIME < <(xcrun simctl list devices available -j | python3 -I -c '
 import json, sys
@@ -35,7 +35,7 @@ fi
 ONLY=()
 for t in "$@"; do ONLY+=(-only-testing:"$t"); done
 
-xcodebuild -project Annex.xcodeproj -scheme Annex -derivedDataPath "$DERIVED" \
+xcodebuild -project aOS.xcodeproj -scheme aOS -derivedDataPath "$DERIVED" \
   -destination 'generic/platform=iOS Simulator' CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual \
   -skipPackagePluginValidation -skipMacroValidation ${TARGET_ARGS[@]+"${TARGET_ARGS[@]}"} build-for-testing -quiet
 
