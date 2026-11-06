@@ -48,10 +48,17 @@ struct WorkspaceWindow: View {
         .navigationSubtitle(statusText)
     }
 
+    private var displayAspect: CGFloat {
+        let size = model.workspaceDisplaySize
+        return size.height > 0 ? size.width / size.height : 1280.0 / 800.0
+    }
+
     @ViewBuilder var screen: some View {
         if let machine = model.workspace.host.virtualMachine {
             VMDisplay(machine: machine) { c in DispatchQueue.main.async { coordinator = c; setup.display = c } }
-                .aspectRatio(1280.0 / 800.0, contentMode: .fit)
+                // The display's own shape: 1280x800, or the iPhone's while it shows the workspace (the window keeps
+                // its size, the screen fits in it).
+                .aspectRatio(displayAspect, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .padding(10)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -28,6 +28,8 @@ final class AppModel: ObservableObject {
     let power: PowerController
 
     @Published var vmPhase: VMHost.Phase = .stopped
+    /// The workspace's display in pixels: its own 1280x800, or the iPhone's shape while the iPhone shows it.
+    @Published var workspaceDisplaySize = CGSize(width: 1280, height: 800)
     @Published var status: AgentStatus?
     @Published var session: SessionStatus?
     @Published var help: HelpRequest?
@@ -333,6 +335,7 @@ final class AppModel: ObservableObject {
     func refresh(loginItems: Bool = true) {
         // Only what changed: every assignment redraws all of aOS's open windows.
         changed(\.vmPhase, workspace.host.phase)
+        changed(\.workspaceDisplaySize, workspace.host.displaySize)
         changed(\.status, workspace.status())
         changed(\.session, SessionStatus.read(paths))
         let k = KeeperStatus.read(paths)
