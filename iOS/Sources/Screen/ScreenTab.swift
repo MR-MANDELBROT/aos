@@ -67,7 +67,7 @@ struct ScreenTab: View {
         }
         .task(id: model.screenTarget) {
             // One screen at a time: the other one lets go (the workspace gets its own size back).
-            model.screen(for: model.screenTarget == .mac ? .workspace : .mac).stop()
+            if !model.isDemo { model.screen(for: model.screenTarget == .mac ? .workspace : .mac).stop() }
             await start()
         }
         // The Mac is back (after a network change, for example): pick the screen up again.
