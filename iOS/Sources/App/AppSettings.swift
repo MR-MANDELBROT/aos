@@ -32,6 +32,10 @@ final class AppSettings {
     var autoLockMinutes: Int { didSet { defaults.set(autoLockMinutes, forKey: "autoLockMinutes") } }
     var frameRate: FrameRate { didSet { defaults.set(frameRate.rawValue, forKey: "frameRate") } }
     var inputMode: InputMode { didSet { defaults.set(inputMode.rawValue, forKey: "inputMode") } }
+    /// The terminal's font size (pinch to change it).
+    var terminalFontSize: Double { didSet { defaults.set(terminalFontSize, forKey: "terminalFontSize") } }
+    /// The screen stays on while a terminal is open and connected.
+    var terminalKeepsScreenOn: Bool { didSet { defaults.set(terminalKeepsScreenOn, forKey: "terminalKeepsScreenOn") } }
 
     static let autoLockChoices = [0, 1, 5, 15, 60]
 
@@ -41,5 +45,7 @@ final class AppSettings {
         autoLockMinutes = defaults.object(forKey: "autoLockMinutes") as? Int ?? 5
         frameRate = FrameRate(rawValue: defaults.string(forKey: "frameRate") ?? "") ?? .balanced
         inputMode = InputMode(rawValue: defaults.string(forKey: "inputMode") ?? "") ?? .trackpad
+        terminalFontSize = defaults.object(forKey: "terminalFontSize") as? Double ?? 13
+        terminalKeepsScreenOn = defaults.object(forKey: "terminalKeepsScreenOn") as? Bool ?? false
     }
 }

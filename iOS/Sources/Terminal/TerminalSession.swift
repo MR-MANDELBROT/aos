@@ -6,7 +6,7 @@ import UIKit
 /// One terminal: a login shell in a pseudo terminal over SSH, shown by SwiftTerm. The terminal view lives here, so
 /// its contents survive leaving the screen and coming back.
 @MainActor @Observable
-final class TerminalSession: Identifiable {
+final class TerminalSession: Identifiable, TerminalInteractionDelegate {
     enum Target: Hashable, Sendable {
         case mac(UUID)
         case host(UUID)
@@ -24,27 +24,43 @@ final class TerminalSession: Identifiable {
         case hostKeyChanged(host: String, fingerprint: String)
     }
 
+    /// A short message over the terminal ("Copied", the font size while pinching).
+    struct Notice: Identifiable, Equatable {
+        let id = UUID()
+        let text: String
+    }
+
     let id: Target
     var title: String
     private(set) var phase: Phase = .idle
-    @ObservationIgnored let view: TerminalView
+    @ObservationIgnored let view: AOSTerminalView
     @ObservationIgnored private var bridge: Bridge!
     private var channel: SessionChannel?
     private var ownConnection: SSHConnection?
     private var readTask: Task<Void, Never>?
+    /// Input goes out in order through one task (separate tasks per key press could overtake each other).
+    @ObservationIgnored private var writer: AsyncStream<Data>.Continuation?
+    @ObservationIgnored private var writeTask: Task<Void, Never>?
     /// The terminal's size in characters, as the view last reported it.
     @ObservationIgnored private var size: (columns: Int, rows: Int) = (80, 24)
 
-    init(id: Target, title: String) {
+    private(set) var notice: Notice?
+    @ObservationIgnored private var noticeTask: Task<Void, Never>?
+    /// Text that would run as commands (no bracketed paste, line breaks in it): the screen asks first.
+    var pendingPaste: String?
+    /// The font size after the last change was finished (the screen keeps it in the settings).
+    private(set) var fontSize: CGFloat
+    private(set) var keyboardShown = false
+
+    init(id: Target, title: String, fontSize: CGFloat = TerminalFontSize.standard) {
         self.id = id
         self.title = title
-        view = TerminalView(frame: CGRect(x: 0, y: 0, width: 390, height: 600),
-                            font: UIFont.monospacedSystemFont(ofSize: 13, weight: .regular))
-        view.nativeBackgroundColor = .systemBackground
-        view.nativeForegroundColor = .label
-        view.optionAsMetaKey = false
+        let size = TerminalFontSize.clamped(fontSize)
+        self.fontSize = size
+        view = AOSTerminalView(fontSize: size)
         bridge = Bridge(session: self)
         view.terminalDelegate = bridge
+        view.interaction = self
     }
 
     var isActive: Bool { phase == .connecting || phase == .connected }
@@ -91,6 +107,11 @@ final class TerminalSession: Identifiable {
         do {
             let shell = try await connection.shell(columns: max(size.columns, 20), rows: max(size.rows, 5))
             channel = shell
+            let (input, writer) = AsyncStream<Data>.makeStream()
+            self.writer = writer
+            writeTask = Task {
+                for await data in input { try? await shell.write(data) }
+            }
             phase = .connected
             readTask = Task { [weak self] in
                 do {
@@ -109,6 +130,7 @@ final class TerminalSession: Identifiable {
 
     private func ended(_ error: Error? = nil) {
         channel = nil
+        stopWriting()
         if let ownConnection { Task { await ownConnection.close() } }
         ownConnection = nil
         if case .connected = phase { phase = .ended }
@@ -121,6 +143,7 @@ final class TerminalSession: Identifiable {
         let channel = self.channel, connection = ownConnection
         self.channel = nil
         ownConnection = nil
+        stopWriting()
         Task {
             await channel?.close()
             await connection?.close()
@@ -134,12 +157,102 @@ final class TerminalSession: Identifiable {
         view.feed(text: text)
     }
 
+    private func stopWriting() {
+        writer?.finish()
+        writer = nil
+        writeTask = nil
+    }
+
+    // MARK: Copy, paste, font
+
+    /// Pastes text: bracketed if the program asked for it; if not and the text has line breaks, the screen asks first.
+    func paste(_ text: String) {
+        let bracketed = view.terminalInputStateSnapshot()?.bracketedPasteMode ?? false
+        if PasteEncoder.runsLines(text, bracketed: bracketed) {
+            pendingPaste = text
+        } else {
+            sendPaste(text, bracketed: bracketed)
+        }
+    }
+
+    /// After the person confirmed.
+    func confirmPaste(_ text: String) {
+        pendingPaste = nil
+        sendPaste(text, bracketed: view.terminalInputStateSnapshot()?.bracketedPasteMode ?? false)
+    }
+
+    private func sendPaste(_ text: String, bracketed: Bool) {
+        view.clearTextSelection()
+        view.send(PasteEncoder.bytes(for: text, bracketed: bracketed))
+    }
+
+    func copyScreen() {
+        Clipboard.copyPlain(view.screenText())
+        terminalNotice(String(localized: "Screen copied"))
+    }
+
+    func copyLastOutput() {
+        if let text = view.lastOutputText() {
+            Clipboard.copyPlain(text)
+            terminalNotice(String(localized: "Output copied"))
+        } else {
+            show(String(localized: "No output to copy"))
+        }
+    }
+
+    func setFontSize(_ size: CGFloat) {
+        view.setFontSize(size)
+        fontSize = view.font.pointSize
+    }
+
+    /// From the menu: a step bigger or smaller, shown like a pinch.
+    func adjustFontSize(by step: CGFloat) { adjustFontSize(to: fontSize + step) }
+
+    func adjustFontSize(to size: CGFloat) {
+        setFontSize(size)
+        terminalFontSizeChanged(fontSize, done: true)
+    }
+
+    func toggleKeyboard() {
+        if view.isFirstResponder {
+            _ = view.resignFirstResponder()
+        } else {
+            _ = view.becomeFirstResponder()
+        }
+    }
+
+    func show(_ text: String) {
+        notice = Notice(text: text)
+        noticeTask?.cancel()
+        noticeTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1.6))
+            guard !Task.isCancelled else { return }
+            self?.notice = nil
+        }
+    }
+
     // MARK: From the terminal view
 
+    func terminalPaste(_ text: String) { paste(text) }
+
+    func terminalNotice(_ text: String) {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        show(text)
+    }
+
+    func terminalFontSizeChanged(_ size: CGFloat, done: Bool) {
+        let dimensions = view.terminalDimensions
+        show(String(localized: "\(Int(size)) pt · \(dimensions.cols) × \(dimensions.rows)"))
+        if done { fontSize = size }
+    }
+
+    func terminalFocusChanged(_ focused: Bool) { keyboardShown = focused }
+
     fileprivate func send(_ bytes: ArraySlice<UInt8>) {
-        guard let channel else { return }
-        let data = Data(bytes)
-        Task { try? await channel.write(data) }
+        guard let writer else { return }
+        writer.yield(Data(bytes))
+        // Return at the shell: where the next command's output begins ("Copy last output").
+        if bytes.count == 1, bytes.first == 0x0d { view.noteReturnSent() }
     }
 
     fileprivate func resize(columns: Int, rows: Int) {

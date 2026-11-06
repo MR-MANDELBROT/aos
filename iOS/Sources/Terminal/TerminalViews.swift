@@ -92,7 +92,9 @@ private struct HostRow: View {
 
 struct TerminalScreen: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
     let session: TerminalSession
+    @State private var visible = false
 
     var body: some View {
         ZStack {
@@ -109,13 +111,47 @@ struct TerminalScreen: View {
                 EmptyView()
             }
         }
-        .navigationTitle(session.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if session.isActive {
-                Button("Disconnect", systemImage: "xmark.circle") { session.disconnect() }
+        .overlay(alignment: .top) {
+            if let notice = session.notice {
+                Text(notice.text)
+                    .font(.callout.weight(.medium).monospacedDigit())
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 9)
+                    .glassEffect(in: Capsule())
+                    .padding(.top, 10)
+                    .id(notice.id)
+                    .transition(.opacity.combined(with: .scale(scale: 0.92)))
+                    .allowsHitTesting(false)
             }
         }
+        .animation(.snappy(duration: 0.2), value: session.notice)
+        .navigationTitle(session.title)
+        .navigationBarTitleDisplayMode(.inline)
+        // The terminal gets the rows the tab bar would take.
+        .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button(session.keyboardShown ? "Hide Keyboard" : "Show Keyboard",
+                       systemImage: session.keyboardShown ? "keyboard.chevron.compact.down" : "keyboard") {
+                    session.toggleKeyboard()
+                }
+                TerminalMenu(session: session)
+            }
+        }
+        .alert(pasteTitle, isPresented: Binding(get: { session.pendingPaste != nil }, set: { if !$0 { session.pendingPaste = nil } }),
+               presenting: session.pendingPaste) { text in
+            Button("Paste") { session.confirmPaste(text) }
+            Button("Cancel", role: .cancel) { session.pendingPaste = nil }
+        } message: { _ in
+            Text("The shell runs each line as soon as it arrives.")
+        }
+        .onAppear {
+            visible = true
+            session.setFontSize(model.settings.terminalFontSize)
+        }
+        .onDisappear { visible = false }
+        .onChange(of: session.fontSize) { _, size in model.settings.terminalFontSize = Double(size) }
+        .onChange(of: keepsScreenOn, initial: true) { _, on in UIApplication.shared.isIdleTimerDisabled = on }
         .task {
             if session.phase == .idle { connect() }
         }
@@ -145,11 +181,26 @@ struct TerminalScreen: View {
         }
     }
 
+    /// While the terminal is on screen and connected, if the person wants that.
+    private var keepsScreenOn: Bool {
+        visible && scenePhase == .active && session.phase == .connected && model.settings.terminalKeepsScreenOn
+    }
+
+    private var pasteTitle: String {
+        let lines = session.pendingPaste?.split(whereSeparator: \.isNewline).count ?? 0
+        return String(localized: "Paste \(lines) lines?")
+    }
+
     private func connect() {
         Task {
             #if DEBUG
             if model.isDemo {
                 session.showDemo(Demo.terminalText)
+                // -AOSDemoTerminal selection|keys|menu: states of the terminal for screenshots
+                if let state = UserDefaults.standard.string(forKey: "AOSDemoTerminal") {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    session.view.showDemoState(state)
+                }
                 return
             }
             #endif
@@ -193,7 +244,41 @@ private struct StateOverlay: View {
     }
 }
 
-/// SwiftTerm's iOS terminal view (with its key bar: esc, ctrl, tab, arrows) in SwiftUI.
+/// The terminal's menu: copying, text size, keeping the screen on, disconnecting.
+private struct TerminalMenu: View {
+    @Environment(AppModel.self) private var model
+    let session: TerminalSession
+
+    var body: some View {
+        Menu {
+            Section {
+                Button("Copy Screen", systemImage: "doc.on.doc") { session.copyScreen() }
+                Button("Copy Last Output", systemImage: "text.line.last.and.arrowtriangle.forward") { session.copyLastOutput() }
+                Button("Select All", systemImage: "selection.pin.in.out") { session.view.selectAll(nil) }
+            }
+            Section("Text Size") {
+                ControlGroup {
+                    Button("Smaller", systemImage: "textformat.size.smaller") { session.adjustFontSize(by: -1) }
+                    Button("Default", systemImage: "textformat.size") { session.adjustFontSize(to: TerminalFontSize.standard) }
+                    Button("Bigger", systemImage: "textformat.size.larger") { session.adjustFontSize(by: 1) }
+                }
+            }
+            Section {
+                Toggle("Keep Screen On", systemImage: "sun.max", isOn: Binding(
+                    get: { model.settings.terminalKeepsScreenOn }, set: { model.settings.terminalKeepsScreenOn = $0 }))
+            }
+            if session.isActive {
+                Section {
+                    Button("Disconnect", systemImage: "xmark.circle", role: .destructive) { session.disconnect() }
+                }
+            }
+        } label: {
+            Label("Terminal", systemImage: "ellipsis")
+        }
+    }
+}
+
+/// The terminal view (AOSTerminalView with its key bar) in SwiftUI.
 struct TerminalViewRepresentable: UIViewRepresentable {
     let view: TerminalView
 
