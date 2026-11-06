@@ -161,6 +161,7 @@ targets:
       path: Helper/Info.plist
       properties:
         CFBundleDisplayName: Annex Helper
+        CFBundleName: Annex Helper
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSBackgroundOnly: true

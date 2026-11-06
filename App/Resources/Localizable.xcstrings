@@ -11,6 +11,16 @@
         }
       }
     },
+    "·" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "·"
+          }
+        }
+      }
+    },
     "\"%@\" reachable in the Claude app" : {
       "localizations" : {
         "de" : {
@@ -37,6 +47,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ trägt seine Werkzeuge in deine Agents ein. Das Öffnen des Arbeitsplatzes braucht immer dein Ja: im Agent, wenn er nach Werkzeug-Erlaubnissen fragt, sonst hier auf dem Mac."
+          }
+        }
+      }
+    },
+    "%@ connected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ verbunden"
           }
         }
       }
@@ -83,6 +103,16 @@
         }
       }
     },
+    "%@ is paired." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist gekoppelt."
+          }
+        }
+      }
+    },
     "%@ is ready." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -116,6 +146,26 @@
         }
       }
     },
+    "%@ on your iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ auf deinem iPhone"
+          }
+        }
+      }
+    },
+    "%@ paired, not connected now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ gekoppelt, gerade nicht verbunden"
+          }
+        }
+      }
+    },
     "%@ runs Claude Code, Anthropic's own app, with your Claude subscription (Pro, Max or Team). You install it and sign in yourself; %@ never sees your sign-in." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -143,6 +193,16 @@
         }
       }
     },
+    "%@ types this into the workspace and submits it. Your agent never sees it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ trägt das im Arbeitsplatz ein und schickt es ab. Dein Agent sieht es nie."
+          }
+        }
+      }
+    },
     "%@ wants to open its workspace" : {
       "localizations" : {
         "de" : {
@@ -163,12 +223,62 @@
         }
       }
     },
+    "%@ wants to sign in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ möchte sich anmelden"
+          }
+        }
+      }
+    },
+    "%@'s own session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigene Sitzung von %@"
+          }
+        }
+      }
+    },
     "%lld" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld"
+          }
+        }
+      }
+    },
+    "%lld conversations reachable on your phone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Unterhaltungen auf deinem Handy erreichbar"
+          }
+        }
+      }
+    },
+    "%lld devices paired" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Geräte gekoppelt"
+          }
+        }
+      }
+    },
+    "1 conversation reachable on your phone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 Unterhaltung auf deinem Handy erreichbar"
           }
         }
       }
@@ -260,6 +370,26 @@
         }
       }
     },
+    "A session that always runs in %@'s folder, with the workspace tools." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Sitzung, die immer im Ordner von %@ läuft, mit den Werkzeugen für den Arbeitsplatz."
+          }
+        }
+      }
+    },
+    "A sign-in is waiting for you" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Anmeldung wartet auf dich"
+          }
+        }
+      }
+    },
     "About 60 GB of free disk space are needed (%lld GB free)." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -277,6 +407,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Etwa 75 GB freier Speicher werden gebraucht (%lld GB frei)."
+          }
+        }
+      }
+    },
+    "Above the limit of %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über der Grenze von %lld"
+          }
+        }
+      }
+    },
+    "Active within the last %lld hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiv in den letzten %lld Stunden"
           }
         }
       }
@@ -322,6 +472,26 @@
         }
       }
     },
+    "Allow the %@ helper below" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaube unten den Helfer von %@"
+          }
+        }
+      }
+    },
+    "Also conversations started in a terminal" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch Unterhaltungen aus dem Terminal"
+          }
+        }
+      }
+    },
     "Also reachable from your phone" : {
       "localizations" : {
         "de" : {
@@ -332,12 +502,52 @@
         }
       }
     },
+    "Always keep reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immer erreichbar halten"
+          }
+        }
+      }
+    },
     "Approve" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bestätigen"
+          }
+        }
+      }
+    },
+    "Approve sign-ins for your agent with Face ID, open your Mac's terminal, and watch and control your Mac and the workspace, also on the go." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib Anmeldungen für deinen Agenten mit Face ID frei, öffne das Terminal deines Macs und sieh und steuere deinen Mac und den Arbeitsplatz, auch unterwegs."
+          }
+        }
+      }
+    },
+    "Approve sign-ins with Face ID, the terminal and the screen of your Mac, on the go." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldungen mit Face ID freigeben, Terminal und Bildschirm deines Macs, auch unterwegs."
+          }
+        }
+      }
+    },
+    "Archived in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Claude-App archiviert"
           }
         }
       }
@@ -372,6 +582,36 @@
         }
       }
     },
+    "At most %lld at once" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höchstens %lld gleichzeitig"
+          }
+        }
+      }
+    },
+    "Automatically: conversations from the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch: Unterhaltungen aus der Claude-App"
+          }
+        }
+      }
+    },
+    "Away from your Wi-Fi, the iPhone reaches this Mac through a VPN such as Tailscale. With it on both devices, the app finds the Mac by itself." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Außerhalb deines WLANs erreicht das iPhone diesen Mac über ein VPN wie Tailscale. Ist es auf beiden Geräten an, findet die App den Mac von selbst."
+          }
+        }
+      }
+    },
     "Build %@, about 26 GB. If you quit %@ or lose the connection, the download continues where it stopped." : {
       "localizations" : {
         "de" : {
@@ -384,6 +624,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Build %1$@, about 26 GB. If you quit %2$@ or lose the connection, the download continues where it stopped."
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbrechen"
           }
         }
       }
@@ -481,7 +731,6 @@
       }
     },
     "Claude Code" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -529,6 +778,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claude braucht deine Hilfe"
+          }
+        }
+      }
+    },
+    "Click Open System Settings if macOS asks, then switch on Annex Helper under Accessibility. When macOS asks for a password, let %@ enter it. This happens only once." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS, klicke auf „Systemeinstellungen öffnen“ und schalte „Annex Helper“ ein. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig."
           }
         }
       }
@@ -624,6 +883,16 @@
         }
       }
     },
+    "Connected now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerade verbunden"
+          }
+        }
+      }
+    },
     "Connecting your agents" : {
       "localizations" : {
         "de" : {
@@ -651,6 +920,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einrichtung fortsetzen …"
+          }
+        }
+      }
+    },
+    "Conversations" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterhaltungen"
           }
         }
       }
@@ -716,6 +995,16 @@
         }
       }
     },
+    "Don't Sign In" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht anmelden"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "de" : {
@@ -762,6 +1051,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lade macOS 27.2.0"
+          }
+        }
+      }
+    },
+    "Each kept conversation is a Claude Code process with about 250 MB of memory. Pinned ones are kept regardless of age." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede gehaltene Unterhaltung ist ein Claude-Code-Prozess mit etwa 250 MB Arbeitsspeicher. Angeheftete bleiben unabhängig vom Alter."
           }
         }
       }
@@ -836,6 +1135,16 @@
         }
       }
     },
+    "Folder no longer exists" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner gibt es nicht mehr"
+          }
+        }
+      }
+    },
     "Folders" : {
       "localizations" : {
         "de" : {
@@ -876,6 +1185,26 @@
         }
       }
     },
+    "From a terminal" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus dem Terminal"
+          }
+        }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allgemein"
+          }
+        }
+      }
+    },
     "Help needed" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -903,6 +1232,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In der Menüleiste"
+          }
+        }
+      }
+    },
+    "In the workspace: switch on Annex Helper (Annex enters the password)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Arbeitsplatz „Annex Helper“ einschalten (Annex gibt das Passwort ein)"
+          }
+        }
+      }
+    },
+    "Inactive for longer than %lld hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Länger als %lld Stunden inaktiv"
           }
         }
       }
@@ -949,12 +1298,42 @@
         }
       }
     },
+    "iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone"
+          }
+        }
+      }
+    },
     "It starts when your agent opens it." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Er startet, wenn dein Agent ihn öffnet."
+          }
+        }
+      }
+    },
+    "Keep conversations reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterhaltungen erreichbar halten"
+          }
+        }
+      }
+    },
+    "Keep only automatically" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur automatisch halten"
           }
         }
       }
@@ -970,11 +1349,22 @@
       }
     },
     "Keep this Mac awake" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diesen Mac wach halten"
+          }
+        }
+      }
+    },
+    "Keep this Mac awake while something must stay reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac wach halten, solange etwas erreichbar bleiben muss"
           }
         }
       }
@@ -1002,6 +1392,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuestes macOS suchen"
+          }
+        }
+      }
+    },
+    "Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac"
           }
         }
       }
@@ -1080,6 +1480,76 @@
         }
       }
     },
+    "Never keep this conversation" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Unterhaltung nie halten"
+          }
+        }
+      }
+    },
+    "Never kept" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird nie gehalten"
+          }
+        }
+      }
+    },
+    "Never used Remote Control" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne Remote Control"
+          }
+        }
+      }
+    },
+    "New Code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Code"
+          }
+        }
+      }
+    },
+    "no conversation to keep right now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gerade keine Unterhaltung zu halten"
+          }
+        }
+      }
+    },
+    "No conversations in the last days." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Unterhaltungen in den letzten Tagen."
+          }
+        }
+      }
+    },
+    "No iPhone paired yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch kein iPhone gekoppelt."
+          }
+        }
+      }
+    },
     "No request waiting." : {
       "localizations" : {
         "de" : {
@@ -1101,6 +1571,16 @@
         }
       }
     },
+    "No sign-in waiting." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Anmeldung wartet."
+          }
+        }
+      }
+    },
     "None of your files, passwords or sign-ins are inside." : {
       "localizations" : {
         "de" : {
@@ -1111,12 +1591,52 @@
         }
       }
     },
+    "Not connected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht verbunden"
+          }
+        }
+      }
+    },
     "not found" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "nicht gefunden"
+          }
+        }
+      }
+    },
+    "Not Now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht jetzt"
+          }
+        }
+      }
+    },
+    "Not paired yet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht gekoppelt"
+          }
+        }
+      }
+    },
+    "Not pinned" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht angeheftet"
           }
         }
       }
@@ -1192,6 +1712,46 @@
         }
       }
     },
+    "On" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An"
+          }
+        }
+      }
+    },
+    "on %@. Approve on your iPhone or here on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bei %@. Gib auf deinem iPhone oder hier am Mac frei."
+          }
+        }
+      }
+    },
+    "on %@. Approve on your iPhone or here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bei %@. Gib auf deinem iPhone oder hier frei."
+          }
+        }
+      }
+    },
+    "On the go" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterwegs"
+          }
+        }
+      }
+    },
     "On your phone" : {
       "localizations" : {
         "de" : {
@@ -1213,12 +1773,72 @@
         }
       }
     },
+    "Once: allow %@'s helper in the workspace to see the sign-in field and type into it. Your agent never sees passwords." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einmalig: Erlaube dem Helfer von %@ im Arbeitsplatz, das Anmeldefeld zu sehen und hineinzuschreiben. Dein Agent sieht nie ein Passwort."
+          }
+        }
+      }
+    },
     "One step needs you: macOS only lets a person switch on screen sharing. It stays inside the workspace; your own Mac is not shared." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einen Schritt musst du selbst machen: Die Bildschirmfreigabe darf nur ein Mensch einschalten. Sie gilt nur im Arbeitsplatz; dein eigener Mac wird nicht freigegeben."
+          }
+        }
+      }
+    },
+    "One-time code" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einmalcode"
+          }
+        }
+      }
+    },
+    "Open %@ on the iPhone: it connects to this Mac now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne %@ auf dem iPhone: Es verbindet sich jetzt mit diesem Mac."
+          }
+        }
+      }
+    },
+    "Open %@ on your iPhone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne %@ auf deinem iPhone."
+          }
+        }
+      }
+    },
+    "Open elsewhere" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Woanders geöffnet"
+          }
+        }
+      }
+    },
+    "Open in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Claude-App geöffnet"
           }
         }
       }
@@ -1331,6 +1951,56 @@
         }
       }
     },
+    "Pair" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koppeln"
+          }
+        }
+      }
+    },
+    "Pair an iPhone …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone koppeln …"
+          }
+        }
+      }
+    },
+    "Paired" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gekoppelt"
+          }
+        }
+      }
+    },
+    "Pairing didn't work" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Koppeln hat nicht geklappt"
+          }
+        }
+      }
+    },
+    "Password" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort"
+          }
+        }
+      }
+    },
     "Pause" : {
       "localizations" : {
         "de" : {
@@ -1341,12 +2011,32 @@
         }
       }
     },
+    "Point the camera at this code." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richte die Kamera auf diesen Code."
+          }
+        }
+      }
+    },
     "Prepare the workspace" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arbeitsplatz vorbereiten"
+          }
+        }
+      }
+    },
+    "Preparing …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird vorbereitet …"
           }
         }
       }
@@ -1381,6 +2071,16 @@
         }
       }
     },
+    "Reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erreichbar"
+          }
+        }
+      }
+    },
     "reachable from your phone" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1388,6 +2088,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "vom Handy erreichbar"
+          }
+        }
+      }
+    },
+    "Reachable from your phone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom Handy erreichbar"
           }
         }
       }
@@ -1413,6 +2123,36 @@
         }
       }
     },
+    "Remote Control turned off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Control ausgeschaltet"
+          }
+        }
+      }
+    },
+    "Remote Login" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernte Anmeldung"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernen"
+          }
+        }
+      }
+    },
     "Restart" : {
       "localizations" : {
         "de" : {
@@ -1429,6 +2169,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "startet neu %@"
+          }
+        }
+      }
+    },
+    "Right after, the workspace asks once more: switch on Annex Helper. %@ enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gleich danach fragt der Arbeitsplatz noch einmal: Schalte „Annex Helper“ ein. Das Passwort gibt %@ selbst ein. Damit kann sich dein Agent nach deiner Freigabe auf Websites anmelden, ohne je das Passwort zu sehen."
           }
         }
       }
@@ -1474,11 +2224,32 @@
       }
     },
     "Save" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sichern"
+          }
+        }
+      }
+    },
+    "Scan this code with %@ on your iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scanne diesen Code mit %@ auf deinem iPhone"
+          }
+        }
+      }
+    },
+    "Scheduled task" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geplante Aufgabe"
           }
         }
       }
@@ -1539,6 +2310,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sitzung „%@“"
+          }
+        }
+      }
+    },
+    "Set Up …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrichten …"
           }
         }
       }
@@ -1624,6 +2405,16 @@
         }
       }
     },
+    "Sign In" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmelden"
+          }
+        }
+      }
+    },
     "Sign in to Claude" : {
       "localizations" : {
         "de" : {
@@ -1654,12 +2445,32 @@
         }
       }
     },
+    "Sign-ins" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldungen"
+          }
+        }
+      }
+    },
     "Sign-ins expire when the workspace closes" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldungen verfallen beim Schließen des Arbeitsplatzes"
+          }
+        }
+      }
+    },
+    "Sign-ins for your agent" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldungen für deinen Agenten"
           }
         }
       }
@@ -1681,6 +2492,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bei Claude Code angemeldet"
+          }
+        }
+      }
+    },
+    "Signing in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmelden"
           }
         }
       }
@@ -1746,6 +2567,16 @@
         }
       }
     },
+    "Starting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet"
+          }
+        }
+      }
+    },
     "Starting the session in the background" : {
       "localizations" : {
         "de" : {
@@ -1792,6 +2623,16 @@
         }
       }
     },
+    "Switch on Annex Helper in the workspace window." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte „Annex Helper“ im Fenster des Arbeitsplatzes ein."
+          }
+        }
+      }
+    },
     "Switch on Screen Sharing below" : {
       "localizations" : {
         "de" : {
@@ -1823,7 +2664,68 @@
         }
       }
     },
+    "Tap Connect to Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf „Mit Mac verbinden“."
+          }
+        }
+      }
+    },
+    "The code expired" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Code ist abgelaufen"
+          }
+        }
+      }
+    },
+    "The code is valid until %@ and only once." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Code gilt bis %@ und nur einmal."
+          }
+        }
+      }
+    },
+    "The helper isn't installed in the workspace yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Helfer ist im Arbeitsplatz noch nicht installiert."
+          }
+        }
+      }
+    },
+    "The iPhone connects over SSH: encrypted, and only with its own key." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das iPhone verbindet sich über SSH: verschlüsselt und nur mit seinem eigenen Schlüssel."
+          }
+        }
+      }
+    },
+    "The Mac doesn't go to sleep by itself while a session or a kept conversation runs. Closing a laptop's lid still puts it to sleep." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac schläft nicht von selbst ein, solange eine Sitzung oder eine gehaltene Unterhaltung läuft. Zuklappen schickt ein MacBook trotzdem in den Ruhezustand."
+          }
+        }
+      }
+    },
     "The Mac doesn't go to sleep by itself while the session runs. Closing a laptop's lid still puts it to sleep." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1936,6 +2838,16 @@
         }
       }
     },
+    "This Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Mac"
+          }
+        }
+      }
+    },
     "This Mac can't run virtual machines (Apple silicon is required)." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1957,6 +2869,26 @@
         }
       }
     },
+    "Try Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        }
+      }
+    },
+    "Turn On …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einschalten …"
+          }
+        }
+      }
+    },
     "Turn on screen sharing" : {
       "localizations" : {
         "de" : {
@@ -1974,6 +2906,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Updates …"
+          }
+        }
+      }
+    },
+    "User name or email" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzername oder E-Mail"
           }
         }
       }
@@ -2010,6 +2952,26 @@
         }
       }
     },
+    "Waiting for the network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf das Netzwerk"
+          }
+        }
+      }
+    },
+    "Waiting until %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet bis %@"
+          }
+        }
+      }
+    },
     "Websites forget their sign-ins when it closes." : {
       "localizations" : {
         "de" : {
@@ -2030,6 +2992,26 @@
         }
       }
     },
+    "When a website needs a sign-in, your agent asks; you approve and %@ fills it in." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht eine Website eine Anmeldung, fragt dein Agent; du gibst frei und %@ trägt sie ein."
+          }
+        }
+      }
+    },
+    "When a website needs a sign-in, your agent asks; you approve on your iPhone or Mac and %@ fills it in." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht eine Website eine Anmeldung, fragt dein Agent; du gibst auf dem iPhone oder Mac frei und %@ trägt sie ein."
+          }
+        }
+      }
+    },
     "When macOS asks for a password, click \"Enter the workspace password\" in the window." : {
       "localizations" : {
         "de" : {
@@ -2046,6 +3028,32 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fragt macOS nach einem Passwort, lass es %@ eingeben."
+          }
+        }
+      }
+    },
+    "When the Claude app or a terminal closes a conversation, %@ keeps it running in the background, so you can continue it from the Claude app on your phone. Open it on the Mac again and %@ hands it back at once." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließt die Claude-App oder ein Terminal eine Unterhaltung, führt %@ sie im Hintergrund weiter, damit du sie in der Claude-App auf deinem Handy fortsetzen kannst. Öffnest du sie am Mac wieder, gibt %@ sie sofort ab."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "When the Claude app or a terminal closes a conversation, %1$@ keeps it running in the background, so you can continue it from the Claude app on your phone. Open it on the Mac again and %2$@ hands it back at once."
+          }
+        }
+      }
+    },
+    "When the Claude app or a terminal closes a conversation, %@ keeps it running, so it stays in the Claude app on your phone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließt die Claude-App oder ein Terminal eine Unterhaltung, führt %@ sie weiter, damit sie in der Claude-App auf deinem Handy bleibt."
           }
         }
       }
@@ -2080,6 +3088,16 @@
         }
       }
     },
+    "Your agent" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Agent"
+          }
+        }
+      }
+    },
     "Your agent asks for your help" : {
       "localizations" : {
         "de" : {
@@ -2106,6 +3124,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Agent braucht deine Hilfe"
+          }
+        }
+      }
+    },
+    "Your Claude Code conversations stay in the Claude app on your phone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Claude-Code-Unterhaltungen bleiben in der Claude-App auf deinem Handy."
           }
         }
       }

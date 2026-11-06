@@ -264,6 +264,7 @@ private struct StepPage: View {
                     numbered(2, "Switch on Screen Sharing.")
                     numbered(3, "When macOS asks for a password, click \"Enter the workspace password\" in the window.")
                     numbered(4, "Come back here and click Check.")
+                    numbered(5, "Right after, the workspace asks once more: switch on Annex Helper. \(Brand.name) enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password.")
                 }
             }
         }
@@ -323,6 +324,17 @@ private struct StepPage: View {
             Text("Optional: \(Brand.name) can keep a Claude Code session running on this Mac that you reach from the Claude app on your phone (Remote Control). You approve opening the workspace right there.")
                 .font(.title3).foregroundStyle(.secondary)
             GlassCard {
+                Toggle(isOn: Binding(get: { model.settings.keepReachable },
+                                     set: { v in model.update { $0.keepReachable = v } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Keep conversations reachable").fontWeight(.semibold)
+                        Text("When the Claude app or a terminal closes a conversation, \(Brand.name) keeps it running, so it stays in the Claude app on your phone.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+            }
+            GlassCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Label(setup.claudeSignedIn ? String(localized: "Signed in to Claude Code") : String(localized: "Sign in to Claude Code"),
@@ -367,6 +379,29 @@ private struct StepPage: View {
                         feature("iphone", "On your phone", "Open the Claude app: the session \"\(model.settings.sessionName)\" appears with a computer icon.")
                     }
                     feature("folder", "Exchange folder", "Files go in and out of the workspace only through it.")
+                    if model.helperState == .allowed {
+                        feature("person.badge.key", "Sign-ins", "When a website needs a sign-in, your agent asks; you approve and \(Brand.name) fills it in.")
+                    }
+                    if model.settings.keepReachable {
+                        feature("iphone.radiowaves.left.and.right", "Reachable", "Your Claude Code conversations stay in the Claude app on your phone.")
+                    }
+                }
+            }
+            GlassCard {
+                HStack(spacing: 14) {
+                    Image(systemName: "iphone").font(.title).foregroundStyle(BrandColor.indigo).frame(width: 34)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(Brand.name) on your iPhone").fontWeight(.semibold)
+                        Text("Approve sign-ins with Face ID, the terminal and the screen of your Mac, on the go.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Pair") {
+                        UserDefaults.standard.set("iphone", forKey: "settingsTab")
+                        model.openSettingsAction?()
+                        NSApp.activate()
+                    }
+                    .buttonStyle(.glass)
                 }
             }
         }

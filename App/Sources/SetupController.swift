@@ -294,6 +294,11 @@ final class SetupController: ObservableObject {
             let image = try await client.screenshot()
             await client.disconnect()
             guard !ScreenCheck.isBlank(image) else { throw SetupError.screenSharingBlank }
+            // Right away the helper for sign-ins: the user flips one switch, Annex enters the password. Skippable:
+            // it can be set up later in the settings.
+            self.activity = .working(String(localized: "In the workspace: switch on Annex Helper (Annex enters the password)"))
+            await AppModel.shared.allowHelper()
+            self.note(AppModel.shared.helperState == .allowed ? "the helper may sign in" : "helper not allowed (later in the settings)")
             try await self.workspace.provisioner.finish(host: ip)
             try self.bundle.updateState { $0.screenSharingReady = true }
             self.note("screen sharing works; the workspace account is a standard user now")
@@ -344,6 +349,7 @@ final class SetupController: ObservableObject {
 
     func continueAfterConnect() {
         if wantsClaudeSession {
+            saveSettings { $0.keepReachable = true }
             step = .session
             checkClaudeSignIn()
         } else {
@@ -370,8 +376,9 @@ final class SetupController: ObservableObject {
     }
 
     func skipSession() {
-        try? SessionAgent.disable()
         saveSettings { $0.sessionEnabled = false }
+        // The background process stays if it keeps conversations reachable
+        if !workspace.settings.keepReachable { try? SessionAgent.disable() }
         finish()
     }
 

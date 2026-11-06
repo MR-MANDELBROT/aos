@@ -68,7 +68,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network. Nothing else on your network is contacted."
+            "value" : "Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network, and lets your iPhone find this Mac when you pair it. Nothing else on your network is contacted."
           }
         }
       }
