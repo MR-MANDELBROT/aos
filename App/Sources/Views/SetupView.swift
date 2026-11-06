@@ -20,7 +20,7 @@ struct SetupView: View {
             if setup.step == .requirements { setup.checkRequirements() }
             if setup.step == .agents { setup.detectAgents() }
             if setup.step == .session { setup.checkClaudeSignIn() }
-            if setup.step == .screenSharing { setup.startWorkspaceIfOff() }
+            if setup.step == .screenSharing { setup.beginScreenSharing() }
         }
     }
 }
@@ -256,17 +256,34 @@ private struct StepPage: View {
         }
     }
 
-    var screenSharing: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("One step needs you: macOS only lets a person switch on screen sharing. It stays inside the workspace; your own Mac is not shared.")
-                .font(.title3).foregroundStyle(.secondary)
-            GlassCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    numbered(1, "Open the workspace window. System Settings is already open there at General > Sharing.")
-                    numbered(2, "Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x.")
-                    numbered(3, "When macOS asks for a password, click \"Enter the workspace password\" in the window.")
-                    numbered(4, "Come back here and click Check.")
-                    numbered(5, "Right after, the workspace asks once more: switch on aOS Helper. \(Brand.name) enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password.")
+    @ViewBuilder var screenSharing: some View {
+        switch setup.sharingPhase {
+        case .verified, .allowingHelper:
+            VStack(alignment: .leading, spacing: 14) {
+                GlassCard {
+                    Label("Screen sharing is on.", systemImage: "checkmark.circle.fill")
+                        .font(.headline).foregroundStyle(.green)
+                }
+                Text("One more switch: aOS Helper. With it your agent can sign in on websites once you approve, without ever seeing the password. \(Brand.name) enters the workspace password itself.")
+                    .font(.title3).foregroundStyle(.secondary)
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        numbered(1, "Click Allow aOS Helper. The workspace window comes to the front.")
+                        numbered(2, "There, follow the bar at the top: switch on aOS Helper. Type nothing, aOS enters the password.")
+                        numbered(3, "Then this window comes back by itself.")
+                    }
+                }
+            }
+        default:
+            VStack(alignment: .leading, spacing: 14) {
+                Text("One step needs you: macOS only lets a person switch on screen sharing. It stays inside the workspace; your own Mac is not shared.")
+                    .font(.title3).foregroundStyle(.secondary)
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        numbered(1, "The workspace window opens by itself. Wait until System Settings appears there at Sharing, the bar at the top tells you.")
+                        numbered(2, "Switch on Screen Sharing. When macOS asks for a password, aOS enters it. Type nothing.")
+                        numbered(3, "aOS notices when it worked and brings you back here.")
+                    }
                 }
             }
         }
@@ -478,11 +495,12 @@ private struct StepPage: View {
         case .download:
             if setup.restoreInfo == nil { Button("Look up the newest macOS") { setup.lookUpRestoreImage() }.buttonStyle(.glass).disabled(busy) }
         case .screenSharing:
-            Button("Open the workspace window") {
-                openWindow(id: WindowID.workspace)
-                setup.startWorkspaceIfOff()
-            }.buttonStyle(.glass)
-            Button("Open Sharing settings again") { setup.openSharingSettingsAgain() }.buttonStyle(.glass).disabled(busy)
+            switch setup.sharingPhase {
+            case .verified:
+                Button("Later") { setup.skipHelper() }.buttonStyle(.glass).disabled(busy)
+            default:
+                EmptyView()
+            }
         case .connect:
             Button("Connect again") { setup.connectAgents() }.buttonStyle(.glass).disabled(busy)
         case .session:
@@ -510,7 +528,18 @@ private struct StepPage: View {
         case .prepare:
             if !busy { Button("Prepare the workspace") { setup.startPrepare() }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction) }
         case .screenSharing:
-            Button("Check") { setup.verifyScreenSharing() }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(busy)
+            switch setup.sharingPhase {
+            case .verified:
+                Button("Allow aOS Helper") { setup.allowHelperAndContinue() }
+                    .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(busy)
+            default:
+                Button("Go to the workspace") {
+                    openWindow(id: WindowID.workspace)
+                    NSApp.activate()
+                    setup.beginScreenSharing()
+                }
+                .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+            }
         case .connect:
             Button("Continue") { setup.continueAfterConnect() }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(busy)
         case .session:

@@ -89,6 +89,9 @@ say "no sleep, no screen saver, no relaunch at login"
 # Language and region like the host, ABC keyboard, host time zone
 if [ -n "${LANGUAGES:-}" ]; then
   as_user defaults write -g AppleLanguages -array ${=LANGUAGES}
+  # Also for the system: the account's first login may copy the system's list over the account's (prepare.sh
+  # puts it right after every boot).
+  defaults write /Library/Preferences/.GlobalPreferences AppleLanguages -array ${=LANGUAGES}
 fi
 [ -n "${LOCALE:-}" ] && as_user defaults write -g AppleLocale -string "$LOCALE"
 LAYOUT='{ InputSourceKind = "Keyboard Layout"; "KeyboardLayout ID" = 252; "KeyboardLayout Name" = ABC; }'

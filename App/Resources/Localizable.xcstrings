@@ -287,6 +287,16 @@
         }
       }
     },
+    "A few seconds. Then the setup continues." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein paar Sekunden. Dann geht die Einrichtung weiter."
+          }
+        }
+      }
+    },
     "A few steps are left." : {
       "localizations" : {
         "de" : {
@@ -437,7 +447,18 @@
         }
       }
     },
+    "Allow aOS Helper" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS Helper erlauben"
+          }
+        }
+      }
+    },
     "Allow the %@ helper below" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -513,6 +534,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS arbeitet im Hintergrund und trägt sich bei deinen Agenten und deinem iPhone ein. Dafür braucht es einen festen Platz. Es kopiert sich dorthin und öffnet sich neu."
+          }
+        }
+      }
+    },
+    "aOS notices when it worked and brings you back here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS merkt, wenn es geklappt hat, und bringt dich hierher zurück."
+          }
+        }
+      }
+    },
+    "aOS prepares the switch for aOS Helper. Type nothing yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS bereitet den Schalter für aOS Helper vor. Tippe noch nichts."
           }
         }
       }
@@ -653,6 +694,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Außerhalb deines WLANs erreicht das iPhone diesen Mac über ein VPN wie Tailscale. Ist es auf beiden Geräten an, findet die App den Mac von selbst."
+          }
+        }
+      }
+    },
+    "Back to Setup" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurück zur Einrichtung"
           }
         }
       }
@@ -1060,6 +1111,16 @@
         }
       }
     },
+    "Click Allow aOS Helper. The workspace window comes to the front." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicke auf „aOS Helper erlauben“. Das Fenster des Arbeitsplatzes kommt nach vorn."
+          }
+        }
+      }
+    },
     "Click into the field and touch your YubiKey." : {
       "localizations" : {
         "de" : {
@@ -1071,6 +1132,7 @@
       }
     },
     "Click Open System Settings if macOS asks, then switch on aOS Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1081,6 +1143,7 @@
       }
     },
     "Click Open System Settings if macOS asks, then switch on aOS Helper. When macOS asks for the password to allow aOS Helper, click Enter the workspace password. Only then: if another window asks, click Not Now." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1151,6 +1214,7 @@
       }
     },
     "Come back here and click Check." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1246,6 +1310,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weiter"
+          }
+        }
+      }
+    },
+    "Continue in the setup window." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiter geht es im Fenster der Einrichtung."
           }
         }
       }
@@ -1440,6 +1514,16 @@
         }
       }
     },
+    "Enter Password" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort eingeben"
+          }
+        }
+      }
+    },
     "Enter the code from your authenticator app." : {
       "localizations" : {
         "de" : {
@@ -1451,6 +1535,7 @@
       }
     },
     "Enter the workspace password" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1556,6 +1641,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ fertig einrichten"
+          }
+        }
+      }
+    },
+    "Finishing the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz wird abgeschlossen"
           }
         }
       }
@@ -1670,12 +1765,42 @@
         }
       }
     },
+    "Go to the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zum Arbeitsplatz"
+          }
+        }
+      }
+    },
     "I can't do this" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geht nicht"
+          }
+        }
+      }
+    },
+    "If macOS asks, click Open System Settings, then switch on aOS Helper. aOS enters the password itself, type nothing. Then the setup continues by itself." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS, klicke „Systemeinstellungen öffnen“ und schalte dann „aOS Helper“ ein. Das Passwort gibt aOS selbst ein, tippe nichts. Danach geht die Einrichtung von selbst weiter."
+          }
+        }
+      }
+    },
+    "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password. Only then: if another window asks, click Not Now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS, klicke „Systemeinstellungen öffnen“ und schalte dann „aOS Helper“ ein. Fragt macOS nach dem Passwort, klicke „Passwort eingeben“. Erst danach: Fragt noch ein Fenster, klicke „Nicht jetzt“."
           }
         }
       }
@@ -1690,7 +1815,18 @@
         }
       }
     },
+    "In the workspace: switch on aOS Helper" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Arbeitsplatz: aOS Helper einschalten"
+          }
+        }
+      }
+    },
     "In the workspace: switch on aOS Helper (aOS enters the password)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1756,6 +1892,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iPhone-Hotspot"
+          }
+        }
+      }
+    },
+    "It starts for the next setup step." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er startet für den nächsten Schritt der Einrichtung."
           }
         }
       }
@@ -1837,6 +1983,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zuletzt synchronisiert"
+          }
+        }
+      }
+    },
+    "Later" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Später"
           }
         }
       }
@@ -1997,6 +2153,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS hat die Änderung nicht übernommen."
+          }
+        }
+      }
+    },
+    "macOS isn't asking for the password right now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS fragt gerade nicht nach dem Passwort."
           }
         }
       }
@@ -2478,6 +2644,26 @@
         }
       }
     },
+    "One moment" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einen Moment"
+          }
+        }
+      }
+    },
+    "One more switch: aOS Helper. With it your agent can sign in on websites once you approve, without ever seeing the password. %@ enters the workspace password itself." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch ein Schalter: aOS Helper. Damit kann sich dein Agent nach deiner Freigabe auf Websites anmelden, ohne je das Passwort zu sehen. Das Passwort des Arbeitsplatzes gibt %@ selbst ein."
+          }
+        }
+      }
+    },
     "One step needs you: macOS only lets a person switch on screen sharing. It stays inside the workspace; your own Mac is not shared." : {
       "localizations" : {
         "de" : {
@@ -2559,6 +2745,7 @@
       }
     },
     "Open Sharing settings again" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2579,6 +2766,7 @@
       }
     },
     "Open the workspace window" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2589,6 +2777,7 @@
       }
     },
     "Open the workspace window. System Settings is already open there at General > Sharing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2720,6 +2909,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Angehalten"
+          }
+        }
+      }
+    },
+    "Please wait, don't click anything yet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte warten und noch nichts anklicken"
           }
         }
       }
@@ -2915,6 +3114,7 @@
       }
     },
     "Right after, the workspace asks once more: switch on aOS Helper. %@ enters the password itself. With it, your agent can sign in on websites once you approve, without ever seeing the password." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2984,12 +3184,32 @@
         }
       }
     },
+    "Screen sharing is on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bildschirmfreigabe ist an"
+          }
+        }
+      }
+    },
     "Screen sharing is on but shows no picture yet. Turn it off and on again in the workspace." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Bildschirmfreigabe ist an, zeigt aber noch kein Bild. Schalte sie im Arbeitsplatz aus und wieder ein."
+          }
+        }
+      }
+    },
+    "Screen sharing is on." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bildschirmfreigabe ist an."
           }
         }
       }
@@ -3365,6 +3585,16 @@
         }
       }
     },
+    "Start it for this step." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starte ihn für diesen Schritt."
+          }
+        }
+      }
+    },
     "Start new chats on this Mac" : {
       "localizations" : {
         "de" : {
@@ -3396,6 +3626,17 @@
       }
     },
     "Start the workspace" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz starten"
+          }
+        }
+      }
+    },
+    "Start the Workspace" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3511,6 +3752,16 @@
         }
       }
     },
+    "Switch on aOS Helper below" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte unten „aOS Helper“ ein"
+          }
+        }
+      }
+    },
     "Switch on aOS Helper in the workspace window." : {
       "localizations" : {
         "de" : {
@@ -3532,11 +3783,22 @@
       }
     },
     "Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schalte „Bildschirmfreigabe“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie mit ihrem x."
+          }
+        }
+      }
+    },
+    "Switch on Screen Sharing. When macOS asks for a password, aOS enters it. Type nothing." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte „Bildschirmfreigabe“ ein. Fragt macOS nach einem Passwort, gibt aOS es ein. Tippe nichts."
           }
         }
       }
@@ -3567,6 +3829,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippe auf „Mit deinem Mac koppeln“."
+          }
+        }
+      }
+    },
+    "That didn't work yet: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das hat noch nicht geklappt: %@"
           }
         }
       }
@@ -3698,6 +3970,16 @@
         }
       }
     },
+    "The workspace didn't start" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist nicht gestartet"
+          }
+        }
+      }
+    },
     "The workspace is off" : {
       "localizations" : {
         "de" : {
@@ -3709,6 +3991,7 @@
       }
     },
     "The workspace is starting" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3760,6 +4043,16 @@
         }
       }
     },
+    "The workspace starts and then opens System Settings at Sharing. This takes about a minute." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz startet und öffnet dann die Systemeinstellungen bei „Teilen“. Das dauert etwa eine Minute."
+          }
+        }
+      }
+    },
     "The workspace starts for the first time, without the setup assistant. %@ creates its account, allows remote access only from this Mac, installs Google Chrome and turns off sleep and automatic updates." : {
       "localizations" : {
         "de" : {
@@ -3770,12 +4063,43 @@
         }
       }
     },
+    "The workspace window opens by itself. Wait until System Settings appears there at Sharing, the bar at the top tells you." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster des Arbeitsplatzes öffnet sich von selbst. Warte, bis dort die Systemeinstellungen bei „Teilen“ erscheinen. Die Leiste oben sagt dir Bescheid."
+          }
+        }
+      }
+    },
     "Then System Settings opens there at Sharing, for the next step." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Danach öffnen sich dort die Systemeinstellungen bei Teilen, für den nächsten Schritt."
+          }
+        }
+      }
+    },
+    "Then this window comes back by itself." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Danach kommt dieses Fenster von selbst zurück."
+          }
+        }
+      }
+    },
+    "There, follow the bar at the top: switch on aOS Helper. Type nothing, aOS enters the password." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folge dort der Leiste oben und schalte „aOS Helper“ ein. Tippe nichts, das Passwort gibt aOS ein."
           }
         }
       }
@@ -4080,7 +4404,18 @@
         }
       }
     },
+    "When macOS asks for a password, aOS enters it, type nothing. aOS notices by itself when it worked." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt macOS nach einem Passwort, gibt aOS es ein. Tippe nichts. aOS merkt von selbst, wenn es geklappt hat."
+          }
+        }
+      }
+    },
     "When macOS asks for a password, click \"Enter the workspace password\" in the window." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4091,6 +4426,7 @@
       }
     },
     "When macOS asks for a password, let %@ enter it." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

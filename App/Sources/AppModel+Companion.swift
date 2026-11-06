@@ -187,6 +187,7 @@ extension AppModel {
         while Date() < deadline, helperState == .allowing {
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             let poll = await workspace.provisioner.helperPermissionPoll(host: ip)
+            helperPasswordDialog = poll.passwordDialog
             if poll.trusted {
                 await finishHelperPermission(ip: ip, allowed: true)
                 return
@@ -204,6 +205,7 @@ extension AppModel {
             }
         }
         if helperState == .allowing { await finishHelperPermission(ip: ip, allowed: false) }
+        helperPasswordDialog = false
     }
 
     func cancelHelperPermission() async {
@@ -219,6 +221,7 @@ extension AppModel {
             helperWasAdmin = nil
         }
         helperState = allowed ? .allowed : .notAllowed
+        helperPasswordDialog = false
         append(allowed ? "the workspace helper may sign in now" : "the helper permission was not given")
     }
 }

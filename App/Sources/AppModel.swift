@@ -51,6 +51,8 @@ final class AppModel: ObservableObject {
     @Published var pairedDevices: [AuthorizedKeys.Device] = []
     @Published var remoteLoginOn = false
     @Published var helperState: HelperState = .unknown
+    /// While the user allows the helper: macOS shows its password dialog in the workspace right now.
+    @Published var helperPasswordDialog = false
     var helperWasAdmin: Bool?
 
     // Bitwarden (see AppModel+Bitwarden.swift); the views read `bitwarden` and redraw on the tick.

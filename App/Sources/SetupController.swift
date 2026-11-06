@@ -1,4 +1,5 @@
 import AOSKit
+import AppKit
 import Foundation
 import ServiceManagement
 import UserNotifications
@@ -87,7 +88,10 @@ final class SetupController: ObservableObject {
         log("setup: \(line)")
     }
 
-    private func run(_ label: String, _ body: @escaping () async throws -> Void) {
+    /// Runs one piece of work at a time (the buttons are disabled meanwhile). `then` runs after it succeeded and
+    /// the activity is idle again: work that starts the next piece goes there, not into `body` (a `run` inside
+    /// `body` would be refused as busy).
+    private func run(_ label: String, _ body: @escaping () async throws -> Void, then: (() -> Void)? = nil) {
         switch activity {
         case .working, .progress: return
         default: break
@@ -97,6 +101,7 @@ final class SetupController: ObservableObject {
             do {
                 try await body()
                 activity = .idle
+                then?()
             } catch {
                 note("\(label): \(error.localizedDescription)")
                 activity = .failed(error.localizedDescription)
@@ -274,72 +279,202 @@ final class SetupController: ObservableObject {
             try await self.workspace.provisioner.bootstrap(host: ip) { line in
                 Task { @MainActor in self.note(line) }
             }
-            // Language and the ABC keyboard (which the password typing relies on) apply only at the next login.
+            // Language and the keyboard layout apply only at the next login. From here on the user follows in the
+            // workspace window: its bar says to wait until System Settings is open.
+            self.step = .screenSharing
+            self.sharingPhase = .starting
+            self.showWorkspace()
             self.activity = .working(String(localized: "Restarting the workspace once"))
             self.note("restarting the workspace so language and keyboard apply")
             try await self.workspace.restart()
-            let address = try await self.startedWorkspace()
-            self.step = .screenSharing
+            let address = try await self.startedWorkspace(prepare: true)
+            self.activity = .working(String(localized: "Opening the Sharing settings"))
             try await self.workspace.provisioner.openSharingSettings(host: address)
+            self.sharingPhase = .waitingForSwitch
+            self.watchScreenSharing(ip: address)
         }
     }
 
     /// The workspace running and logged in (booted if it was off, e.g. after the app was quit); its address.
-    private func startedWorkspace() async throws -> String {
+    private func startedWorkspace(prepare: Bool = false) async throws -> String {
         let host = workspace.host
-        if !host.isRunning { try await host.start() }
+        let booting = !host.isRunning
+        if booting { try await host.start() }
         let ip = try await host.waitForAddress(timeout: 300)
-        try await workspace.provisioner.prepareSession(host: ip)
+        if booting || prepare { try await workspace.provisioner.prepareSession(host: ip) }
         workspace.noteActivity()
         return ip
     }
 
-    // MARK: 6. Screen sharing
-
-    func verifyScreenSharing() {
-        run(String(localized: "Checking screen sharing")) {
-            let ip = try await self.startedWorkspace()
-            guard try await self.workspace.provisioner.screenSharingEnabled(host: ip) else {
-                throw SetupError.screenSharingOff
-            }
-            let password = try GuestSecrets(paths: self.paths).adminPassword(createIfMissing: false)
-            let client = RFBClient(host: ip, username: Brand.guestUser, password: password)
-            try await client.connect()
-            let image = try await client.screenshot()
-            await client.disconnect()
-            guard !ScreenCheck.isBlank(image) else { throw SetupError.screenSharingBlank }
-            // Right away the helper for sign-ins: the user flips one switch, aOS enters the password. Skippable:
-            // it can be set up later in the settings.
-            self.activity = .working(String(localized: "In the workspace: switch on aOS Helper (aOS enters the password)"))
-            await AppModel.shared.allowHelper()
-            self.note(AppModel.shared.helperState == .allowed ? "the helper may sign in" : "helper not allowed (later in the settings)")
-            try await self.workspace.provisioner.finish(host: ip)
-            try self.bundle.updateState { $0.screenSharingReady = true }
-            self.note("screen sharing works; the workspace account is a standard user now")
-            _ = await self.workspace.close()
-            self.step = .connect
-            self.connectAgents()
-        }
+    private func showWorkspace() {
+        AppModel.shared.openWindow?(WindowID.workspace)
+        NSApp.activate()
     }
+
+    private func showSetup() {
+        AppModel.shared.openWindow?(WindowID.setup)
+        NSApp.activate()
+    }
+
+    // MARK: 6. Screen sharing and the helper
+
+    /// Where the screen sharing step stands. The user works in the workspace window (its bar guides them); the setup
+    /// window takes over again for the helper and the next steps.
+    enum SharingPhase: Equatable {
+        /// The workspace starts and opens System Settings at Sharing: the user waits.
+        case starting
+        /// System Settings is open: the user switches on Screen Sharing. aOS enters the password when macOS asks
+        /// and notices by itself when it is on.
+        case waitingForSwitch
+        case checking
+        /// Screen sharing works: back in the setup window, next the helper.
+        case verified
+        /// The user switches on aOS Helper in the workspace window (aOS enters the password).
+        case allowingHelper
+    }
+
+    @Published var sharingPhase: SharingPhase = .starting
+    /// Why the last check failed (shown in the workspace window's bar).
+    @Published var sharingProblem: String?
+    /// macOS shows its password dialog in the workspace right now.
+    @Published var passwordDialogOpen = false
+    /// The workspace window's screen, for typing the password (set by the window).
+    weak var display: VMDisplay.Coordinator?
+    private var sharingWatch: Task<Void, Never>?
 
     var isBusy: Bool {
         switch activity { case .working, .progress: return true; default: return false }
     }
 
-    /// The screen sharing step happens on the workspace's screen: boots it if it is off (the app was quit, or it
-    /// was closed) and opens the Sharing settings there.
-    func startWorkspaceIfOff() {
-        guard step == .screenSharing, !isComplete, workspace.host.virtualMachine == nil else { return }
-        openSharingSettingsAgain()
-    }
-
-    func openSharingSettingsAgain() {
+    /// Step 6 from the start: shows the workspace window, boots the workspace if it is off (the app was quit or
+    /// the workspace closed), opens the Sharing settings there and watches. Called when the setup or the
+    /// workspace window shows this step; does nothing while it runs already.
+    func beginScreenSharing() {
+        guard step == .screenSharing, !isComplete, !isBusy else { return }
+        switch sharingPhase {
+        case .verified, .allowingHelper, .checking: return
+        case .waitingForSwitch where sharingWatch != nil && workspace.host.isRunning: return
+        default: break
+        }
+        showWorkspace()
+        sharingPhase = .starting
+        sharingProblem = nil
         run(String(localized: "Opening the Sharing settings")) {
             let ip = try await self.startedWorkspace()
             try await self.workspace.provisioner.openSharingSettings(host: ip)
+            self.sharingPhase = .waitingForSwitch
+            self.watchScreenSharing(ip: ip)
         }
     }
 
+    /// Every two seconds: is screen sharing on (then check it), does macOS ask for the password (then enter it, once
+    /// per dialog; during the setup no agent has used the workspace yet, so nothing else can be waiting for it).
+    private func watchScreenSharing(ip: String, checkWhenOn: Bool = true) {
+        sharingWatch?.cancel()
+        sharingWatch = Task { [weak self] in
+            var typedForDialog = false
+            var typings = 0
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                guard let self, !Task.isCancelled, self.step == .screenSharing, self.sharingPhase == .waitingForSwitch,
+                      self.workspace.host.isRunning else { break }
+                let provisioner = self.workspace.provisioner
+                if checkWhenOn, (try? await provisioner.screenSharingEnabled(host: ip)) == true {
+                    self.sharingWatch = nil
+                    self.checkScreenSharing(automatic: true)
+                    return
+                }
+                let dialog = await provisioner.passwordDialogOpen(host: ip)
+                self.passwordDialogOpen = dialog
+                if dialog && !typedForDialog && typings < 3 {
+                    try? await Task.sleep(nanoseconds: 1_200_000_000)  // the dialog takes the focus
+                    guard self.sharingPhase == .waitingForSwitch, self.display != nil else { continue }
+                    self.typeGuestPassword(into: self.display)
+                    self.note("entered the workspace password for screen sharing")
+                    typedForDialog = true
+                    typings += 1
+                } else if !dialog {
+                    typedForDialog = false
+                }
+            }
+            self?.passwordDialogOpen = false
+        }
+    }
+
+    /// "Check" in the workspace window, or by itself once screen sharing is on: connects over screen sharing and
+    /// looks for a picture. Works: back to the setup window for the helper.
+    func checkScreenSharing(automatic: Bool = false) {
+        guard step == .screenSharing, !isBusy else { return }
+        sharingWatch?.cancel()
+        sharingWatch = nil
+        passwordDialogOpen = false
+        sharingPhase = .checking
+        sharingProblem = nil
+        run(String(localized: "Checking screen sharing")) {
+            do {
+                let ip = try await self.startedWorkspace()
+                guard try await self.workspace.provisioner.screenSharingEnabled(host: ip) else {
+                    throw SetupError.screenSharingOff
+                }
+                let password = try GuestSecrets(paths: self.paths).adminPassword(createIfMissing: false)
+                // Right after the switch the service needs a few seconds before it shows a picture.
+                var problem: Error?
+                for attempt in 0..<(automatic ? 6 : 2) {
+                    if attempt > 0 { try await Task.sleep(nanoseconds: 3_000_000_000) }
+                    do {
+                        let client = RFBClient(host: ip, username: Brand.guestUser, password: password)
+                        try await client.connect()
+                        let image = try await client.screenshot()
+                        await client.disconnect()
+                        guard !ScreenCheck.isBlank(image) else { throw SetupError.screenSharingBlank }
+                        problem = nil
+                        break
+                    } catch {
+                        problem = error
+                    }
+                }
+                if let problem { throw problem }
+                self.note("screen sharing works")
+                self.sharingPhase = .verified
+                self.showSetup()
+            } catch {
+                self.sharingPhase = .waitingForSwitch
+                self.sharingProblem = error.localizedDescription
+                if let ip = try? self.workspace.host.guestAddress() { self.watchScreenSharing(ip: ip, checkWhenOn: false) }
+                throw error
+            }
+        }
+    }
+
+    /// In the setup window after screen sharing: the workspace window comes to the front, the user switches on aOS
+    /// Helper (aOS enters the password), then the setup window comes back by itself.
+    func allowHelperAndContinue() {
+        sharingPhase = .allowingHelper
+        run(String(localized: "In the workspace: switch on aOS Helper"), {
+            await AppModel.shared.allowHelper()
+            self.note(AppModel.shared.helperState == .allowed ? "the helper may sign in" : "helper not allowed (later in the settings)")
+            try await self.finishScreenSharing()
+        }, then: { self.connectAgents() })
+    }
+
+    /// Without the helper (it can be allowed later in the settings).
+    func skipHelper() {
+        run(String(localized: "Finishing the workspace"), {
+            try await self.finishScreenSharing()
+        }, then: { self.connectAgents() })
+    }
+
+    private func finishScreenSharing() async throws {
+        let ip = try await startedWorkspace()
+        try await workspace.provisioner.finish(host: ip)
+        try bundle.updateState { $0.screenSharingReady = true }
+        note("screen sharing works; the workspace account is a standard user now")
+        _ = await workspace.close()
+        step = .connect
+        showSetup()
+    }
+
+    /// Types the workspace password into the workspace window's screen (the password dialog has the focus there).
     func typeGuestPassword(into view: VMDisplay.Coordinator?) {
         guard let view, let password = try? GuestSecrets(paths: paths).adminPassword(createIfMissing: false) else { return }
         workspace.noteActivity()

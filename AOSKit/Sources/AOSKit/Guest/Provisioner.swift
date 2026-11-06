@@ -148,12 +148,23 @@ public struct Provisioner: Sendable {
         return r.status == 0
     }
 
-    /// Opens the Sharing settings in the guest's session, at screen sharing.
+    /// Opens the Sharing settings in the guest's session, at screen sharing, and returns once they are on screen
+    /// (the first time after a boot that takes a while: the user is told to wait until then). Notices left from
+    /// the login ("background items added") go first, they would cover the switches.
     public func openSharingSettings(host: String) async throws {
         try await maintenance(host: host).run(
-            "u=\(Brand.guestUser); launchctl asuser \"$(id -u $u)\" sudo -u $u /usr/bin/open " +
-            "'x-apple.systempreferences:com.apple.Sharing-Settings.extension'",
-            timeout: 30, what: "open Sharing settings")
+            "u=\(Brand.guestUser); pkill -u $u -x NotificationCenter; sleep 1; " +
+            "launchctl asuser \"$(id -u $u)\" sudo -u $u /usr/bin/open " +
+            "'x-apple.systempreferences:com.apple.Sharing-Settings.extension'; " +
+            "for i in {1..90}; do pgrep -x SharingPrefsExtension >/dev/null && break; sleep 0.5; done; sleep 2",
+            timeout: 90, what: "open Sharing settings")
+    }
+
+    /// Whether macOS shows its password dialog in the workspace right now (by the program's path, as above).
+    public func passwordDialogOpen(host: String) async -> Bool {
+        let command = "ps -axo comm= | grep -qx -e '\(Self.securityAgent)' -e '\(Self.localAuthenticationService)'"
+        let r = try? await maintenance(host: host).run(command, timeout: 15, check: false, what: "password dialog")
+        return r?.status == 0
     }
 
     /// Makes the account a standard user (after screen sharing works).

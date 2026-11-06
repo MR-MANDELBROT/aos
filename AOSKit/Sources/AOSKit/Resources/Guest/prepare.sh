@@ -7,7 +7,7 @@
 #     ask for a search engine and keep site data). Nobody has used it yet; the agent starts a fresh one.
 # Prints "ok" or a reason, exit status 0 only when the policies are in place.
 set -u
-source /usr/local/libexec/aos/settings.env   # GUEST_USER LIBEXEC LOG
+source /usr/local/libexec/aos/settings.env   # GUEST_USER LIBEXEC LOG LANGUAGES LOCALE
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 JXA='function run(a){ObjC.import("AppKit");return a.map(function(p){var x=$.NSRunningApplication.runningApplicationWithProcessIdentifier(parseInt(p,10));return p+":"+(x.isNil()?"gone":(x.terminate?"ok":"no"))}).join(" ")}'
 note() { print -r -- "$(date '+%Y-%m-%d %H:%M:%S') prepare: $*" >> "$LOG"; }
@@ -16,6 +16,20 @@ cd /
 for i in {1..240}; do [ "$(stat -f %Su /dev/console)" = "$GUEST_USER" ] && break; sleep 0.5; done
 [ "$(stat -f %Su /dev/console)" = "$GUEST_USER" ] || { print "the account is not logged in"; exit 3; }
 uid="$(id -u "$GUEST_USER")" || exit 3
+
+# Language like the host. The first login of a new account can replace the list setup.sh wrote with the system's
+# default (every language, English first); apps read it when they start, so the ones started from now on follow.
+if [ -n "${LANGUAGES:-}" ]; then
+  want="${${=LANGUAGES}[1]}"
+  have="$(/bin/launchctl asuser "$uid" /usr/bin/sudo -u "$GUEST_USER" -H /usr/bin/defaults read -g AppleLanguages 2>/dev/null \
+    | sed -n '2p' | tr -d ' ",')"
+  if [ "$have" != "$want" ]; then
+    /bin/launchctl asuser "$uid" /usr/bin/sudo -u "$GUEST_USER" -H /usr/bin/defaults write -g AppleLanguages -array ${=LANGUAGES}
+    [ -n "${LOCALE:-}" ] && /bin/launchctl asuser "$uid" /usr/bin/sudo -u "$GUEST_USER" -H /usr/bin/defaults write -g AppleLocale -string "$LOCALE"
+    /usr/bin/defaults write /Library/Preferences/.GlobalPreferences AppleLanguages -array ${=LANGUAGES}
+    note "language was $have, set to $LANGUAGES"
+  fi
+fi
 
 # A finished workspace's account is a standard user (it may only have been an administrator for a moment to allow
 # the helper; if that was interrupted, it ends here).
