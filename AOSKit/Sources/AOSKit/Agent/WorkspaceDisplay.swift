@@ -30,6 +30,12 @@ extension WorkspaceController {
         return f < 1 ? ScreenImage.scaled(image, by: f) ?? image : image
     }
 
+    /// The display got another size: the agent's next picture waits for it; the app's window follows.
+    func displayChanged() {
+        if let rfb { Task { await rfb.expectNewSize() } }
+        onChange?()
+    }
+
     /// Tells the agent why the screen has another shape.
     func displayNote() -> String {
         host.displayOverride == nil ? "" : " (The user is watching the workspace on their iPhone, so the screen has the phone's shape for now. Use coordinates of this picture.)"

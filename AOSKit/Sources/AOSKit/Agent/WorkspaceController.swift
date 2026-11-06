@@ -10,7 +10,7 @@ public final class WorkspaceController {
     public let host: VMHost
     public private(set) var provisioner: Provisioner
     public private(set) var settings: AgentSettings
-    private var rfb: RFBClient?
+    var rfb: RFBClient?
     var lease: (until: Date, purpose: String)?
     private var lastActivity = Date()
     private var idleTimer: Timer?
@@ -48,6 +48,7 @@ public final class WorkspaceController {
         self.provisioner = Provisioner(paths: paths, kit: GuestKit(policies: settings.chromePolicies))
         self.bitwarden = bitwarden ?? BitwardenVault(paths: paths)
         self.bitwarden.lockHours = settings.bitwardenLockHours
+        host.onDisplayChange = { [weak self] in self?.displayChanged() }
         host.onPhaseChange = { [weak self] phase in
             // The idle time counts from the start, not from the app's launch.
             if phase == .running { self?.lastActivity = Date() }

@@ -267,6 +267,14 @@ public actor RFBClient {
         try await s.write(req)
     }
 
+    /// The screen's size is about to change (the host reconfigured the display): the next screenshot waits for the
+    /// new size, up to `within` seconds.
+    public func expectNewSize(within: TimeInterval = 4) {
+        sizeChangeExpected = Date().addingTimeInterval(within)
+    }
+
+    private var sizeChangeExpected: Date?
+
     /// A fresh picture of the whole screen.
     public func screenshot(timeout: TimeInterval = 15) async throws -> CGImage {
         // A live viewer reads the stream already: its last picture is current.
@@ -277,17 +285,38 @@ public actor RFBClient {
         return try await withReconnect { s in
             try await request(s, incremental: false)
             let deadline = Date().addingTimeInterval(timeout)
-            var resized = false
+            var asked = false
+            // After a new size: whole pictures until one covers the new screen (the first one may not yet).
+            var resizedTries = 0
             while true {
                 if Date() > deadline { throw RFBError.timeout("screenshot") }
                 let type = try await s.u8()
                 if type == 0 {
                     let result = try await readUpdate(s)
                     framebuffer.commit()
-                    // After a new size the picture comes with the next update: ask once more for all of it.
-                    if result.resized && !resized {
-                        resized = true
+                    // After a new size the picture comes with the next update: ask for all of it.
+                    if result.resized || (resizedTries > 0 && resizedTries < 4
+                                          && result.covered != RFBRect(x: 0, y: 0, width: width, height: height)) {
+                        resizedTries += 1
+                        sizeChangeExpected = nil
                         try await request(s, incremental: false)
+                        continue
+                    }
+                    // A size change is on its way: one pixel at a time until it comes.
+                    if let until = sizeChangeExpected, resizedTries == 0 {
+                        if Date() < until {
+                            try await Task.sleep(nanoseconds: 100_000_000)
+                            try await request(s, incremental: false, RFBRect(x: 0, y: 0, width: 1, height: 1))
+                            continue
+                        }
+                        sizeChangeExpected = nil
+                    }
+                    // screensharingd tells a connection without a pending request about a new screen size only with
+                    // the update after the next one (measured, macOS 27.2): one pixel more, which it answers at once,
+                    // brings a size change that waits.
+                    if !asked {
+                        asked = true
+                        try await request(s, incremental: false, RFBRect(x: 0, y: 0, width: 1, height: 1))
                         continue
                     }
                     guard let image = framebuffer.makeImage() else { throw RFBError.protocolError("image") }
@@ -300,6 +329,8 @@ public actor RFBClient {
 
     struct UpdateResult {
         var resized = false
+        /// Bounds of the picture rectangles.
+        var covered = RFBRect(x: 0, y: 0, width: 0, height: 0)
         var cursor: RFBCursor?
         var pointer: (x: Int, y: Int)?
     }
@@ -318,6 +349,7 @@ public actor RFBClient {
                                width: Int(header[4]) << 8 | Int(header[5]), height: Int(header[6]) << 8 | Int(header[7]))
             let encoding = Int32(bitPattern: UInt32(header[8]) << 24 | UInt32(header[9]) << 16 | UInt32(header[10]) << 8 | UInt32(header[11]))
             var size = 0
+            if encoding < 0 || encoding > 1000 { dbg("rect \(RFBEncoding.name(encoding)) \(rect)") }
             switch encoding {
             case RFBEncoding.raw:
                 size = decoder.rawSize(rect)
@@ -360,6 +392,7 @@ public actor RFBClient {
             }
             counters.rects[encoding, default: 0] += 1
             counters.rectBytes[encoding, default: 0] += size + 12
+            if encoding >= 0 { result.covered = result.covered.union(rect) }
         }
         return result
     }

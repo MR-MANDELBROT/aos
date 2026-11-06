@@ -67,6 +67,34 @@ func rfbProbe(_ args: [String], paths: Paths) async throws {
         await client.disconnect()
     }
 
+    // --resize: the agent's connection stays open while the display changes (as when the iPhone views the
+    // workspace) and back; each picture must come in the new size without a reconnect. Needs `aosctl run`.
+    if args.contains("--resize") {
+        let agent = RFBClient(host: ip, username: Brand.guestUser, password: password, options: .agent)
+        func display(_ line: String) throws -> String {
+            let socket = try LineSocketClient(path: paths.run.appendingPathComponent("display.sock"))
+            return String(decoding: try socket.roundTrip(Data(line.utf8)), as: UTF8.self)
+        }
+        try await agent.connect()
+        var image = try await agent.screenshot()
+        print("agent picture \(image.width)x\(image.height)")
+        for spec in ["1200 2322 2 160", "2322 1200 2 160", "reset"] {
+            print("display: \(try display(spec))")
+            await agent.expectNewSize()
+            try await Task.sleep(nanoseconds: 4_000_000_000)
+            let t = Date()
+            image = try await agent.screenshot()
+            print(String(format: "agent picture %dx%d after %.2fs, still connected: %@", image.width, image.height,
+                         Date().timeIntervalSince(t), "\(await agent.isConnected)"))
+            if let out {
+                try png(image, to: out.appendingPathComponent("resize-\(spec.replacingOccurrences(of: " ", with: "x")).png"))
+            }
+        }
+        try await agent.click(x: 10, y: 10)
+        print("click after the changes: ok, size \(await agent.width)x\(await agent.height)")
+        await agent.disconnect()
+    }
+
     if let seconds = value("--live").flatMap(Double.init) {
         let quality = RFBQuality(rawValue: value("--quality") ?? "best") ?? .best
         // --before: what the app did before (zlib with 32-bit pixels, a picture at most every 0.1 s)
