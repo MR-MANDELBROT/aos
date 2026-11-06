@@ -9,6 +9,7 @@ struct MenuView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            let _ = model.bitwardenTick
             header
 
             if let signIn = model.signIns.first {
@@ -52,6 +53,20 @@ struct MenuView: View {
                                 NSApp.activate()
                             }
                             .buttonStyle(.glass).controlSize(.small)
+                        }
+                    }
+                    if model.bitwarden.isSignedIn {
+                        statusCard(symbol: "key.horizontal", title: "Bitwarden", value: model.bitwardenStateText,
+                                   color: model.bitwarden.phase == .unlocked ? .green : .secondary) {
+                            if model.bitwarden.phase == .unlocked {
+                                Button("Lock") { model.lockBitwarden() }.buttonStyle(.glass).controlSize(.small)
+                            } else {
+                                Button("Unlock") {
+                                    UserDefaults.standard.set("bitwarden", forKey: "settingsTab")
+                                    openSettings(); NSApp.activate()
+                                }
+                                .buttonStyle(.glass).controlSize(.small)
+                            }
                         }
                     }
                     statusCard(symbol: "iphone", title: "iPhone", value: phoneText,

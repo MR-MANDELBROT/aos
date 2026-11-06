@@ -368,3 +368,105 @@ DE.update({
     'Click Open System Settings if macOS asks, then switch on aOS Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once.': 'Fragt macOS, klicke auf „Systemeinstellungen öffnen“, dann schalte „aOS Helper“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie vorher mit ihrem x. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig.',
     'Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x.': 'Schalte „Bildschirmfreigabe“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie mit ihrem x.',
 })
+
+# Bitwarden (Settings > Bitwarden, the sign-in window, the menu, the last setup page). Bitwarden's own terms:
+# Master-Passwort, zweistufige Anmeldung, Konto.
+DE.update({
+    ' · with one-time code': ' · mit Einmalcode',
+    '%@ asks Bitwarden for exactly the login you approve; your passwords stay in Bitwarden.':
+        '%@ fragt Bitwarden nur nach der Anmeldung, die du freigibst; deine Passwörter bleiben in Bitwarden.',
+    '%@ asks for a one-time code': '%@ bittet um einen Einmalcode',
+    "%@ runs Bitwarden's official command line tool as a program of its own and checks Bitwarden's signature before using it. It isn't part of %@.":
+        '%1$@ startet das offizielle Befehlszeilenprogramm von Bitwarden als eigenes Programm und prüft vor der Verwendung die Signatur von Bitwarden. Es ist kein Teil von %2$@.',
+    '%@ · the current code': '%@ · der aktuelle Code',
+    'Account': 'Konto',
+    'After %lld hours': 'Nach %lld Stunden',
+    'After 1 hour': 'Nach 1 Stunde',
+    'Authenticator app': 'Authenticator-App',
+    'Bitwarden': 'Bitwarden',
+    'Bitwarden CLI': 'Bitwarden CLI',
+    'Bitwarden CLI %@': 'Bitwarden CLI %@',
+    'Bitwarden asks: %@': 'Bitwarden fragt: %@',
+    "Bitwarden didn't answer in time. Check the internet connection and try again.":
+        'Bitwarden hat nicht rechtzeitig geantwortet. Prüfe die Internetverbindung und versuche es noch einmal.',
+    "Bitwarden didn't answer. Fill in from another password app, or ask your agent to try again.":
+        'Bitwarden hat nicht geantwortet. Füll die Felder aus einer anderen Passwort-App aus oder bitte deinen Agent, es noch einmal zu versuchen.',
+    "Bitwarden doesn't have this login (any more).": 'Diese Anmeldung gibt es in Bitwarden nicht (mehr).',
+    'Bitwarden emailed you a code. Enter it here.': 'Bitwarden hat dir einen Code per E-Mail geschickt. Gib ihn hier ein.',
+    'Bitwarden is locked': 'Bitwarden ist gesperrt',
+    'Bitwarden is locked.': 'Bitwarden ist gesperrt.',
+    'Bitwarden sent a verification code to %@. It asks for it because %@ signs in from a new device.':
+        'Bitwarden hat einen Bestätigungscode an %1$@ geschickt. Es fragt danach, weil sich %2$@ von einem neuen Gerät aus anmeldet.',
+    "Bitwarden's command line tool answered unexpectedly (%@).": 'Das Befehlszeilenprogramm von Bitwarden hat unerwartet geantwortet (%@).',
+    "Bitwarden's command line tool could not be downloaded (%@).": 'Das Befehlszeilenprogramm von Bitwarden konnte nicht geladen werden (%@).',
+    "Bitwarden's command line tool could not be started (%@).": 'Das Befehlszeilenprogramm von Bitwarden konnte nicht gestartet werden (%@).',
+    "Bitwarden's download link didn't lead to a release (%@).": 'Der Download-Link von Bitwarden führte zu keiner Version (%@).',
+    'Cancelled.': 'Abgebrochen.',
+    'Checking …': 'Prüfe …',
+    'Click into the field and touch your YubiKey.': 'Klick in das Feld und berühre deinen YubiKey.',
+    'Code': 'Code',
+    'Code from Bitwarden': 'Code aus Bitwarden',
+    'Command line tool': 'Befehlszeilenprogramm',
+    'Connect': 'Verbinden',
+    'Counted from unlocking. Bitwarden also locks when this Mac goes to sleep or restarts. While it is locked, sign-in requests show no Bitwarden logins until you unlock it here or in the sign-in window.':
+        'Gezählt ab dem Entsperren. Bitwarden sperrt sich auch, wenn dieser Mac in den Ruhezustand geht oder neu startet. Solange es gesperrt ist, zeigen Anmeldeanfragen keine Bitwarden-Anmeldungen, bis du es hier oder im Anmeldefenster entsperrst.',
+    'Downloaded from Bitwarden, signed by Bitwarden': 'Von Bitwarden geladen, von Bitwarden signiert',
+    "Downloading Bitwarden's command line tool from Bitwarden and checking its signature …":
+        'Lade das Befehlszeilenprogramm von Bitwarden und prüfe seine Signatur …',
+    "Downloading Bitwarden's command line tool …": 'Lade das Befehlszeilenprogramm von Bitwarden …',
+    'Email': 'E-Mail',
+    'Enter the code from your authenticator app.': 'Gib den Code aus deiner Authenticator-App ein.',
+    'Enter your two-step login code (from your authenticator app, the email Bitwarden sent, or your YubiKey).':
+        'Gib deinen Code für die zweistufige Anmeldung ein (aus deiner Authenticator-App, aus der E-Mail von Bitwarden oder von deinem YubiKey).',
+    'Fill In': 'Einsetzen',
+    'From Bitwarden': 'Aus Bitwarden',
+    'From another password app': 'Aus einer anderen Passwort-App',
+    'Last sync': 'Zuletzt synchronisiert',
+    'Lock': 'Sperren',
+    'Lock Now': 'Jetzt sperren',
+    'Lock again': 'Wieder sperren',
+    'Locked': 'Gesperrt',
+    'Locking': 'Sperren',
+    'Master password': 'Master-Passwort',
+    'No login for this website in Bitwarden.': 'Keine Anmeldung für diese Website in Bitwarden.',
+    'No login with a one-time code for this website in Bitwarden.': 'Keine Anmeldung mit Einmalcode für diese Website in Bitwarden.',
+    'Not signed in': 'Nicht angemeldet',
+    'Not signed in to Bitwarden.': 'Nicht bei Bitwarden angemeldet.',
+    'Self-hosted': 'Selbst gehostet',
+    'Server': 'Server',
+    'Server address': 'Serveradresse',
+    'Sign Out': 'Abmelden',
+    'Sign in to Bitwarden': 'Bei Bitwarden anmelden',
+    'Sign-ins for your agent from your Bitwarden account: you approve one login, %@ gets exactly that one from Bitwarden.':
+        'Anmeldungen für deinen Agent aus deinem Bitwarden-Konto: Du gibst eine Anmeldung frei, %@ holt genau diese aus Bitwarden.',
+    'Signing in to Bitwarden': 'Anmeldung bei Bitwarden',
+    'Signing in …': 'Melde an …',
+    'Status': 'Status',
+    'Sync Now': 'Jetzt synchronisieren',
+    'Talking to Bitwarden …': 'Spreche mit Bitwarden …',
+    "That isn't an email address.": 'Das ist keine E-Mail-Adresse.',
+    "The download isn't Bitwarden's signed command line tool (%@), so %@ deleted it.":
+        'Der Download ist nicht das signierte Befehlszeilenprogramm von Bitwarden (%1$@), deshalb hat %2$@ ihn gelöscht.',
+    "The first time, %@ downloads Bitwarden's official command line tool from Bitwarden (about 45 MB) and checks that Bitwarden signed it.":
+        'Beim ersten Mal lädt %@ das offizielle Befehlszeilenprogramm von Bitwarden (etwa 45 MB) und prüft, dass Bitwarden es signiert hat.',
+    "The master password isn't right.": 'Das Master-Passwort stimmt nicht.',
+    "This Bitwarden item isn't a login.": 'Dieser Bitwarden-Eintrag ist keine Anmeldung.',
+    'Type the code yourself': 'Code selbst eingeben',
+    'Unlock': 'Entsperren',
+    "Unlock Bitwarden so sign-in requests can offer your logins. The master password goes to Bitwarden's tool and isn't stored.":
+        'Entsperre Bitwarden, damit Anmeldeanfragen deine Anmeldungen anbieten können. Das Master-Passwort geht an das Programm von Bitwarden und wird nicht gespeichert.',
+    'Unlock it to see your logins for this website.': 'Entsperre es, um deine Anmeldungen für diese Website zu sehen.',
+    'Unlocked': 'Entsperrt',
+    'Unlocked until %@': 'Entsperrt bis %@',
+    'Update': 'Aktualisieren',
+    'Verification code': 'Bestätigungscode',
+    'When your agent needs to sign in, you see which of your Bitwarden logins fit the website and approve one on your iPhone or here. %@ then gets that one login from Bitwarden and types it into the workspace. Your agent never sees it.':
+        'Muss sich dein Agent anmelden, siehst du, welche deiner Bitwarden-Anmeldungen zur Website passen, und gibst eine auf dem iPhone oder hier frei. %@ holt dann genau diese Anmeldung aus Bitwarden und tippt sie in den Arbeitsplatz. Dein Agent sieht sie nie.',
+    "Your account has several ways to confirm it's you. Which one do you want to use?":
+        'Dein Konto kennt mehrere Wege, zu bestätigen, dass du es bist. Welchen möchtest du nehmen?',
+    "Your master password goes to Bitwarden's command line tool once and isn't stored. If Bitwarden asks for a code (two-step login, or because %@ is a new device for your account), you enter it here.":
+        'Dein Master-Passwort geht einmal an das Befehlszeilenprogramm von Bitwarden und wird nicht gespeichert. Fragt Bitwarden nach einem Code (zweistufige Anmeldung, oder weil %@ ein neues Gerät für dein Konto ist), gibst du ihn hier ein.',
+    'Yours (%@), signed by Bitwarden': 'Deins (%@), von Bitwarden signiert',
+    'YubiKey (one-time password)': 'YubiKey (Einmalpasswort)',
+    'your email address': 'deine E-Mail-Adresse',
+})

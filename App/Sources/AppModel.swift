@@ -51,6 +51,10 @@ final class AppModel: ObservableObject {
     @Published var helperState: HelperState = .unknown
     var helperWasAdmin: Bool?
 
+    // Bitwarden (see AppModel+Bitwarden.swift); the views read `bitwarden` and redraw on the tick.
+    @Published var bitwardenTick = 0
+    var sleepObserver: NSObjectProtocol?
+
     var openWindow: ((String) -> Void)?
     var openSettingsAction: (() -> Void)?
     var openersNoted = false
@@ -77,6 +81,8 @@ final class AppModel: ObservableObject {
         }
         workspace.companion.onChange = { [weak self] in self?.companionChanged() }
         workspace.onCompanionAnswer = { [weak self] request in self?.companionAnswer(request) }
+        workspace.bitwarden.log = { [weak self] line in self?.append(line) }
+        workspace.bitwarden.onChange = { [weak self] in self?.bitwardenTick += 1 }
     }
 
     // MARK: Approval on the Mac
@@ -153,11 +159,19 @@ final class AppModel: ObservableObject {
         case "help":
             Task { _ = await askForHelp("Sign in to the library website, then click Done.") }
         case "signin":
-            // A sign-in request as the agent would make it (nothing is filled: no workspace)
+            // A sign-in request as the agent would make it (nothing is filled: no workspace).
+            // AOS_PREVIEW=signin:<field>:<bitwarden state> (unlocked with two logins by default; locked, off, none)
+            let state = parts.count > 2 ? parts[2] : "unlocked"
+            let logins = state == "unlocked" ? [
+                CompanionLogin(id: "preview-1", name: "Example", username: "max@example.com", totp: true),
+                CompanionLogin(id: "preview-2", name: "Example (work)", username: "m.marquart@example.com", totp: false),
+            ] : []
             workspace.companion.post(CompanionEvent(event: "signin", request: "preview", agent: "Claude Code",
-                                                    host: "accounts.example.com", field: parts.dropFirst().first ?? "username",
+                                                    host: "accounts.example.com", field: parts.count > 1 ? parts[1] : "username",
                                                     purpose: "Download the invoice for October",
-                                                    expires: Date().addingTimeInterval(180)))
+                                                    expires: Date().addingTimeInterval(180), logins: logins,
+                                                    bitwarden: state == "none" ? "unlocked" : state))
+            if state == "locked" { bitwarden.showForPreview(.locked, email: "max@example.com", server: .eu) }
         case "menu":
             // The menu bar panel, in a window of its own
             let host = NSHostingView(rootView: MenuView().environmentObject(self))
@@ -172,8 +186,24 @@ final class AppModel: ObservableObject {
             NSApp.activate()
         case "settings":
             UserDefaults.standard.set(parts.dropFirst().first ?? "general", forKey: "settingsTab")
+            // AOS_PREVIEW=settings:bitwarden:<signedout|methods|code|newdevice|locked|unlocked|problem>
+            if parts.count > 2 { previewBitwarden(parts[2]) }
             openSettingsWindow()
         default: break
+        }
+    }
+
+    /// Bitwarden states for design review (no tool, no account).
+    private func previewBitwarden(_ state: String) {
+        let email = "max@example.com"
+        switch state {
+        case "methods": bitwarden.showForPreview(.signingIn(.chooseMethod(["Authenticator App", "Email", "Yubico OTP Security Key"])))
+        case "code": bitwarden.showForPreview(.signingIn(.twoStepCode(method: "Email")))
+        case "newdevice": bitwarden.showForPreview(.signingIn(.newDeviceCode))
+        case "locked": bitwarden.showForPreview(.locked, email: email, server: .eu)
+        case "unlocked": bitwarden.showForPreview(.unlocked, email: email, server: .eu, until: Date().addingTimeInterval(8 * 3600))
+        case "problem": bitwarden.showForPreview(.signedOut, problem: BitwardenError.wrongPassword)
+        default: bitwarden.showForPreview(.noTool)
         }
     }
 
@@ -211,6 +241,7 @@ final class AppModel: ObservableObject {
             append("agent socket: \(error.localizedDescription)")
         }
         workspace.startIdleWatch()
+        startBitwarden()
         updateSessionAgent()
         // Cheap state every 2 s; the login item status means two XPC calls to macOS, so only every 30 s
         // (and whenever a view asks with refresh()).
@@ -237,11 +268,15 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// AOS_SNAPSHOT=<folder>: a few seconds after the preview, every visible window is drawn into
-    /// <folder>/<title>.png and the app quits (design review where screen recording isn't allowed).
+    /// AOS_SNAPSHOT=<folder>: a few seconds after the preview (AOS_SNAPSHOT_DELAY, default 3.5), every visible
+    /// window is drawn into <folder>/<title>.png and the app quits (design review where screen recording isn't
+    /// allowed). AOS_SNAPSHOT_DRAW=1 draws the views instead of asking the window server (which can deliver blank
+    /// pictures without the screen recording permission).
     private func snapshotIfAsked() {
         guard let folder = ProcessInfo.processInfo.environment["AOS_SNAPSHOT"] else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+        let delay = Double(ProcessInfo.processInfo.environment["AOS_SNAPSHOT_DELAY"] ?? "") ?? 3.5
+        let draw = ProcessInfo.processInfo.environment["AOS_SNAPSHOT_DRAW"] == "1"
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             let dir = URL(fileURLWithPath: folder, isDirectory: true)
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             // The window server's picture of our own windows (with glass and shadows); drawing the views ourselves
@@ -253,7 +288,7 @@ final class AppModel: ObservableObject {
                 let title = window.title.isEmpty ? "window-\(n)" : window.title
                 let url = dir.appendingPathComponent(title.replacingOccurrences(of: "/", with: "-") + ".png")
                 // optionIncludingWindow (8), boundsIgnoreFraming (1)
-                if let capture, let image = capture(.null, 8, UInt32(window.windowNumber), 1)?.takeRetainedValue() {
+                if !draw, let capture, let image = capture(.null, 8, UInt32(window.windowNumber), 1)?.takeRetainedValue() {
                     try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: url)
                     continue
                 }

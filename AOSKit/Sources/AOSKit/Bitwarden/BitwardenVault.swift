@@ -58,8 +58,9 @@ public final class BitwardenVault {
     public private(set) var lastSync: Date?
     public private(set) var tool: BitwardenTool.Located?
     public private(set) var toolVersion: String?
-    /// The last thing that went wrong (Bitwarden's own message or aOS's), until the next action.
-    public private(set) var problem: String?
+    /// The last thing that went wrong (a BitwardenError with Bitwarden's own message, or a download problem), until
+    /// the next action.
+    public private(set) var problem: Error?
     /// When the vault locks again by itself (while unlocked).
     public var lockedAt: Date? { session?.until }
     /// Hours after unlocking until the vault locks again (AgentSettings.bitwardenLockHours).
@@ -117,7 +118,7 @@ public final class BitwardenVault {
         do {
             apply(try await cli.status(session: validSession()?.key))
         } catch {
-            problem = Self.describe(error)
+            problem = error
         }
         changed()
     }
@@ -150,7 +151,7 @@ public final class BitwardenVault {
         let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
         await pendingLock?.value
         guard BitwardenCLI.isEmail(address) else {
-            problem = BitwardenError.invalidEmail.localizedDescription
+            problem = BitwardenError.invalidEmail
             changed()
             return
         }
@@ -185,8 +186,8 @@ public final class BitwardenVault {
         } catch {
             conversation = nil
             if (error as? BitwardenError) != .cancelled {
-                problem = Self.describe(error)
-                log("Bitwarden sign-in: \(problem ?? "")")
+                problem = error
+                log("Bitwarden sign-in: \(error.localizedDescription)")
             }
             phase = .unknown
             await refresh()
@@ -217,7 +218,7 @@ public final class BitwardenVault {
             changed()
             onOffersChanged?()
         } catch {
-            problem = Self.describe(error)
+            problem = error
             phase = .locked
             await refresh()
         }
@@ -245,7 +246,7 @@ public final class BitwardenVault {
         conversation?.cancel()
         forgetSession()
         if let cli = await currentCLI() {
-            do { try await cli.logout() } catch BitwardenError.notLoggedIn {} catch { problem = Self.describe(error) }
+            do { try await cli.logout() } catch BitwardenError.notLoggedIn {} catch { problem = error }
         }
         email = nil
         lastSync = nil
@@ -287,7 +288,7 @@ public final class BitwardenVault {
             toolVersion = nil
             log("Bitwarden's command line tool updated")
         } catch {
-            problem = Self.describe(error)
+            problem = error
         }
         phase = .unknown
         await refresh()
@@ -467,4 +468,19 @@ public final class BitwardenVault {
     private func changed() { onChange?() }
 
     static func describe(_ error: Error) -> String { error.localizedDescription }
+
+    /// Design review only (the app's AOS_PREVIEW): shows a state without Bitwarden's tool or an account.
+    public func showForPreview(_ phase: Phase, email: String? = nil, server: BitwardenServer = .us,
+                               until: Date? = nil, problem: Error? = nil) {
+        self.phase = phase
+        self.email = email
+        self.server = server
+        self.problem = problem
+        lastSync = email == nil ? nil : Date().addingTimeInterval(-240)
+        tool = BitwardenTool.Located(path: BitwardenTool.installedPath(paths), downloaded: true)
+        toolVersion = "2026.10.1"
+        loaded = true
+        if let until { session = BitwardenSession(key: "preview", unlocked: Date(), until: until) }
+        changed()
+    }
 }

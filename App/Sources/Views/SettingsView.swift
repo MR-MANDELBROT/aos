@@ -10,6 +10,7 @@ struct SettingsView: View {
         TabView(selection: $tab) {
             Tab("General", systemImage: "gearshape", value: "general") { GeneralSettings() }
             Tab("Claude Code", systemImage: "iphone.radiowaves.left.and.right", value: "claude") { ReachableSettings() }
+            Tab("Bitwarden", systemImage: "key.horizontal", value: "bitwarden") { BitwardenSettings() }
             Tab("iPhone", systemImage: "iphone", value: "iphone") { PhoneSettings() }
         }
         .frame(width: 640)

@@ -389,6 +389,22 @@ private struct StepPage: View {
             }
             GlassCard {
                 HStack(spacing: 14) {
+                    Image(systemName: "key.horizontal").font(.title).foregroundStyle(BrandColor.indigo).frame(width: 34)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Bitwarden").fontWeight(.semibold)
+                        Text("Sign-ins for your agent from your Bitwarden account: you approve one login, \(Brand.name) gets exactly that one from Bitwarden.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button(model.bitwarden.isSignedIn ? "Settings" : "Connect") {
+                        UserDefaults.standard.set("bitwarden", forKey: "settingsTab")
+                        model.openSettingsWindow()
+                    }
+                    .buttonStyle(.glass)
+                }
+            }
+            GlassCard {
+                HStack(spacing: 14) {
                     Image(systemName: "iphone").font(.title).foregroundStyle(BrandColor.indigo).frame(width: 34)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(Brand.name) on your iPhone").fontWeight(.semibold)
