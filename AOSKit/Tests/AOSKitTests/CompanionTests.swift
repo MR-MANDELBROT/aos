@@ -245,3 +245,51 @@ final class CompanionHubTests: XCTestCase {
         XCTAssertTrue(events.isEmpty)
     }
 }
+
+final class WorkspaceSettingsTests: XCTestCase {
+    func testOldSettingsGetTheNewDefaults() throws {
+        // A settings file from before the choice: sign-ins expired, Google kept
+        let old = try JSONDecoder().decode(AgentSettings.self, from: Data(#"{"expireSignIns": true, "keepSignedIn": ["[*.]google.com"]}"#.utf8))
+        XCTAssertEqual(old.signOutWebsites, .allExcept)
+        XCTAssertTrue(old.newChats)
+        XCTAssertTrue(old.shareApplications)
+        XCTAssertEqual(old.newChatsDirectory.path, FileManager.default.homeDirectoryForCurrentUser.path)
+        // "Sign-ins expire" off meant they stayed
+        let kept = try JSONDecoder().decode(AgentSettings.self, from: Data(#"{"expireSignIns": false}"#.utf8))
+        XCTAssertEqual(kept.signOutWebsites, .none)
+    }
+
+    func testChromePoliciesFollowTheChoice() throws {
+        var s = AgentSettings()
+        s.keepSignedIn = ["[*.]google.com"]
+        func cookies(_ mode: AgentSettings.SignOutWebsites) throws -> (Int, [String]) {
+            s.signOutWebsites = mode
+            let plist = try PropertyListSerialization.propertyList(from: s.chromePolicies.plist(), format: nil) as! [String: Any]
+            return (plist["DefaultCookiesSetting"] as! Int, plist["CookiesAllowedForUrls"] as! [String])
+        }
+        XCTAssertEqual(try cookies(.all).0, 4)
+        XCTAssertEqual(try cookies(.all).1, [])
+        XCTAssertEqual(try cookies(.allExcept).0, 4)
+        XCTAssertEqual(try cookies(.allExcept).1, ["[*.]google.com"])
+        XCTAssertEqual(try cookies(.none).0, 1)
+    }
+
+    func testNewChatsFolder() {
+        var s = AgentSettings()
+        s.newChatsFolder = "/does/not/exist"
+        XCTAssertEqual(s.newChatsDirectory.path, FileManager.default.homeDirectoryForCurrentUser.path, "a missing folder falls back to home")
+        s.newChatsFolder = NSTemporaryDirectory()
+        XCTAssertEqual(s.newChatsDirectory.standardizedFileURL.path, URL(fileURLWithPath: NSTemporaryDirectory()).standardizedFileURL.path)
+    }
+
+    func testServerModeArguments() {
+        let args = RemoteServer.arguments(claude: "/x/claude", shell: "/bin/zsh")
+        XCTAssertEqual(Array(args.prefix(5)), ["/bin/zsh", "-l", "-c", "exec \"$@\"", "aos-remote"])
+        XCTAssertEqual(args[5], "/x/claude")
+        XCTAssertEqual(args[6], "remote-control")
+        for flag in ["--spawn", "same-dir", "--no-create-session-in-dir", "--permission-mode", "default",
+                     "--remote-control-session-name-prefix", Brand.name] {
+            XCTAssertTrue(args.contains(flag), flag)
+        }
+    }
+}

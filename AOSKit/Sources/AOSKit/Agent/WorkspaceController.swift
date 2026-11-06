@@ -38,7 +38,7 @@ public final class WorkspaceController {
         self.paths = paths
         self.settings = AgentSettings.load(paths)
         self.host = VMHost(bundle: VMBundle(url: paths.vm), paths: paths)
-        self.provisioner = Provisioner(paths: paths, kit: GuestKit(policies: ChromePolicies(keepSignedIn: settings.keepSignedIn)))
+        self.provisioner = Provisioner(paths: paths, kit: GuestKit(policies: settings.chromePolicies))
         host.onPhaseChange = { [weak self] _ in self?.onChange?() }
     }
 
@@ -46,7 +46,7 @@ public final class WorkspaceController {
         try s.save(paths)
         settings = s
         // New sign-in domains change the Chrome policies: the guest gets them at its next opening.
-        provisioner = Provisioner(paths: paths, kit: GuestKit(policies: ChromePolicies(keepSignedIn: s.keepSignedIn)))
+        provisioner = Provisioner(paths: paths, kit: GuestKit(policies: s.chromePolicies))
         onChange?()
     }
 
@@ -142,7 +142,12 @@ public final class WorkspaceController {
             lines.append("not open (call workspace_open first)")
         }
         lines.append("exchange folder: \(s.exchangeFiles) item(s)")
-        lines.append("sign-ins: \(settings.expireSignIns ? "expire when closed, except \(settings.keepSignedIn.joined(separator: ", "))" : "kept (workspace is suspended)")")
+        switch settings.signOutWebsites {
+        case .all: lines.append("sign-ins on websites: all expire when the workspace closes")
+        case .allExcept: lines.append("sign-ins on websites: expire when the workspace closes, except \(settings.keepSignedIn.joined(separator: ", "))")
+        case .none: lines.append("sign-ins on websites: kept")
+        }
+        if settings.shareApplications { lines.append("the Mac's programs: /Volumes/My Shared Files/Applications (read only)") }
         if let e = s.lastError { lines.append("last error: \(e)") }
         return lines.joined(separator: "\n")
     }

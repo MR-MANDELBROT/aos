@@ -334,6 +334,25 @@ func runCommand() async {
             keeper.run()
             return
 
+        case "remote":
+            // remote --run: Claude Code's server mode in the foreground with the current settings (testing),
+            // Ctrl-C ends it
+            let server = RemoteServer(paths: paths)
+            server.log = { line in print(ISO8601DateFormatter().string(from: Date()), line); fflush(stdout) }
+            guard args.contains("--run") else {
+                if let s = RemoteServerStatus.read(paths) { print("\(s.state.rawValue) \(s.detail) \(s.folder)") } else { print("no status") }
+                exit(0)
+            }
+            signal(SIGTERM, SIG_IGN); signal(SIGINT, SIG_IGN)
+            for sig in [SIGTERM, SIGINT] {
+                let src = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+                src.setEventHandler { DispatchQueue.global().async { server.stop(); exit(0) } }
+                src.resume()
+                keepAlive.append(src as AnyObject)
+            }
+            server.run()
+            return
+
         case "ip":
             let host = VMHost(bundle: bundle, paths: paths)
             print(try host.guestAddress() ?? "no address")

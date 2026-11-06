@@ -1,11 +1,16 @@
 import Foundation
 
 /// Chrome policies for the account in the guest. Sign-ins expire when the workspace shuts down, except on the
-/// domains in `keepSignedIn` (fewer captchas there).
+/// domains in `keepSignedIn` (fewer captchas there), or never (`keepAll`).
 public struct ChromePolicies: Sendable, Equatable {
     public var keepSignedIn: [String]
+    /// Every website stays signed in (cookies are kept).
+    public var keepAll: Bool
 
-    public init(keepSignedIn: [String] = ["[*.]google.com"]) { self.keepSignedIn = keepSignedIn }
+    public init(keepSignedIn: [String] = ["[*.]google.com"], keepAll: Bool = false) {
+        self.keepSignedIn = keepSignedIn
+        self.keepAll = keepAll
+    }
 
     public func plist() throws -> Data {
         let policies: [String: Any] = [
@@ -15,8 +20,8 @@ public struct ChromePolicies: Sendable, Equatable {
             "PasswordLeakDetectionEnabled": false,
             "BrowserSignin": 0,
             "SyncDisabled": true,
-            "DefaultCookiesSetting": 4,                 // cookies for the session only ...
-            "CookiesAllowedForUrls": keepSignedIn,      // ... except these
+            "DefaultCookiesSetting": keepAll ? 1 : 4,   // cookies kept, or for the session only ...
+            "CookiesAllowedForUrls": keepAll ? [] : keepSignedIn,  // ... except these
             "ClearBrowsingDataOnExitList": ["browsing_history", "download_history", "cached_images_and_files",
                                             "password_signin", "autofill", "site_settings", "hosted_app_data"],
             // No prompts that cover the page: promotions, translation and sandbox prompts off. Chrome ignores

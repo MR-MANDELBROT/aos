@@ -26,20 +26,29 @@ struct GeneralSettings: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Sign-ins expire when the workspace closes", isOn: binding(\.expireSignIns))
-                Text(model.settings.expireSignIns
-                     ? "The workspace shuts down after each use; websites forget sign-ins, except the domains below (fewer captchas there)."
-                     : "The workspace is suspended after each use and continues exactly where it was, signed in everywhere.")
-                    .font(.caption).foregroundStyle(.secondary)
-                TextField("Stay signed in on", text: $domains, prompt: Text("[*.]google.com"))
-                    .disabled(!model.settings.expireSignIns)
-                    .onSubmit(saveDomains)
+                Picker("Sign out of websites when it closes", selection: binding(\.signOutWebsites)) {
+                    Text("All websites").tag(AgentSettings.SignOutWebsites.all)
+                    Text("All except …").tag(AgentSettings.SignOutWebsites.allExcept)
+                    Text("None, stay signed in").tag(AgentSettings.SignOutWebsites.none)
+                }
+                if model.settings.signOutWebsites == .allExcept {
+                    TextField("Stay signed in on", text: $domains, prompt: Text("[*.]google.com"))
+                        .onSubmit(saveDomains)
+                }
+                Text(signOutText).font(.caption).foregroundStyle(.secondary)
+                Toggle(isOn: binding(\.shareApplications)) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Programs of this Mac in the workspace")
+                        Text("Your agent can open them there. They start fresh, without your data and sign-ins; App Store apps and apps with licenses often don't run.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
                 Stepper("Close after \(model.settings.idleMinutes) min without activity",
                         value: binding(\.idleMinutes), in: 5...120, step: 5)
             } header: {
                 Text("Workspace")
             } footer: {
-                Text("Changes to sign-ins apply to the workspace at its next start.").font(.caption).foregroundStyle(.secondary)
+                Text("Changes apply to the workspace at its next start.").font(.caption).foregroundStyle(.secondary)
             }
             Section {
                 LabeledContent {
@@ -86,6 +95,17 @@ struct GeneralSettings: View {
         .onDisappear(perform: saveDomains)
     }
 
+    var signOutText: String {
+        switch model.settings.signOutWebsites {
+        case .all:
+            return String(localized: "Every website forgets its sign-in when the workspace closes. Expect more captchas, for example from Google.")
+        case .allExcept:
+            return String(localized: "Websites forget their sign-in when the workspace closes, except the domains above (fewer captchas there).")
+        case .none:
+            return String(localized: "Websites stay signed in, also after the workspace closed. Your agent can use those sign-ins next time.")
+        }
+    }
+
     var helperText: String {
         switch model.helperState {
         case .allowed:
@@ -117,6 +137,38 @@ struct ReachableSettings: View {
 
     var body: some View {
         Form {
+            Section {
+                Toggle(isOn: binding(\.newChats)) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Start new chats on this Mac")
+                        Text("This Mac appears in the Claude app on your phone and on claude.ai/code. A chat you start there runs here, with your Claude Code and \(Brand.name)'s workspace.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                if model.settings.newChats {
+                    LabeledContent("Folder") {
+                        HStack(spacing: 8) {
+                            Text(folderText).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                            Button("Choose …", action: chooseFolder).buttonStyle(.glass)
+                        }
+                    }
+                    if let remote = model.remote {
+                        Label(remoteText(remote), systemImage: remote.state == .running ? "checkmark.circle.fill" : "clock")
+                            .foregroundStyle(remote.state == .running ? .green : .secondary)
+                            .font(.callout)
+                        if remote.state == .needsTrust {
+                            Text("Claude Code asks once whether you trust this folder: chats started from the Claude app can read and change files there and run programs, and the folder's Claude Code settings apply to them.")
+                                .font(.caption).foregroundStyle(.secondary)
+                            Button("Trust the Folder") {
+                                try? RemoteServerStatus.trust(folder: remote.folder, paths: model.paths)
+                            }
+                            .buttonStyle(.glassProminent)
+                        }
+                    }
+                }
+            } header: {
+                Text("New chats from the Claude app")
+            }
             Section {
                 Toggle(isOn: binding(\.keepReachable)) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -170,6 +222,36 @@ struct ReachableSettings: View {
         }
         .onDisappear(perform: saveName)
         .onReceive(timer) { _ in if model.settings.keepReachable { model.loadConversations() } }
+    }
+
+    var folderText: String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let path = model.settings.newChatsDirectory.path
+        return path == home ? String(localized: "Your home folder") : path.replacingOccurrences(of: home, with: "~")
+    }
+
+    func remoteText(_ r: RemoteServerStatus) -> String {
+        switch r.state {
+        case .running: return String(localized: "Ready: start a chat on this Mac in the Claude app.")
+        case .starting, .restarting: return String(localized: "Starting …")
+        case .waitingForNetwork: return String(localized: "Waiting for the internet connection.")
+        case .needsLogin: return String(localized: "Claude Code isn't signed in. Sign in once in a terminal: claude")
+        case .needsTrust: return String(localized: "Waiting for you to trust the folder.")
+        case .missingClaude: return String(localized: "Claude Code isn't installed.")
+        case .off: return String(localized: "Off")
+        }
+    }
+
+    func chooseFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = model.settings.newChatsDirectory
+        panel.prompt = String(localized: "Choose")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        model.update { $0.newChatsFolder = url.path == home ? "" : url.path }
     }
 
     func saveName() {

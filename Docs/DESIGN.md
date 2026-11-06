@@ -126,6 +126,34 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   can use, so the request is encrypted to it (instead of trusting the socket's peer), and a check of Chrome's profile
   settings before each sign-in.
 
+## New chats from the Claude app (server mode)
+
+aos-session runs Claude Code's Remote Control server mode (`claude remote-control --spawn same-dir
+--no-create-session-in-dir --permission-mode default --remote-control-session-name-prefix aOS`) in the folder the user
+chose (default: the home folder), on by default (Settings > Claude Code). The Mac then appears as a device in the
+Claude app; every chat started there runs here with the user's own Claude Code and aOS's tools. `RemoteServer`
+waits for the network (the server gives up after 10 minutes without it), starts it again with back-off, follows the
+settings every 2 s and reports run/remote.json. Learned while testing it:
+- Only one server per folder and device. A server that was killed (SIGKILL) stays registered for some minutes, and
+  a new one in the same folder is refused ("already served"). So it is ended with SIGTERM only (it says goodbye and
+  ends within one or two seconds), SIGKILL only after 10 s.
+- After a SIGHUP the server stops answering signals: never send one.
+- While stopping, its terminal must still be read: on the way out it writes, and with nobody reading it blocks.
+- A folder Claude Code hasn't trusted yet makes it ask "Trust …? [y/N]". aOS never answers on its own: the settings
+  show the question and a "Trust the Folder" button; only that click sends the yes.
+- Children started in a pseudo terminal inherit ignored signals across exec: aos-session ignores SIGTERM itself
+  (it handles it through a dispatch source), so every child now starts with all signals at their default.
+
+## The workspace: programs and website sign-ins
+
+- The Mac's /Applications is shared read only into the workspace (/Volumes/My Shared Files/Applications, setting
+  "Programs of this Mac in the workspace", on by default). The programs start there fresh, without the user's data
+  and sign-ins (their data lives in the guest account); App Store and licensed apps often don't run. The agent's
+  instructions say where they are.
+- Website sign-ins when the workspace closes: all sign out, all except a list (default: Google, fewer captchas), or
+  none. Chrome policies: DefaultCookiesSetting 4 (session only) with CookiesAllowedForUrls for the list, or 1 (kept)
+  for none. Applies at the next start of the workspace.
+
 ## Two traps found on the way
 
 - **Foundation's Process**: `waitUntilExit` (and the termination handler) notice the exit through the run loop of the

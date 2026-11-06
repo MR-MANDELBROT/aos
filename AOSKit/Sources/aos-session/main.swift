@@ -1,8 +1,9 @@
 import AOSKit
 import Foundation
 
-// Keeps the Claude Code session running and the conversations the user wants reachable (started by launchd as a
-// LaunchAgent of the app, see App/LaunchAgents). SIGTERM ends them too.
+// Keeps the Claude Code session running, the conversations the user wants reachable, and Claude Code's server mode
+// for new chats from the Claude app (started by launchd as a LaunchAgent of the app, see App/LaunchAgents).
+// SIGTERM ends them too.
 let paths = Paths.default
 try? paths.prepare()
 // Log to Logs/session.log (kept short: the old log moves aside when it passes 2 MB).
@@ -20,14 +21,18 @@ supervisor.log = { line in
 }
 let keeper = SessionKeeper(paths: paths)
 keeper.log = supervisor.log
+let remote = RemoteServer(paths: paths)
+remote.log = supervisor.log
 signal(SIGTERM, SIG_IGN)
 let term = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
 term.setEventHandler {
     supervisor.stop()
     keeper.stopAll()
+    remote.stop()
     DispatchQueue.main.asyncAfter(deadline: .now() + 6) { exit(0) }
 }
 term.resume()
 supervisor.run()
 keeper.run()
+remote.run()
 dispatchMain()

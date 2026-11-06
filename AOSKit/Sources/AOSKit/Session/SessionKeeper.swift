@@ -427,6 +427,12 @@ enum PTY {
         var fd: Int32 = -1
         let pid = forkpty(&fd, nil, nil, &size)
         if pid == 0 {
+            // aos-session ignores SIGTERM itself (it handles it through a dispatch source); an ignored signal
+            // survives exec, and the child would then ignore SIGTERM too. Start it with every signal at its default.
+            for sig in 1..<NSIG { signal(sig, SIG_DFL) }
+            var none = sigset_t()
+            sigemptyset(&none)
+            sigprocmask(SIG_SETMASK, &none, nil)
             _ = chdir(cCwd)
             execve(cArgs[0], cArgs, cEnv)
             _exit(127)

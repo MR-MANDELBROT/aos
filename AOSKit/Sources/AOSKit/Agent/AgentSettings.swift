@@ -36,9 +36,31 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// Conversation ids the user doesn't want kept.
     public var skippedConversations: [String] = []
 
+    // New chats from the Claude app (Claude Code's Remote Control server mode)
+    /// The Mac appears as a device in the Claude app; a chat started there runs here.
+    public var newChats: Bool = true
+    /// Folder new chats start in (empty: the home folder).
+    public var newChatsFolder: String = ""
+
+    // The workspace
+    /// Which websites forget their sign-in when the workspace closes.
+    public var signOutWebsites: SignOutWebsites = .allExcept
+    /// The Mac's programs are available in the workspace (read only, they start without the user's data).
+    public var shareApplications: Bool = true
+
+    public enum SignOutWebsites: String, Codable, Sendable, CaseIterable {
+        /// Every website forgets its sign-in.
+        case all
+        /// All except the domains in `keepSignedIn`.
+        case allExcept
+        /// Websites stay signed in.
+        case none
+    }
+
     private enum CodingKeys: String, CodingKey {
         case expireSignIns, keepSignedIn, idleMinutes, sessionName, sessionEnabled, keepAwake, agents, setupFinished
         case keepReachable, keepAutomatic, keepHours, keepTerminal, keepMax, keptConversations, skippedConversations
+        case newChats, newChatsFolder, signOutWebsites, shareApplications
     }
 
     public init(from decoder: Decoder) throws {
@@ -59,6 +81,30 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         keepMax = min(max(try c.decodeIfPresent(Int.self, forKey: .keepMax) ?? d.keepMax, 1), 20)
         keptConversations = try c.decodeIfPresent([String].self, forKey: .keptConversations) ?? d.keptConversations
         skippedConversations = try c.decodeIfPresent([String].self, forKey: .skippedConversations) ?? d.skippedConversations
+        newChats = try c.decodeIfPresent(Bool.self, forKey: .newChats) ?? d.newChats
+        newChatsFolder = try c.decodeIfPresent(String.self, forKey: .newChatsFolder) ?? d.newChatsFolder
+        // Before the choice existed, "sign-ins expire" off meant they stayed
+        signOutWebsites = try c.decodeIfPresent(SignOutWebsites.self, forKey: .signOutWebsites)
+            ?? (expireSignIns ? .allExcept : .none)
+        shareApplications = try c.decodeIfPresent(Bool.self, forKey: .shareApplications) ?? d.shareApplications
+    }
+
+    /// The folder new chats from the Claude app start in.
+    public var newChatsDirectory: URL {
+        let path = (newChatsFolder as NSString).expandingTildeInPath
+        guard !path.isEmpty, FileManager.default.fileExists(atPath: path) else {
+            return FileManager.default.homeDirectoryForCurrentUser
+        }
+        return URL(fileURLWithPath: path, isDirectory: true)
+    }
+
+    /// The Chrome policies these settings ask for.
+    public var chromePolicies: ChromePolicies {
+        switch signOutWebsites {
+        case .all: return ChromePolicies(keepSignedIn: [], keepAll: false)
+        case .allExcept: return ChromePolicies(keepSignedIn: keepSignedIn, keepAll: false)
+        case .none: return ChromePolicies(keepSignedIn: [], keepAll: true)
+        }
     }
 
     public init() {}

@@ -36,6 +36,7 @@ final class AppModel: ObservableObject {
     @Published var sessionAgentStatus: SMAppService.Status = .notRegistered
     /// What the session keeper does (run/keeper.json, written by aos-session).
     @Published var keeper: KeeperStatus?
+    @Published var remote: RemoteServerStatus?
     /// Recent Claude Code conversations, for the settings (filled while the settings show them).
     @Published var conversations: [ClaudeConversation] = []
     let conversationCache = ConversationCache()
@@ -287,6 +288,7 @@ final class AppModel: ObservableObject {
         status = workspace.status()
         session = SessionStatus.read(paths)
         keeper = KeeperStatus.read(paths)
+        remote = RemoteServerStatus.read(paths)
         if loginItems {
             loginItemEnabled = SMAppService.mainApp.status == .enabled
             sessionAgentStatus = SessionAgent.service.status
@@ -333,6 +335,7 @@ final class AppModel: ObservableObject {
     func updateSessionAgent() {
         let needed = settings.keepReachable
             || (settings.sessionEnabled && ClaudeCode.isConfigured(session: paths.session))
+            || (settings.newChats && ClaudeCode.executable() != nil)
         do {
             if needed && SessionAgent.service.status != .enabled {
                 try SessionAgent.enable()

@@ -92,11 +92,15 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         config.entropyDevices = [VZVirtioEntropyDeviceConfiguration()]
         config.memoryBalloonDevices = [VZVirtioTraditionalMemoryBalloonDeviceConfiguration()]
 
-        // The exchange folder appears in the guest as /Volumes/My Shared Files/Exchange.
+        // The exchange folder appears in the guest as /Volumes/My Shared Files/Exchange, the Mac's programs (read
+        // only, they start there without the user's data) as /Volumes/My Shared Files/Applications.
         try FileManager.default.createDirectory(at: paths.exchange, withIntermediateDirectories: true)
-        let share = VZMultipleDirectoryShare(directories: [
-            "Exchange": VZSharedDirectory(url: paths.exchange, readOnly: false),
-        ])
+        var directories = ["Exchange": VZSharedDirectory(url: paths.exchange, readOnly: false)]
+        if AgentSettings.load(paths).shareApplications {
+            directories["Applications"] = VZSharedDirectory(url: URL(fileURLWithPath: "/Applications", isDirectory: true),
+                                                            readOnly: true)
+        }
+        let share = VZMultipleDirectoryShare(directories: directories)
         let fs = VZVirtioFileSystemDeviceConfiguration(tag: VZVirtioFileSystemDeviceConfiguration.macOSGuestAutomountTag)
         fs.share = share
         config.directorySharingDevices = [fs]

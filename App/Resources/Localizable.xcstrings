@@ -291,12 +291,32 @@
         }
       }
     },
+    "All except …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle außer …"
+          }
+        }
+      }
+    },
     "All set" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alles bereit"
+          }
+        }
+      }
+    },
+    "All websites" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Websites"
           }
         }
       }
@@ -497,7 +517,18 @@
         }
       }
     },
+    "Changes apply to the workspace at its next start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen gelten ab dem nächsten Start des Arbeitsplatzes."
+          }
+        }
+      }
+    },
     "Changes to sign-ins apply to the workspace at its next start." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -557,6 +588,26 @@
         }
       }
     },
+    "Choose" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen"
+          }
+        }
+      }
+    },
+    "Choose …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen …"
+          }
+        }
+      }
+    },
     "Choose your agent" : {
       "localizations" : {
         "de" : {
@@ -577,6 +628,16 @@
         }
       }
     },
+    "Claude Code asks once whether you trust this folder: chats started from the Claude app can read and change files there and run programs, and the folder's Claude Code settings apply to them." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code fragt einmal, ob du diesem Ordner vertraust: Chats aus der Claude-App können dort Dateien lesen und ändern und Programme ausführen, und die Claude-Code-Einstellungen des Ordners gelten für sie."
+          }
+        }
+      }
+    },
     "Claude Code asks something (open Session)" : {
       "localizations" : {
         "de" : {
@@ -593,6 +654,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claude Code ist nicht installiert"
+          }
+        }
+      }
+    },
+    "Claude Code isn't installed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code ist nicht installiert."
+          }
+        }
+      }
+    },
+    "Claude Code isn't signed in. Sign in once in a terminal: claude" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code ist nicht angemeldet. Melde dich einmal im Terminal an: claude"
           }
         }
       }
@@ -877,6 +958,16 @@
         }
       }
     },
+    "Every website forgets its sign-in when the workspace closes. Expect more captchas, for example from Google." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede Website vergisst ihre Anmeldung, wenn der Arbeitsplatz schließt. Rechne mit mehr Captchas, etwa bei Google."
+          }
+        }
+      }
+    },
     "Exchange" : {
       "localizations" : {
         "de" : {
@@ -933,6 +1024,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erster Start der Sitzung"
+          }
+        }
+      }
+    },
+    "Folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner"
           }
         }
       }
@@ -1237,6 +1338,16 @@
         }
       }
     },
+    "New chats from the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats aus der Claude-App"
+          }
+        }
+      }
+    },
     "New Code" : {
       "localizations" : {
         "de" : {
@@ -1303,6 +1414,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine deiner Dateien, Passwörter oder Anmeldungen ist darin."
+          }
+        }
+      }
+    },
+    "None, stay signed in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine, angemeldet bleiben"
           }
         }
       }
@@ -1713,6 +1834,16 @@
         }
       }
     },
+    "Programs of this Mac in the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programme dieses Macs im Arbeitsplatz"
+          }
+        }
+      }
+    },
     "Purpose" : {
       "localizations" : {
         "de" : {
@@ -1769,6 +1900,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fertig"
+          }
+        }
+      }
+    },
+    "Ready: start a chat on this Mac in the Claude app." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereit: Starte in der Claude-App einen Chat auf diesem Mac."
           }
         }
       }
@@ -2073,6 +2214,16 @@
         }
       }
     },
+    "Sign out of websites when it closes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Websites beim Schließen abmelden"
+          }
+        }
+      }
+    },
     "Sign-ins" : {
       "localizations" : {
         "de" : {
@@ -2084,6 +2235,7 @@
       }
     },
     "Sign-ins expire when the workspace closes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2143,6 +2295,16 @@
         }
       }
     },
+    "Start new chats on this Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats auf diesem Mac starten"
+          }
+        }
+      }
+    },
     "Start once" : {
       "localizations" : {
         "de" : {
@@ -2179,6 +2341,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Startet"
+          }
+        }
+      }
+    },
+    "Starting …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet …"
           }
         }
       }
@@ -2330,6 +2502,7 @@
       }
     },
     "The workspace is suspended after each use and continues exactly where it was, signed in everywhere." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2360,6 +2533,7 @@
       }
     },
     "The workspace shuts down after each use; websites forget sign-ins, except the domains below (fewer captchas there)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2399,12 +2573,32 @@
         }
       }
     },
+    "This Mac appears in the Claude app on your phone and on claude.ai/code. A chat you start there runs here, with your Claude Code and %@'s workspace." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Mac erscheint in der Claude-App auf deinem Handy und auf claude.ai/code. Ein Chat, den du dort startest, läuft hier, mit deinem Claude Code und dem Arbeitsplatz von %@."
+          }
+        }
+      }
+    },
     "This Mac can't run virtual machines. aOS needs a Mac with Apple silicon and can't run inside a virtual machine itself." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Mac kann keine virtuellen Maschinen ausführen. aOS braucht einen Mac mit Apple Silicon und kann nicht selbst in einer virtuellen Maschine laufen."
+          }
+        }
+      }
+    },
+    "Trust the Folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner vertrauen"
           }
         }
       }
@@ -2449,6 +2643,16 @@
         }
       }
     },
+    "Waiting for the internet connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf die Internetverbindung."
+          }
+        }
+      }
+    },
     "waiting for the network" : {
       "localizations" : {
         "de" : {
@@ -2469,6 +2673,16 @@
         }
       }
     },
+    "Waiting for you to trust the folder." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet darauf, dass du dem Ordner vertraust."
+          }
+        }
+      }
+    },
     "Waiting until %@" : {
       "localizations" : {
         "de" : {
@@ -2479,12 +2693,32 @@
         }
       }
     },
+    "Websites forget their sign-in when the workspace closes, except the domains above (fewer captchas there)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Websites vergessen ihre Anmeldung, wenn der Arbeitsplatz schließt, außer bei den Domains oben (dort gibt es weniger Captchas)."
+          }
+        }
+      }
+    },
     "Websites forget their sign-ins when it closes." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Websites vergessen ihre Anmeldungen, wenn er schließt."
+          }
+        }
+      }
+    },
+    "Websites stay signed in, also after the workspace closed. Your agent can use those sign-ins next time." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Websites bleiben angemeldet, auch nachdem der Arbeitsplatz geschlossen wurde. Dein Agent kann diese Anmeldungen beim nächsten Mal nutzen."
           }
         }
       }
@@ -2615,6 +2849,16 @@
         }
       }
     },
+    "Your agent can open them there. They start fresh, without your data and sign-ins; App Store apps and apps with licenses often don't run." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Agent kann sie dort öffnen. Sie starten frisch, ohne deine Daten und Anmeldungen; Apps aus dem App Store und Apps mit Lizenz laufen dort oft nicht."
+          }
+        }
+      }
+    },
     "Your agent is working" : {
       "localizations" : {
         "de" : {
@@ -2641,6 +2885,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deine Claude-Code-Unterhaltungen bleiben in der Claude-App auf deinem Handy."
+          }
+        }
+      }
+    },
+    "Your home folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Benutzerordner"
           }
         }
       }
