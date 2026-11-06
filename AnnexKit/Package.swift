@@ -8,16 +8,24 @@ import PackageDescription
 
 let package = Package(
     name: "Annex",
-    platforms: [.macOS("27.0")],
+    platforms: [.macOS("27.0"), .iOS("27.0")],
     products: [
         .library(name: "AnnexKit", targets: ["AnnexKit"]),
+        // The screen sharing (RFB) client, shared with the iPhone app
+        .library(name: "AnnexRFB", targets: ["AnnexRFB"]),
         .executable(name: "annexctl", targets: ["annexctl"]),
         .executable(name: "annex-mcp", targets: ["annex-mcp"]),
         .executable(name: "annex-session", targets: ["annex-session"]),
     ],
     targets: [
         .target(
+            name: "AnnexRFB",
+            path: "Sources/AnnexRFB",
+            linkerSettings: [.linkedLibrary("z")]
+        ),
+        .target(
             name: "AnnexKit",
+            dependencies: ["AnnexRFB"],
             path: "Sources/AnnexKit",
             resources: [.copy("Resources/Guest")],
             linkerSettings: [
@@ -28,7 +36,7 @@ let package = Package(
         .executableTarget(name: "annexctl", dependencies: ["AnnexKit"], path: "Sources/annexctl"),
         .executableTarget(name: "annex-mcp", dependencies: ["AnnexKit"], path: "Sources/annex-mcp"),
         .executableTarget(name: "annex-session", dependencies: ["AnnexKit"], path: "Sources/annex-session"),
-        .testTarget(name: "AnnexKitTests", dependencies: ["AnnexKit"], path: "Tests/AnnexKitTests"),
+        .testTarget(name: "AnnexKitTests", dependencies: ["AnnexKit", "AnnexRFB"], path: "Tests/AnnexKitTests"),
     ],
     swiftLanguageModes: [.v5]
 )

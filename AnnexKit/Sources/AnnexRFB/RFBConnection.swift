@@ -21,13 +21,13 @@ public enum RFBError: LocalizedError {
 }
 
 /// A TCP byte stream with exact reads, on top of Network.framework.
-final class RFBStream: @unchecked Sendable {
+public final class RFBStream: @unchecked Sendable {
     private let connection: NWConnection
-    private let queue = DispatchQueue(label: "\(Brand.bundleIdentifierPrefix).rfb")
+    private let queue = DispatchQueue(label: "dev.marquart.annex.rfb")
     private var buffer = Data()
     private let lock = NSLock()
 
-    init(host: String, port: UInt16) {
+    public init(host: String, port: UInt16) {
         let tcp = NWProtocolTCP.Options()
         tcp.noDelay = true
         tcp.connectionTimeout = 10
@@ -35,7 +35,7 @@ final class RFBStream: @unchecked Sendable {
                                   using: NWParameters(tls: nil, tcp: tcp))
     }
 
-    func open(timeout: TimeInterval) async throws {
+    public func open(timeout: TimeInterval) async throws {
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             var done = false
             let finish: (Result<Void, Error>) -> Void = { result in
@@ -62,7 +62,7 @@ final class RFBStream: @unchecked Sendable {
         }
     }
 
-    func close() { connection.cancel() }
+    public func close() { connection.cancel() }
 
     /// A send or receive that takes longer than this cancels the connection (its completion then fails), so a
     /// stalled screen sharing connection turns into an error and a reconnect instead of a hang.

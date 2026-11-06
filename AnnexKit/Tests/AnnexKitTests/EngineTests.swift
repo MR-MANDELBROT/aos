@@ -1,3 +1,4 @@
+@testable import AnnexRFB
 @testable import AnnexKit
 import XCTest
 

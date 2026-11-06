@@ -8,8 +8,8 @@ import zlib
 /// rectangles, pointer and key events. One connection is kept open: screensharingd drops input during the first
 /// two seconds after a connection, so every reconnect costs that wait.
 public actor RFBClient {
-    public let host: String
-    public let port: UInt16
+    public nonisolated let host: String
+    public nonisolated let port: UInt16
     private let username: String
     private let password: String
     /// Encodings to ask for (zlib for screensharingd). Empty: raw only, nothing sent (the hypervisor's VNC server
