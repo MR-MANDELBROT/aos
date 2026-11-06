@@ -24,7 +24,8 @@ struct ScreenTab: View {
             ZStack {
                 (fullScreen ? Color.black : Color.clear).ignoresSafeArea()
                 if fullScreen {
-                    RemoteScreen(session: session, options: viewerOptions, focus: focus) { touched() }
+                    RemoteScreen(session: session, options: viewerOptions, focus: focus,
+                                 keyBarHeight: keyboard && model.settings.showsKeyBar ? 56 : 0) { touched() }
                         .ignoresSafeArea()
                         .accessibilityAddTraits(.isImage)
                 }
@@ -174,7 +175,6 @@ struct ScreenTab: View {
 
     private var statusText: LocalizedStringKey? {
         switch session.phase {
-        case .connecting where session.hasPicture: "Connecting again …"
         case .live where !session.inputReady: "Input works in a moment …"
         default: nil
         }

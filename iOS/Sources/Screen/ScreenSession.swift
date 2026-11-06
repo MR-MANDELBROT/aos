@@ -102,7 +102,8 @@ final class ScreenSession {
     }
 
     var isRunning: Bool { phase == .connecting || phase == .live }
-    var hasPicture: Bool { size.width > 0 && (framebuffer != nil || stillImage != nil) }
+    /// A picture arrived (the first one can take a moment after connecting).
+    private(set) var hasPicture = false
 
     // MARK: Connecting
 
@@ -152,10 +153,35 @@ final class ScreenSession {
         }
     }
 
+    #if DEBUG
+    /// Straight to a screen sharing server, without the Mac and SSH (see `Demo.directScreen`).
+    func startDirect(host: String, port: UInt16, username: String, password: String, options: ScreenOptions) {
+        stop()
+        phase = .connecting
+        self.options = options
+        let client = RFBClient(host: host, port: port, username: username, password: password,
+                               options: .viewer(options.quality, localCursor: options.localCursor))
+        self.client = client
+        framebuffer = client.framebuffer
+        stillImage = nil
+        sender = InputSender(client: client)
+        inputReady = false
+        frames = 0
+        lastBytes = 0
+        liveTask = Task { [weak self] in await self?.receive(client.events(minimumInterval: options.interval)) }
+        statsTask = Task { [weak self] in await self?.measure(client) }
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(RFBClient.inputGrace))
+            self?.inputReady = true
+        }
+    }
+    #endif
+
     /// The demo shows a picture instead of a live screen.
     func showDemo(_ image: CGImage) {
         stop()
         stillImage = image
+        hasPicture = true
         size = CGSize(width: image.width, height: image.height)
         pointer = CGPoint(x: size.width * 0.55, y: size.height * 0.45)
         phase = .live
@@ -177,6 +203,7 @@ final class ScreenSession {
         sender = nil
         connection = nil
         dragging = false
+        hasPicture = false
         // The workspace gets its own size back (if the phone can't say so, the Mac's lease runs out).
         if !keepDisplay {
             if displayRequest != nil, let companion = mac?.companion {
@@ -193,6 +220,7 @@ final class ScreenSession {
                 switch event {
                 case .frame:
                     frames += 1
+                    if !hasPicture { hasPicture = true }
                     if size == .zero, let s = framebuffer?.size, s.width > 0 {
                         size = s
                         pointer = CGPoint(x: s.width / 2, y: s.height / 2)

@@ -14,7 +14,7 @@ struct ScreenGeometry: Equatable {
         var id: String { rawValue }
     }
 
-    /// The whole viewer.
+    /// The part of the viewer that shows the picture: all of it, or what the keyboard leaves free.
     var bounds: CGRect = .zero
     /// The part of the viewer the picture fits into (without the rounded corners, the island and the home bar).
     var area: CGRect = .zero
@@ -69,11 +69,13 @@ struct ScreenGeometry: Equatable {
     mutating func clampPan() {
         guard !isEmpty else { pan = .zero; return }
         let size = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
-        // Bigger than the area: it may use the whole viewer (under the island and the home bar) but no more.
+        // Smaller than the visible part of the area: centered in it. Bigger: it may use the whole viewer (under the
+        // island and the home bar) but leave no gap; with the keyboard up the hidden part is a pan away.
         func limit(_ picture: CGFloat, _ area: CGFloat, _ areaMin: CGFloat, _ areaMax: CGFloat, _ boundsMin: CGFloat,
                    _ boundsMax: CGFloat, _ value: CGFloat) -> CGFloat {
-            if picture <= area + 0.5 { return 0 }
             let center = (areaMin + areaMax) / 2
+            let visibleMin = max(areaMin, boundsMin), visibleMax = min(areaMax, boundsMax)
+            if picture <= visibleMax - visibleMin + 0.5 { return (visibleMin + visibleMax) / 2 - center }
             // picture edges: center + value - picture/2 <= boundsMin, center + value + picture/2 >= boundsMax
             let lower = boundsMax - picture / 2 - center
             let upper = boundsMin + picture / 2 - center

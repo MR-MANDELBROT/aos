@@ -12,6 +12,14 @@ enum Demo {
     static var sheet: String? { UserDefaults.standard.string(forKey: "AOSDemoSheet") }
     /// `-AOSDemoUnpaired YES`: the welcome page.
     static var unpaired: Bool { UserDefaults.standard.bool(forKey: "AOSDemoUnpaired") }
+    /// `-AOSScreenDirect HOST:PORT`: the workspace screen connects straight to a screen sharing server (the
+    /// simulator reaches a workspace VM's address), with the login from the environment variables AOS_SCREEN_USER and
+    /// AOS_SCREEN_PASSWORD. For testing the viewer against a real screensharingd.
+    static var directScreen: (host: String, port: UInt16)? {
+        guard let text = UserDefaults.standard.string(forKey: "AOSScreenDirect") else { return nil }
+        let parts = text.split(separator: ":")
+        return (String(parts[0]), parts.count > 1 ? UInt16(parts[1]) ?? 5900 : 5900)
+    }
 
     struct Content {
         var mac: PairedMac
@@ -51,7 +59,14 @@ enum Demo {
         case "screen": model.tab = .screen
         default: model.tab = .overview
         }
-        if let image = workspacePicture() { model.workspaceScreen.showDemo(image) }
+        if let direct = directScreen {
+            let env = ProcessInfo.processInfo.environment
+            model.workspaceScreen.startDirect(host: direct.host, port: direct.port, username: env["AOS_SCREEN_USER"] ?? "",
+                                              password: env["AOS_SCREEN_PASSWORD"] ?? "",
+                                              options: ScreenOptions(settings: model.settings, cellular: false))
+        } else if let image = workspacePicture() {
+            model.workspaceScreen.showDemo(image)
+        }
         if let image = macPicture() { model.macScreen.showDemo(image) }
         Task {
             try? await Task.sleep(for: .milliseconds(600))

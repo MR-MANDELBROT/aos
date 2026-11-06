@@ -91,7 +91,8 @@ final class AppSettings {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        func bool(_ key: String, _ fallback: Bool) -> Bool { defaults.object(forKey: key) as? Bool ?? fallback }
+        // bool(forKey:) also reads "YES"/"NO" (launch arguments for tests and screenshots).
+        func bool(_ key: String, _ fallback: Bool) -> Bool { defaults.object(forKey: key) == nil ? fallback : defaults.bool(forKey: key) }
         requireUnlock = bool("requireUnlock", false)
         autoLockMinutes = defaults.object(forKey: "autoLockMinutes") as? Int ?? 5
         terminalFontSize = defaults.object(forKey: "terminalFontSize") as? Double ?? 13

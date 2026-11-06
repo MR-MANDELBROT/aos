@@ -63,6 +63,11 @@ final class RemoteScreenView: UIView, UIGestureRecognizerDelegate {
     private var holdLocation: CGPoint = .zero
     private var lastTap: (time: Date, view: CGPoint, remote: CGPoint)?
 
+    /// Points at the bottom the keyboard (and the key bar above it) cover.
+    private var keyboardOverlap: CGFloat = 0
+    /// Height of what the viewer shows above the keyboard (the key bar).
+    var keyboardAccessoryHeight: CGFloat = 0
+
     private let tapFeedback = UIImpactFeedbackGenerator(style: .light)
     private let pressFeedback = UIImpactFeedbackGenerator(style: .medium)
 
@@ -89,9 +94,29 @@ final class RemoteScreenView: UIView, UIGestureRecognizerDelegate {
         accessibilityLabel = String(localized: "Remote screen")
         accessibilityTraits = .allowsDirectInteraction
         installGestures()
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardChanged(_:)),
+                                               name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardChanged(_:)),
+                                               name: UIResponder.keyboardWillHideNotification, object: nil)
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
+
+    /// The keyboard covers the bottom: the picture keeps its size and the covered part is a pan away (in trackpad
+    /// mode the picture follows the pointer up).
+    @objc private func keyboardChanged(_ note: Notification) {
+        var overlap: CGFloat = 0
+        if note.name != UIResponder.keyboardWillHideNotification,
+           let frame = (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+            let local = convert(frame, from: nil)
+            overlap = max(0, bounds.maxY - local.minY)
+            if overlap > 0 { overlap += keyboardAccessoryHeight }
+        }
+        guard overlap != keyboardOverlap else { return }
+        keyboardOverlap = overlap
+        setNeedsLayout()
+        if overlap > 0 { follow() }
+    }
 
     // MARK: Picture
 
@@ -134,8 +159,9 @@ final class RemoteScreenView: UIView, UIGestureRecognizerDelegate {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        geometry.bounds = bounds
-        geometry.area = bounds.inset(by: safeAreaInsets)
+        geometry.bounds = CGRect(x: 0, y: 0, width: bounds.width, height: max(1, bounds.height - keyboardOverlap))
+        // The view ignores the safe area (it draws under the island too); the window's insets say what to avoid.
+        geometry.area = bounds.inset(by: window?.safeAreaInsets ?? safeAreaInsets)
         geometry.displayScale = window?.screen.scale ?? traitCollection.displayScale
         geometry.scaling = options.scaling
         geometry.clampPan()
@@ -520,6 +546,8 @@ struct RemoteScreen: UIViewRepresentable {
     let options: ViewerOptions
     /// Changes when the view should zoom: to fit (nil) or onto a region.
     let focus: FocusRequest
+    /// The key bar above the keyboard covers this much more.
+    var keyBarHeight: CGFloat = 0
     var onTouch: (() -> Void)?
 
     struct FocusRequest: Equatable {
@@ -538,6 +566,7 @@ struct RemoteScreen: UIViewRepresentable {
         view.session = session
         view.options = options
         view.onTouch = onTouch
+        view.keyboardAccessoryHeight = keyBarHeight
         // Observed here so SwiftUI updates the pointer and the shape when they change.
         _ = (session.pointer, session.cursor, session.size)
         view.updatePointer()
