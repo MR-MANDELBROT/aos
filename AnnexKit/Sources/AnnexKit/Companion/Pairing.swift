@@ -136,19 +136,28 @@ public final class PairingSession {
     private var listener: NWListener?
     private let code: Data
     private let keys: AuthorizedKeys
+    private let sshPort: UInt16
+    private let fixedFingerprint: String?
     private var failures = 0
     public static let companionPath = "/Applications/Annex.app/Contents/MacOS/annex-companion"
 
-    public init(keys: AuthorizedKeys = AuthorizedKeys()) {
+    /// Tests pass another key file, SSH port and host key fingerprint (an sshd of their own).
+    public init(keys: AuthorizedKeys = AuthorizedKeys(), sshPort: UInt16 = 22, hostKeyFingerprint: String? = nil) {
         var bytes = [UInt8](repeating: 0, count: 16)
         _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         code = Data(bytes)
         self.keys = keys
+        self.sshPort = sshPort
+        self.fixedFingerprint = hostKeyFingerprint
     }
 
     public func start() {
-        guard MacSSH.remoteLoginOn() else { state = .failed("Remote Login is off"); return }
-        guard let fingerprint = MacSSH.hostKeyFingerprint() else { state = .failed("no SSH host key"); return }
+        guard TCPCheck.reachable(host: "127.0.0.1", port: sshPort, timeout: 2) else {
+            state = .failed("Remote Login is off"); return
+        }
+        guard let fingerprint = fixedFingerprint ?? MacSSH.hostKeyFingerprint() else {
+            state = .failed("no SSH host key"); return
+        }
         do {
             let params = NWParameters.tcp
             params.includePeerToPeer = false
@@ -197,7 +206,7 @@ public final class PairingSession {
             URLQueryItem(name: "n", value: MacSSH.macName()),
             URLQueryItem(name: "h", value: MacSSH.addresses().joined(separator: ",")),
             URLQueryItem(name: "p", value: String(port)),
-            URLQueryItem(name: "s", value: "22"),
+            URLQueryItem(name: "s", value: String(sshPort)),
             URLQueryItem(name: "u", value: NSUserName()),
             URLQueryItem(name: "k", value: fingerprint),
             URLQueryItem(name: "c", value: codeText),
@@ -234,9 +243,13 @@ public final class PairingSession {
 
     /// Checks a pairing request; see `PairingRequest.verify`.
     private func handle(_ line: Data, _ connection: NWConnection) {
-        func respond(_ o: [String: Any]) {
+        /// Sends the answer; `then` runs once it is out (only then may the pairing end).
+        func respond(_ o: [String: Any], then: @escaping @MainActor () -> Void = {}) {
             let data = ((try? JSONSerialization.data(withJSONObject: o)) ?? Data()) + Data([0x0A])
-            connection.send(content: data, completion: .contentProcessed { _ in connection.cancel() })
+            connection.send(content: data, completion: .contentProcessed { _ in
+                connection.cancel()
+                Task { @MainActor in then() }
+            })
         }
         switch PairingRequest.verify(line, code: code) {
         case .failure(let reason):
@@ -246,9 +259,10 @@ public final class PairingSession {
         case .success(let request):
             do {
                 try keys.add(key: request.key, id: request.id, name: request.device)
-                respond(["ok": true, "user": NSUserName(), "companion": Self.companionPath])
-                stop()
-                state = .paired(request.device)
+                respond(["ok": true, "user": NSUserName(), "companion": Self.companionPath]) { [weak self] in
+                    self?.stop()
+                    self?.state = .paired(request.device)
+                }
             } catch {
                 respond(["ok": false, "error": "could not save the key"])
                 state = .failed(error.localizedDescription)

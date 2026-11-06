@@ -279,6 +279,25 @@ func runCommand() async {
             }
             exit(0)
 
+        case "pair-test":
+            // pair-test KEYS_FILE PORT FINGERPRINT: a pairing against a test sshd (its own authorized_keys), prints the
+            // link and waits for one phone
+            guard args.count >= 4, let port = UInt16(args[2]) else { fail("pair-test KEYS_FILE PORT FINGERPRINT") }
+            let session = PairingSession(keys: AuthorizedKeys(url: URL(fileURLWithPath: args[1])), sshPort: port,
+                                         hostKeyFingerprint: args[3])
+            session.onChange = {
+                switch session.state {
+                case .waiting: print("LINK \(session.url ?? "")")
+                case .paired(let name): print("PAIRED \(name)"); exit(0)
+                case .failed(let why): print("FAILED \(why)"); exit(1)
+                case .expired: print("EXPIRED"); exit(1)
+                case .starting: break
+                }
+            }
+            session.start()
+            keepAlive.append(session)
+            return
+
         case "keeper":
             // keeper plan: what the session keeper would keep now (with the current settings, or --all as if on)
             var settings = AgentSettings.load(paths)
