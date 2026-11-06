@@ -156,7 +156,9 @@ public actor RFBClient {
 
     /// A fresh picture of the whole screen.
     public func screenshot(timeout: TimeInterval = 15) async throws -> CGImage {
-        try await withReconnect { s in
+        // A live viewer reads the stream already: its last picture is current.
+        if liveActive, !framebuffer.isEmpty { return try makeImage() }
+        return try await withReconnect { s in
             var req = Data([3, 0])  // FramebufferUpdateRequest, not incremental
             req.appendBE(UInt16(0)); req.appendBE(UInt16(0))
             req.appendBE(UInt16(width)); req.appendBE(UInt16(height))
@@ -283,6 +285,82 @@ public actor RFBClient {
     }
 
     public enum Button: Int, Sendable { case left = 0, middle = 1, right = 2 }
+
+    /// Low-level pointer event for live viewers (touch and trackpad): position and the buttons held now.
+    public func pointer(x: Int, y: Int, pressed: Set<Button> = []) async throws {
+        try await withReconnect { s in
+            await waitForInputGrace()
+            let mask = pressed.reduce(UInt8(0)) { $0 | (1 << UInt8($1.rawValue)) }
+            try await sendPointer(s, x: x, y: y, buttons: mask)
+        }
+    }
+
+    /// Low-level key event for live viewers (a hardware keyboard: down and up come separately).
+    public func key(_ keysym: UInt32, down: Bool) async throws {
+        try await withReconnect { s in
+            await waitForInputGrace()
+            try await sendKey(s, keysym, down: down)
+        }
+    }
+
+    // MARK: Live
+
+    private var liveActive = false
+
+    /// Continuous pictures for a live viewer: asks for incremental updates and delivers the whole screen after each
+    /// update, at most every `minimumInterval`. Input methods keep working meanwhile; `screenshot` returns the last
+    /// picture. Ending the stream (or cancelling its task) closes the connection.
+    public nonisolated func liveFrames(minimumInterval: TimeInterval = 0.05) -> AsyncThrowingStream<CGImage, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task { await self.runLive(minimumInterval, continuation) }
+            continuation.onTermination = { _ in
+                task.cancel()
+                Task { await self.disconnect() }  // a pending read only ends when the connection closes
+            }
+        }
+    }
+
+    private func runLive(_ interval: TimeInterval, _ out: AsyncThrowingStream<CGImage, Error>.Continuation) async {
+        guard !liveActive else { out.finish(throwing: RFBError.protocolError("a live view is running already")); return }
+        liveActive = true
+        defer { liveActive = false }
+        do {
+            let s = try await live()
+            var incremental = false
+            while !Task.isCancelled {
+                var req = Data([3, incremental ? 1 : 0])  // FramebufferUpdateRequest
+                req.appendBE(UInt16(0)); req.appendBE(UInt16(0))
+                req.appendBE(UInt16(width)); req.appendBE(UInt16(height))
+                try await s.write(req)
+                incremental = true
+                var updated = false
+                while !updated {
+                    switch try await s.u8() {
+                    case 0:
+                        try await readUpdate(s)
+                        updated = true
+                    case 2:
+                        continue  // bell
+                    case 3:  // server cut text
+                        _ = try await s.read(3)
+                        _ = try await s.read(Int(try await s.u32()))
+                    case 1:  // colour map
+                        _ = try await s.read(3)
+                        _ = try await s.read(Int(try await s.u16()) * 6)
+                    case let type:
+                        throw RFBError.protocolError("unknown server message \(type)")
+                    }
+                }
+                out.yield(try makeImage())
+                try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+            }
+            out.finish()
+        } catch is CancellationError {
+            out.finish()
+        } catch {
+            out.finish(throwing: error)
+        }
+    }
 
     /// Moves the pointer and clicks `count` times, with `modifiers` held.
     public func click(x: Int, y: Int, button: Button = .left, count: Int = 1, modifiers: [UInt32] = []) async throws {
