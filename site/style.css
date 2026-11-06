@@ -996,3 +996,7 @@ p { text-wrap: pretty; }
 .doc-list p { font-size: 15px; color: var(--ink-2); }
 .back { display: inline-block; margin-top: 34px; font-size: 17px; text-decoration: none; }
 .back:hover { text-decoration: underline; }
+
+/* Not switched on yet: notifications through iCloud (the app has the code, the Apple developer account the setup
+   still to come). Remove this rule once push works. */
+[data-feature="push"] { display: none !important; }
