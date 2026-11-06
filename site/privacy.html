@@ -1,19 +1,76 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>aOS privacy</title><link rel="stylesheet" href="style.css"><link rel="icon" href="img/favicon.png"></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aOS: Privacy</title>
+<meta name="description" content="aOS has no server and collects nothing. What it sends, stores and sees.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="canonical" href="https://mr-mandelbrot.github.io/aos/privacy.html">
+<link rel="alternate" hreflang="en" href="https://mr-mandelbrot.github.io/aos/privacy.html">
+<link rel="alternate" hreflang="de" href="https://mr-mandelbrot.github.io/aos/de/datenschutz.html">
+<link rel="stylesheet" href="style.css">
+</head>
 <body>
-<nav class="wrap"><div class="bar glass"><a class="brand" href="./"><img src="img/icon.png" alt="">aOS</a>
-<div class="links"><a class="lang" href="de/datenschutz.html">Deutsch</a><a class="button small" href="https://github.com/MR-MANDELBROT/aos/releases">Download</a></div></div></nav>
-<main class="wrap doc">
-<h1>Privacy</h1>
-<p class="lead">aOS has no server and collects nothing.</p>
-<div class="panel glass"><ul>
-  <li>aOS sends no analytics, crash reports or usage data anywhere.</li>
-  <li>It downloads macOS from Apple, Google Chrome from Google (inside the workspace) and its own updates from this website's release feed. Those servers see a normal download request.</li>
-  <li>It never reads, stores or forwards credentials of your agents or your accounts. Signing in to an agent always happens in the agent's own flow.</li>
-  <li>Everything aOS stores stays on your Mac, in <code>~/Library/Application Support/aOS</code>: the workspace, its keys, logs and the exchange folder. Deleting that folder removes it all.</li>
-  <li>Your agent sees screenshots of the workspace while it works. What happens to them is governed by your agent's provider and its terms.</li>
-</ul></div>
-<p style="margin-top:28px"><a href="./">Back to aOS</a></p>
-</main></body></html>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m10.85 12.15 7.65-7.65M18 5l2 2M15 8l2 2"/></symbol>
+  <symbol id="i-personkey" viewBox="0 0 24 24"><circle cx="9" cy="7.5" r="3.5"/><path d="M2.5 19.5a6.5 6.5 0 0 1 10-5.5"/><circle cx="17" cy="14.5" r="2.5"/><path d="M17 17v4.5M17 19.5h2"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.2l1.8 2H19a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.6"/><path d="M10.5 5.3h3"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-display" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12.5" rx="2.2"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+  <symbol id="i-win" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.6"/><path d="M3 9h18"/></symbol>
+</svg>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="nav" aria-label="Main">
+  <div class="nav-inner">
+    <a class="brand" href="./"><img src="img/favicon.png" alt="" width="26" height="26">aOS</a>
+    <ul class="nav-links">
+      <li><a href="de/datenschutz.html" hreflang="de" lang="de">Deutsch</a></li>
+      <li><a class="nav-cta" href="./#download">Download</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main id="main" class="doc">
+  <div class="container">
+    <span class="caps">Privacy</span>
+    <h1>aOS has no server and collects nothing.</h1>
+    <p class="lede">aOS runs on your Mac and your iPhone. This is everything it sends, stores and sees.</p>
+    <ul class="doc-list">
+      <li><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><div><h2>No analytics</h2><p>aOS sends no analytics, crash reports or usage data anywhere. There is no account to create.</p></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="#i-down"/></svg><div><h2>Downloads</h2><p>aOS downloads macOS from Apple, Google Chrome from Google (inside the workspace) and its own updates from this website’s release feed on GitHub. Those servers see a normal download request.</p></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="#i-key"/></svg><div><h2>Your agent’s credentials</h2><p>aOS never reads, stores or forwards the credentials of your agents or your accounts. Signing in to an agent always happens in the agent’s own flow.</p></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="#i-personkey"/></svg><div><h2>Sign-ins you approve</h2><p>A sign-in you approve goes once from your iPhone or Mac to the workspace, over SSH, and is typed into that one website. aOS doesn’t keep it.</p></div></li>
+      <li data-feature="bitwarden"><svg class="i" aria-hidden="true"><use href="#i-key"/></svg><div><h2>Bitwarden</h2><p>If you use Bitwarden, your passwords stay in your Bitwarden account. aOS uses one only when you approve it, for that one sign-in.</p></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="#i-folder"/></svg><div><h2>On your Mac</h2><p>Everything aOS stores stays on your Mac, in <code>~/Library/Application Support/aOS</code>: the workspace, its keys, logs and the exchange folder. Deleting that folder removes it all.</p></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="#i-phone"/></svg><div><h2>aOS for iPhone</h2><p>The iPhone app talks to your Mac directly over SSH, with a key that never leaves the iPhone. There is no server and no account of ours in between.</p></div></li>
+      <li data-feature="push"><svg class="i" aria-hidden="true"><use href="#i-bell"/></svg><div><h2>Notifications</h2><p>Notifications about requests reach your iPhone through Apple. They name the agent and the reason, never a password.</p></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="#i-display"/></svg><div><h2>What your agent sees</h2><p>Your agent sees screenshots of the workspace while it works. What happens to them is governed by your agent’s provider and its terms.</p></div></li>
+      <li><svg class="i" aria-hidden="true"><use href="#i-win"/></svg><div><h2>This website</h2><p>This website is hosted on GitHub Pages, and GitHub processes your IP address to deliver it. The site itself sets no cookies and loads no trackers or external fonts.</p></div></li>
+    </ul>
+    <a class="back" href="./">Back to aOS ›</a>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="foot">
+      <span>aOS by <a href="https://marquart.dev">Maximilian Marquart</a></span>
+      <ul class="foot-links">
+        <li><a href="https://github.com/MR-MANDELBROT/aos">GitHub</a></li>
+        <li><a href="https://marquart.dev/impressum/">Imprint</a></li>
+        <li><a href="de/datenschutz.html" hreflang="de" lang="de">Deutsch</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
