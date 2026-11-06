@@ -147,6 +147,18 @@ final class AppModel: ObservableObject {
             Task { _ = await askApproval(agent: "Codex CLI", purpose: "Look up the opening hours of the city library", minutes: 15) }
         case "help":
             Task { _ = await askForHelp("Sign in to the library website, then click Done.") }
+        case "signin":
+            // A sign-in request as the agent would make it (nothing is filled: no workspace)
+            workspace.companion.post(CompanionEvent(event: "signin", request: "preview", agent: "Claude Code",
+                                                    host: "accounts.example.com", field: parts.dropFirst().first ?? "username",
+                                                    purpose: "Download the invoice for October",
+                                                    expires: Date().addingTimeInterval(180)))
+        case "settings":
+            UserDefaults.standard.set(parts.dropFirst().first ?? "general", forKey: "settingsTab")
+            if let open = openSettingsAction { open() } else {
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            }
+            NSApp.activate()
         default: break
         }
     }
