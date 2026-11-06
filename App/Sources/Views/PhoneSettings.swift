@@ -105,9 +105,13 @@ struct PairingView: View {
                 }
                 VStack(alignment: .leading, spacing: 6) {
                     step(1, "Open \(Brand.name) on your iPhone.")
-                    step(2, "Tap Connect to Mac.")
+                    step(2, "Tap \u{201C}Pair with your Mac\u{201D}.")
                     step(3, "Point the camera at this code.")
                 }
+                Link(destination: Brand.phoneAppPage) {
+                    Label("\(Brand.name) isn't on your iPhone yet?", systemImage: "arrow.down.app")
+                }
+                .font(.callout)
                 if let expires = model.pairing?.expires {
                     Text("The code is valid until \(expires.formatted(date: .omitted, time: .shortened)) and only once.")
                         .font(.caption).foregroundStyle(.secondary)

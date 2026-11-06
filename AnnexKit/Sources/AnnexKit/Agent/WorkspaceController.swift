@@ -200,11 +200,13 @@ public final class WorkspaceController {
     }
 
     /// Types text: ASCII as key events, everything else through the guest's clipboard.
-    func typeRuns(_ text: String, client: RFBClient) async throws {
+    /// Types text: ASCII as keys, the rest through the guest's clipboard. `privately` (the person typing from the
+    /// phone): the clipboard is emptied again right after, so nothing they typed stays readable in the workspace.
+    func typeRuns(_ text: String, client: RFBClient, privately: Bool = false) async throws {
         for run in Keysyms.runs(for: text) {
             switch run {
             case .keys(let keys): try await client.type(keys)
-            case .paste(let s): try await paste(s, client: client)
+            case .paste(let s): try await paste(s, client: client, clearAfter: privately)
             }
         }
     }
@@ -366,13 +368,14 @@ public final class WorkspaceController {
     }
 
     /// Text without a key symbol goes through the guest's clipboard: set over SSH, pasted with cmd+v.
-    private func paste(_ text: String, client: RFBClient) async throws {
+    private func paste(_ text: String, client: RFBClient, clearAfter: Bool = false) async throws {
         guard let ip = try host.guestAddress() else { throw VMHostError.noAddress }
-        try await provisioner.maintenance(host: ip).run(
-            "u=\(Brand.guestUser); launchctl asuser \"$(id -u $u)\" sudo -u $u env LANG=en_US.UTF-8 /usr/bin/pbcopy",
-            input: Data(text.utf8), timeout: 20, what: "clipboard")
+        let ssh = provisioner.maintenance(host: ip)
+        let pbcopy = "u=\(Brand.guestUser); launchctl asuser \"$(id -u $u)\" sudo -u $u env LANG=en_US.UTF-8 /usr/bin/pbcopy"
+        try await ssh.run(pbcopy, input: Data(text.utf8), timeout: 20, what: "clipboard")
         try await client.press([Keysyms.command, 0x76])
-        try await Task.sleep(nanoseconds: 150_000_000)
+        try await Task.sleep(nanoseconds: clearAfter ? 400_000_000 : 150_000_000)
+        if clearAfter { _ = try? await ssh.run(pbcopy, input: Data(), timeout: 20, what: "clipboard") }
     }
 
     /// Ends the lease and stops the VM: an orderly shutdown (sign-ins expire) or a suspend.

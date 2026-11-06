@@ -12,4 +12,12 @@ public enum Brand {
     /// Account name inside the VM.
     public static let guestUser = "annex"
     public static let guestFullName = "Annex"
+    /// The product's website (GitHub Pages; German under de/).
+    public static let website = "https://mr-mandelbrot.github.io/annex/"
+
+    /// The website's iPhone section (where to get the iPhone app), in German for German speakers.
+    public static var phoneAppPage: URL {
+        let german = Locale.preferredLanguages.first?.hasPrefix("de") == true
+        return URL(string: website + (german ? "de/" : "") + "#phone")!
+    }
 }

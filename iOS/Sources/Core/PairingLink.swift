@@ -173,10 +173,40 @@ struct PairingRequest: Codable, Equatable, Sendable {
     }
 }
 
-/// The Mac's answer: `{"ok":true,"user":"<user>","companion":"<path>"}` or `{"ok":false,"error":"..."}`.
+/// The Mac's answer: `{"ok":true,"user":"<user>","companion":"<path>","mac":"<base64>"}` or
+/// `{"ok":false,"error":"..."}`. `mac` is HMAC-SHA256(code, "annex-pair-answer\n" + user + "\n" + companion): only
+/// the Mac that shows the code can write it, so nobody on the network can change the answer on its way.
 struct PairingResponse: Codable, Equatable, Sendable {
     var ok: Bool
     var user: String?
     var companion: String?
     var error: String?
+    var mac: String?
+
+    static func authentication(code: Data, user: String, companion: String) -> Data {
+        let message = Data(("annex-pair-answer\n" + user + "\n" + companion).utf8)
+        return Data(HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: code)))
+    }
+
+    /// The answer came from the Mac with this code, and names a plausible user and companion program.
+    func isAuthentic(code: Data) -> Bool {
+        guard ok, let user, let companion, let mac, let given = Data(base64Encoded: mac) else { return false }
+        let expected = Self.authentication(code: code, user: user, companion: companion)
+        guard given.count == expected.count else { return false }
+        var difference: UInt8 = 0
+        for (a, b) in zip(given, expected) { difference |= a ^ b }
+        return difference == 0 && Self.isPlausible(user: user) && Self.isPlausible(companion: companion)
+    }
+
+    static func isPlausible(user: String) -> Bool {
+        !user.isEmpty && user.count <= 64 && user.unicodeScalars.allSatisfy {
+            CharacterSet.alphanumerics.contains($0) || "._-".unicodeScalars.contains($0)
+        }
+    }
+
+    static func isPlausible(companion: String) -> Bool {
+        companion.hasPrefix("/") && companion.hasSuffix("/annex-companion") && companion.count < 1024
+            && !companion.unicodeScalars.contains { $0.properties.generalCategory == .control }
+            && !companion.contains("/../")
+    }
 }

@@ -91,6 +91,16 @@
         }
       }
     },
+    "%@ isn't on your iPhone yet?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist noch nicht auf deinem iPhone?"
+          }
+        }
+      }
+    },
     "%@ on your iPhone" : {
       "localizations" : {
         "de" : {
@@ -2239,12 +2249,12 @@
         }
       }
     },
-    "Tap Connect to Mac." : {
+    "Tap “Pair with your Mac”." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tippe auf „Mit Mac verbinden“."
+            "value" : "Tippe auf „Mit deinem Mac koppeln“."
           }
         }
       }

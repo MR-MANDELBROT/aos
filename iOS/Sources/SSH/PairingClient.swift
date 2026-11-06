@@ -15,6 +15,8 @@ enum PairingClient {
         case invalidAnswer
         /// The Mac said no, with its reason.
         case refused(String)
+        /// The answer wasn't signed with the code (changed on its way, or not from the Mac showing the code).
+        case notAuthentic
 
         var errorDescription: String? {
             switch self {
@@ -28,6 +30,8 @@ enum PairingClient {
                 String(localized: "The Mac's answer wasn't understood. Update Annex on the Mac and on this iPhone.")
             case .refused(let reason):
                 String(localized: "The Mac refused the pairing: \(reason)")
+            case .notAuthentic:
+                String(localized: "The answer didn't come from the Mac that shows this code. Pair again, on a network you trust.")
             }
         }
     }
@@ -52,16 +56,17 @@ enum PairingClient {
             throw outcome.denied ? Failure.localNetworkDenied : Failure.unreachable
         }
         switch await exchange(line, on: connection, timeout: timeout) {
-        case .answer(let data): return (try decode(data), host)
+        case .answer(let data): return (try decode(data, code: link.code), host)
         case .closedWithoutAnswer: throw Failure.noAnswer
         case .localNetworkDenied: throw Failure.localNetworkDenied
         case .unreachable: throw Failure.unreachable
         }
     }
 
-    private static func decode(_ data: Data) throws -> PairingResponse {
+    static func decode(_ data: Data, code: Data) throws -> PairingResponse {
         guard let response = try? JSONDecoder().decode(PairingResponse.self, from: data) else { throw Failure.invalidAnswer }
         guard response.ok else { throw Failure.refused(response.error ?? String(localized: "no reason given")) }
+        guard response.isAuthentic(code: code) else { throw Failure.notAuthentic }
         return response
     }
 

@@ -2,6 +2,7 @@ import AppKit
 import ApplicationServices
 import Darwin
 import Foundation
+import Security
 
 // Annex's helper inside the workspace (installed at /usr/local/libexec/annex/AnnexHelper.app).
 //
@@ -14,7 +15,7 @@ import Foundation
 // Requests: {"op":"status"} {"op":"focus"} {"op":"fill","host":"...","kind":"username|password|code",
 // "username":"...","password":"...","code":"..."}. Answers never contain what was typed.
 
-let helperVersion = "7"
+let helperVersion = "8"
 let guestUser = "annex"
 
 func socketPath(home: String) -> String { "\(home)/Library/Application Support/AnnexHelper/helper.sock" }
@@ -47,11 +48,16 @@ enum AX {
     /// background app like this one gets no activation news (NSWorkspace's frontmost app goes stale), and the
     /// system-wide element sometimes has no focused app at all. Chrome builds the accessibility tree of web pages
     /// only for assistive apps; AXManualAccessibility asks for it.
-    static func chromeApp() -> AXUIElement? {
+    static func chromeApp() -> AXUIElement? { frontChrome()?.app }
+
+    /// The Chrome in front and its process. Only the real Google Chrome counts (by code signature, not by name),
+    /// started without command line switches (switches could turn off certificate checks or log the traffic).
+    static func frontChrome() -> (app: AXUIElement, pid: pid_t)? {
         for chrome in NSRunningApplication.runningApplications(withBundleIdentifier: "com.google.Chrome") {
-            let app = AXUIElementCreateApplication(chrome.processIdentifier)
+            let pid = chrome.processIdentifier
+            let app = AXUIElementCreateApplication(pid)
             enableWebAccessibility(app)
-            if (attribute(app, kAXFrontmostAttribute) as? Bool) == true { return app }
+            if (attribute(app, kAXFrontmostAttribute) as? Bool) == true { return (app, pid) }
         }
         return nil
     }
@@ -72,6 +78,20 @@ enum AX {
             usleep(150_000)
         } while Date() < deadline
         return nil
+    }
+
+    /// The page an element belongs to, only if that is the tab's own page (not a frame inside another page: the
+    /// outer page could move the focus away from the frame while typing).
+    static func topLevelWebArea(of element: AXUIElement) -> (area: AXUIElement, url: URL)? {
+        guard let found = webArea(of: element) else { return nil }
+        var current = parent(found.area)
+        var depth = 0
+        while let e = current, depth < 80 {
+            if string(e, kAXRoleAttribute) == "AXWebArea" { return nil }
+            current = parent(e)
+            depth += 1
+        }
+        return found
     }
 
     /// The web page an element belongs to and its URL.
@@ -141,11 +161,18 @@ enum Keyboard {
     /// Its own event state: what the user (or screen sharing) holds down doesn't mix into these events.
     static let source = CGEventSource(stateID: .privateState)
     static let command: CGKeyCode = 0x37
+    /// The verified Chrome: key events go to this process only, never to whatever app has the focus meanwhile.
+    nonisolated(unsafe) static var target: pid_t = 0
+
+    static func send(_ e: CGEvent?) {
+        guard let e, target > 0 else { return }
+        e.postToPid(target)
+    }
 
     static func event(_ key: CGKeyCode, down: Bool, flags: CGEventFlags) {
         let e = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: down)
         e?.flags = flags
-        e?.post(tap: .cghidEventTap)
+        send(e)
         usleep(8000)
     }
 
@@ -171,7 +198,7 @@ enum Keyboard {
                 let e = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: down)
                 e?.flags = []
                 e?.keyboardSetUnicodeString(stringLength: 1, unicodeString: &u)
-                e?.post(tap: .cghidEventTap)
+                send(e)
             }
             usleep(12000)
         }
@@ -184,8 +211,74 @@ enum Keyboard {
 // MARK: Requests
 
 func hostMatches(_ url: URL, _ host: String) -> Bool {
-    guard let h = url.host?.lowercased(), ["https", "http"].contains(url.scheme?.lowercased() ?? "") else { return false }
+    guard let h = url.host?.lowercased(), url.scheme?.lowercased() == "https" else { return false }
     return h == host.lowercased()
+}
+
+/// A website a sign-in may go to: https (the certificate proves the site) on a domain name. Not an address, not
+/// localhost or a name without a dot: a page the agent serves itself must not pass as a website.
+func signInSite(_ url: URL) -> String? {
+    guard url.scheme?.lowercased() == "https", let raw = url.host?.lowercased(), !raw.isEmpty else { return nil }
+    let host = raw.hasSuffix(".") ? String(raw.dropLast()) : raw
+    guard host.contains("."), !host.hasSuffix(".localhost"), host != "localhost", !host.hasSuffix(".local"),
+          !host.contains(":"), host.rangeOfCharacter(from: CharacterSet.letters) != nil else { return nil }
+    // dotted numbers (an IPv4 address) are no domain
+    if host.split(separator: ".").allSatisfy({ $0.allSatisfy(\.isNumber) }) { return nil }
+    return host
+}
+
+// MARK: Code signatures
+
+enum Signature {
+    static let chrome = "anchor apple generic and identifier \"com.google.Chrome\" and certificate leaf[subject.OU] = \"EQHXZ8M8AV\""
+    static let helper = "anchor apple generic and identifier \"dev.marquart.annex.guest-helper\" and certificate leaf[subject.OU] = \"S3725YB7V6\""
+
+    static func valid(_ attributes: [CFString: Any], _ requirement: String) -> Bool {
+        var code: SecCode?
+        guard SecCodeCopyGuestWithAttributes(nil, attributes as CFDictionary, [], &code) == errSecSuccess,
+              let code else { return false }
+        var req: SecRequirement?
+        guard SecRequirementCreateWithString(requirement as CFString, [], &req) == errSecSuccess, let req else { return false }
+        return SecCodeCheckValidity(code, [], req) == errSecSuccess
+    }
+
+    static func valid(pid: pid_t, _ requirement: String) -> Bool { valid([kSecGuestAttributePid: pid], requirement) }
+
+    static func valid(token: audit_token_t, _ requirement: String) -> Bool {
+        var t = token
+        return valid([kSecGuestAttributeAudit: Data(bytes: &t, count: MemoryLayout<audit_token_t>.size)], requirement)
+    }
+
+    /// The switches a process was started with (KERN_PROCARGS2), without the program path; nil if unreadable.
+    static func arguments(of pid: pid_t) -> [String]? {
+        var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
+        var size = 0
+        guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > 4 else { return nil }
+        var buffer = [UInt8](repeating: 0, count: size)
+        guard sysctl(&mib, 3, &buffer, &size, nil, 0) == 0, size > 4 else { return nil }
+        let argc = Int(buffer.withUnsafeBytes { $0.load(as: Int32.self) })
+        var i = 4
+        while i < size, buffer[i] != 0 { i += 1 }  // the executable path
+        while i < size, buffer[i] == 0 { i += 1 }
+        var args: [String] = []
+        while args.count < argc, i < size {
+            let start = i
+            while i < size, buffer[i] != 0 { i += 1 }
+            args.append(String(decoding: buffer[start..<i], as: UTF8.self))
+            i += 1
+        }
+        return Array(args.dropFirst())
+    }
+
+    /// Why this Chrome may not get a sign-in (nil: it may).
+    static func chromeProblem(_ pid: pid_t) -> String? {
+        guard valid(pid: pid, chrome) else { return "the app in front calls itself Chrome but isn't Google Chrome" }
+        guard let args = arguments(of: pid) else { return "Chrome's start options can't be checked" }
+        if args.contains(where: { !$0.hasPrefix("-psn_") }) {
+            return "Chrome was started with extra options; quit it and open it from the Dock"
+        }
+        return nil
+    }
 }
 
 /// Why there is no Chrome focus, step by step (for the agent's error message and for diagnosis).
@@ -204,14 +297,22 @@ func focusProblem() -> String {
 
 func currentFocus() -> [String: Any] {
     guard AXIsProcessTrusted() else { return ["ok": false, "error": "the helper is not allowed to use accessibility"] }
+    guard let chrome = AX.frontChrome() else { return ["ok": true, "kind": "none", "error": focusProblem()] }
+    if let problem = Signature.chromeProblem(chrome.pid) { return ["ok": true, "kind": "none", "error": problem] }
     guard let (_, element) = AX.chromeFocus() else {
         return ["ok": true, "kind": "none", "error": focusProblem()]
     }
     guard AX.isTextField(element) else { return ["ok": true, "kind": "none", "error": "the focus is not in a text field"] }
-    guard let (_, url) = AX.webArea(of: element), let host = url.host, ["https", "http"].contains(url.scheme ?? "") else {
+    guard let (_, url) = AX.webArea(of: element) else {
         return ["ok": true, "kind": "none", "error": "the field is not on a website"]
     }
-    return ["ok": true, "kind": AX.kind(element), "host": host.lowercased(), "app": "Google Chrome"]
+    guard AX.topLevelWebArea(of: element) != nil else {
+        return ["ok": true, "kind": "none", "error": "the field is inside a frame of another page; open the sign-in page itself"]
+    }
+    guard let host = signInSite(url) else {
+        return ["ok": true, "kind": "none", "error": "Annex signs in only on https websites with a domain name"]
+    }
+    return ["ok": true, "kind": AX.kind(element), "host": host, "app": "Google Chrome"]
 }
 
 /// Waits up to `seconds` for a password field on a page of `host` (two-step sign-ins show it after "Next").
@@ -240,10 +341,31 @@ func fill(_ r: [String: Any]) -> [String: Any] {
     guard AXIsProcessTrusted() else { return ["ok": false, "error": "the helper is not allowed to use accessibility"] }
     guard let host = r["host"] as? String, let kind = r["kind"] as? String else { return ["ok": false, "error": "bad request"] }
     let username = r["username"] as? String, password = r["password"] as? String, code = r["code"] as? String
-    // The focus must still be where the user approved it: a text field of the same kind on the same website.
-    guard let (_, element) = AX.chromeFocus(), AX.isTextField(element), let (area, url) = AX.webArea(of: element),
-          hostMatches(url, host) else {
+    // The real Chrome must be in front; keys go to its process only.
+    guard let chrome = AX.frontChrome() else { return ["ok": false, "error": "Chrome is not in front any more"] }
+    if let problem = Signature.chromeProblem(chrome.pid) { return ["ok": false, "error": problem] }
+    Keyboard.target = chrome.pid
+    defer { Keyboard.target = 0 }
+    // The focus must still be where the user approved it: a text field of the same kind on the tab's own page of
+    // the same website.
+    guard let (_, element) = AX.chromeFocus(), AX.isTextField(element),
+          let (area, url) = AX.topLevelWebArea(of: element), hostMatches(url, host) else {
         return ["ok": false, "error": "the focus moved away from the sign-in field on \(host)"]
+    }
+    /// Right before Return: still the same field on the same page, Chrome still in front. Otherwise what was typed
+    /// is taken out again and nothing is submitted.
+    func stillThere(_ field: AXUIElement) -> Bool {
+        guard let front = AX.frontChrome(), front.pid == chrome.pid, let (_, now) = AX.chromeFocus(wait: 1),
+              CFEqual(now, field), let (_, u) = AX.topLevelWebArea(of: now), hostMatches(u, host) else { return false }
+        return true
+    }
+    func submit(_ field: AXUIElement, _ filled: [String]) -> [String: Any] {
+        guard stillThere(field) else {
+            Keyboard.selectAll(); Keyboard.post(0x33)  // delete
+            return ["ok": false, "error": "the focus moved while typing; nothing was submitted"]
+        }
+        Keyboard.returnKey()
+        return ["ok": true, "filled": filled, "submitted": true, "host": host]
     }
     guard AX.kind(element) == kind || (kind == "username" && AX.kind(element) == "code") else {
         return ["ok": false, "error": "a different field has the focus now"]
@@ -253,8 +375,7 @@ func fill(_ r: [String: Any]) -> [String: Any] {
     case "code":
         guard let code, !code.isEmpty else { return ["ok": false, "error": "no code in the answer"] }
         Keyboard.selectAll(); Keyboard.type(code); filled.append("code")
-        Keyboard.returnKey()
-        return ["ok": true, "filled": filled, "submitted": true, "host": host]
+        return submit(element, filled)
 
     case "password":
         guard let password, !password.isEmpty else { return ["ok": false, "error": "no password in the answer"] }
@@ -275,16 +396,12 @@ func fill(_ r: [String: Any]) -> [String: Any] {
             return ["ok": false, "error": "the focus moved away from the password field"]
         }
         Keyboard.selectAll(); Keyboard.type(password); filled.append("password")
-        Keyboard.returnKey()
-        return ["ok": true, "filled": filled, "submitted": true, "host": host]
+        return submit(element, filled)
 
     default:  // username
         guard let username, !username.isEmpty else { return ["ok": false, "error": "no user name in the answer"] }
         Keyboard.selectAll(); Keyboard.type(username); filled.append("user name")
-        guard let password, !password.isEmpty else {
-            Keyboard.returnKey()
-            return ["ok": true, "filled": filled, "submitted": true, "host": host]
-        }
+        guard let password, !password.isEmpty else { return submit(element, filled) }
         // Same page: the next password field after the user name field. Otherwise submit and wait for the
         // password step on the same website.
         let fields = AX.fields(in: area)
@@ -293,6 +410,10 @@ func fill(_ r: [String: Any]) -> [String: Any] {
             target = fields[(index + 1)...].first(where: AX.isSecure)
         }
         if target == nil {
+            guard stillThere(element) else {
+                Keyboard.selectAll(); Keyboard.post(0x33)
+                return ["ok": false, "error": "the focus moved while typing; nothing was submitted"]
+            }
             Keyboard.returnKey()
             target = waitForPasswordField(host: host, seconds: 12)
             guard target != nil else {
@@ -304,13 +425,12 @@ func fill(_ r: [String: Any]) -> [String: Any] {
             return ["ok": false, "filled": filled, "error": "could not move to the password field"]
         }
         usleep(250_000)
-        guard let (_, now) = AX.chromeFocus(), CFEqual(now, field), let (_, u2) = AX.webArea(of: now),
-              hostMatches(u2, host) else {
+        guard let front = AX.frontChrome(), front.pid == chrome.pid, let (_, now) = AX.chromeFocus(), CFEqual(now, field),
+              let (_, u2) = AX.topLevelWebArea(of: now), hostMatches(u2, host) else {
             return ["ok": false, "filled": filled, "error": "the password field is not on \(host) any more"]
         }
         Keyboard.selectAll(); Keyboard.type(password); filled.append("password")
-        Keyboard.returnKey()
-        return ["ok": true, "filled": filled, "submitted": true, "host": host]
+        return submit(field, filled)
     }
 }
 
@@ -469,17 +589,15 @@ func client() -> Never {
         exit(1)
     }
     guard rc == 0 else { fail("the helper is not running (no one logged in, or it was stopped)") }
-    // Who answers? It must be this very program, running as the account.
-    var pid: pid_t = 0
-    var length = socklen_t(MemoryLayout<pid_t>.size)
-    guard getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &pid, &length) == 0, pid > 0 else { fail("cannot identify the helper") }
-    var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
-    guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 else { fail("cannot identify the helper") }
-    let peer = URL(fileURLWithPath: String(cString: buffer)).resolvingSymlinksInPath().path
+    // Who answers? It must be the signed helper (checked by code signature through the kernel's audit token, not
+    // by a path a process can borrow), running as the account, and this program must be the installed one.
+    var token = audit_token_t()
+    var length = socklen_t(MemoryLayout<audit_token_t>.size)
+    guard getsockopt(fd, SOL_LOCAL, LOCAL_PEERTOKEN, &token, &length) == 0 else { fail("cannot identify the helper") }
     let me = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath().path
     var uid: uid_t = 0, gid: gid_t = 0
-    guard getpeereid(fd, &uid, &gid) == 0, uid == pw.pointee.pw_uid, peer == me,
-          me.hasPrefix("/usr/local/libexec/annex/") else {
+    guard getpeereid(fd, &uid, &gid) == 0, uid == pw.pointee.pw_uid, token.val.1 == pw.pointee.pw_uid,
+          Signature.valid(token: token, Signature.helper), me.hasPrefix("/usr/local/libexec/annex/") else {
         fail("something other than the installed helper listens on its socket")
     }
     guard let line = readLine(STDIN_FILENO) else { fail("no request") }

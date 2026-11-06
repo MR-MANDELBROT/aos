@@ -94,21 +94,36 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   reports the focused field's kind and the page's host; Annex locks the agent's other tools, posts the request
   (iPhone) and shows the sign-in window on the Mac when no phone is connected (user name and password fields with
   AutoFill, so a password manager on the Mac fills them). Whoever answers first wins; 3 minutes.
-- **The helper** (`AnnexHelper.app`, LaunchAgent in the guest, Accessibility permission) checks right before typing
-  that the focus is still the field on that host, types with Unicode key events from its own event source (Command
-  pressed and released properly), finds the password field after the user name (same page, or after "Next" on the
-  same host), and submits. Annex reaches it as root over SSH through its own client mode, which accepts only the
-  installed helper binary as the peer of its socket (so nothing else in the guest can receive a password). Chrome's
-  web accessibility tree is asked for with `AXManualAccessibility` and `AXEnhancedUserInterface` (VoiceOver's way);
-  the frontmost app comes from LaunchServices plus `kAXFrontmostAttribute` (the system-wide element sometimes has no
-  focused app, and a background app's NSWorkspace doesn't follow activations). DevTools are off, so a filled password
-  can't be read back.
+- **The helper** (`AnnexHelper.app`, LaunchAgent in the guest, Accessibility permission) fills only into the real
+  Google Chrome (checked by code signature, Google's team EQHXZ8M8AV, not by name) started without command line
+  switches (they could turn off certificate checks or log traffic), only into a field of the tab's own page (not a
+  frame of another page) and only on an https website with a domain name (no address, no localhost: a page the
+  agent serves itself can't pass as a website; the certificate proves the site). It checks right before typing that
+  the focus is still that field, sends its key events to Chrome's process only (`postToPid`: another app taking the
+  focus meanwhile gets nothing), and right before Return checks again: if the focus moved, it deletes what it typed
+  and submits nothing. It types Unicode key events from its own event source (Command pressed and released
+  properly), finds the password field after the user name (same page, or after "Next" on the same host).
+  Annex reaches it as root over SSH through its own client mode, which checks the peer of its socket by code
+  signature through the kernel's audit token. Chrome's web accessibility tree is asked for with
+  `AXManualAccessibility` and `AXEnhancedUserInterface` (VoiceOver's way); the frontmost app comes from LaunchServices
+  plus `kAXFrontmostAttribute`. Chrome policies keep DevTools, extensions, `javascript:` URLs and Chrome's own pages
+  closed (`chrome://*` except new tab, downloads, history, settings and a few more; `chrome://net-export` could
+  otherwise record a filled sign-in).
 - **The permission**: once, right after screen sharing in the setup (or Settings > General > Signing in). Annex
-  starts the helper's request, opens Privacy & Security > Accessibility in the guest, and when macOS asks for the
-  password (LocalAuthenticationUI on macOS 27, SecurityAgent before) enters the workspace account's password itself:
-  the user only flips the switch. A finished workspace's account is a standard user: it becomes an administrator for
-  that moment and a standard user again (`prepare.sh` demotes it at the next start should that be interrupted). TCC
-  keeps the permission across helper updates (same signature).
+  starts the helper's request, opens Privacy & Security > Accessibility in the guest; during the first setup (no
+  agent has used the workspace yet) it enters the workspace account's password itself when macOS asks (the dialog is
+  recognized by its program's path). Later the person clicks "Enter the workspace password" themselves while looking
+  at the dialog: an agent could have left programs that wait for exactly this moment. A finished workspace's account
+  is a standard user: it becomes an administrator for that moment and a standard user again (`prepare.sh` demotes it
+  at the next start should that be interrupted). TCC keeps the permission across helper updates (same signature).
+- **What this does and doesn't promise.** Annex keeps the password away from the agent's tools and its normal ways of
+  working: the agent gets only the result, its screenshots show dots, the clipboard isn't used, and the obvious
+  side doors are closed (above). The account Chrome runs in is still the agent's: an agent that deliberately attacks
+  the workspace from the inside with programs of its own (for example Chrome's JavaScript from Apple Events switched
+  on in its profile, which has no policy) can't be ruled out completely. So: approve sign-ins for agents you trust
+  with the account, and prefer accounts with two-factor sign-in. Open hardening steps: a key only the signed helper
+  can use, so the request is encrypted to it (instead of trusting the socket's peer), and a check of Chrome's profile
+  settings before each sign-in.
 
 ## Two traps found on the way
 

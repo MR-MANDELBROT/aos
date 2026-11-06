@@ -26,8 +26,9 @@ public struct AuthorizedKeys: Sendable {
     static let marker = "annex-companion:"
 
     public func devices() -> [Device] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
-        return text.split(separator: "\n").compactMap { line in
+        guard let data = try? read() else { return [] }
+        return Self.lines(data).compactMap { raw in
+            let line = String(decoding: raw, as: UTF8.self)
             guard let range = line.range(of: Self.marker) else { return nil }
             let rest = line[range.upperBound...]
             let id = rest.prefix { !$0.isWhitespace }
@@ -36,7 +37,8 @@ public struct AuthorizedKeys: Sendable {
         }
     }
 
-    /// Appends a phone's key (options keep it to a shell, commands and forwarded connections).
+    /// Appends a phone's key (options keep it to a shell, commands and forwarded connections). The file is edited
+    /// as bytes, line by line: other lines stay exactly as they are, whatever their encoding.
     public func add(key: String, id: String, name: String) throws {
         let fm = FileManager.default
         let dir = url.deletingLastPathComponent()
@@ -45,34 +47,55 @@ public struct AuthorizedKeys: Sendable {
         }
         let safeName = name.unicodeScalars.filter { $0.properties.isAlphabetic || $0.properties.numericType != nil
             || " -_'’.".unicodeScalars.contains($0) }.map(String.init).joined().prefix(60)
-        let line = "no-agent-forwarding,no-X11-forwarding \(key) \(Self.marker)\(id) \(safeName)\n"
-        var text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
-        if !text.isEmpty && !text.hasSuffix("\n") { text += "\n" }
+        let line = Data("no-agent-forwarding,no-X11-forwarding \(key) \(Self.marker)\(id) \(safeName)".utf8)
         // The same key again (pairing a second time): keep one line
-        text = text.split(separator: "\n", omittingEmptySubsequences: false)
-            .filter { !$0.contains("\(Self.marker)\(id)") }.joined(separator: "\n")
-        if !text.isEmpty && !text.hasSuffix("\n") { text += "\n" }
-        text += line
-        try write(text)
+        var lines = try read().map(Self.lines) ?? []
+        lines.removeAll { Self.line($0, belongsTo: id) }
+        while lines.last?.isEmpty == true { lines.removeLast() }
+        lines.append(line)
+        try write(lines)
     }
 
     public func remove(id: String) throws {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return }
-        let kept = text.split(separator: "\n", omittingEmptySubsequences: false)
-            .filter { !$0.contains("\(Self.marker)\(id)") }.joined(separator: "\n")
-        try write(kept)
+        guard let data = try read() else { return }
+        var lines = Self.lines(data)
+        lines.removeAll { Self.line($0, belongsTo: id) }
+        while lines.last?.isEmpty == true { lines.removeLast() }
+        try write(lines)
     }
 
-    private func write(_ text: String) throws {
-        let tmp = url.deletingLastPathComponent().appendingPathComponent(".authorized_keys.annex-\(UUID().uuidString)")
-        try Data(text.utf8).write(to: tmp)
+    /// The real file when authorized_keys is a link (dotfiles kept elsewhere): the link stays a link.
+    private var target: URL { url.resolvingSymlinksInPath() }
+
+    /// The file's bytes, nil when there is none. A file that exists but can't be read is an error: it must never
+    /// be replaced by a file with only our line.
+    private func read() throws -> Data? {
+        guard FileManager.default.fileExists(atPath: target.path) else { return nil }
+        return try Data(contentsOf: target)
+    }
+
+    static func lines(_ data: Data) -> [Data] {
+        data.split(separator: 0x0A, omittingEmptySubsequences: false).map { Data($0) }
+    }
+
+    static func line(_ line: Data, belongsTo id: String) -> Bool {
+        line.range(of: Data("\(marker)\(id) ".utf8)) != nil || line.suffix(marker.utf8.count + id.utf8.count)
+            == Data("\(marker)\(id)".utf8)
+    }
+
+    private func write(_ lines: [Data]) throws {
+        var data = Data(lines.joined(separator: [0x0A]))
+        if !data.isEmpty { data.append(0x0A) }
+        let file = target
+        let tmp = file.deletingLastPathComponent().appendingPathComponent(".authorized_keys.annex-\(UUID().uuidString)")
+        try data.write(to: tmp)
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tmp.path)
-        if FileManager.default.fileExists(atPath: url.path) {
-            _ = try FileManager.default.replaceItemAt(url, withItemAt: tmp)
+        if FileManager.default.fileExists(atPath: file.path) {
+            _ = try FileManager.default.replaceItemAt(file, withItemAt: tmp)
         } else {
-            try FileManager.default.moveItem(at: tmp, to: url)
+            try FileManager.default.moveItem(at: tmp, to: file)
         }
-        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
     }
 }
 
@@ -113,6 +136,24 @@ public enum MacSSH {
             if name.hasPrefix("en") { lan.append(ip) } else if name.hasPrefix("utun") { vpn.append(ip) }
         }
         return out + lan + vpn
+    }
+
+    /// Whether an address is in the network of a bridge interface (the workspace's network).
+    public static func isOnVirtualMachineBridge(_ address: IPv4Address) -> Bool {
+        let remote = address.rawValue.withUnsafeBytes { $0.load(as: UInt32.self) }
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0, let first = ifaddr else { return false }
+        defer { freeifaddrs(ifaddr) }
+        var p: UnsafeMutablePointer<ifaddrs>? = first
+        while let a = p {
+            defer { p = a.pointee.ifa_next }
+            guard String(cString: a.pointee.ifa_name).hasPrefix("bridge"), let sa = a.pointee.ifa_addr,
+                  sa.pointee.sa_family == sa_family_t(AF_INET), let mask = a.pointee.ifa_netmask else { continue }
+            let local = sa.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee.sin_addr.s_addr }
+            let bits = mask.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee.sin_addr.s_addr }
+            if local & bits == remote & bits { return true }
+        }
+        return false
     }
 
     public static func macName() -> String {
@@ -206,6 +247,13 @@ public final class PairingSession {
         }
     }
 
+    /// HMAC-SHA256(code, "annex-pair-answer\n" + user + "\n" + companion): the phone checks that the answer comes
+    /// from the Mac that shows the code and wasn't changed on its way (it names the program the phone runs).
+    public nonisolated static func answerAuthentication(code: Data, user: String, companion: String) -> Data {
+        let message = Data(("annex-pair-answer\n" + user + "\n" + companion).utf8)
+        return Data(HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: code)))
+    }
+
     public func stop() {
         listener?.cancel()
         listener = nil
@@ -233,6 +281,12 @@ public final class PairingSession {
 
     private func accept(_ connection: NWConnection) {
         guard case .waiting = state else { connection.cancel(); return }
+        // Not from the workspace: it has no phone to pair, and must not use up the attempts.
+        if case .hostPort(let host, _) = connection.endpoint, case .ipv4(let address) = host,
+           MacSSH.isOnVirtualMachineBridge(address) {
+            connection.cancel()
+            return
+        }
         connection.start(queue: .main)
         receiveLine(connection, buffer: Data())
         // Whatever happens, the connection doesn't stay longer than 15 s.
@@ -274,7 +328,9 @@ public final class PairingSession {
         case .success(let request):
             do {
                 try keys.add(key: request.key, id: request.id, name: request.device)
-                respond(["ok": true, "user": NSUserName(), "companion": companion]) { [weak self] in
+                let user = NSUserName()
+                let mac = Self.answerAuthentication(code: code, user: user, companion: companion).base64EncodedString()
+                respond(["ok": true, "user": user, "companion": companion, "mac": mac]) { [weak self] in
                     self?.stop()
                     self?.state = .paired(request.device)
                 }

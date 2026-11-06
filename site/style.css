@@ -173,3 +173,5 @@ code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; padding: 2px 6
   nav .links a:not(.button) { display: none; }
 }
 nav .links a.button { color: #fff; }
+.section-note { max-width: 40em; margin: 26px 0 0; font-size: 15px; color: var(--muted); }
+.section-note a { color: inherit; text-decoration: underline; }

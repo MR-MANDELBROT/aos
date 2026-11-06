@@ -218,7 +218,7 @@ extension WorkspaceController {
             guard !text.isEmpty, text.count <= 4000 else { return .failure(r.id, "Nothing to type.") }
             do {
                 let client = try await screenClient(ip: ip)
-                try await typeRuns(text, client: client)
+                try await typeRuns(text, client: client, privately: true)
                 return AgentResponse(id: r.id, ok: true, text: "ok")
             } catch {
                 return .failure(r.id, error.localizedDescription)

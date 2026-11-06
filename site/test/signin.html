@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Annex Test-Anmeldung</title>
+<style>body{font:17px -apple-system,system-ui,sans-serif;margin:48px;max-width:560px}label{display:block;margin-top:14px}input{font:inherit;width:100%;padding:6px;margin-top:4px}button{font:inherit;margin-top:18px;padding:6px 14px}#out{margin-top:18px}</style>
+</head><body>
+<h1>Annex Test-Anmeldung</h1>
+<p>Testseite für die Anmeldung über Annex. Sie schickt nichts weg: Was eingetragen wird, bleibt in diesem Tab.</p>
+<form id="f" autocomplete="off">
+<label>E-Mail<input id="user" type="email" name="user"></label>
+<label>Passwort<input id="pw" type="password" name="pw"></label>
+<button type="submit">Anmelden</button>
+</form>
+<p id="out"></p>
+<script>
+document.getElementById('f').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var u = document.getElementById('user').value, p = document.getElementById('pw').value;
+  document.getElementById('out').textContent = 'Angekommen: ' + u + ', Passwortlänge ' + p.length;
+  document.getElementById('pw').value = '';
+});
+</script>
+</body></html>

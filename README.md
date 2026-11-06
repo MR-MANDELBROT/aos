@@ -64,9 +64,12 @@ Details: [Docs/DESIGN.md](Docs/DESIGN.md).
 - Sign-ins on websites expire when the workspace closes (Chrome policies, orderly shutdown), except the domains you
   choose to keep (default: Google, which reduces captchas).
 - Sign-ins: the agent clicks into the field and calls `sign_in`; you approve on your iPhone (Face ID) or your Mac, and
-  Annex Helper in the workspace types it into exactly that field on that website and submits. The agent never sees
-  passwords; DevTools are off, so the page can't hand a filled password back. The agent is told never to type
-  passwords or codes itself and never to solve captchas.
+  Annex Helper in the workspace types it into exactly that field and submits, only in the real Google Chrome (by code
+  signature) and only on https websites with a domain name. The agent gets the result, not the password; DevTools,
+  extensions and Chrome's internal pages are off, so the page can't hand a filled password back. The agent is told
+  never to type passwords or codes itself and never to solve captchas. An agent that deliberately attacks its own
+  workspace with programs of its own can't be ruled out completely (Docs/DESIGN.md, "What this does and doesn't
+  promise"): approve sign-ins for agents you trust with the account.
 - Files cross only through the exchange folder. Links planted by the guest are refused; files from the workspace are
   treated as untrusted. Credentials and key folders of your Mac can't be put into the workspace.
 - Annex does not collect, store or forward any agent's credentials and has no server of its own.

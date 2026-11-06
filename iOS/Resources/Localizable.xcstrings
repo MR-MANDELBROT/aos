@@ -2571,6 +2571,16 @@
         }
       }
     },
+    "The answer didn't come from the Mac that shows this code. Pair again, on a network you trust." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Antwort kam nicht von dem Mac, der diesen Code zeigt. Kopple noch einmal, in einem Netzwerk, dem du vertraust."
+          }
+        }
+      }
+    },
     "The camera isn't available here. Paste the pairing link instead: on the Mac, Annex can copy it." : {
       "localizations" : {
         "de" : {

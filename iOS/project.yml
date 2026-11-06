@@ -91,7 +91,6 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        UIRequiresFullScreen: true
         # annex-pair:// links from the Mac's QR code (the Camera app offers to open them in Annex)
         CFBundleURLTypes:
           - CFBundleURLName: dev.marquart.annex.pair

@@ -108,11 +108,15 @@ public struct Provisioner: Sendable {
         return wasAdmin
     }
 
+    static let securityAgent = "/System/Library/Frameworks/Security.framework/Versions/A/MachServices/SecurityAgent.bundle/Contents/MacOS/SecurityAgent"
+    static let localAuthenticationService = "/System/Library/PrivateFrameworks/LocalAuthenticationUI.framework/Versions/A/XPCServices/LocalAuthenticationRemoteService.xpc/Contents/MacOS/LocalAuthenticationRemoteService"
+
     /// While the user allows the helper: whether macOS shows its password dialog and whether the
     /// helper is allowed already, in one round trip.
     public func helperPermissionPoll(host: String) async -> (passwordDialog: Bool, trusted: Bool) {
         // macOS 27 asks through LocalAuthenticationUI; older versions through SecurityAgent.
-        let command = "if pgrep -x SecurityAgent >/dev/null || pgrep -f LocalAuthenticationRemoteService >/dev/null; " +
+        // By the program's path, not its name (any process can call itself LocalAuthenticationRemoteService).
+        let command = "if ps -axo comm= | grep -qx -e '\(Self.securityAgent)' -e '\(Self.localAuthenticationService)'; " +
             "then echo DIALOG; fi; " +
             "echo '{\"op\":\"status\"}' | \(GuestHelper.executable) client"
         guard let r = try? await maintenance(host: host).run(command, timeout: 20, check: false, what: "helper status")

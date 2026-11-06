@@ -342,7 +342,7 @@ public enum MCPTools {
             [
                 "name": "sign_in",
                 "title": "Sign in on a website",
-                "description": "Sign in on the website open in Chrome: first click into its user name, email, password or one-time code field, then call this. The user approves on their iPhone or Mac (up to 3 minutes) and \(Brand.name) fills the field (and the password after the user name) and submits; you never see the password. Then take a screenshot. If the website asks for the password or a code on the next page, click into that field and call sign_in again.",
+                "description": "Sign in on the website open in Chrome: first click into its user name, email, password or one-time code field, then call this. Works in Google Chrome opened from the Dock, on https websites with a domain name, on the sign-in page itself (not a page that embeds it). The user approves on their iPhone or Mac (up to 3 minutes) and \(Brand.name) fills the field (and the password after the user name) and submits; you never see the password. Then take a screenshot. If the website asks for the password or a code on the next page, click into that field and call sign_in again.",
                 "inputSchema": schema([
                     "purpose": ["type": "string", "description": "One sentence: why you need to sign in (shown to the user)."],
                 ], required: ["purpose"]),

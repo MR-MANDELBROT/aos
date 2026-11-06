@@ -179,6 +179,11 @@ extension AppModel {
         let deadline = Date().addingTimeInterval(600)
         var typedForDialog = false
         var typings = 0
+        // The password goes in by itself only during the first setup, before any agent ever used the workspace.
+        // Later an agent could have programs running there that wait for exactly this moment (a dialog of their
+        // own, or a real one they asked for): then the person looks at the workspace and clicks "Enter the
+        // workspace password" themselves.
+        let automatic = !setup.isComplete
         while Date() < deadline, helperState == .allowing {
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             let poll = await workspace.provisioner.helperPermissionPoll(host: ip)
@@ -186,7 +191,7 @@ extension AppModel {
                 await finishHelperPermission(ip: ip, allowed: true)
                 return
             }
-            if poll.passwordDialog && !typedForDialog && typings < 3 {
+            if automatic && poll.passwordDialog && !typedForDialog && typings < 3 {
                 try? await Task.sleep(nanoseconds: 1_200_000_000)  // the dialog takes the focus
                 do {
                     try await workspace.typeGuestPasswordForSetup()

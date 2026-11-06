@@ -38,7 +38,9 @@ struct WorkspaceWindow: View {
             } else if model.helperState == .allowing {
                 banner(symbol: "person.badge.key.fill", tint: BrandColor.indigo,
                        title: "Allow the \(Brand.name) helper below",
-                       detail: String(localized: "Click Open System Settings if macOS asks, then switch on Annex Helper. If notices at the top right cover the switch, close them with their x first. \(Brand.name) enters the password itself. This happens only once.")) {
+                       detail: model.setup.isComplete
+                           ? String(localized: "Click Open System Settings if macOS asks, then switch on Annex Helper. When macOS asks for the password to allow Annex Helper, click Enter the workspace password. Only then: if another window asks, click Not Now.")
+                           : String(localized: "Click Open System Settings if macOS asks, then switch on Annex Helper. If notices at the top right cover the switch, close them with their x first. \(Brand.name) enters the password itself. This happens only once.")) {
                     Button("Not Now") { Task { await model.cancelHelperPermission() } }
                         .buttonStyle(.glass)
                     Button("Enter the workspace password") { model.setup.typeGuestPassword(into: coordinator) }

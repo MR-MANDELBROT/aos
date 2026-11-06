@@ -227,6 +227,32 @@ struct PairingClientTests {
         }
     }
 
+    @Test func aChangedAnswerIsRejected() async throws {
+        let listener = try await FakePairingListener.start(code: Vectors.code,
+                                                           behavior: .tampered(user: "max", companion: "/x/annex-companion"))
+        defer { Task { await listener.stop() } }
+        let request = PairingRequest(device: "Test iPhone", key: Vectors.p256Key, code: Vectors.code)
+        await #expect(throws: PairingClient.Failure.notAuthentic) {
+            _ = try await PairingClient.send(request, link: link(listener.port))
+        }
+    }
+
+    @Test func answerChecks() {
+        let code = Vectors.code
+        let mac = PairingResponse.authentication(code: code, user: "max", companion: "/Applications/Annex.app/Contents/MacOS/annex-companion")
+        var r = PairingResponse(ok: true, user: "max", companion: "/Applications/Annex.app/Contents/MacOS/annex-companion",
+                                error: nil, mac: mac.base64EncodedString())
+        #expect(r.isAuthentic(code: code))
+        r.user = "root"
+        #expect(!r.isAuthentic(code: code))
+        #expect(!PairingResponse.isPlausible(companion: "/bin/sh"))
+        #expect(!PairingResponse.isPlausible(companion: "relative/annex-companion"))
+        #expect(!PairingResponse.isPlausible(user: "max; rm"))
+        // The reference vector the Mac's tests use too
+        #expect(PairingResponse.authentication(code: Data(0..<16), user: "max", companion: "/Applications/Annex.app/Contents/MacOS/annex-companion").base64EncodedString()
+                == "8QYDEJNYuWoqmC0VTGwqq2sI8T0/yVI70PvnQ9jXBK0=")
+    }
+
     @Test func aClosedListenerAndAHangUp() async throws {
         let hangUp = try await FakePairingListener.start(code: Vectors.code, behavior: .hangUp)
         defer { Task { await hangUp.stop() } }

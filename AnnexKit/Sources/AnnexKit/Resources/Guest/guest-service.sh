@@ -27,8 +27,8 @@ if [ -d "$TALD" ] && [ ! -L "$TALD" ] && [ ! -d "$TAL" ] && [ "$(stat -f '%u %Sf
   t="$(mktemp /var/db/annex-tal.XXXXXX)" && print -r -- '<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict><key>PersistentApps</key><array/></dict></plist>' > "$t" && chmod 644 "$t" && {
-    chflags nouchg "$TAL" 2>/dev/null
-    mv -f "$t" "$TAL" && chflags uchg "$TAL" && note "list of apps to reopen at login locked empty"
+    chflags -h nouchg "$TAL" 2>/dev/null
+    mv -f "$t" "$TAL" && chflags -h uchg "$TAL" && note "list of apps to reopen at login locked empty"
   }
   rm -f "$t" 2>/dev/null
 fi

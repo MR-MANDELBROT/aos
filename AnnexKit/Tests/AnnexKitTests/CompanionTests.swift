@@ -80,6 +80,47 @@ final class PairingTests: XCTestCase {
         XCTAssertTrue(try String(contentsOf: file, encoding: .utf8).contains("someone@laptop"))
     }
 
+    func testAuthorizedKeysKeepsOtherBytesAndLinks() throws {
+        let fm = FileManager.default
+        let dir = fm.temporaryDirectory.appendingPathComponent("annex-ak2-\(UUID().uuidString)")
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        // A line that isn't UTF-8 (a Latin-1 comment) stays byte for byte
+        let real = dir.appendingPathComponent("real_keys")
+        var original = Data("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOld J".utf8)
+        original.append(0xF6)  // ö in Latin-1
+        original.append(contentsOf: Array("rg@box\n".utf8))
+        try original.write(to: real)
+        // authorized_keys is a link to it (dotfiles): the link stays, the real file changes
+        let link = dir.appendingPathComponent("authorized_keys")
+        try fm.createSymbolicLink(at: link, withDestinationURL: real)
+        let keys = AuthorizedKeys(url: link)
+        try keys.add(key: key, id: "abcdef123456", name: "iPhone")
+        XCTAssertEqual(try fm.destinationOfSymbolicLink(atPath: link.path), real.path)
+        let after = try Data(contentsOf: real)
+        XCTAssertTrue(after.starts(with: original), "the old line is unchanged")
+        XCTAssertEqual(keys.devices().map(\.id), ["abcdef123456"])
+        try keys.remove(id: "abcdef123456")
+        XCTAssertEqual(try Data(contentsOf: real), original)
+
+        // A file that exists but can't be read: nothing is written
+        let locked = dir.appendingPathComponent("locked")
+        try Data("ssh-ed25519 AAAA keep\n".utf8).write(to: locked)
+        try fm.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+        defer { try? fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: locked.path) }
+        if getuid() != 0 {
+            XCTAssertThrowsError(try AuthorizedKeys(url: locked).add(key: key, id: "abcdef123456", name: "iPhone"))
+            try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: locked.path)
+            XCTAssertEqual(try String(contentsOf: locked, encoding: .utf8), "ssh-ed25519 AAAA keep\n")
+        }
+    }
+
+    func testAnswerAuthenticationVectorFromThePhone() {
+        // The same vector as the iPhone's tests (SSHIntegrationTests.answerChecks)
+        let mac = PairingSession.answerAuthentication(code: Data(0..<16), user: "max",
+                                                      companion: "/Applications/Annex.app/Contents/MacOS/annex-companion")
+        XCTAssertEqual(mac.base64EncodedString(), "8QYDEJNYuWoqmC0VTGwqq2sI8T0/yVI70PvnQ9jXBK0=")
+    }
+
     func testHostKeyFingerprintMatchesSSHKeygen() throws {
         guard let mine = MacSSH.hostKeyFingerprint() else { throw XCTSkip("no ed25519 host key on this Mac") }
         let p = Process()

@@ -34,8 +34,15 @@ public struct ChromePolicies: Sendable, Equatable {
             "DeveloperToolsAvailability": 2,
             "ExtensionInstallBlocklist": ["*"],
             "RemoteDebuggingAllowed": false,
-            "URLBlocklist": ["javascript:*", "view-source:*", "chrome://inspect", "chrome://extensions",
-                             "chrome://flags", "chrome-devtools://*", "devtools://*"],
+            // Chrome's own pages are closed except the few a browser needs: chrome://net-export and the tracing
+            // pages could record a filled sign-in, others reveal or change too much.
+            "URLBlocklist": ["javascript:*", "view-source:*", "chrome://*", "chrome-untrusted://*",
+                             "chrome-devtools://*", "devtools://*", "chrome://settings/passwords",
+                             "chrome://settings/autofill", "chrome://settings/addresses", "chrome://settings/payments"],
+            "URLAllowlist": ["chrome://newtab", "chrome://new-tab-page", "chrome://new-tab-page-third-party",
+                             "chrome-untrusted://new-tab-page", "chrome://search-engine-choice", "chrome://downloads",
+                             "chrome://print", "chrome://welcome", "chrome://intro", "chrome://profile-picker",
+                             "chrome://whats-new", "chrome://history", "chrome://settings"],
         ]
         return try PropertyListSerialization.data(fromPropertyList: policies, format: .xml, options: 0)
     }

@@ -302,6 +302,8 @@ DE.update({
     'No iPhone paired yet.': 'Noch kein iPhone gekoppelt.',
     'No sign-in waiting.': 'Keine Anmeldung wartet.',
     'Not Now': 'Nicht jetzt',
+    'Click Open System Settings if macOS asks, then switch on Annex Helper. When macOS asks for the password to allow Annex Helper, click Enter the workspace password. Only then: if another window asks, click Not Now.':
+        'Klicke auf „Systemeinstellungen öffnen“, falls macOS fragt, und schalte dann „Annex Helper“ ein. Fragt macOS nach dem Passwort, um Annex Helper zu erlauben, klicke auf „Passwort des Arbeitsplatzes eingeben“. Nur dann: Fragt ein anderes Fenster, klicke auf „Nicht jetzt“.',
     'Move Annex to the Applications folder?': 'Annex in den Ordner „Programme“ bewegen?',
     'Annex keeps working in the background and registers itself with your agents and your iPhone. For that it needs a fixed place. It copies itself there and opens again.':
         'Annex arbeitet im Hintergrund und trägt sich bei deinen Agenten und deinem iPhone ein. Dafür braucht es einen festen Platz. Es kopiert sich dorthin und öffnet sich neu.',
@@ -339,7 +341,8 @@ DE.update({
     'Signing in': 'Anmelden',
     'Starting': 'Startet',
     'Switch on Annex Helper in the workspace window.': 'Schalte „Annex Helper“ im Fenster des Arbeitsplatzes ein.',
-    'Tap Connect to Mac.': 'Tippe auf „Mit Mac verbinden“.',
+    'Tap “Pair with your Mac”.': 'Tippe auf „Mit deinem Mac koppeln“.',
+    "%@ isn't on your iPhone yet?": '%@ ist noch nicht auf deinem iPhone?',
     "The Mac doesn't go to sleep by itself while a session or a kept conversation runs. Closing a laptop's lid still puts it to sleep.": 'Der Mac schläft nicht von selbst ein, solange eine Sitzung oder eine gehaltene Unterhaltung läuft. Zuklappen schickt ein MacBook trotzdem in den Ruhezustand.',
     'The code expired': 'Der Code ist abgelaufen',
     'The code is valid until %@ and only once.': 'Der Code gilt bis %@ und nur einmal.',

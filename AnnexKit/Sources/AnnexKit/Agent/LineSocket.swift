@@ -54,10 +54,13 @@ public final class LineSocketServer: @unchecked Sendable {
         umask(old)
         guard rc == 0 else { throw SocketError.system("bind \(path)", errno) }
         chmod(path, 0o600)
-        guard listen(fd, 8) == 0 else { throw SocketError.system("listen", errno) }
+        // A burst of connections (several agents, a phone) must not be refused: a full backlog refuses Unix
+        // socket connections at once. The listening socket doesn't block; each event takes every waiting connection.
+        guard listen(fd, SOMAXCONN) == 0 else { throw SocketError.system("listen", errno) }
+        _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK)
         let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: .global())
         let listening = fd
-        src.setEventHandler { [weak self] in self?.acceptOne() }
+        src.setEventHandler { [weak self] in self?.acceptWaiting() }
         // The descriptor may only be closed once the source is cancelled (libdispatch requires it).
         src.setCancelHandler { close(listening) }
         src.resume()
@@ -75,9 +78,20 @@ public final class LineSocketServer: @unchecked Sendable {
         unlink(path)
     }
 
-    private func acceptOne() {
-        let client = accept(fd, nil, nil)
-        guard client >= 0 else { return }
+    private func acceptWaiting() {
+        while true {
+            let client = accept(fd, nil, nil)
+            if client < 0 {
+                if errno == EINTR || errno == ECONNABORTED { continue }
+                return  // EAGAIN: none left
+            }
+            // Accepted sockets inherit O_NONBLOCK on macOS; the connection thread reads blocking
+            _ = fcntl(client, F_SETFL, fcntl(client, F_GETFL) & ~O_NONBLOCK)
+            serve(client)
+        }
+    }
+
+    private func serve(_ client: Int32) {
         var uid: uid_t = 0, gid: gid_t = 0
         guard getpeereid(client, &uid, &gid) == 0, uid == getuid() else { close(client); return }
         var on: Int32 = 1

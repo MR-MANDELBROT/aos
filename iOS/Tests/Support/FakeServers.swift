@@ -147,7 +147,7 @@ private final class RFBSession: ChannelInboundHandler, @unchecked Sendable {
 
 /// The Mac's pairing listener: checks the proof with the code and answers like Annex on the Mac.
 final class FakePairingListener: @unchecked Sendable {
-    enum Behavior: Sendable { case accept(user: String, companion: String), refuse(String), hangUp }
+    enum Behavior: Sendable { case accept(user: String, companion: String), tampered(user: String, companion: String), refuse(String), hangUp }
 
     let port: Int
     private let channel: Channel
@@ -213,8 +213,13 @@ private final class PairingSession: ChannelInboundHandler, @unchecked Sendable {
         let answer: String
         switch behavior {
         case .accept(let user, let companion) where expected == request.proof:
-            answer = #"{"ok":true,"user":"\#(user)","companion":"\#(companion)"}"#
-        case .accept:
+            let mac = PairingResponse.authentication(code: code, user: user, companion: companion).base64EncodedString()
+            answer = #"{"ok":true,"user":"\#(user)","companion":"\#(companion)","mac":"\#(mac)"}"#
+        case .tampered(let user, let companion) where expected == request.proof:
+            // Signed for the real path, then changed on the way
+            let mac = PairingResponse.authentication(code: code, user: user, companion: companion).base64EncodedString()
+            answer = #"{"ok":true,"user":"\#(user)","companion":"/bin/sh","mac":"\#(mac)"}"#
+        case .accept, .tampered:
             answer = #"{"ok":false,"error":"wrong proof"}"#
         case .refuse(let reason):
             answer = #"{"ok":false,"error":"\#(reason)"}"#

@@ -53,8 +53,11 @@ user, wherever they are:
 4. The Mac checks the proof (constant-time), appends
    `no-agent-forwarding,no-X11-forwarding ecdsa-sha2-nistp256 AAAA... annex-companion:<id> <device name>`
    to `~/.ssh/authorized_keys` (folder 0700, file 0600, `<id>` = first 12 hex characters of the key's SHA-256) and
-   answers one line: `{"ok":true,"user":"<user>","companion":"/Applications/Annex.app/Contents/MacOS/annex-companion"}`
-   or `{"ok":false,"error":"..."}`. The listener closes.
+   answers one line: `{"ok":true,"user":"<user>","companion":"/Applications/Annex.app/Contents/MacOS/annex-companion","mac":"<base64>"}`
+   or `{"ok":false,"error":"..."}`. The listener closes. `mac` is HMAC-SHA256(`c`, `"annex-pair-answer\n" + user +
+   "\n" + companion`): the iPhone accepts the answer only with it (so nobody on the network can change the program
+   the iPhone will run), and only a plain user name and an absolute path ending in `/annex-companion`. Connections
+   from the workspace's own network are ignored (they can't use up the attempts).
 5. The iPhone connects over SSH (user `u`, port `s`) and accepts the Mac only if its host key matches `k`. From then
    on the host key is pinned.
 
@@ -106,10 +109,12 @@ still has at least two labels (`amazon.de` matches `www.amazon.de`; `login.tum.d
 
 ## Filling in the workspace (Mac side)
 
-The agent calls `request_sign_in(host, purpose)`. Annex blocks all other workspace tools while the request runs,
-sends the request to the iPhone, and with the answer types into the workspace only if the focused element in the
-guest is a password or user name field of a page on that host (checked by a helper in the guest). DevTools are off
-in the workspace's Chrome, so a filled password can't be read back.
+The agent clicks into the sign-in field and calls `sign_in(purpose)`. Annex asks the helper in the workspace (Annex
+Helper, an app with the Accessibility permission, installed and checked by code signature) which field has the focus
+and on which website; only a user name, password or one-time code field counts. Annex blocks all other workspace
+tools while the request runs, shows the request on the Mac and sends it to the iPhone; whoever answers first wins.
+With the answer the helper types into the workspace only if the focus is still on that website, and submits. The
+agent gets only the result. DevTools are off in the workspace's Chrome, so a filled password can't be read back.
 
 ## iPhone app structure
 

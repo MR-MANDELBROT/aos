@@ -222,6 +222,8 @@ DE = {
         'Kopple nur mit deinem eigenen Mac. Annex auf dem Mac trägt den Schlüssel dieses iPhones dort bei den SSH-Schlüsseln deines Benutzers ein.',
     'Pair with a Mac': 'Mit einem Mac koppeln',
     'Pair with your Mac': 'Mit deinem Mac koppeln',
+    "The answer didn't come from the Mac that shows this code. Pair again, on a network you trust.":
+        'Die Antwort kam nicht von dem Mac, der diesen Code zeigt. Kopple noch einmal, in einem Netzwerk, dem du vertraust.',
     'Pair your Mac or add a computer to open a terminal on it.': 'Kopple deinen Mac oder füge einen Rechner hinzu, um dort ein Terminal zu öffnen.',
     'Paired': 'Gekoppelt',
     'Paired Macs': 'Gekoppelte Macs',
