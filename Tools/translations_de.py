@@ -393,3 +393,65 @@ DE.update({
     'Click Open System Settings if macOS asks, then switch on aOS Helper. If notices at the top right cover the switch, close them with their x first. %@ enters the password itself. This happens only once.': 'Fragt macOS, klicke auf „Systemeinstellungen öffnen“, dann schalte „aOS Helper“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie vorher mit ihrem x. Das Passwort gibt %@ selbst ein. Das ist nur einmal nötig.',
     'Switch on Screen Sharing. If notices at the top right cover the switch, close them with their x.': 'Schalte „Bildschirmfreigabe“ ein. Verdecken Hinweise oben rechts den Schalter, schließe sie mit ihrem x.',
 })
+
+DE.update({
+    # Staying awake with the lid closed, freezing, the iPhone hotspot (2026-11-06)
+    'Staying awake': 'Wach bleiben',
+    'While the lid is open': 'Solange der Deckel offen ist',
+    'Also with the lid closed': 'Auch mit geschlossenem Deckel',
+    'The Mac sleeps as usual. Sessions, kept conversations and the workspace pause while it sleeps.':
+        'Der Mac schläft wie gewohnt. Sitzungen, gehaltene Unterhaltungen und der Arbeitsplatz pausieren, solange er schläft.',
+    "While a session, a kept conversation or the workspace runs, the Mac doesn't go to sleep by itself. Closing the lid puts it to sleep.":
+        'Solange eine Sitzung, eine gehaltene Unterhaltung oder der Arbeitsplatz läuft, schläft der Mac nicht von selbst ein. Zuklappen schickt ihn in den Ruhezustand.',
+    'The Mac also stays awake with the lid closed, on battery too. Meanwhile %@ freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. Below 10 percent battery, or when it gets too hot, the Mac sleeps.':
+        'Der Mac bleibt auch mit geschlossenem Deckel wach, auch im Akkubetrieb. Solange friert %@ deine anderen Apps ein und schaltet den Bildschirm aus; klappst du ihn auf, läuft alles weiter. Claude, Terminals, Code-Editoren und deine Agents laufen weiter. Unter 10 Prozent Akku oder wenn er zu heiß wird, schläft der Mac.',
+    'Battery below 10 percent: the Mac may sleep now.': 'Akku unter 10 Prozent: Der Mac darf jetzt schlafen.',
+    'The Mac is too hot: it may sleep now.': 'Der Mac ist zu heiß: Er darf jetzt schlafen.',
+    'Nothing to keep reachable right now: the Mac sleeps as usual.': 'Gerade muss nichts erreichbar bleiben: Der Mac schläft wie gewohnt.',
+    'Lid closed: the Mac stays awake.': 'Deckel zu: Der Mac bleibt wach.',
+    'Lid closed: 1 app frozen until you open it.': 'Deckel zu: 1 App eingefroren, bis du ihn aufklappst.',
+    'Lid closed: %lld apps frozen until you open it.': 'Deckel zu: %lld Apps eingefroren, bis du ihn aufklappst.',
+    'Ready: the Mac stays awake when you close the lid.': 'Bereit: Der Mac bleibt wach, wenn du den Deckel zuklappst.',
+    'Allowed': 'Erlaubt',
+    'Open Login Items': 'Anmeldeobjekte öffnen',
+    'Set Up': 'Einrichten',
+    'Background helper': 'Hintergrunddienst',
+    'Keeps the Mac awake with the lid closed and changes Wi-Fi settings for you.':
+        'Hält den Mac mit geschlossenem Deckel wach und ändert WLAN-Einstellungen für dich.',
+    'macOS asks you once: switch on %@ under Login Items & Extensions, "Allow in the Background".':
+        'macOS fragt dich einmal: Schalte %@ unter „Anmeldeobjekte & Erweiterungen“ bei „Im Hintergrund erlauben“ ein.',
+    'Needed to keep the Mac awake with the lid closed. macOS asks you once to allow it.':
+        'Nötig, damit der Mac mit geschlossenem Deckel wach bleibt. macOS fragt dich einmal, ob du ihn erlaubst.',
+    'Managed by Cloupi': 'Von Cloupi verwaltet',
+    "Cloupi's own service keeps this Mac awake and looks after Wi-Fi. %@ leaves both alone.":
+        'Cloupis eigener Dienst hält diesen Mac wach und kümmert sich ums WLAN. %@ lässt beides in Ruhe.',
+    'Changing the Wi-Fi settings. Wi-Fi reconnects for a moment.': 'Ändere die WLAN-Einstellungen. Das WLAN verbindet sich kurz neu.',
+    "macOS didn't take the change.": 'macOS hat die Änderung nicht übernommen.',
+    'Open Wi-Fi Settings': 'WLAN-Einstellungen öffnen',
+    'iPhone hotspot': 'iPhone-Hotspot',
+    "When should this Mac join your iPhone's hotspot?": 'Wann soll sich dieser Mac mit dem Hotspot deines iPhones verbinden?',
+    'Only when I switch it on on the iPhone': 'Nur wenn ich ihn am iPhone einschalte',
+    'macOS never joins or wakes your hotspot by itself. Switch it on and %@ connects (with the lid closed as soon as your iPhone sends it); switch it off and the Mac stays disconnected. Meanwhile the Mac keeps looking for known Wi-Fi.':
+        'macOS verbindet sich nie von selbst mit deinem Hotspot und weckt ihn nicht auf. Schaltest du ihn ein, verbindet sich %@ (mit geschlossenem Deckel, sobald dein iPhone ihn sendet); schaltest du ihn aus, bleibt der Mac getrennt. Solange sucht der Mac weiter nach bekannten WLANs.',
+    'Automatically (uses more energy)': 'Automatisch (braucht mehr Energie)',
+    "macOS joins your hotspot whenever it can and may switch it on by itself when there's no Wi-Fi. That keeps your iPhone's hotspot busy and uses its battery.":
+        'macOS verbindet sich mit deinem Hotspot, wann immer es geht, und schaltet ihn ohne WLAN auch selbst ein. Das hält den Hotspot deines iPhones belegt und kostet seinen Akku.',
+    "%@ changes this in macOS's Wi-Fi settings for you.": '%@ stellt das für dich in den WLAN-Einstellungen von macOS um.',
+    'Automatic': 'Automatisch',
+    'Ask to Join': 'Fragen',
+    'Never': 'Nie',
+    'unknown': 'unbekannt',
+    'on': 'an',
+    'mixed': 'gemischt',
+    'No iPhone hotspot known to this Mac yet: join yours once from the Wi-Fi menu. Ask to join hotspots: %@.':
+        'Diesem Mac ist noch kein iPhone-Hotspot bekannt: Verbinde dich einmal über das WLAN-Menü mit deinem. Fragen, ob Hotspots verbunden werden sollen: %@.',
+    'Now in macOS: auto-join for your hotspot %@, Ask to join hotspots: %@.':
+        'Jetzt in macOS: Automatisch verbinden für deinen Hotspot %@, Fragen, ob Hotspots verbunden werden sollen: %@.',
+    'Stay awake with the lid closed': 'Mit geschlossenem Deckel wach bleiben',
+    'Conversations and agents keep working with the lid closed, also on battery. Meanwhile %@ freezes your other apps; they continue when you open the lid.':
+        'Unterhaltungen und Agents arbeiten mit geschlossenem Deckel weiter, auch im Akkubetrieb. Solange friert %@ deine anderen Apps ein; sie laufen weiter, wenn du den Deckel aufklappst.',
+    "macOS asks you once to allow %@'s background helper.": 'macOS fragt dich einmal, ob du den Hintergrunddienst von %@ erlaubst.',
+    "Allow %@'s background helper": 'Hintergrunddienst von %@ erlauben',
+    'So the Mac stays awake with the lid closed: Login Items & Extensions, "Allow in the Background".':
+        'Damit der Mac mit geschlossenem Deckel wach bleibt: „Anmeldeobjekte & Erweiterungen“, „Im Hintergrund erlauben“.',
+})

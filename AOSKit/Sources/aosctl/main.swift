@@ -12,6 +12,7 @@ import Virtualization
 //   aosctl run [--provision]      start the VM (first boot: account, auto login, SSH) and keep it running;
 //                                   Ctrl-C suspends it
 //   aosctl ip                     guest address
+//   aosctl power [--plan]         what the stay-awake logic sees (read only); --plan: what would freeze now
 
 setvbuf(stdout, nil, _IOLBF, 0)
 let paths = Paths.default
@@ -356,6 +357,45 @@ func runCommand() async {
         case "ip":
             let host = VMHost(bundle: bundle, paths: paths)
             print(try host.guestAddress() ?? "no address")
+            exit(0)
+
+        case "power":
+            // power: what the stay-awake logic sees, read only (no helper, nothing changes)
+            let settings = AgentSettings.load(paths)
+            let power = MacState.power()
+            let displays = MacState.displays()
+            print("setting: stay awake \(settings.stayAwake.rawValue), hotspot \(settings.hotspotJoin?.rawValue ?? "not chosen")")
+            print("Cloupi present: \(CloupiPresence.detectWithLaunchd())")
+            print("lid closed: \(MacState.lidClosed().map(String.init) ?? "unknown"), power: \(power.map { $0.onAC ? "adapter" : "battery" } ?? "unknown")"
+                  + ", charge \(power?.percent.map { "\($0)%" } ?? "unknown"), thermal critical: \(MacState.thermalCritical)")
+            print("displays: built-in awake \(displays?.builtinAwake ?? false), external \(displays?.external ?? -1), idle \(Int(MacState.idleSeconds())) s")
+            let sleepOutput = (try? Subprocess.runBlocking("/usr/bin/pmset", ["-g"], timeout: 10)).map { String(decoding: $0.stdout, as: UTF8.self) } ?? ""
+            print("pmset SleepDisabled: \(HoldPolicy.parseDisableSleep(sleepOutput))")
+            let ip = WiFiRadio.ipv4()
+            print("Wi-Fi on: \(WiFiRadio.powerOn().map(String.init) ?? "no answer"), address: \(ip.isEmpty ? "none" : (NetworkCarePolicy.isHotspotAddress(ip) ? "iPhone hotspot" : "yes"))"
+                  + ", online through another interface: \(WiFiRadio.onlineElsewhere())")
+            if let w = WiFiRadio.readState() {
+                print("Ask to join hotspots: \(w.hotspotMode?.schemaString ?? "unknown"); personal hotspots: \(w.personalHotspots.map(String.init) ?? "unknown"), auto-join off: \(w.autoJoinOff.map(String.init) ?? "unknown")")
+                if let choice = settings.hotspotJoin { print("matches the choice: \(w.matches(choice))") }
+            } else {
+                print("Wi-Fi settings: no answer from airportd")
+            }
+            let record = FrozenRecord.read(FrozenRecord.url(paths))
+            print("frozen now: \(record?.processes.count ?? 0) processes" + (record?.owner.map { ", owner pid \($0.pid) alive: \($0.isAlive)" } ?? ""))
+            if args.contains("--plan"), let table = ProcessTable.snapshot() {
+                // What would freeze now (nothing is signalled)
+                let apps = NSWorkspace.shared.runningApplications.compactMap { app -> RunningAppInfo? in
+                    guard !app.isTerminated, let id = app.bundleIdentifier else { return nil }
+                    return RunningAppInfo(pid: app.processIdentifier, bundleID: id, name: app.localizedName ?? id,
+                                          regular: app.activationPolicy == .regular)
+                }
+                let targets = FreezePlanner.plan(apps: apps, table: table, uid: getuid(), me: getpid(),
+                                                 responsible: ProcessTable.responsibleMap(table, uid: getuid()),
+                                                 isAgent: ProcessTable.isAgent)
+                print("would freeze \(targets.count) apps: " + targets.map { "\($0.app) (\($0.processes.count))" }.joined(separator: ", "))
+                let kept = apps.filter { a in a.regular && !targets.contains { $0.bundleID == a.bundleID } }.map(\.name)
+                print("stay awake: " + kept.joined(separator: ", "))
+            }
             exit(0)
 
         default:

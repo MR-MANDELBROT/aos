@@ -24,7 +24,8 @@ final class AppModel: ObservableObject {
     let updater: SPUStandardUpdaterController
     private var server: LineSocketServer?
     private var statusTimer: Timer?
-    private let keepAwake = KeepAwake()
+    /// Staying awake, freezing with the lid closed, network care and the hotspot choice.
+    let power: PowerController
 
     @Published var vmPhase: VMHost.Phase = .stopped
     @Published var status: AgentStatus?
@@ -61,10 +62,12 @@ final class AppModel: ObservableObject {
         workspace = WorkspaceController(paths: paths)
         settings = workspace.settings
         setup = SetupController(paths: paths, workspace: workspace)
+        power = PowerController(paths: paths)
         let key = Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String ?? ""
         updater = SPUStandardUpdaterController(startingUpdater: !key.isEmpty && !key.hasPrefix("REPLACE"),
                                                updaterDelegate: nil, userDriverDelegate: nil)
         workspace.log = { [weak self] line in self?.append(line) }
+        power.log = { [weak self] line in self?.append(line) }
         workspace.onChange = { [weak self] in self?.refresh() }
         workspace.onHelpRequest = { [weak self] purpose in
             guard let self else { return "The app is not available." }
@@ -161,7 +164,7 @@ final class AppModel: ObservableObject {
                                                     expires: Date().addingTimeInterval(180)))
         case "menu":
             // The menu bar panel, in a window of its own
-            let host = NSHostingView(rootView: MenuView().environmentObject(self))
+            let host = NSHostingView(rootView: MenuView().environmentObject(self).environmentObject(power))
             let size = host.fittingSize
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: max(size.width, 320), height: max(size.height, 200)),
                                   styleMask: [.titled, .closable], backing: .buffered, defer: false)
@@ -213,6 +216,8 @@ final class AppModel: ObservableObject {
         }
         workspace.startIdleWatch()
         updateSessionAgent()
+        power.start()
+        if settings.stayAwake == .lidClosed { power.ensureHelperRegistered() }
         // Cheap state every 2 s; the login item status means two XPC calls to macOS, so only every 30 s
         // (and whenever a view asks with refresh()).
         statusTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
@@ -277,6 +282,7 @@ final class AppModel: ObservableObject {
     }
 
     func prepareToQuit() async {
+        await power.shutdown()
         if workspace.host.isRunning { _ = await workspace.close() }
         server?.stop()
     }
@@ -292,11 +298,10 @@ final class AppModel: ObservableObject {
         if loginItems {
             loginItemEnabled = SMAppService.mainApp.status == .enabled
             sessionAgentStatus = SessionAgent.service.status
+            power.refreshHelperStatus()
         }
         setup.refreshCompletion()
-        // Awake while something must stay reachable: aOS's own session or kept conversations.
-        let ownSession = settings.sessionEnabled && ClaudeCode.isConfigured(session: paths.session)
-        keepAwake.set(settings.keepAwake && sessionAgentStatus == .enabled && (ownSession || reachableCount > 0))
+        if !Self.isPreview { power.update(settings: settings, needed: reachabilityNeeded) }
         updateActivationPolicy()
     }
 
@@ -318,15 +323,31 @@ final class AppModel: ObservableObject {
         return "macwindow"
     }
 
+    /// Something must stay reachable, so the Mac stays awake (Settings > General): aOS's own session, the
+    /// conversations the keeper looks after (also while one is open in the Claude app or a terminal; the selection
+    /// changes rarely, so the hold doesn't flap while one restarts), or the workspace in use.
+    var reachabilityNeeded: Bool {
+        let ownSession = settings.sessionEnabled && ClaudeCode.isConfigured(session: paths.session)
+        let kept = settings.keepReachable
+            && (keeper?.entries.contains { $0.state != .failed && $0.state != .folderMissing } ?? false)
+        let background = sessionAgentStatus == .enabled && (ownSession || kept)
+        return background || vmPhase == .running || status?.leaseUntil != nil
+    }
+
     // MARK: Settings
 
     func save(_ s: AgentSettings) {
         do {
             let sessionChanged = s.sessionName != settings.sessionName || s.sessionEnabled != settings.sessionEnabled
+            let lidClosedChosen = s.stayAwake == .lidClosed && settings.stayAwake != .lidClosed
+            let hotspotChosen = s.hotspotJoin != settings.hotspotJoin ? s.hotspotJoin : nil
             try workspace.updateSettings(s)
             settings = s
             if sessionChanged { SessionAgent.restart(paths: paths) }
             updateSessionAgent()
+            // Both need the background helper; macOS asks the user once to allow it.
+            if lidClosedChosen && !Self.isPreview { power.ensureHelperRegistered() }
+            if let join = hotspotChosen, !Self.isPreview { power.applyHotspot(join) }
         } catch { append("settings: \(error.localizedDescription)") }
     }
 

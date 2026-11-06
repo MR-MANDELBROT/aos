@@ -31,7 +31,9 @@ aOS is not made by or affiliated with Anthropic, OpenAI, Google, Microsoft or an
    the workspace password for you.
 5. aOS connects your agents (their own `mcp add` commands or their MCP config files; a snippet for anything else).
 6. Claude Code: keep your conversations reachable from the phone (on by default), and optionally an always-on
-   session of its own. You sign in through Claude Code's own flow; aOS never sees credentials.
+   session of its own. You sign in through Claude Code's own flow; aOS never sees credentials. Optionally the Mac
+   stays awake with the lid closed (your other apps freeze meanwhile), and you choose how it joins your iPhone's
+   hotspot: automatically, or only when you switch the hotspot on.
 7. Optional: pair aOS for iPhone (Settings > iPhone, scan the QR code; needs Remote Login on the Mac).
 
 ## Approval
@@ -51,6 +53,7 @@ Opening the workspace always needs the user's yes:
 | `aos-mcp` | MCP server that the agent starts. Its tools (open, screenshot, click, type, keys, scroll, drag, files, close) go to the app over a private socket |
 | `aos-session` | LaunchAgent: keeps Claude Code conversations reachable (resumes them with Remote Control when no other process has them) and the optional always-on session |
 | `aos-companion` | What the iPhone app runs over SSH: requests and events between the phone and the app |
+| `aos-powerd` | Optional privileged helper (LaunchDaemon you allow once in Login Items): keeps the Mac awake with the lid closed (`pmset disablesleep`, as a lease aOS renews), sets your iPhone hotspot's join settings, rejoins known networks. Only aOS may talk to it; it stays out of the way of Cloupi's own wake service |
 | Guest kit | Scripts and the helper that run inside the VM: SSH lock-down, Chrome policies, orderly shutdown, sign-ins (aOS Helper) |
 | `iOS/` | aOS for iPhone |
 
@@ -73,6 +76,10 @@ Details: [Docs/DESIGN.md](Docs/DESIGN.md).
 - Files cross only through the exchange folder. Links planted by the guest are refused; files from the workspace are
   treated as untrusted. Credentials and key folders of your Mac can't be put into the workspace.
 - aOS does not collect, store or forward any agent's credentials and has no server of its own.
+- The privileged helper accepts only aOS (code signature, checked for every message) and does five things: keep the
+  Mac awake as a lease that ends by itself, apply the hotspot choice, join a network macOS already knows, restart
+  Wi-Fi's service, switch Wi-Fi off and on. Apps frozen with the lid closed are recorded first and always continued
+  (lid opens, aOS quits or crashes).
 
 ## Building
 

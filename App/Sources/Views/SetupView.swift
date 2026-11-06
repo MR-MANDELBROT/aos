@@ -87,6 +87,7 @@ private struct StepList: View {
 private struct StepPage: View {
     @EnvironmentObject var model: AppModel
     @EnvironmentObject var setup: SetupController
+    @EnvironmentObject var power: PowerController
     @Environment(\.openWindow) private var openWindow
     @State private var terminalCommand: TerminalCommand?
 
@@ -334,6 +335,7 @@ private struct StepPage: View {
                 }
                 .toggleStyle(.switch)
             }
+            lidClosedCard
             GlassCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
@@ -366,6 +368,39 @@ private struct StepPage: View {
                 }
             }
         }
+    }
+
+    /// The one question about the closed lid (and, when the Mac stays awake, how it joins the iPhone's hotspot).
+    var lidClosedCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Toggle(isOn: Binding(get: { model.settings.stayAwake == .lidClosed },
+                                     set: { v in model.update { $0.stayAwake = v ? .lidClosed : .lidOpen } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Stay awake with the lid closed").fontWeight(.semibold)
+                        Text("Conversations and agents keep working with the lid closed, also on battery. Meanwhile \(Brand.name) freezes your other apps; they continue when you open the lid.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+                .disabled(power.cloupiPresent)
+                if power.cloupiPresent {
+                    CloupiNote()
+                } else if model.settings.stayAwake == .lidClosed {
+                    if power.helperStatus == .requiresApproval {
+                        HStack(spacing: 10) {
+                            Label("macOS asks you once to allow \(Brand.name)'s background helper.", systemImage: "lock.shield")
+                                .font(.callout)
+                            Spacer()
+                            Button("Open Login Items") { power.openLoginItems() }.buttonStyle(.glass)
+                        }
+                    }
+                    Divider()
+                    HotspotChoice(compact: true)
+                }
+            }
+        }
+        .onAppear { power.refreshHelperStatus() }
     }
 
     var done: some View {
