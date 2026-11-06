@@ -33,7 +33,7 @@
 	<key>SUEnableInstallerLauncherService</key>
 	<false/>
 	<key>SUFeedURL</key>
-	<string>https://marquart.dev/annex/appcast.xml</string>
+	<string>https://mr-mandelbrot.github.io/annex/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>REPLACE_WITH_SPARKLE_PUBLIC_KEY</string>
 </dict>

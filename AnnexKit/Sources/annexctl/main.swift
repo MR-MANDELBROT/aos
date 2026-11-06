@@ -258,6 +258,22 @@ func runCommand() async {
             keepAliveController = controller
             print("serving on \(paths.agentSocket.path)")
 
+        case "vnctest":
+            // vnctest HOST PORT USER: asks for the password without echo (never printed) and tries a screen sharing
+            // login with Apple's classic RSA method; prints only success or the error.
+            guard args.count >= 4, let port = UInt16(args[2]) else { fail("usage: annexctl vnctest HOST PORT USER") }
+            guard let raw = getpass("Password for \(args[3]) (not shown): ") else { fail("no password") }
+            let password = String(cString: raw)
+            let client = RFBClient(host: args[1], port: port, username: args[3], password: password)
+            do {
+                try await client.connect()
+                let image = try await client.screenshot()
+                print("LOGIN OK with the classic RSA method, screen \(image.width)x\(image.height)")
+            } catch {
+                print("LOGIN FAILED: \(error.localizedDescription)")
+            }
+            exit(0)
+
         case "ip":
             let host = VMHost(bundle: bundle, paths: paths)
             print(try host.guestAddress() ?? "no address")
