@@ -1,0 +1,143 @@
+# XcodeGen spec for the iPhone app (the companion). Generate the project with:  iOS/generate.sh
+# Design: Docs/COMPANION.md. Notes for the Mac side and open points: iOS/NOTES.md.
+name: Annex
+options:
+  bundleIdPrefix: dev.marquart
+  deploymentTarget:
+    iOS: "27.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+packages:
+  # Only the screen sharing client (product AnnexRFB); AnnexKit itself is macOS-only.
+  AnnexKit:
+    path: ../AnnexKit
+  # SSH. Pinned to 0.12.0 on purpose: 0.12.1 switched its swift-nio-ssh dependency from the Citadel author's fork
+  # (Joannis/swift-nio-ssh, used for years) to a new third-party fork. 0.12.0 has everything this app needs.
+  Citadel:
+    url: https://github.com/orlandos-nl/Citadel
+    exactVersion: 0.12.0
+  # Listed so the app can import NIOSSH and NIO directly; the same packages Citadel 0.12.0 resolves.
+  swift-nio-ssh:
+    url: https://github.com/Joannis/swift-nio-ssh
+    minVersion: 0.3.4
+    maxVersion: 0.4.0
+  swift-nio:
+    url: https://github.com/apple/swift-nio
+    from: 2.81.0
+  # SSH connections over Network.framework (the recommended transport on iOS: VPN on demand, cellular, path changes).
+  swift-nio-transport-services:
+    url: https://github.com/apple/swift-nio-transport-services
+    from: 1.21.0
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: 1.2.0
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: S3725YB7V6
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 1
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "27.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    ENABLE_PREVIEWS: YES
+  configs:
+    Release:
+      DEAD_CODE_STRIPPING: YES
+
+targets:
+  Annex:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+        excludes:
+          - "AppIcon.icon"
+      - path: Resources/AppIcon.icon
+        type: file
+        buildPhase: resources
+    dependencies:
+      - package: AnnexKit
+        product: AnnexRFB
+      - package: Citadel
+      - package: swift-nio-ssh
+        product: NIOSSH
+      - package: swift-nio
+        product: NIOCore
+      - package: swift-nio
+        product: NIOPosix
+      - package: swift-nio-transport-services
+        product: NIOTransportServices
+      - package: SwiftTerm
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: Annex
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.productivity
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIRequiresFullScreen: true
+        # annex-pair:// links from the Mac's QR code (the Camera app offers to open them in Annex)
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.marquart.annex.pair
+            CFBundleURLSchemes:
+              - annex-pair
+        NSLocalNetworkUsageDescription: "Annex connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted."
+        NSBonjourServices:
+          - _annex-pair._tcp
+          - _ssh._tcp
+        NSFaceIDUsageDescription: "Face ID unlocks your passwords and approves sign-ins for your agent."
+        NSCameraUsageDescription: "The camera scans the pairing code that Annex shows on your Mac."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.annex.ios
+        PRODUCT_NAME: Annex
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_UILaunchScreen_Generation: NO
+
+  AnnexTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: Annex
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.annex.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Annex:
+    build:
+      targets:
+        Annex: all
+        AnnexTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - AnnexTests
+      environmentVariables:
+        # screensharingd needs a grace period after connecting; the fake server in the tests doesn't.
+        ANNEX_INPUT_GRACE: "0"
+    archive:
+      config: Release
