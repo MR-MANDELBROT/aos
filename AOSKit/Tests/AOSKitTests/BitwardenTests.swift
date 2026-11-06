@@ -587,6 +587,31 @@ final class SignInAnswerTests: XCTestCase {
         XCTAssertNil(given?.password)
     }
 
+    @MainActor
+    func testUnlockingOffersTheLoginsToAnOpenRequest() async throws {
+        let fake = try FakeBitwarden(scenario: FakeBitwarden.scenario(), state: ["state": "locked", "email": "max@example.com"])
+        let paths = Paths(root: fake.folder.appendingPathComponent("aos", isDirectory: true))
+        try paths.prepare()
+        let vault = BitwardenVault(paths: paths, store: MemorySessionStore(), cli: fake.cli)
+        vault.lastSleep = { nil }
+        vault.bootTime = { nil }
+        let controller = WorkspaceController(paths: paths, bitwarden: vault)
+        let offer = await vault.offer(for: "campus.tum.de")
+        XCTAssertEqual(offer, .locked)
+        controller.signInOffers["r1"] = SignInOffer(host: "campus.tum.de", field: "password", logins: [], bitwarden: offer.state)
+        controller.companion.post(CompanionEvent(event: "signin", request: "r1", agent: "Claude Code", host: "campus.tum.de",
+                                                 field: "password", logins: [], bitwarden: offer.state))
+        await vault.unlock(password: FakeBitwarden.password)
+        await controller.refreshSignInOffers()
+        let event = try XCTUnwrap(controller.companion.open["r1"])
+        XCTAssertEqual(event.bitwarden, "unlocked")
+        XCTAssertEqual(event.logins?.map(\.name), ["TUM", "TUMonline"])
+        XCTAssertEqual(controller.signInOffers["r1"]?.logins.count, 2)
+        // Sent again under the same request id: the phone updates the request it has
+        let (events, _) = await controller.companion.events(since: 0, timeout: 0)
+        XCTAssertEqual(events.filter { $0.request == "r1" }.count, 1)
+    }
+
     func testEventsCarryLoginsWithoutSecrets() throws {
         let event = CompanionEvent(event: "signin", request: "r", agent: "Claude Code", host: "github.com", field: "password",
                                    logins: [CompanionLogin(id: "a", name: "GitHub", username: "max", totp: true)],
