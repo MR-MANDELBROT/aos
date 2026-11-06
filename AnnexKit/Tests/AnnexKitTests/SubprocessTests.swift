@@ -47,3 +47,66 @@ final class SubprocessTests: XCTestCase {
         }
     }
 }
+
+/// One request over a plain socket (the test's clients and the server share a process; FileHandles that close on
+/// dealloc would race over reused descriptor numbers there).
+func rawRoundTrip(_ path: URL, _ line: String) -> String? {
+    let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+    defer { close(fd) }
+    var addr = sockaddr_un()
+    addr.sun_family = sa_family_t(AF_UNIX)
+    _ = withUnsafeMutableBytes(of: &addr.sun_path) { raw in
+        path.path.utf8CString.withUnsafeBytes { raw.copyMemory(from: UnsafeRawBufferPointer(rebasing: $0.prefix(raw.count - 1))) }
+    }
+    let ok = withUnsafePointer(to: &addr) {
+        $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
+    }
+    guard ok == 0 else { return nil }
+    let data = Array((line + "\n").utf8)
+    guard write(fd, data, data.count) == data.count else { return nil }
+    var reply = [UInt8]()
+    var byte: UInt8 = 0
+    while read(fd, &byte, 1) == 1 { if byte == 0x0A { break }; reply.append(byte) }
+    return String(decoding: reply, as: UTF8.self)
+}
+
+final class LineSocketTests: XCTestCase {
+    /// A connection that waits (like a phone's long poll) must not hold up the others. The clients run on threads
+    /// of their own (their calls block).
+    func testSlowConnectionDoesNotBlockOthers() throws {
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent("annex-ls-\(UUID().uuidString.prefix(8)).sock")
+        let server = LineSocketServer(path: path) { line in
+            if line == Data("slow".utf8) { try? await Task.sleep(nanoseconds: 3_000_000_000) }
+            return line
+        }
+        try server.start()
+        defer { server.stop() }
+        // An open connection that sends nothing
+        let idle = socket(AF_UNIX, SOCK_STREAM, 0)
+        defer { close(idle) }
+        var addr = sockaddr_un()
+        addr.sun_family = sa_family_t(AF_UNIX)
+        _ = withUnsafeMutableBytes(of: &addr.sun_path) { raw in
+            path.path.utf8CString.withUnsafeBytes { raw.copyMemory(from: UnsafeRawBufferPointer(rebasing: $0.prefix(raw.count - 1))) }
+        }
+        _ = withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(idle, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
+        }
+        let slowDone = expectation(description: "slow")
+        Thread.detachNewThread {
+            if rawRoundTrip(path, "slow") == "slow" { slowDone.fulfill() }
+        }
+        Thread.sleep(forTimeInterval: 0.2)
+        let start = Date()
+        let fast = expectation(description: "fast")
+        fast.expectedFulfillmentCount = 10
+        for i in 0..<10 {
+            Thread.detachNewThread {
+                if rawRoundTrip(path, "fast \(i)") == "fast \(i)" { fast.fulfill() }
+            }
+        }
+        wait(for: [fast], timeout: 10)
+        XCTAssertLessThan(Date().timeIntervalSince(start), 1.5, "fast requests waited for the slow one")
+        wait(for: [slowDone], timeout: 10)
+    }
+}

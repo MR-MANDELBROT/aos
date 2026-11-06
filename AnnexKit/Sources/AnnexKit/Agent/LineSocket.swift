@@ -82,16 +82,56 @@ public final class LineSocketServer: @unchecked Sendable {
         guard getpeereid(client, &uid, &gid) == 0, uid == getuid() else { close(client); return }
         var on: Int32 = 1
         setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))
-        let handle = FileHandle(fileDescriptor: client, closeOnDealloc: true)
         let handler = self.handler
-        Task.detached {
-            do {
-                for try await line in handle.bytes.lines {
-                    let reply = await handler(Data(line.utf8))
-                    try handle.write(contentsOf: reply + Data([0x0A]))
+        // One thread per connection with plain blocking reads. Not FileHandle.AsyncBytes: all of those share one
+        // serial queue, and a connection that waits for its next line (an iPhone's long poll, an agent between
+        // calls) blocked reading on every other connection.
+        Thread.detachNewThread {
+            defer { close(client) }
+            var buffer = Data()
+            var chunk = [UInt8](repeating: 0, count: 65536)
+            while true {
+                while let nl = buffer.firstIndex(of: 0x0A) {
+                    let line = Data(buffer[buffer.startIndex..<nl])
+                    buffer.removeSubrange(buffer.startIndex...nl)
+                    let reply = Self.wait { await handler(line) }
+                    guard Self.writeAll(client, reply + Data([0x0A])) else { return }
                 }
-            } catch {}
-            try? handle.close()
+                let n = read(client, &chunk, chunk.count)
+                if n > 0 {
+                    buffer.append(contentsOf: chunk[0..<n])
+                    if buffer.count > 64 << 20 { return }  // no line is that long
+                } else if n == -1 && errno == EINTR {
+                    continue
+                } else {
+                    return
+                }
+            }
+        }
+    }
+
+    /// Runs the async handler and blocks this (connection) thread until it answers.
+    private static func wait(_ body: @escaping @Sendable () async -> Data) -> Data {
+        let box = ReplyBox()
+        let done = DispatchSemaphore(value: 0)
+        Task.detached {
+            box.value = await body()
+            done.signal()
+        }
+        done.wait()
+        return box.value ?? Data()
+    }
+
+    private final class ReplyBox: @unchecked Sendable { var value: Data? }
+
+    private static func writeAll(_ fd: Int32, _ data: Data) -> Bool {
+        data.withUnsafeBytes { raw in
+            var offset = 0
+            while offset < raw.count {
+                let n = write(fd, raw.baseAddress!.advanced(by: offset), raw.count - offset)
+                if n > 0 { offset += n } else if n == -1 && errno == EINTR { continue } else { return false }
+            }
+            return true
         }
     }
 }
