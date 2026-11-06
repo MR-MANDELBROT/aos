@@ -46,6 +46,14 @@ struct AnnexApp: App {
         .windowResizability(.contentSize)
         .windowLevel(.floating)
 
+        Window(Text("Sign In"), id: WindowID.signIn) {
+            SignInView()
+                .environmentObject(model)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .windowLevel(.floating)
+
         Settings {
             SettingsView()
                 .environmentObject(model)
@@ -58,6 +66,7 @@ enum WindowID {
     static let workspace = "workspace"
     static let session = "session"
     static let approval = "approval"
+    static let signIn = "signin"
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {

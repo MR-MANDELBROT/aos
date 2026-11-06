@@ -20,3 +20,6 @@ done
 dseditgroup -o edit -d "$GUEST_USER" -t user admin 2>/dev/null || true
 if dseditgroup -o checkmember -m "$GUEST_USER" admin 2>/dev/null | grep -q '^yes'; then die "$GUEST_USER is still an administrator"; fi
 print -r -- "==> $GUEST_USER is a standard user"
+# Marks the workspace as finished: prepare.sh makes the account a standard user again should it still be an
+# administrator (after the one-time permission for the helper, see Provisioner.beginHelperPermission).
+touch /var/db/annex-finished

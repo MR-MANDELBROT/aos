@@ -17,6 +17,12 @@ for i in {1..240}; do [ "$(stat -f %Su /dev/console)" = "$GUEST_USER" ] && break
 [ "$(stat -f %Su /dev/console)" = "$GUEST_USER" ] || { print "the account is not logged in"; exit 3; }
 uid="$(id -u "$GUEST_USER")" || exit 3
 
+# A finished workspace's account is a standard user (it may only have been an administrator for a moment to allow
+# the helper; if that was interrupted, it ends here).
+if [ -f /var/db/annex-finished ] && dseditgroup -o checkmember -m "$GUEST_USER" admin 2>/dev/null | grep -q '^yes'; then
+  dseditgroup -o edit -d "$GUEST_USER" -t user admin && note "account is a standard user again"
+fi
+
 f="/Library/Managed Preferences/$GUEST_USER/com.google.Chrome.plist"
 placed=0
 for i in 1 2 3; do

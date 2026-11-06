@@ -35,6 +35,15 @@ struct WorkspaceWindow: View {
                     }
                     .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
                 }
+            } else if model.helperState == .allowing {
+                banner(symbol: "person.badge.key.fill", tint: BrandColor.indigo,
+                       title: "Allow the \(Brand.name) helper below",
+                       detail: String(localized: "Click Open System Settings if macOS asks, then switch on Annex Helper under Accessibility. When macOS asks for a password, let \(Brand.name) enter it. This happens only once.")) {
+                    Button("Not Now") { Task { await model.cancelHelperPermission() } }
+                        .buttonStyle(.glass)
+                    Button("Enter the workspace password") { model.setup.typeGuestPassword(into: coordinator) }
+                        .buttonStyle(.glassProminent)
+                }
             } else if model.setup.step == .screenSharing && !model.setup.isComplete {
                 banner(symbol: "rectangle.on.rectangle", tint: BrandColor.indigo,
                        title: "Switch on Screen Sharing below",

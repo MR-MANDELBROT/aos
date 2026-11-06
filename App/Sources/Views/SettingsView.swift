@@ -41,6 +41,27 @@ struct GeneralSettings: View {
             } footer: {
                 Text("Changes to sign-ins apply to the workspace at its next start.").font(.caption).foregroundStyle(.secondary)
             }
+            Section {
+                LabeledContent {
+                    switch model.helperState {
+                    case .allowed:
+                        Label("Ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                    case .checking, .allowing:
+                        ProgressView().controlSize(.small)
+                    default:
+                        Button("Set Up …") { Task { await model.allowHelper() } }
+                            .buttonStyle(.glass)
+                            .disabled(!model.setup.isComplete)
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sign-ins for your agent")
+                        Text(helperText).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            } header: {
+                Text("Signing in")
+            }
             Section("Mac") {
                 Toggle("Start \(Brand.name) at login", isOn: Binding(
                     get: { model.loginItemEnabled }, set: { model.setLoginItem($0) }))
@@ -58,8 +79,22 @@ struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { domains = model.settings.keepSignedIn.joined(separator: ", ") }
+        .onAppear {
+            domains = model.settings.keepSignedIn.joined(separator: ", ")
+            Task { await model.checkHelper() }
+        }
         .onDisappear(perform: saveDomains)
+    }
+
+    var helperText: String {
+        switch model.helperState {
+        case .allowed:
+            return String(localized: "When a website needs a sign-in, your agent asks; you approve on your iPhone or Mac and \(Brand.name) fills it in.")
+        case .unavailable(let reason): return reason
+        case .allowing: return String(localized: "Switch on Annex Helper in the workspace window.")
+        default:
+            return String(localized: "Once: allow \(Brand.name)'s helper in the workspace to see the sign-in field and type into it. Your agent never sees passwords.")
+        }
     }
 
     func saveDomains() {

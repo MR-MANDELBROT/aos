@@ -11,7 +11,13 @@ struct MenuView: View {
         VStack(alignment: .leading, spacing: 12) {
             header
 
-            if let help = model.help {
+            if let signIn = model.signIns.first {
+                attention(symbol: "person.badge.key.fill",
+                          title: "\(signIn.agent ?? String(localized: "Your agent")) wants to sign in",
+                          detail: String(localized: "on \(signIn.host ?? "a website"). Approve on your iPhone or here.")) {
+                    openWindow(id: WindowID.signIn); NSApp.activate()
+                }
+            } else if let help = model.help {
                 attention(symbol: "hand.raised.fill", title: "Your agent asks for your help", detail: help.purpose) {
                     openWindow(id: WindowID.workspace); NSApp.activate()
                 }
@@ -33,10 +39,29 @@ struct MenuView: View {
                                 .buttonStyle(.glass).controlSize(.small)
                         }
                     }
-                    if model.settings.sessionEnabled && model.sessionAgentStatus == .enabled {
-                        statusCard(symbol: "iphone.radiowaves.left.and.right", title: "Session", value: sessionText, color: sessionColor) {
-                            Button("Show") { openWindow(id: WindowID.session); NSApp.activate() }
-                                .buttonStyle(.glass).controlSize(.small)
+                    if model.settings.keepReachable || ownSession {
+                        statusCard(symbol: "iphone.radiowaves.left.and.right", title: "Claude Code", value: claudeText,
+                                   color: claudeColor) {
+                            Button("Show") {
+                                if ownSession && !model.settings.keepReachable {
+                                    openWindow(id: WindowID.session)
+                                } else {
+                                    UserDefaults.standard.set("claude", forKey: "settingsTab")
+                                    openSettings()
+                                }
+                                NSApp.activate()
+                            }
+                            .buttonStyle(.glass).controlSize(.small)
+                        }
+                    }
+                    statusCard(symbol: "iphone", title: "iPhone", value: phoneText,
+                               color: model.phoneConnected ? .green : (model.pairedDevices.isEmpty ? .secondary : BrandColor.indigo)) {
+                        if model.pairedDevices.isEmpty {
+                            Button("Pair") {
+                                UserDefaults.standard.set("iphone", forKey: "settingsTab")
+                                openSettings(); NSApp.activate()
+                            }
+                            .buttonStyle(.glass).controlSize(.small)
                         }
                     }
                 }
@@ -61,7 +86,10 @@ struct MenuView: View {
         }
         .padding(16)
         .frame(width: 340)
-        .onAppear { model.openWindow = { openWindow(id: $0) } }
+        .onAppear {
+            model.openWindow = { openWindow(id: $0) }
+            model.refreshPhone()
+        }
     }
 
     var header: some View {
@@ -76,6 +104,7 @@ struct MenuView: View {
     }
 
     var summary: String {
+        if !model.signIns.isEmpty { return String(localized: "A sign-in is waiting for you") }
         if model.status?.leaseUntil != nil { return String(localized: "Your agent is working") }
         if !model.setup.isComplete { return String(localized: "Setup not finished") }
         return String(localized: "Ready")
@@ -127,6 +156,36 @@ struct MenuView: View {
             .padding(.vertical, 8)
         }
         .buttonStyle(.glass)
+    }
+
+    var ownSession: Bool {
+        model.settings.sessionEnabled && model.sessionAgentStatus == .enabled
+            && ClaudeCode.isConfigured(session: model.paths.session)
+    }
+
+    var claudeText: String {
+        var parts: [String] = []
+        if ownSession { parts.append(sessionText) }
+        if model.settings.keepReachable {
+            let n = model.reachableCount
+            parts.append(n == 0 ? String(localized: "no conversation to keep right now")
+                         : (n == 1 ? String(localized: "1 conversation reachable on your phone")
+                            : String(localized: "\(n) conversations reachable on your phone")))
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    var claudeColor: Color {
+        if ownSession { return sessionColor }
+        if model.keeper?.entries.contains(where: { $0.state == .needsAttention || $0.state == .failed }) == true { return .orange }
+        return model.reachableCount > 0 ? .green : .secondary
+    }
+
+    var phoneText: String {
+        if model.phoneConnected { return String(localized: "\(model.phoneName ?? "iPhone") connected") }
+        if model.pairedDevices.isEmpty { return String(localized: "Not paired yet") }
+        return model.pairedDevices.count == 1 ? String(localized: "\(model.pairedDevices[0].name) paired, not connected now")
+            : String(localized: "\(model.pairedDevices.count) devices paired")
     }
 
     var sessionText: String {

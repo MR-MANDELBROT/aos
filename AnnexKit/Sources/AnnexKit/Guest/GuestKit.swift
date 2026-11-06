@@ -30,7 +30,8 @@ public struct ChromePolicies: Sendable, Equatable {
             "PrivacySandboxAdMeasurementEnabled": false,
             "DefaultBrowserSettingEnabled": false,
             "MetricsReportingEnabled": false,
-            "DeveloperToolsAvailability": 0,
+            // No DevTools: they could read a filled password back out of the page.
+            "DeveloperToolsAvailability": 2,
             "ExtensionInstallBlocklist": ["*"],
             "RemoteDebuggingAllowed": false,
             "URLBlocklist": ["javascript:*", "view-source:*", "chrome://inspect", "chrome://extensions",
@@ -112,23 +113,52 @@ public struct GuestKit: Sendable {
             ("shutdown.sh", try Self.resource("shutdown.sh")),
             ("finish.sh", try Self.resource("finish.sh")),
             ("prepare.sh", try Self.resource("prepare.sh")),
+            ("helper.sh", try Self.resource("helper.sh")),
             ("update.sh", try Self.resource("update.sh")),
             ("chrome.plist", try policies.plist()),
             ("settings.env", Data(settingsEnv().utf8)),
             ("maintenance.pub", Data((maintenancePublicKey + "\n").utf8)),
             ("stop.pub", Data((stopPublicKey + "\n").utf8)),
-        ]
+        ] + Self.helperFiles()
+    }
+
+    /// The workspace helper, packed (the app ships it as Resources/AnnexHelper.app; development builds don't have it).
+    static let helperArchive: Data? = {
+        guard let app = Bundle.main.url(forResource: "AnnexHelper", withExtension: "app") else { return nil }
+        let tar = Process()
+        tar.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
+        tar.arguments = ["-czf", "-", "--no-xattrs", "--no-mac-metadata", "-C", app.deletingLastPathComponent().path,
+                         "AnnexHelper.app"]
+        tar.environment = ["COPYFILE_DISABLE": "1"]
+        let out = Pipe()
+        tar.standardOutput = out
+        tar.standardError = FileHandle.nullDevice
+        guard (try? tar.run()) != nil else { return nil }
+        let data = out.fileHandleForReading.readDataToEndOfFile()
+        tar.waitUntilExit()
+        return tar.terminationStatus == 0 && !data.isEmpty ? data : nil
+    }()
+
+    /// What identifies the helper's version (the archive itself changes with every packing).
+    static let helperDigest: Data = {
+        guard let app = Bundle.main.url(forResource: "AnnexHelper", withExtension: "app") else { return Data() }
+        var d = Data()
+        for part in ["Contents/MacOS/AnnexHelper", "Contents/Info.plist", "Contents/_CodeSignature/CodeResources"] {
+            d.append(FileManager.default.contents(atPath: app.appendingPathComponent(part).path) ?? Data())
+        }
+        return d
+    }()
+
+    static func helperFiles() -> [(String, Data)] {
+        helperArchive.map { [("AnnexHelper.tgz", $0)] } ?? []
     }
 
     /// A fingerprint of everything the kit puts into the guest (without the keys): when it changes (an app update),
     /// a set-up workspace gets the new files at its next opening.
     public func fingerprint() throws -> String {
-        var data = Data()
-        for name in ["setup.sh", "guest-service.sh", "shutdown.sh", "finish.sh", "update.sh"] {
-            data.append(try Self.resource(name))
-        }
-        data.append(try policies.plist())
-        data.append(Data(settingsEnv().utf8))
+        var data = try Self.resource("setup.sh")
+        for (name, file) in try updateFiles() where name != "AnnexHelper.tgz" { data.append(file) }
+        data.append(Self.helperDigest)
         var hash = 0xcbf29ce484222325 as UInt64
         for b in data { hash = (hash ^ UInt64(b)) &* 0x100000001b3 }
         return String(hash, radix: 16)
@@ -142,9 +172,10 @@ public struct GuestKit: Sendable {
             ("shutdown.sh", try Self.resource("shutdown.sh")),
             ("finish.sh", try Self.resource("finish.sh")),
             ("prepare.sh", try Self.resource("prepare.sh")),
+            ("helper.sh", try Self.resource("helper.sh")),
             ("chrome.plist", try policies.plist()),
             ("settings.env", Data(settingsEnv().utf8)),
-        ]
+        ] + Self.helperFiles()
     }
 
     /// A self-contained zsh script: unpacks the files into a private temporary folder, runs `entry` with that

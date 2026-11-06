@@ -162,8 +162,20 @@ public final class WorkspaceController {
             log("asking the user: \(request.agent ?? "an agent") wants the workspace for \"\(purpose)\"")
             guard await ask(request.agent ?? "An agent", purpose, minutes) else { throw WorkspaceError.declined }
         }
+        let ip = try await bootAndPrepare(reason: purpose)
+        let client = try await connectScreen(ip: ip, timeout: 120)
+        lease = (Date().addingTimeInterval(Double(minutes * 60)), purpose)
+        log("open for \"\(purpose)\", \(minutes) min")
+        let image = try await client.screenshot()
+        return try picture(request.id, "Workspace open for \(minutes) min. Screen \(image.width)x\(image.height) pixels; coordinates are pixels in this picture.", image)
+    }
+
+    /// Starts the workspace if needed and brings it up to date: the newest scripts, policies and helper, and after a
+    /// cold boot the browser policies in place before anyone uses Chrome. Returns the guest's address.
+    @discardableResult
+    public func bootAndPrepare(reason: String) async throws -> String {
         if !host.isRunning {
-            log("starting the workspace for \"\(purpose)\"")
+            log("starting the workspace for \"\(reason)\"")
             try await host.start()
         }
         let ip = try await host.waitForAddress(timeout: 120)
@@ -184,11 +196,7 @@ public final class WorkspaceController {
                 log("workspace preparation failed (continuing): \(error.localizedDescription)")
             }
         }
-        let client = try await connectScreen(ip: ip, timeout: 120)
-        lease = (Date().addingTimeInterval(Double(minutes * 60)), purpose)
-        log("open for \"\(purpose)\", \(minutes) min")
-        let image = try await client.screenshot()
-        return try picture(request.id, "Workspace open for \(minutes) min. Screen \(image.width)x\(image.height) pixels; coordinates are pixels in this picture.", image)
+        return ip
     }
 
     /// Fails fast without the local network permission: otherwise SSH and screen sharing would only time out after

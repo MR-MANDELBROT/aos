@@ -26,10 +26,14 @@
 	<string>27.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_annex-pair._tcp</string>
+	</array>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Maximilian Marquart</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network. Nothing else on your network is contacted.</string>
+	<string>Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network, and lets your iPhone find this Mac when you pair it. Nothing else on your network is contacted.</string>
 	<key>SUEnableInstallerLauncherService</key>
 	<false/>
 	<key>SUFeedURL</key>

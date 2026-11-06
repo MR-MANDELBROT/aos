@@ -82,6 +82,42 @@ public struct Provisioner: Sendable {
         try await root.run("/bin/zsh -f \(GuestKit.libexec)/prepare.sh", timeout: 180, what: "workspace preparation")
     }
 
+    // MARK: The workspace helper's permission
+
+    /// The helper's state (nil: not installed yet or not answering).
+    public func helperStatus(host: String) async -> GuestHelper.Status? {
+        try? await GuestHelper(provisioner: self, host: host).status()
+    }
+
+    /// Lets the user allow the helper: it asks macOS once (so it shows up in the list, macOS shows its own question),
+    /// then System Settings opens at Privacy & Security > Accessibility in the guest. Changing that list needs an
+    /// administrator: a finished workspace's account becomes one until `endHelperPermission`. Returns whether it was
+    /// one before.
+    public func beginHelperPermission(host: String) async throws -> Bool {
+        let root = maintenance(host: host)
+        let user = Brand.guestUser
+        let wasAdmin = try await root.run("dseditgroup -o checkmember -m \(user) admin | grep -q '^yes'",
+                                          timeout: 30, check: false, what: "administrator check").status == 0
+        if !wasAdmin {
+            try await root.run("dseditgroup -o edit -a \(user) -t user admin", timeout: 30, what: "temporary administrator")
+        }
+        let _: GuestHelper.Status? = try? await GuestHelper(provisioner: self, host: host).call(["op": "prompt"], timeout: 20)
+        try await root.run("launchctl asuser \"$(id -u \(user))\" sudo -u \(user) /usr/bin/open " +
+                           "'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'",
+                           timeout: 30, what: "open the Accessibility settings")
+        return wasAdmin
+    }
+
+    /// Ends `beginHelperPermission`: the account is a standard user again (if it was one), System Settings closes.
+    public func endHelperPermission(host: String, wasAdmin: Bool) async throws {
+        let root = maintenance(host: host)
+        if !wasAdmin {
+            try await root.run("dseditgroup -o edit -d \(Brand.guestUser) -t user admin", timeout: 30,
+                               what: "standard user again")
+        }
+        _ = try? await root.run("pkill -x 'System Settings'", timeout: 15, check: false, what: "close System Settings")
+    }
+
     /// Whether screen sharing is switched on in the guest.
     public func screenSharingEnabled(host: String) async throws -> Bool {
         let r = try await maintenance(host: host).run(

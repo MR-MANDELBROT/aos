@@ -40,6 +40,17 @@ final class AppModel: ObservableObject {
     @Published var conversations: [ClaudeConversation] = []
     let conversationCache = ConversationCache()
 
+    // iPhone (see AppModel+Companion.swift)
+    @Published var signIns: [CompanionEvent] = []
+    @Published var phoneConnected = false
+    @Published var phoneName: String?
+    @Published var pairing: PairingSession?
+    @Published var pairingTick = 0
+    @Published var pairedDevices: [AuthorizedKeys.Device] = []
+    @Published var remoteLoginOn = false
+    @Published var helperState: HelperState = .unknown
+    var helperWasAdmin: Bool?
+
     var openWindow: ((String) -> Void)?
 
     private init() {
@@ -62,6 +73,8 @@ final class AppModel: ObservableObject {
             guard let self else { return false }
             return await self.askApproval(agent: agent, purpose: purpose, minutes: minutes)
         }
+        workspace.companion.onChange = { [weak self] in self?.companionChanged() }
+        workspace.onCompanionAnswer = { [weak self] request in self?.companionAnswer(request) }
     }
 
     // MARK: Approval on the Mac
@@ -89,6 +102,9 @@ final class AppModel: ObservableObject {
         return await withCheckedContinuation { cont in
             let request = ApprovalRequest(agent: agent, purpose: purpose, minutes: minutes, continuation: cont)
             approval = request
+            workspace.companion.post(CompanionEvent(event: "approval", request: request.id.uuidString, agent: agent,
+                                                    purpose: purpose, minutes: minutes,
+                                                    expires: Date().addingTimeInterval(300)))
             DispatchQueue.main.asyncAfter(deadline: .now() + 300) { [weak self] in self?.answerApproval(request.id, false) }
         }
     }
@@ -97,6 +113,8 @@ final class AppModel: ObservableObject {
         guard let a = approval, a.id == id else { return }
         approval = nil
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["approval"])
+        workspace.companion.post(CompanionEvent(event: "approval.closed", request: id.uuidString,
+                                                result: allowed ? "allowed" : "declined"))
         a.continuation.resume(returning: allowed)
     }
 
@@ -203,6 +221,7 @@ final class AppModel: ObservableObject {
     }
 
     var menuSymbol: String {
+        if !signIns.isEmpty { return "person.badge.key.fill" }
         if help != nil || approval != nil { return "hand.raised.fill" }
         switch session?.state {
         case .needsLogin, .needsAttention, .failed, .missingClaude: return "exclamationmark.triangle"
@@ -305,6 +324,8 @@ final class AppModel: ObservableObject {
         return await withCheckedContinuation { cont in
             let request = HelpRequest(purpose: purpose, continuation: cont)
             help = request
+            workspace.companion.post(CompanionEvent(event: "help", request: request.id.uuidString, purpose: purpose,
+                                                    expires: Date().addingTimeInterval(600)))
             DispatchQueue.main.asyncAfter(deadline: .now() + 600) { [weak self] in
                 self?.finishHelp(request.id, "The user did not respond within 10 minutes. Tell them in the chat what you need.")
             }
@@ -315,6 +336,7 @@ final class AppModel: ObservableObject {
         guard let h = help, h.id == id else { return }
         help = nil
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["help"])
+        workspace.companion.post(CompanionEvent(event: "help.closed", request: id.uuidString))
         h.continuation.resume(returning: answer)
     }
 }

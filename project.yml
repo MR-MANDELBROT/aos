@@ -64,6 +64,17 @@ targets:
         codeSign: true
         copy:
           destination: executables
+      - target: annex-companion
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
+      # Runs inside the workspace; the app hands it to the guest (GuestKit.helperArchive)
+      - target: AnnexHelper
+        embed: true
+        codeSign: true
+        copy:
+          destination: resources
     info:
       path: App/Info.plist
       properties:
@@ -73,7 +84,9 @@ targets:
         LSApplicationCategoryType: public.app-category.productivity
         LSMinimumSystemVersion: "27.0"
         LSUIElement: true
-        NSLocalNetworkUsageDescription: "Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network. Nothing else on your network is contacted."
+        NSLocalNetworkUsageDescription: "Annex connects to its workspace, a virtual Mac that macOS counts as a device on your local network, and lets your iPhone find this Mac when you pair it. Nothing else on your network is contacted."
+        NSBonjourServices:
+          - _annex-pair._tcp
         NSHumanReadableCopyright: "© 2026 Maximilian Marquart"
         SUFeedURL: https://mr-mandelbrot.github.io/annex/appcast.xml
         SUPublicEDKey: REPLACE_WITH_SPARKLE_PUBLIC_KEY
@@ -116,4 +129,44 @@ targets:
       base:
         PRODUCT_NAME: annex-session
         PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.annex.session
+        SKIP_INSTALL: YES
+
+  annex-companion:
+    type: tool
+    platform: macOS
+    sources:
+      - path: AnnexKit/Sources/annex-companion
+    dependencies:
+      - package: AnnexKit
+        product: AnnexKit
+    settings:
+      base:
+        PRODUCT_NAME: annex-companion
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.annex.companion
+        SKIP_INSTALL: YES
+
+  # The helper inside the workspace: a background app with the Accessibility permission (see GuestHelper.swift)
+  AnnexHelper:
+    type: application
+    platform: macOS
+    sources:
+      - path: AnnexKit/Sources/annex-guest-helper
+      - path: App/Resources/AppIcon.icon
+        type: file
+        buildPhase: resources
+    info:
+      path: Helper/Info.plist
+      properties:
+        CFBundleDisplayName: Annex Helper
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSBackgroundOnly: true
+        LSUIElement: true
+        LSMinimumSystemVersion: "27.0"
+        NSHumanReadableCopyright: "© 2026 Maximilian Marquart"
+    settings:
+      base:
+        PRODUCT_NAME: AnnexHelper
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.annex.guest-helper
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SKIP_INSTALL: YES
