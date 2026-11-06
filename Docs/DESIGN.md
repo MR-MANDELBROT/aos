@@ -46,6 +46,9 @@ Claude app (phone) ──Remote Control──▶ claude (pty) ◀── aos-sess
 - **aos-mcp** is registered by `claude mcp add --scope local` for the session folder. `.claude/settings.local.json`
   there allows `mcp__aos__*` and asks for `mcp__aos__workspace_open`; `CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS=0`
   keeps long tool calls (help requests) in the foreground.
+- **aos-powerd** (optional) is a root LaunchDaemon from `Contents/Library/LaunchDaemons`, registered with
+  `SMAppService.daemon` once the user wants the Mac awake with the lid closed or answers the hotspot question
+  (see "Staying awake, freezing and the hotspot").
 
 ## Keeping conversations reachable (SessionKeeper)
 
@@ -72,6 +75,104 @@ the keeper, when "keep conversations reachable" is on:
   15 s. Quick exits back off from 10 s to 30 min.
 - Status in `run/keeper.json`; the app's settings (Claude Code tab) list the conversations with their state, pin and
   exclude.
+
+## Staying awake, freezing and the hotspot
+
+Settings > General > Staying awake (`AgentSettings.stayAwake`, migrated from the old `keepAwake`): Off, While the
+lid is open, Also with the lid closed. `AwakePolicy` (AOSKit, tested) decides every two seconds in the app's
+`PowerController` from the setting, whether something must stay reachable (aOS's own session or kept conversations
+while the background process runs, or the workspace in use), the lid (`AppleClamshellState`), power source and
+charge, thermal state, external screens, whether Cloupi is on the Mac, and whether the helper is allowed.
+
+- **While the lid is open**: the app holds `PreventUserIdleSystemSleep`. Closing the lid sleeps the Mac.
+- **Also with the lid closed**: measured on MacBookPro18,3 (Cloupi, ~/cloupi/mac/DESIGN.md 2), a closed MacBook on
+  battery ignores every power assertion; only `pmset disablesleep 1` holds it, and that needs root. The helper
+  **aos-powerd** sets it as a lease: the app renews it every 30 s for 180 s; the helper checks every 5 s and releases
+  it when the lease ends (aOS quit or crashed), on battery below 10 percent, when the Mac gets critically hot, or when
+  Cloupi appears. The hold starts while the lid is still open (set only when it closes, the Mac would already be
+  asleep). `disablesleep` survives a restart, so the helper writes a marker
+  (`/Library/Application Support/aOS/powerd-holding`) before setting it, and at boot (`RunAtLoad`) undoes a hold
+  whose marker is left. It only ever undoes what it set: if `disablesleep` was already on, it holds without touching
+  it. It exits after two idle minutes; launchd starts it again with the next message.
+- **The helper's surface** (`PowerHelperXPC`, Mach service `dev.marquart.aos.powerd`): status, hold, apply the
+  hotspot choice, join a network macOS already knows, restart airportd, Wi-Fi off and on (each at most every 4
+  minutes). The listener's code signing requirement admits only aOS (`identifier "dev.marquart.aos"`, team
+  S3725YB7V6), checked by the system for every message through the caller's audit token; the app requires the
+  helper's signature (`aos-powerd`, same team) in turn. macOS asks the user once to allow it (Login Items &
+  Extensions); the settings show its state and, only while macOS waits for that, a button to Login Items. Log:
+  `/Library/Logs/aOS/powerd.log`.
+- **With the lid closed** (held, no external screen):
+  - **Freezing**: after 20 s with the lid closed and no input, aOS stops the user's Dock apps with SIGSTOP, with their
+    child processes and the processes macOS holds them responsible for, and continues them with SIGCONT when the lid
+    opens, a screen is connected, input arrives, the setting changes or aOS quits. Never frozen: aOS, Claude (the
+    desktop app hosts Claude Code sessions), Cloupi, Finder and the system's tools, terminals and code editors
+    (agents, Claude Code and builds run there), password managers, VPNs (the iPhone reaches the Mac through them),
+    file providers (a frozen one hangs every program that opens its files), keyboard and mouse tools, and any app
+    with `claude` or `aos-mcp` (an agent using the workspace) in its process tree. Menu bar apps are left as they
+    are, and so are processes someone else stopped.
+  - **Never left frozen**: the record `run/frozen.json` (pids with start times, and the process that froze them) is
+    written before the first signal, and nothing is signalled whose start time doesn't match. aOS thaws what it lists
+    at start, on SIGTERM, SIGINT and SIGHUP, and on quit; a crash signal handler continues the frozen pids (only
+    kill(2)); aos-session thaws a record whose owner is gone every 15 s.
+  - **Display**: while the Mac is held, macOS leaves the built-in display on when the lid closes (Cloupi measured up
+    to the display sleep time, ~/cloupi/mac/DESIGN.md 32). aOS runs `pmset displaysleepnow` as the user after 2 s, at
+    most every 20 s, not while the session is screen-shared.
+  - **Network care** (`NetworkCarePolicy`, after Cloupi's sections 31, 36 and 37): offline for 20 s, every 45 s a scan
+    by name for the user's hotspots and the first 12 known networks (names are hidden from processes without
+    location access, root included, but a scan for a name finds it, and macOS's list of preferred networks has the
+    names). The first known Wi-Fi network in range in macOS's order wins, else the hotspot; the helper joins with
+    `networksetup -setairportnetwork` (password from the System keychain; success is an address, the message can
+    say "Failed" and the Mac connects a moment later). A network whose join failed rests 45 s, 3 min, 10 min. Two
+    failed joins of visible networks restart airportd (that clears its deny list), at most every 10 minutes; 4
+    minutes without anything turn Wi-Fi off and on (then after 10, 20, 40, 60 minutes), with a marker so an
+    interrupted cycle never leaves Wi-Fi off. Nothing while Wi-Fi is off (the user's choice), while the Mac has an
+    address, or with the lid open (the user is there).
+- **Cloupi**: when its wake daemon is on the Mac (`/Library/Application Support/cloupi-wake`,
+  `/Library/LaunchDaemons/de.cloupi.waked.plist`, or launchd knows `system/de.cloupi.waked`), it owns sleep and Wi-Fi.
+  aOS holds no assertion and freezes nothing, the helper refuses and never touches pmset or Wi-Fi, and the settings
+  say "Managed by Cloupi". aOS never stops, changes or reads Cloupi's services.
+
+**The iPhone hotspot.** The question (Settings > General > iPhone hotspot; in the setup right after "Stay awake with
+the lid closed") is "Only when I switch it on on the iPhone" or "Automatically (uses more energy)"
+(`AgentSettings.hotspotJoin`). aOS applies it to macOS itself:
+
+| Answer | Auto-join of the user's hotspots | Ask to join hotspots |
+|--------|----------------------------------|----------------------|
+| Only when I switch it on | off | Never |
+| Automatically | on | Automatic |
+
+How macOS 27 keeps both (found as a normal user on macOS 27.0, 26A428, MacBookPro18,3):
+- Auto-join is the known-network property `AutoJoinDisabled` (`CWFNetworkProfilePropertyAutoJoinDisabledKey`) in
+  airportd's store `com.apple.wifi.known-networks` (`CWFKnownNetworksStoreIdentifier`), the file
+  `/Library/Preferences/com.apple.wifi.known-networks.plist` (root, 0600) with entries `wifi.network.ssid.<name>`; the
+  user's own hotspots carry `PersonalHotspot`.
+- Ask to join hotspots is `AutoHotspotMode` with `AskToJoin`, `Automatic` or `Never` (CoreWLAN
+  `schemaStringForAutoHotspotMode`: 1, 2, 3) in airportd's global configuration (CoreWLAN `globalConfiguration()`,
+  SystemConfiguration's `com.apple.airport.preferences.plist`; the sandbox denies a user process even reading it).
+- Reading both works without privileges through airportd: CoreWLAN `CWGetAutoHotspotMode()` and CoreWiFi's known
+  network profiles (names hidden without location access, the flags not). `aosctl power` prints them; on the
+  development Mac: Never, 4 personal hotspots, auto-join on for all of them.
+- Changing them through airportd needs Apple's private entitlements: its handler for "set auto hotspot mode" checks
+  `com.apple.wifi.auto-hotspot` (seen in airportd's code), and the known-network calls belong to the
+  `com.apple.private.corewifi` family. No other app can have them, and no command line covers either setting
+  (`networksetup` has none; `airportd <interface> prefs` knows JoinMode and a few more, not these).
+- So the helper writes the stores as root: the hotspot entries through CFPreferences (any user,
+  `com.apple.wifi.known-networks`), `AutoHotspotMode` through SCPreferences (like the keys of airportd's own `prefs`
+  verb). Then it restarts airportd (`launchctl kickstart -k`, as Cloupi's daemon does on this Mac) and reads the
+  result back through airportd; if it didn't take, it writes once more and ends airportd with SIGKILL (so it can't
+  write old values on its way out). The reply carries what macOS reports, the settings show it ("Now in macOS: …"),
+  and if it didn't take they offer "Try Again" and "Open Wi-Fi Settings".
+- Not verified, because it needs root: whether macOS 27 lets root read and write these two files (a user process
+  gets "Operation not permitted" even for the world-readable airport preferences), whether `AutoHotspotMode` sits at
+  the top level of the airport preferences, and whether airportd takes both after the restart. The helper reports
+  the read-back result either way.
+
+With "Only when I switch it on" and the lid closed, network care joins the hotspot while it broadcasts and the Mac
+has no other network. A dormant iPhone hotspot sends no name, so broadcasting means the user switched it on (or has
+the Personal Hotspot page open). Switched off, it disappears and the Mac stays disconnected; macOS doesn't join or
+wake it by itself. With the lid open the user joins it from the Wi-Fi menu. Limits (Cloupi, ~/cloupi/mac/DESIGN.md
+13 and 36): a closed Mac can't switch a dormant hotspot on ("AutoHotspot not allowed during dark wake", also with the
+screen locked), and the iPhone ends its hotspot about 90 s after the last device left.
 
 ## aOS for iPhone (companion)
 
@@ -228,6 +329,6 @@ item (a link created by the guest would point at the Mac's files).
 
 - Push notifications on the phone while its app is closed (planned: CloudKit, no server of our own). Until then the
   phone sees requests while the app is open; the Mac window and notification cover the rest.
-- Staying reachable with the lid closed (needs a privileged helper for `pmset disablesleep`); version 1 only prevents
-  idle sleep.
+- Waking a sleeping Mac from the phone (Cloupi's RTC wakes, mailbox and relay); aOS keeps the Mac awake or lets it
+  sleep.
 - Automating the screen sharing switch (blind keyboard navigation of System Settings).
