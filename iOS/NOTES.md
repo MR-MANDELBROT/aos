@@ -101,21 +101,29 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   its own vault, which is gone).
 - Exit status 127 of the exec channel is shown as "aOS isn't installed where it was paired; pair again".
 
+## The screen (iOS/Sources/Screen)
+
+- `ScreenSession` runs `RFBClient.events` and hands frames to the view through `onFrame` (not through SwiftUI);
+  `ScreenRenderer` uploads only the changed rectangles into a Metal texture (mipmaps while the picture is shown
+  smaller than its pixels). `ScreenGeometry` (fit, fill, actual pixels, zoom, pan) and `PointerMotion` (trackpad
+  acceleration, wheel steps, momentum) are plain math with tests.
+- The workspace asks for its display in the phone's shape (`display`, renewed every 20 s, `reset` when it stops; the
+  Mac's lease of 45 s covers a phone that vanished). The size is the safe area grown to at least 600x900 points.
+- Settings: quality (automatic: best on Wi-Fi, saver on cellular), picture rate, the Mac's scaling, the workspace's
+  shape and Retina, pointer drawn on the phone or by the Mac, speed, natural scrolling, haptics, toolbar, key bar,
+  statistics.
+- Debug builds: `-AOSScreenDirect HOST:PORT` with `AOS_SCREEN_USER` and `AOS_SCREEN_PASSWORD` in the environment
+  connects the workspace screen straight to a screensharingd (the simulator reaches a workspace VM's address).
+
 ## Requests for AOSRFB (not changed from here)
 
 1. A transport hook: `RFBClient` only connects with NWConnection to host:port, so the iPhone runs a loopback
    listener (`LocalForwarder`) and bridges each connection to a direct-tcpip channel. An initializer that takes a
    byte stream (or a connect closure) would remove the listener, a local port that other apps on the phone could
    connect to while a screen is open (they would still need the screen sharing password).
-2. Frame cost: every `liveFrames` picture copies the whole framebuffer (`Data(framebuffer)` in `makeImage`). For a
-   Retina Mac (3024x1964) that is 23 MB per frame; at 10 frames a second the phone moves 230 MB/s. Changed
-   rectangles, or a picture made from a buffer that is reused, would make the Mac's own screen much lighter.
-3. Bandwidth: 32-bit pixels with zlib only. A lower pixel format or Tight/JPEG would make "Saves data" do more than
-   lower the frame rate over cellular.
-4. Input readiness: input waits `inputGrace` (5 s) after connecting; the iPhone shows "input works in a moment".
+2. Input readiness: input waits `inputGrace` (5 s) after connecting; the iPhone shows "input works in a moment".
    Exposing the connect time (or an `isInputReady`) would let it show this exactly.
-5. Cursor: no cursor pseudo-encoding; in trackpad mode the iPhone draws its own pointer.
-6. Typing beyond ASCII into the workspace: done on the Mac side as the companion op `type` and used (on the Mac's
+3. Typing beyond ASCII into the workspace: done on the Mac side as the companion op `type` and used (on the Mac's
    own screen the iPhone uses `pbcopy` over SSH, then cmd+v).
 
 ## What was learned about the libraries

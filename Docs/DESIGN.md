@@ -427,11 +427,32 @@ denial for a few seconds. Several copies of the app with different UUIDs (debug 
 ## Screen and input
 
 `RFBClient` speaks RFB 3.8 to screensharingd: Apple's RSA authentication (type 33: credentials 2x64 bytes AES-128-ECB
-with a random key, key encrypted with the server's RSA key, PKCS#1 v1.5), 32-bit RGBX pixels, raw and zlib rectangles
-(one zlib stream per connection). The connection stays open because screensharingd drops input during the first two
-seconds after connecting. Screenshots are non-incremental full updates encoded as JPEG (quality 0.8). Keys are X11
-keysyms (Command = Super_L); printable ASCII is typed key by key, anything else goes through the guest's clipboard
-(`pbcopy` over SSH as the account, then cmd+v).
+with a random key, key encrypted with the server's RSA key, PKCS#1 v1.5). The connection stays open because
+screensharingd drops input during the first seconds after connecting. Screenshots are non-incremental full updates
+encoded as JPEG (quality 0.8). Keys are X11 keysyms (Command = Super_L); printable ASCII is typed key by key, anything
+else goes through the guest's clipboard (`pbcopy` over SSH as the account, then cmd+v).
+
+What screensharingd does with the standard protocol (measured against the workspace, macOS 27.2, `aosctl rfbprobe`):
+- Picture encodings it uses when asked: raw, zlib (6), ZRLE (16), and its own halftone (1000, 1 bit), gray (1001,
+  4 bits) and thousands (1002, x-5-5-5), each zlib data with a stream of its own. Not Hextile (it sends raw instead),
+  no continuous updates, no pointer positions (-232). It sends RichCursor shapes (-239; then leaves the pointer out
+  of the picture) and DesktopSize (-223).
+- Pixel formats: 32 bits and 16 bits (also 4-4-4 in 16); depths below 12 or 8 bits per pixel close the connection.
+- One full 1280x800 picture of the photo desktop: raw 4.1 MB, zlib 1.99 MB, ZRLE 1.70 MB, ZRLE 5-6-5 0.76 MB,
+  thousands 0.68 MB, ZRLE 4-4-4 0.45 MB, gray 0.15 MB, halftone 0.05 MB. The iPhone's qualities: best = ZRLE 24 bit,
+  balanced = thousands, saver = ZRLE 4-4-4, gray = gray.
+- A connection without a pending request learns about a new screen size only with a later update; a screenshot asks
+  for one more pixel after its picture, and after the host changed the display it waits for the new size.
+
+`RFBFramebuffer` keeps 32-bit pixels and the changed rectangles of complete updates; the iPhone uploads only those
+into a Metal texture. The agent's connection asks for ZRLE without the cursor pseudo-encodings.
+
+The workspace's display can take the iPhone's shape while the iPhone shows it (companion op `display`,
+Docs/COMPANION.md): `VMHost.setDisplay` reconfigures the VZMacGraphicsDisplay (pixels, and 160 pixels per inch for
+Retina, at which macOS draws exactly two pixels per point in both orientations; at 220 it picked a "more space" mode
+for portrait shapes), for a lease the phone renews. The display goes back to the bundle's size when the lease runs
+out, before a suspend and after a restore from a saved state. The agent's pictures bigger than 1280 pixels on the long
+side are scaled down for it and its coordinates scaled back up.
 
 ## Exchange folder
 
