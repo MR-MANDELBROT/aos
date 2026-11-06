@@ -3,158 +3,571 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>aOS: a Mac of its own for your coding agent</title>
-<meta name="description" content="aOS gives your coding agent its own Mac: a virtual macOS workspace with its own screen and browser, separate from yours. Works with Claude Code, Codex, Gemini CLI, VS Code, Cursor and any MCP agent.">
-<meta property="og:title" content="aOS: a Mac of its own for your coding agent">
-<meta property="og:description" content="A virtual Mac for every task that needs a website or an app. You approve every time it opens.">
-<meta property="og:image" content="img/icon.png">
-<link rel="stylesheet" href="style.css">
-<link rel="icon" href="img/favicon.png">
+<title>aOS: A Mac of its own for your coding agent</title>
+<meta name="description" content="aOS gives your coding agent its own Mac: a virtual macOS workspace with its own screen and browser, separate from yours. You approve every time it opens. Works with Claude Code, Codex, Gemini CLI, VS Code, Cursor and any MCP agent.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="img/favicon.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<link rel="alternate" hreflang="de" href="de/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="aOS">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="aOS: A Mac of its own for your coding agent">
+<meta property="og:description" content="A virtual Mac for every task that needs a website or an app. You approve every time it opens, and you can watch.">
+<meta property="og:url" content="https://mr-mandelbrot.github.io/aos/">
+<meta property="og:image" content="https://mr-mandelbrot.github.io/aos/img/icon.png">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://mr-mandelbrot.github.io/aos/">
+<link rel="alternate" hreflang="en" href="https://mr-mandelbrot.github.io/aos/">
+<link rel="alternate" hreflang="de" href="https://mr-mandelbrot.github.io/aos/de/">
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.classList.add("js")</script>
 </head>
 <body>
-<nav class="wrap">
-  <div class="bar glass">
-    <a class="brand" href="./"><img src="img/icon.png" alt="">aOS</a>
-    <div class="links">
-      <a href="#how">How it works</a>
-      <a href="#trust">Trust</a>
-      <a href="#phone">iPhone</a>
-      <a href="#faq">FAQ</a>
-      <a class="lang" href="de/">Deutsch</a>
-      <a class="button small" href="https://github.com/MR-MANDELBROT/aos/releases">Download</a>
-    </div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14"/></symbol>
+  <symbol id="i-win" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.6"/><path d="M3 9h18"/></symbol>
+  <symbol id="i-winplus" viewBox="0 0 24 24"><path d="M12.5 19H5.6A2.6 2.6 0 0 1 3 16.4V7.6A2.6 2.6 0 0 1 5.6 5h12.8A2.6 2.6 0 0 1 21 7.6v3.9"/><path d="M3 9h18M18 14v7M14.5 17.5h7"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M3 9.5a13.5 13.5 0 0 1 18 0M6 13a9 9 0 0 1 12 0M9 16.5a4.5 4.5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-batt" viewBox="0 0 30 16"><rect x="1" y="2" width="24" height="12" rx="3.5"/><rect x="3" y="4" width="16" height="8" rx="2" fill="currentColor" stroke="none"/><path d="M27.5 6.5v3"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.6"/><path d="M10.5 5.3h3"/></symbol>
+  <symbol id="i-mac" viewBox="0 0 24 24"><path d="M5 15.5V7a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 19 7v8.5"/><path d="M2.5 18.5h19"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4.2l1.8 2H19a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M9.92 5.21 10.55 2.81 13.45 2.81 14.08 5.21 15.33 5.73 17.47 4.48 19.52 6.53 18.27 8.67 18.79 9.92 21.19 10.55 21.19 13.45 18.79 14.08 18.27 15.33 19.52 17.47 17.47 19.52 15.33 18.27 14.08 18.79 13.45 21.19 10.55 21.19 9.92 18.79 8.67 18.27 6.53 19.52 4.48 17.47 5.73 15.33 5.21 14.08 2.81 13.45 2.81 10.55 5.21 9.92 5.73 8.67 4.48 6.53 6.53 4.48 8.67 5.73Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3.5v8"/><path d="M7.2 6.6a7.5 7.5 0 1 0 9.6 0"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m10.85 12.15 7.65-7.65M18 5l2 2M15 8l2 2"/></symbol>
+  <symbol id="i-personkey" viewBox="0 0 24 24"><circle cx="9" cy="7.5" r="3.5"/><path d="M2.5 19.5a6.5 6.5 0 0 1 10-5.5"/><circle cx="17" cy="14.5" r="2.5"/><path d="M17 17v4.5M17 19.5h2"/></symbol>
+  <symbol id="i-faceid" viewBox="0 0 24 24"><path d="M4 8.5v-2A2.5 2.5 0 0 1 6.5 4h2M15.5 4h2A2.5 2.5 0 0 1 20 6.5v2M20 15.5v2a2.5 2.5 0 0 1-2.5 2.5h-2M8.5 20h-2A2.5 2.5 0 0 1 4 17.5v-2"/><path d="M9 9v1.5M15 9v1.5M12 9v4h-1M9.5 15.5c1.4 1.2 3.6 1.2 5 0"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0"/></symbol>
+  <symbol id="i-eyeslash" viewBox="0 0 24 24"><path d="M9.9 5.7A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.7 3.5M6.5 7.7C4 9.5 2.5 12 2.5 12s3.5 6.5 9.5 6.5c1.6 0 3-.4 4.3-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></symbol>
+  <symbol id="i-term" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="m7.5 10 3 2.5-3 2.5M12.5 15.5h4"/></symbol>
+  <symbol id="i-display" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12.5" rx="2.2"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-tray" viewBox="0 0 24 24"><path d="M3.5 13.5 6 5.5h12l2.5 8v4a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M3.5 13.5H8.5a3.5 3.5 0 0 0 7 0h5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></symbol>
+  <symbol id="i-checkcircle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" stroke="none"/><path d="m7.5 12.3 3 3 6-6.3" stroke="#fff" stroke-width="2.2"/></symbol>
+  <symbol id="i-captcha" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-apps" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/></symbol>
+  <symbol id="i-signout" viewBox="0 0 24 24"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14"/><path d="M9.5 16.5 5 12l4.5-4.5M5 12h10"/></symbol>
+  <symbol id="i-bubble" viewBox="0 0 24 24"><path d="M12 4.5c4.7 0 8.5 3.1 8.5 7s-3.8 7-8.5 7c-1.1 0-2.2-.2-3.2-.5L4.5 19.5l1.2-3.6c-1.4-1.2-2.2-2.7-2.2-4.4 0-3.9 3.8-7 8.5-7z"/></symbol>
+  <symbol id="i-bubbleplus" viewBox="0 0 24 24"><path d="M12 4.5c4.7 0 8.5 3.1 8.5 7s-3.8 7-8.5 7c-1.1 0-2.2-.2-3.2-.5L4.5 19.5l1.2-3.6c-1.4-1.2-2.2-2.7-2.2-4.4 0-3.9 3.8-7 8.5-7z"/><path d="M12 8.5v6M9 11.5h6"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-lidopen" viewBox="0 0 48 48"><rect x="8" y="9" width="32" height="22" rx="2.5"/><path d="M3 35.5h42M19.5 35.5v1.5h9v-1.5"/></symbol>
+  <symbol id="i-lidclosed" viewBox="0 0 48 48"><path d="M5 31h38a2 2 0 0 1 2 2v.5a2.5 2.5 0 0 1-2.5 2.5h-37A2.5 2.5 0 0 1 3 33.5V33a2 2 0 0 1 2-2z"/><path d="M16.5 19.5a10.5 10.5 0 0 1 15 0M20 23a5.5 5.5 0 0 1 8 0"/><circle cx="24" cy="26.5" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-hotspot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.8"/><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8M15.4 8.6a4.8 4.8 0 0 1 0 6.8M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol>
+  <symbol id="i-nocloud" viewBox="0 0 24 24"><path d="M7.5 18.5H17a4 4 0 0 0 1.3-7.8 6 6 0 0 0-10.6-2.4A4.6 4.6 0 0 0 7.5 18.5z"/><path d="M4 4l16 16"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.6M9.5 3h5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.2"/><path d="M6.5 10h.01M9.5 10h.01M12.5 10h.01M15.5 10h.01M18 10h.01M8 14h8"/></symbol>
+  <symbol id="i-pad" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="12" rx="2.5"/><path d="M12 17v3"/></symbol>
+  <symbol id="i-pointer" viewBox="0 0 24 24"><path d="M5.5 3v16.2l4.1-3.9 2.7 6 2.7-1.2-2.7-5.9 5.7-.2z" fill="#111" stroke="#fff" stroke-width="1.3" stroke-linejoin="round"/></symbol>
+  <symbol id="sb-cell" viewBox="0 0 18 12"><rect y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" width="3" height="12" rx="1"/></symbol>
+  <symbol id="sb-wifi" viewBox="0 0 16 12"><path d="M8 2.2c2.4 0 4.6.9 6.3 2.5l1.2-1.3A10.8 10.8 0 0 0 8 .5 10.8 10.8 0 0 0 .5 3.4l1.2 1.3A9 9 0 0 1 8 2.2zm0 3.4c1.5 0 2.9.6 4 1.6l1.2-1.3A7.4 7.4 0 0 0 8 3.9a7.4 7.4 0 0 0-5.2 2l1.2 1.3c1.1-1 2.5-1.6 4-1.6zm0 3.4c.6 0 1.2.2 1.7.7L8 11.5 6.3 9.7c.5-.5 1.1-.7 1.7-.7z"/></symbol>
+  <symbol id="sb-bat" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2"/><path d="M25 4.5v4a2 2 0 0 0 0-4z" opacity=".4"/></symbol>
+</svg>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="nav" aria-label="Main">
+  <div class="nav-inner">
+    <a class="brand" href="#top"><img src="img/favicon.png" alt="" width="26" height="26">aOS</a>
+    <ul class="nav-links">
+      <li class="hide-s"><a href="#how">How it works</a></li>
+      <li class="hide-s"><a href="#signin">Sign-ins</a></li>
+      <li class="hide-s"><a href="#phone">iPhone</a></li>
+      <li class="hide-s"><a href="#trust">Privacy</a></li>
+      <li class="hide-s"><a href="#faq">FAQ</a></li>
+      <li><a href="de/" hreflang="de" lang="de">Deutsch</a></li>
+      <li><a class="nav-cta" href="#download">Download</a></li>
+    </ul>
   </div>
 </nav>
 
-<main class="wrap">
-  <header class="hero">
+<main id="main">
+
+<header class="hero" id="top">
+  <div class="container">
+    <img class="hero-icon reveal" src="img/icon.png" alt="App icon of aOS" width="180" height="180">
+    <span class="caps reveal" style="--d:.05s">Mac app for macOS 27</span>
+    <h1 class="reveal" style="--d:.1s">A Mac of its own for <span class="grad">your coding agent.</span></h1>
+    <p class="lede reveal" style="--d:.15s">aOS gives your agent a virtual Mac with its own screen and browser, separate from yours. For every task that needs a website or an app. You approve each time it opens, and you can watch.</p>
+    <div class="hero-ctas reveal" style="--d:.2s">
+      <a class="btn btn-primary" href="https://github.com/MR-MANDELBROT/aos/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-down"/></svg>Download for Mac</a>
+      <a class="btn btn-ghost" href="#how">How it works ›</a>
+    </div>
+    <p class="meta reveal" style="--d:.25s">Free · macOS 27 or later · Apple silicon</p>
+  </div>
+</header>
+
+<section class="showcase" aria-label="aOS on your Mac">
+  <div class="container">
+    <div class="desk reveal">
+      <div class="menubar" aria-hidden="true">
+        <span class="open"><svg class="i"><use href="#i-winplus"/></svg></span>
+        <span class="wifi"><svg class="i"><use href="#i-wifi"/></svg></span>
+        <span><svg class="i batt"><use href="#i-batt"/></svg></span>
+        <span class="clock">Thu Nov 6 9:41 AM</span>
+      </div>
+
+      <div class="wswin" role="img" aria-label="The workspace window: your agent’s own Mac, with Chrome open on a sign-in page">
+        <div class="ws-bar">
+          <span class="lights"><i></i><i></i><i></i></span>
+          <span class="ws-status"><i class="dot"></i><span>Open: Download the October invoice</span></span>
+          <span class="ws-tools"><svg class="i"><use href="#i-folder"/></svg><svg class="i"><use href="#i-power"/></svg></span>
+        </div>
+        <div class="vm">
+          <div class="vm-bar"><span>Chrome</span><span>File</span><span>Edit</span><span>View</span><span>History</span></div>
+          <div class="vm-chrome">
+            <div class="vm-tab"><span class="lights"><i></i><i></i><i></i></span><span class="vm-url">amazon.com/ap/signin</span></div>
+            <div class="vm-card">
+              <b>Sign in</b>
+              <span class="vm-field">max@example.com</span>
+              <span class="vm-field focus">••••••••••••</span>
+              <span class="vm-go">Continue</span>
+            </div>
+          </div>
+          <svg class="vm-pointer"><use href="#i-pointer"/></svg>
+        </div>
+      </div>
+
+      <div class="mpanel" role="img" aria-label="The aOS menu in the menu bar: your agent is working, the workspace is open to download the October invoice until 2:30 PM, the iPhone is not paired yet and can be paired, and there are buttons for Workspace, Exchange and Settings">
+        <div class="mp-head">
+          <img src="img/icon.png" alt="" width="32" height="32">
+          <div><b>aOS</b><small>Your agent is working</small></div>
+        </div>
+        <div class="mp-card">
+          <svg class="i on"><use href="#i-win"/></svg>
+          <div class="mp-text"><b>Workspace <i class="dot on"></i></b><small>open: Download the October invoice (until 2:30 PM)</small></div>
+          <span class="mp-btn">Close now</span>
+        </div>
+        <div class="mp-card">
+          <svg class="i off"><use href="#i-phone"/></svg>
+          <div class="mp-text"><b>iPhone <i class="dot off"></i></b><small>Not paired yet</small></div>
+          <span class="mp-btn">Pair</span>
+        </div>
+        <div class="mp-quick">
+          <span><svg class="i"><use href="#i-win"/></svg>Workspace</span>
+          <span><svg class="i"><use href="#i-folder"/></svg>Exchange</span>
+          <span><svg class="i"><use href="#i-gear"/></svg>Settings</span>
+        </div>
+        <div class="mp-foot"><span>Check for Updates …</span><span>Quit aOS</span></div>
+      </div>
+    </div>
+    <p class="agents reveal">Bring your own agent: <b>Claude Code</b>, <b>Codex</b>, <b>Gemini CLI</b>, <b>VS Code</b>, <b>Cursor</b>, <b>Windsurf</b>, <b>opencode</b> or any agent that speaks MCP.</p>
+  </div>
+</section>
+
+<section class="band gray" id="how">
+  <div class="container">
+    <span class="caps reveal">How it works</span>
+    <h2 class="big reveal" style="--d:.05s">Set up once. Then just ask.</h2>
+    <p class="lede reveal" style="--d:.1s">Most of the setup is waiting for macOS to download. There is no setup assistant to click through.</p>
+    <ol class="steps">
+      <li class="reveal">
+        <h3>Pick your agent</h3>
+        <p>aOS finds the agents on your Mac and adds itself to the ones you pick, as an MCP server.</p>
+      </li>
+      <li class="reveal hl" style="--d:.06s">
+        <h3>aOS builds the workspace</h3>
+        <p>It downloads macOS from Apple and sets up a Mac for your agent, with Google Chrome, that only your Mac can reach.</p>
+        <span class="time">About 10 minutes</span>
+      </li>
+      <li class="reveal" style="--d:.12s">
+        <h3>Ask your agent</h3>
+        <p>“Download my October invoice.” Your agent asks to open its workspace. You approve it, every time, and can watch it work.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="band" id="can">
+  <div class="container">
+    <span class="caps reveal">In the workspace</span>
+    <h2 class="big reveal" style="--d:.05s">What your agent can do. And what it can’t.</h2>
+    <p class="lede reveal" style="--d:.1s">It works on a Mac that has none of your files, passwords or sign-ins, and only while you let it.</p>
+    <div class="cando">
+      <div class="can reveal">
+        <h3>Your agent can</h3>
+        <ul>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>See the screen, click, type, scroll and drag</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Use any website in Chrome, and Mac apps</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Bring files in and results out through the exchange folder</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Sign in on websites once you approve, without seeing the password</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Ask you for help, for example with a captcha</li>
+        </ul>
+      </div>
+      <div class="cant reveal" style="--d:.06s">
+        <h3>It can’t</h3>
+        <ul>
+          <li><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>Open the workspace without your yes</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>See your Mac, your files or your passwords</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>Keep sign-ins after the workspace closes, unless you allow it</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-x"/></svg>Change the workspace’s own settings or browser rules</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band gray" id="signin">
+  <div class="container split">
     <div>
-      <h1>A Mac of its own<br>for <span class="accent">your coding agent</span>.</h1>
-      <p class="lead">aOS gives your agent a virtual Mac with its own screen, keyboard and browser, separate from yours. For every task that needs a website or an app. You approve each time it opens.</p>
-      <div class="cta">
-        <a class="button" href="https://github.com/MR-MANDELBROT/aos/releases">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
-          Download for Mac</a>
-        <a class="button ghost" href="#how">How it works</a>
-      </div>
-      <p class="note">Free · macOS 27 or later · Apple silicon</p>
+      <span class="caps reveal">Signing in</span>
+      <h2 class="big reveal" style="--d:.05s">Your agent asks. You approve.</h2>
+      <p class="lede reveal" style="--d:.1s">When a website needs a sign-in, your agent doesn’t type a password. You approve with Face ID on your iPhone, or on your Mac, and aOS fills it into the website. Your agent never sees the password.</p>
+      <ol class="flow-list reveal" style="--d:.15s">
+        <li><b>Your agent asks.</b> It clicks into the sign-in field and asks, with the website and the reason.</li>
+        <li><b>You approve.</b> With Face ID on your iPhone, or on your Mac. Or you decline.</li>
+        <li><b>aOS fills it in.</b> Only in the real Chrome and only on that https website. Your agent learns “signed in”, never the password.</li>
+      </ol>
     </div>
-    <div class="visual" aria-hidden="true">
-      <img class="appicon" src="img/icon.png" alt="">
-      <div class="dialog glass">
-        <img src="img/icon.png" alt="">
-        <h3>Codex wants to open its workspace</h3>
-        <p class="sub">For up to 15 minutes. You can watch and close it any time.</p>
-        <div class="purpose"><small>Purpose</small>Look up the opening hours of the city library</div>
-        <div class="buttons"><span class="no">Don't Allow</span><span class="yes">Allow</span></div>
+    <div class="figure reveal" style="--d:.1s">
+      <div class="iphone" role="img" aria-label="aOS for iPhone: Claude Code asks to sign in on www.amazon.com to download the October invoice. A button approves it with Face ID, another declines.">
+        <div class="screen">
+          <span class="island"></span>
+          <div class="sb"><span>9:41</span><span class="sb-r"><svg><use href="#sb-cell"/></svg><svg class="wf"><use href="#sb-wifi"/></svg><svg class="bat"><use href="#sb-bat"/></svg></span></div>
+          <div class="behind"></div>
+          <div class="sheet">
+            <div class="sheet-nav"><span class="glass-pill">Later</span>Sign-in request</div>
+            <p class="att"><svg class="i"><use href="#i-personkey"/></svg>Claude Code asks to sign in</p>
+            <p class="host">www.amazon.com</p>
+            <p class="purpose">“Download the October invoice”</p>
+            <p class="fine">The page asks for the password.</p>
+            <p class="timer"><svg class="i"><use href="#i-timer"/></svg>4:32 left</p>
+            <div class="login">
+              <span class="mono">A</span>
+              <span class="who"><b>max@example.com</b><small>Amazon</small></span>
+              <svg class="i check" style="color:var(--accent)"><use href="#i-checkcircle"/></svg>
+            </div>
+            <span class="ios-btn primary"><svg class="i"><use href="#i-faceid"/></svg>Approve with Face ID</span>
+            <span class="ios-btn"><svg class="i"><use href="#i-hand"/></svg>Decline</span>
+            <span class="ios-row">From another password app<svg class="i"><use href="#i-chev"/></svg></span>
+            <p class="fact"><svg class="i"><use href="#i-eyeslash"/></svg><span>The agent never sees the password. aOS types it into the sign-in page in the workspace, only on this site.</span></p>
+          </div>
+        </div>
       </div>
-      <div class="status glass">
-        <div class="row"><div class="ico indigo">▢</div><div><b>Workspace</b><span>open: opening hours, until 14:30</span></div><div class="dot"></div></div>
-        <div class="row"><div class="ico mint">↗</div><div><b>Exchange</b><span>1 file ready for you</span></div></div>
-      </div>
-    </div>
-  </header>
-
-  <div class="agents">
-    <p>Bring your own agent. aOS adds itself as an MCP server.</p>
-    <div class="chips">
-      <span class="chip glass">Claude Code</span><span class="chip glass">Codex CLI</span><span class="chip glass">Gemini CLI</span>
-      <span class="chip glass">VS Code</span><span class="chip glass">Cursor</span><span class="chip glass">Windsurf</span>
-      <span class="chip glass">opencode</span><span class="chip glass">any MCP agent</span>
     </div>
   </div>
-
-  <section id="trust">
-    <h2>Built so you stay in charge.</h2>
-    <p class="section-lead">Your agent works on a Mac that has none of your files, passwords or sign-ins, and only while you let it.</p>
-    <div class="grid">
-      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a5 5 0 0 1 10 0v4"/><rect x="5" y="11" width="14" height="10" rx="2"/></svg></div>
-        <h3>You approve every time</h3><p>Opening the workspace always needs your yes: in your agent, in the Claude app on your phone, or on your Mac.</p></div>
-      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="13" rx="2"/><path d="M8 21h8"/></svg></div>
-        <h3>Separate from your Mac</h3><p>A real macOS in a virtual machine. It can't see your files, and files only cross through an exchange folder.</p></div>
-      <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div>
-        <h3>Fresh every time</h3><p>When the workspace closes, websites forget their sign-ins, except the few you choose to keep.</p></div>
-      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0"/></svg></div>
-        <h3>It asks, you approve</h3><p>Your agent never types passwords or solves captchas. When it needs a sign-in it asks; you approve on your iPhone or Mac and aOS fills it in.</p></div>
-      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <h3>No server, no tracking</h3><p>aOS runs on your Mac only. It sends no data anywhere and never touches your agent's credentials.</p></div>
-      <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
-        <h3>Reach it from your phone</h3><p>With Claude Code, your conversations stay in the Claude app on your phone, even after the window that ran them closed.</p></div>
-    </div>
-  </section>
-
-  <section id="phone">
-    <h2>Your Mac, in your pocket.</h2>
-    <p class="section-lead">aOS for iPhone pairs with your Mac by QR code. No account, no cloud of ours: it talks to your Mac directly, encrypted with SSH.</p>
-    <div class="grid">
-      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.85 12.15 7.65-7.65M18 5l2 2M15 8l2 2"/></svg></div>
-        <h3>Sign-ins with Face ID</h3><p>A website needs a sign-in? Your agent asks, you approve with Face ID, aOS fills it in. Your agent never sees the password. From aOS's own vault or your password manager.</p></div>
-      <div class="card glass"><div class="ico mint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6M12 19h8"/></svg></div>
-        <h3>Terminal</h3><p>A full SSH terminal to your Mac, and to any other host you add.</p></div>
-      <div class="card glass"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
-        <h3>Screen</h3><p>Watch and control your Mac and the workspace live. Help requests from your agent open right there.</p></div>
-    </div>
-    <p class="section-note">aOS for iPhone is on its way to the App Store. Until then you can build it from the <a href="https://github.com/MR-MANDELBROT/aos/tree/main/iOS">source</a> with Xcode. To pair, click aOS in your Mac's menu bar, then <em>Pair</em> next to iPhone.</p>
-  </section>
-
-  <section id="how">
-    <h2>Set up once. Then just ask.</h2>
-    <p class="section-lead">Most of the setup is waiting for macOS to download. There is no setup assistant to click through.</p>
-    <div class="steps">
-      <div class="step glass"><h3>Choose your agent</h3><p>aOS finds the agents on your Mac and adds itself to the ones you pick.</p></div>
-      <div class="step glass"><h3>aOS builds the workspace</h3><p>It downloads macOS from Apple, installs it, adds Google Chrome and locks access down to your Mac.</p></div>
-      <div class="step glass"><h3>Ask for something on the web</h3><p>"Find the opening hours of the city library." Your agent asks to open its workspace; you say yes and can watch.</p></div>
-    </div>
-  </section>
-
-  <section>
-    <div class="split">
-      <div class="panel glass">
-        <h3>What your agent can do</h3>
-        <ul>
-          <li>See the screen, click, type, scroll and drag</li>
-          <li>Use any website in Chrome, and Mac apps</li>
-          <li>Bring files in and results out through the exchange folder</li>
-          <li>Sign in on websites once you approve, without seeing the password</li>
-          <li>Ask you to step in, for captchas</li>
-        </ul>
+  <div class="container">
+    <div class="cards">
+      <div class="card reveal" data-feature="bitwarden">
+        <svg class="i" aria-hidden="true"><use href="#i-key"/></svg>
+        <h3>Passwords stay in Bitwarden</h3>
+        <p>Your passwords stay where they are, in your Bitwarden account. aOS uses one only when you approve it, for that one sign-in.</p>
       </div>
-      <div class="panel glass">
-        <h3>What it can't do</h3>
-        <ul>
-          <li>Open the workspace without your yes</li>
-          <li>See your Mac, your files or your passwords</li>
-          <li>Keep sign-ins after the workspace closes (unless you allow it)</li>
-          <li>Change the workspace's own settings or browser policies</li>
-        </ul>
+      <div class="card reveal" style="--d:.05s">
+        <svg class="i" aria-hidden="true"><use href="#i-faceid"/></svg>
+        <h3>Or your password app</h3>
+        <p>Keep your passwords somewhere else? Your password app fills the request through AutoFill, with its own Face ID.</p>
+      </div>
+      <div class="card reveal" style="--d:.1s">
+        <svg class="i" aria-hidden="true"><use href="#i-captcha"/></svg>
+        <h3>Captchas are yours</h3>
+        <p>Your agent doesn’t solve captchas. It asks you, and you solve them on your iPhone, right on the workspace’s screen.</p>
       </div>
     </div>
-  </section>
-
-  <section id="faq">
-    <h2>Questions</h2>
-    <details class="glass"><summary>What do I need?</summary><p>A Mac with Apple silicon, macOS 27 or later, 8 GB of memory (16 GB recommended) and about 75 GB of free disk space. And a coding agent that supports MCP servers.</p></details>
-    <details class="glass"><summary>What does it cost?</summary><p>aOS is free. Your agent's subscription or API usage is between you and its provider.</p></details>
-    <details class="glass"><summary>Why a whole Mac and not just a browser?</summary><p>Some tasks need apps, downloads or a desktop. A real macOS behaves like a person's Mac, which also means fewer captchas.</p></details>
-    <details class="glass"><summary>Does the workspace slow my Mac down?</summary><p>It only runs while your agent works and shuts down afterwards. While it runs it uses about 4 GB of memory.</p></details>
-    <details class="glass"><summary>Does my agent see my passwords?</summary><p>Not through anything it does normally. Your agent only clicks into the sign-in field and asks. You approve on your iPhone or Mac; aOS's helper in the workspace types it into exactly that field, only in the real Chrome and only on an https website. The agent gets "signed in", never the password. An agent that deliberately attacks its own workspace with programs of its own can't be ruled out completely, so approve sign-ins for agents you trust with the account, and prefer accounts with two-factor sign-in.</p></details>
-    <details class="glass"><summary>Do I need the iPhone app?</summary><p>No. Everything works from the Mac. The iPhone app adds approvals with Face ID, the terminal and the screen of your Mac on the go.</p></details>
-    <details class="glass"><summary>Is it affiliated with Anthropic, OpenAI or Google?</summary><p>No. aOS is an independent app that works with their agents through MCP, the open standard for agent tools.</p></details>
-  </section>
-
-  <div class="final glass">
-    <img src="img/icon.png" alt="">
-    <h2>Give your agent a Mac of its own.</h2>
-    <p class="section-lead" style="margin: 0 auto 24px;">Free for macOS 27 on Apple silicon.</p>
-    <a class="button" href="https://github.com/MR-MANDELBROT/aos/releases">Download aOS</a>
   </div>
+</section>
+
+<section class="band" id="phone">
+  <div class="container">
+    <div class="center">
+      <span class="caps reveal">aOS for iPhone</span>
+      <h2 class="big reveal" style="--d:.05s">Your Mac, in your pocket.</h2>
+      <p class="lede reveal" style="--d:.1s">aOS for iPhone pairs with your Mac by QR code. No account, no cloud of ours: it talks to your Mac directly, encrypted with SSH.</p>
+    </div>
+    <div class="phones">
+      <div class="iphone reveal" role="img" aria-label="aOS for iPhone showing the workspace’s screen: Claude Code asks for help with the captcha on a sign-in page, with a Done button">
+        <div class="screen">
+          <span class="island"></span>
+          <div class="sb"><span>9:41</span><span class="sb-r"><svg><use href="#sb-cell"/></svg><svg class="wf"><use href="#sb-wifi"/></svg><svg class="bat"><use href="#sb-bat"/></svg></span></div>
+          <div class="seg-top"><div><span>Workspace</span><span>Mac</span></div></div>
+          <div class="help">
+            <svg class="i"><use href="#i-hand"/></svg>
+            <div><b>Claude Code asks for help</b><small>Please solve the captcha on the sign-in page</small></div>
+            <span class="done">Done</span>
+          </div>
+          <div class="ws-shot">
+            <div class="ws-page">
+              <b>Sign in</b>
+              <span class="vm-field">max@example.com</span>
+              <span class="vm-field">••••••••••••</span>
+              <span class="vm-go">Continue</span>
+              <span class="captcha"><i></i>I’m not a robot</span>
+            </div>
+            <svg class="ws-ptr"><use href="#i-pointer"/></svg>
+          </div>
+          <div class="scr-tools"><span><svg class="i"><use href="#i-pad"/></svg>Trackpad</span><span><svg class="i"><use href="#i-keyboard"/></svg></span></div>
+        </div>
+      </div>
+      <div class="iphone reveal" style="--d:.1s" role="img" aria-label="aOS for iPhone with a terminal on the Mac: git status and uptime in a shell">
+        <div class="screen light">
+          <span class="island"></span>
+          <div class="sb dark"><span>9:41</span><span class="sb-r"><svg><use href="#sb-cell"/></svg><svg class="wf"><use href="#sb-wifi"/></svg><svg class="bat"><use href="#sb-bat"/></svg></span></div>
+          <div class="term-nav"><span class="round-pill"><svg class="i"><use href="#i-back"/></svg></span>MacBook Pro<span class="round-pill"><svg class="i"><use href="#i-x"/></svg></span></div>
+<pre class="term">Last login: Thu Nov  6 08:12:44 on ttys002
+<span class="u">max@MacBook-Pro</span> <span class="p">~</span> % cd Developer/aos
+<span class="u">max@MacBook-Pro</span> <span class="p">~/Developer/aos</span> % git status --short
+ M iOS/Sources/App/AppModel.swift
+?? iOS/Sources/Screen/
+<span class="u">max@MacBook-Pro</span> <span class="p">~/Developer/aos</span> % uptime
+08:15  up 3 days, 22:41, 2 users, load averages: 1.42 1.37 1.29
+<span class="u">max@MacBook-Pro</span> <span class="p">~/Developer/aos</span> % <span class="cur"></span></pre>
+          <div class="keys">
+            <div class="keyrow bar"><span>esc</span><span>ctrl</span><span>tab</span><span>~</span><span>|</span><span>/</span><span>←</span><span>↓</span><span>↑</span><span>→</span></div>
+            <div class="keyrow"><span>q</span><span>w</span><span>e</span><span>r</span><span>t</span><span>y</span><span>u</span><span>i</span><span>o</span><span>p</span></div>
+            <div class="keyrow"><span>a</span><span>s</span><span>d</span><span>f</span><span>g</span><span>h</span><span>j</span><span>k</span><span>l</span></div>
+            <div class="keyrow"><span>⇧</span><span>z</span><span>x</span><span>c</span><span>v</span><span>b</span><span>n</span><span>m</span><span>⌫</span></div>
+            <div class="keyrow"><span>123</span><span class="wide-key">space</span><span>↵</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cards c4">
+      <div class="card reveal">
+        <svg class="i" aria-hidden="true"><use href="#i-tray"/></svg>
+        <h3>Requests</h3>
+        <p>Sign-ins, workspace requests and calls for help from your agent appear on your iPhone. You answer with Face ID.</p>
+      </div>
+      <div class="card reveal" style="--d:.05s" data-feature="push">
+        <svg class="i" aria-hidden="true"><use href="#i-bell"/></svg>
+        <h3>Notifications</h3>
+        <p>A request reaches you as a notification, even when the app is closed.</p>
+      </div>
+      <div class="card reveal" style="--d:.1s">
+        <svg class="i" aria-hidden="true"><use href="#i-term"/></svg>
+        <h3>Terminal</h3>
+        <p>A real SSH terminal to your Mac, and to any other computer you add.</p>
+      </div>
+      <div class="card reveal" style="--d:.15s">
+        <svg class="i" aria-hidden="true"><use href="#i-display"/></svg>
+        <h3>Screen</h3>
+        <p>Watch and control your Mac and the workspace live, with touch, keyboard and trackpad.</p>
+      </div>
+    </div>
+    <div class="wide reveal">
+      <svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg>
+      <p><b>At home and on the go.</b> On the same Wi-Fi, or with your Mac on your iPhone’s hotspot, the app connects directly. From anywhere else, use a VPN such as Tailscale.</p>
+    </div>
+    <p class="note reveal">aOS for iPhone is on its way to the App Store. Until then you can build it from the <a href="https://github.com/MR-MANDELBROT/aos/tree/main/iOS">source</a> with Xcode. To pair, click aOS in your Mac’s menu bar, then Pair next to iPhone.</p>
+  </div>
+</section>
+
+<section class="band gray" id="claude">
+  <div class="container">
+    <span class="caps reveal">Claude Code</span>
+    <h2 class="big reveal" style="--d:.05s">Keep going from your phone.</h2>
+    <p class="lede reveal" style="--d:.1s">With Claude Code, your conversations stay reachable from the Claude app on your phone, even after the window or terminal that ran them closed.</p>
+    <div class="cards">
+      <div class="card reveal">
+        <svg class="i" aria-hidden="true"><use href="#i-bubble"/></svg>
+        <h3>Conversations stay reachable</h3>
+        <p>aOS keeps a closed conversation running in the background, so you can continue it in the Claude app. Open it on the Mac again, and aOS hands it back.</p>
+      </div>
+      <div class="card reveal" style="--d:.05s" data-feature="new-chats">
+        <svg class="i" aria-hidden="true"><use href="#i-bubbleplus"/></svg>
+        <h3>New chats start on this Mac</h3>
+        <p>Start a new chat in the Claude app on your phone, and it runs here, on your Mac.</p>
+      </div>
+      <div class="card reveal" style="--d:.1s">
+        <svg class="i" aria-hidden="true"><use href="#i-person"/></svg>
+        <h3>Your own sign-in</h3>
+        <p>Claude Code runs unchanged and signs in through its own flow. aOS never sees your credentials.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="workspace">
+  <div class="container">
+    <span class="caps reveal">The workspace</span>
+    <h2 class="big reveal" style="--d:.05s">A fresh Mac, every time.</h2>
+    <p class="lede reveal" style="--d:.1s">The workspace is a real macOS in a virtual machine, with its own screen and browser. You decide what it may keep.</p>
+    <div class="cards">
+      <div class="card reveal" data-feature="programs">
+        <svg class="i" aria-hidden="true"><use href="#i-apps"/></svg>
+        <h3>Your Mac’s programs</h3>
+        <p>The programs on your Mac are there in the workspace too. They start fresh, without your data, settings or sign-ins.</p>
+      </div>
+      <div class="card reveal" style="--d:.05s">
+        <svg class="i" aria-hidden="true"><use href="#i-signout"/></svg>
+        <h3>Sign out when it closes</h3>
+        <p>Choose which websites sign out when the workspace closes: all of them, all except a few, or none.</p>
+        <div class="seg" aria-hidden="true"><span>All</span><span class="on">All except …</span><span>None</span></div>
+        <div class="chips" aria-hidden="true"><span>google.com</span></div>
+      </div>
+      <div class="card reveal" style="--d:.1s">
+        <svg class="i" aria-hidden="true"><use href="#i-folder"/></svg>
+        <h3>One folder to share</h3>
+        <p>Files only cross through the exchange folder. You hand your agent what it needs there, and its results land there.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band gray" id="awake" data-feature="wake">
+  <div class="container">
+    <span class="caps reveal">Staying awake</span>
+    <h2 class="big reveal" style="--d:.05s">Reachable when you need it.</h2>
+    <p class="lede reveal" style="--d:.1s">Your agent and your conversations need a Mac that’s awake. You choose how much.</p>
+    <div class="options">
+      <div class="option reveal">
+        <svg class="i" aria-hidden="true"><use href="#i-lidopen"/></svg>
+        <div>
+          <h3><span class="radio" aria-hidden="true"></span>Only with the lid open</h3>
+          <p>Your Mac stays awake while something needs to stay reachable. Close the lid, and it sleeps as usual.</p>
+        </div>
+      </div>
+      <div class="option on reveal" style="--d:.06s">
+        <svg class="i" aria-hidden="true"><use href="#i-lidclosed"/></svg>
+        <div>
+          <h3><span class="radio" aria-hidden="true"></span>With the lid closed, too</h3>
+          <p>Your Mac stays reachable with the lid closed. Everything else on it is frozen meanwhile.</p>
+        </div>
+      </div>
+    </div>
+    <div class="wide reveal">
+      <svg class="i" aria-hidden="true"><use href="#i-hotspot"/></svg>
+      <p><b>Away from Wi-Fi?</b> Your Mac joins your iPhone’s hotspot, but only when you switch that on.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band-dark" id="trust">
+  <div class="container safe-grid">
+    <div>
+      <span class="caps reveal">Privacy and trust</span>
+      <h2 class="big reveal" style="--d:.05s">No account. No cloud of ours.</h2>
+      <p class="lede reveal" style="--d:.1s">aOS runs on your Mac and your iPhone, and nowhere else. It collects nothing and never touches your agent’s credentials.</p>
+      <ul class="safe-list">
+        <li class="reveal">
+          <h3><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>You approve every time</h3>
+          <p>Opening the workspace always needs your yes: in your agent, in the Claude app on your phone, or on your Mac.</p>
+        </li>
+        <li class="reveal" style="--d:.06s">
+          <h3><svg class="i" aria-hidden="true"><use href="#i-win"/></svg>Separate from your Mac</h3>
+          <p>The workspace can’t see your files. Files only cross through the exchange folder.</p>
+        </li>
+        <li class="reveal" style="--d:.12s">
+          <h3><svg class="i" aria-hidden="true"><use href="#i-key"/></svg>SSH, with keys that stay put</h3>
+          <p>Everything goes over SSH. The keys never leave the device they were made on.</p>
+        </li>
+        <li class="reveal" style="--d:.18s">
+          <h3><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg>Results, not passwords</h3>
+          <p>Your agent gets screenshots and results. A password goes from you to the website, never through your agent.</p>
+        </li>
+      </ul>
+      <p class="limit reveal"><b>One honest limit.</b> An agent that deliberately attacks its own workspace can’t be ruled out completely. So approve sign-ins only for agents you trust with the account, and use two-factor sign-in where you can.</p>
+    </div>
+    <div class="wire reveal" style="--d:.1s" role="img" aria-label="Your iPhone, your Mac and the workspace talk to each other over SSH, with no server in between">
+      <div class="node"><span class="ico"><svg class="i"><use href="#i-phone"/></svg></span><div><b>Your iPhone</b><small>Its key stays in the Secure Enclave</small></div></div>
+      <div class="link"><span><svg class="i"><use href="#i-lock"/></svg>SSH</span></div>
+      <div class="node"><span class="ico"><svg class="i"><use href="#i-mac"/></svg></span><div><b>Your Mac</b><small>aOS runs here</small></div></div>
+      <div class="link"><span><svg class="i"><use href="#i-lock"/></svg>SSH</span></div>
+      <div class="node"><span class="ico vm"><svg class="i"><use href="#i-win"/></svg></span><div><b>The workspace</b><small>A Mac of its own, for your agent</small></div></div>
+      <p class="nocloud"><svg class="i" aria-hidden="true"><use href="#i-nocloud"/></svg>No server, no account, no cloud of ours</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="requirements">
+  <div class="container">
+    <span class="caps reveal">Requirements</span>
+    <h2 class="big reveal" style="--d:.05s">What you need.</h2>
+    <div class="stats">
+      <div class="stat reveal"><b>M1</b><span>or newer: any Mac with Apple silicon.</span></div>
+      <div class="stat reveal" style="--d:.05s"><b>macOS 27</b><span>or later.</span></div>
+      <div class="stat reveal" style="--d:.1s"><b>8 GB</b><span>of memory or more. 16 GB is more comfortable.</span></div>
+      <div class="stat reveal" style="--d:.15s"><b>75 GB</b><span>of free disk space, about.</span></div>
+    </div>
+    <p class="req reveal">Plus a coding agent that supports MCP servers.</p>
+  </div>
+</section>
+
+<section class="band gray" id="faq">
+  <div class="container">
+    <span class="caps reveal">FAQ</span>
+    <h2 class="big reveal" style="--d:.05s">Questions and answers.</h2>
+    <div class="faq reveal" style="--d:.1s">
+      <details>
+        <summary>What do I need?<svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+        <p>A Mac with Apple silicon, macOS 27 or later, 8 GB of memory or more (16 GB recommended) and about 75 GB of free disk space. And a coding agent that supports MCP servers.</p>
+      </details>
+      <details>
+        <summary>What does it cost?<svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+        <p>aOS is free. Your agent’s subscription or API usage is between you and its provider.</p>
+      </details>
+      <details>
+        <summary>Why a whole Mac and not just a browser?<svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+        <p>Some tasks need apps, downloads or a desktop. A real macOS behaves like a person’s Mac, which also means fewer captchas.</p>
+      </details>
+      <details>
+        <summary>Does the workspace slow my Mac down?<svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+        <p>It only runs while your agent works and shuts down afterwards. While it runs, it uses about 4 GB of memory.</p>
+      </details>
+      <details>
+        <summary>Does my agent see my passwords?<svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+        <p>Not through anything it does normally. Your agent only clicks into the sign-in field and asks. You approve on your iPhone or Mac, and aOS’s helper in the workspace types the sign-in into exactly that field, only in the real Chrome and only on an https website. Your agent learns “signed in”, never the password. An agent that deliberately attacks its own workspace with programs of its own can’t be ruled out completely. So approve sign-ins for agents you trust with the account, and prefer accounts with two-factor sign-in.</p>
+      </details>
+      <details>
+        <summary>Do I need the iPhone app?<svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+        <p>No. Everything works from the Mac. The iPhone app adds approvals with Face ID, the terminal and the screen of your Mac on the go.</p>
+      </details>
+      <details>
+        <summary>Is it affiliated with Anthropic, OpenAI or Google?<svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+        <p>No. aOS is an independent app. It works with their agents through MCP, the open standard for agent tools.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="download">
+  <div class="container">
+    <img class="reveal" src="img/icon.png" alt="" width="96" height="96" loading="lazy">
+    <h2 class="big reveal" style="--d:.05s">Give your agent a Mac of its own.</h2>
+    <p class="lede reveal" style="--d:.1s">Free for macOS 27 on Apple silicon.</p>
+    <a class="btn btn-primary reveal" style="--d:.15s" href="https://github.com/MR-MANDELBROT/aos/releases/latest"><svg class="i" aria-hidden="true"><use href="#i-down"/></svg>Download for Mac</a>
+    <p class="note reveal" style="--d:.2s">aOS for iPhone is on its way to the App Store. Until then you can build it from the <a href="https://github.com/MR-MANDELBROT/aos/tree/main/iOS">source</a> with Xcode.</p>
+  </div>
+</section>
+
 </main>
 
-<footer class="wrap">
-  <div class="row"><a href="privacy.html">Privacy</a><a href="https://github.com/MR-MANDELBROT/aos">Source and releases</a><a href="de/">Deutsch</a></div>
-  <p>aOS is not made by or affiliated with Apple, Anthropic, OpenAI, Google, Microsoft or the makers of any agent it works with. Names of agents are trademarks of their owners.</p>
+<footer class="footer">
+  <div class="container">
+    <div class="foot">
+      <span>aOS by <a href="https://marquart.dev">Maximilian Marquart</a></span>
+      <ul class="foot-links">
+        <li><a href="https://github.com/MR-MANDELBROT/aos">GitHub</a></li>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="https://marquart.dev/impressum/">Imprint</a></li>
+        <li><a href="de/" hreflang="de" lang="de">Deutsch</a></li>
+      </ul>
+    </div>
+    <p class="legal">aOS is not made by or affiliated with Apple, Anthropic, OpenAI, Google, Microsoft or the makers of any agent or app it works with. Their names are trademarks of their owners.</p>
+  </div>
 </footer>
+
+<script>
+  // Fade sections in while scrolling
+  (function () {
+    var els = document.querySelectorAll(".reveal");
+    if (!("IntersectionObserver" in window)) {
+      els.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+</script>
 </body>
 </html>
