@@ -119,8 +119,9 @@ See Docs/COMPANION.md for the protocol. On the Mac:
 - **What this does and doesn't promise.** Annex keeps the password away from the agent's tools and its normal ways of
   working: the agent gets only the result, its screenshots show dots, the clipboard isn't used, and the obvious
   side doors are closed (above). The account Chrome runs in is still the agent's: an agent that deliberately attacks
-  the workspace from the inside with programs of its own (for example Chrome's JavaScript from Apple Events switched
-  on in its profile, which has no policy) can't be ruled out completely. So: approve sign-ins for agents you trust
+  the workspace from the inside with programs of its own can't be ruled out completely (for example Chrome's
+  JavaScript from Apple Events: Chrome has no policy for it; the helper refuses while a profile has it on, but can
+  only see the profile files, not a running Chrome's memory). So: approve sign-ins for agents you trust
   with the account, and prefer accounts with two-factor sign-in. Open hardening steps: a key only the signed helper
   can use, so the request is encrypted to it (instead of trusting the socket's peer), and a check of Chrome's profile
   settings before each sign-in.
