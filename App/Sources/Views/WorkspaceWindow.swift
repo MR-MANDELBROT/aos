@@ -1,4 +1,5 @@
 import AOSKit
+import AppKit
 import SwiftUI
 
 /// The workspace screen. Shows the agent's help requests on top, and the setup's screen sharing step.
@@ -56,13 +57,14 @@ struct WorkspaceWindow: View {
             }
         }
         .frame(minWidth: 800, minHeight: 540)
+        // The user working in the window keeps the workspace open like the agent's requests do.
+        .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { _ in
+            guard coordinator?.view?.window?.isKeyWindow == true,
+                  let any = CGEventType(rawValue: ~0),
+                  CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: any) < 120 else { return }
+            model.workspace.noteActivity()
+        }
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Label(statusText, systemImage: "circle.fill")
-                    .labelStyle(.titleAndIcon)
-                    .foregroundStyle(statusColor)
-                    .font(.callout)
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Exchange Folder", systemImage: "folder") { NSWorkspace.shared.open(model.paths.exchange) }
             }
@@ -72,16 +74,12 @@ struct WorkspaceWindow: View {
             }
         }
         .navigationTitle(Text("Workspace"))
+        .navigationSubtitle(statusText)
     }
 
     var statusText: String {
-        if let purpose = model.status?.leasePurpose { return String(localized: "Open: \(purpose)") }
-        return model.vmPhase == .running ? String(localized: "Running") : String(localized: "Off")
-    }
-
-    var statusColor: Color {
-        if model.status?.leaseUntil != nil { return BrandColor.indigo }
-        return model.vmPhase == .running ? .green : .secondary
+        if let purpose = model.status?.leasePurpose, model.vmPhase == .running { return String(localized: "Open: \(purpose)") }
+        return model.vmPhase.displayName
     }
 
     func banner(symbol: String, tint: Color, title: LocalizedStringKey, detail: String,
@@ -111,16 +109,42 @@ struct SessionWindow: View {
             .padding(8)
             .frame(minWidth: 760, minHeight: 480)
             .toolbar {
-                ToolbarItem(placement: .navigation) {
-                    Label(model.session?.state.rawValue ?? String(localized: "not running"), systemImage: "circle.fill")
-                        .labelStyle(.titleAndIcon)
-                        .foregroundStyle(model.session?.state == .running ? .green : .secondary)
-                        .font(.callout)
-                }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Restart", systemImage: "arrow.clockwise") { SessionAgent.restart(paths: model.paths) }
                 }
             }
             .navigationTitle(Text("Session \"\(model.settings.sessionName)\""))
+            .navigationSubtitle(model.session?.state.displayName ?? String(localized: "Off"))
+    }
+}
+
+extension VMHost.Phase {
+    /// For window subtitles and the menu.
+    var displayName: String {
+        switch self {
+        case .stopped: return String(localized: "Off")
+        case .starting: return String(localized: "Starting")
+        case .running: return String(localized: "Running")
+        case .pausing, .paused: return String(localized: "Paused")
+        case .suspending, .stopping: return String(localized: "Shutting down")
+        case .installing: return String(localized: "Installing macOS")
+        case .error: return String(localized: "Error")
+        }
+    }
+}
+
+extension SessionStatus.State {
+    var displayName: String {
+        switch self {
+        case .starting: return String(localized: "Starting")
+        case .running: return String(localized: "Running")
+        case .waitingForNetwork: return String(localized: "Waiting for the network")
+        case .needsLogin: return String(localized: "Sign in to Claude Code")
+        case .needsAttention: return String(localized: "Claude Code asks something")
+        case .missingClaude: return String(localized: "Claude Code is not installed")
+        case .restarting: return String(localized: "Restarting")
+        case .stopped: return String(localized: "Off")
+        case .failed: return String(localized: "Error")
+        }
     }
 }

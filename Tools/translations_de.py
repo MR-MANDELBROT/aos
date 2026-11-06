@@ -540,4 +540,11 @@ DE.update({
     'Yours (%@), signed by Bitwarden': 'Deins (%@), von Bitwarden signiert',
     'YubiKey (one-time password)': 'YubiKey (Einmalpasswort)',
     'your email address': 'deine E-Mail-Adresse',
+    'Claude Code asks something': 'Claude Code fragt etwas',
+    'Error': 'Fehler',
+    'Installing macOS': 'macOS wird installiert',
+    'Paused': 'Angehalten',
+    'Restarting': 'Startet neu',
+    'Restarting the workspace once': 'Arbeitsplatz startet einmal neu',
+    'Shutting down': 'Fährt herunter',
 })

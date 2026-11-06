@@ -45,7 +45,11 @@ public final class WorkspaceController {
         self.provisioner = Provisioner(paths: paths, kit: GuestKit(policies: settings.chromePolicies))
         self.bitwarden = bitwarden ?? BitwardenVault(paths: paths)
         self.bitwarden.lockHours = settings.bitwardenLockHours
-        host.onPhaseChange = { [weak self] _ in self?.onChange?() }
+        host.onPhaseChange = { [weak self] phase in
+            // The idle time counts from the start, not from the app's launch.
+            if phase == .running { self?.lastActivity = Date() }
+            self?.onChange?()
+        }
         self.bitwarden.onOffersChanged = { [weak self] in
             Task { @MainActor in await self?.refreshSignInOffers() }
         }
@@ -67,8 +71,12 @@ public final class WorkspaceController {
         }
     }
 
+    /// The user works in the workspace window (or the setup needs it): counts like the agent's activity.
+    public func noteActivity() { lastActivity = Date() }
+
     private func idleCheck() async {
-        guard !busy, !closing else { return }
+        // During the setup the user works in the workspace at their own pace: never close it under them.
+        guard !busy, !closing, setupComplete else { return }
         if let lease, lease.until < Date() {
             log("lease for \"\(lease.purpose)\" expired, closing the workspace")
             _ = await close()
@@ -391,6 +399,24 @@ public final class WorkspaceController {
         try await client.press([Keysyms.command, 0x76])
         try await Task.sleep(nanoseconds: clearAfter ? 400_000_000 : 150_000_000)
         if clearAfter { _ = try? await ssh.run(pbcopy, input: Data(), timeout: 20, what: "clipboard") }
+    }
+
+    /// Shuts the guest down in order and boots it again (the setup: language and keyboard layout apply only at
+    /// the next login). Returns once the VM runs again; the login inside may still take a moment.
+    public func restart() async throws {
+        lease = nil
+        await rfb?.disconnect()
+        rfb = nil
+        if host.isRunning, let ip = try? host.guestAddress() {
+            host.expectStop()
+            try? await provisioner.shutdown(host: ip)
+            if !(await host.waitUntilStopped(timeout: 90)) {
+                log("guest did not power off in time, stopping it")
+                try? await host.forceStop()
+            }
+        }
+        try await host.start()
+        lastActivity = Date()
     }
 
     /// Ends the lease and stops the VM: an orderly shutdown (sign-ins expire) or a suspend.

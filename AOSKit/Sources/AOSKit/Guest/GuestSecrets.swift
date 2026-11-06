@@ -29,10 +29,14 @@ public struct GuestSecrets: Sendable {
         return password
     }
 
-    /// Letters and digits only: typed into the guest over VNC and passed to sudo, so nothing that a
-    /// keyboard layout or a shell could change.
+    /// Typed into the guest as key presses (the workspace window sends key codes, which the guest reads with
+    /// its own keyboard layout) and passed to sudo. So only letters that sit on the same key in the common
+    /// layouts (US/ABC, German QWERTZ, French AZERTY): no a, q, w, y, z, m and no digits (Shift on AZERTY).
+    /// 40 characters, 32 of them: about 170 bits.
+    static let passwordAlphabet = Array("bcdefghijklnoprstuvxBCDEFGHIJKLNOPRSTUVX")
+
     static func randomPassword(length: Int) -> String {
-        let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789")
+        let alphabet = passwordAlphabet
         var bytes = [UInt8](repeating: 0, count: length)
         let status = SecRandomCopyBytes(kSecRandomDefault, length, &bytes)
         precondition(status == errSecSuccess, "no random bytes")

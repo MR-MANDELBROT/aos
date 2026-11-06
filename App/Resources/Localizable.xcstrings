@@ -1010,6 +1010,16 @@
         }
       }
     },
+    "Claude Code asks something" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code fragt etwas"
+          }
+        }
+      }
+    },
     "Claude Code asks something (open Session)" : {
       "localizations" : {
         "de" : {
@@ -1470,6 +1480,16 @@
         }
       }
     },
+    "Error" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler"
+          }
+        }
+      }
+    },
     "Every website forgets its sign-in when the workspace closes. Expect more captchas, for example from Google." : {
       "localizations" : {
         "de" : {
@@ -1696,6 +1716,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "installiert macOS"
+          }
+        }
+      }
+    },
+    "Installing macOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS wird installiert"
           }
         }
       }
@@ -2272,6 +2302,7 @@
       }
     },
     "not running" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2683,6 +2714,16 @@
         }
       }
     },
+    "Paused" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angehalten"
+          }
+        }
+      }
+    },
     "Point the camera at this code." : {
       "localizations" : {
         "de" : {
@@ -2843,12 +2884,32 @@
         }
       }
     },
+    "Restarting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet neu"
+          }
+        }
+      }
+    },
     "restarting %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "startet neu %@"
+          }
+        }
+      }
+    },
+    "Restarting the workspace once" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz startet einmal neu"
           }
         }
       }
@@ -3089,6 +3150,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Im Finder zeigen"
+          }
+        }
+      }
+    },
+    "Shutting down" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fährt herunter"
           }
         }
       }

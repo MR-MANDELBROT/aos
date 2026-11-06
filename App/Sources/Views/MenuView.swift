@@ -243,7 +243,7 @@ struct MenuView: View {
         case .running: return String(localized: "running")
         case .installing: return String(localized: "installing macOS")
         case .error: return model.status?.lastError ?? String(localized: "error")
-        default: return model.vmPhase.rawValue
+        default: return model.vmPhase.displayName
         }
     }
 

@@ -27,9 +27,11 @@ final class DHCPLeasesTests: XCTestCase {
         XCTAssertNil(DHCPLeases.parse(text, mac: "0a:02:3c:04:05:07"))
     }
 
-    func testRandomPasswordIsAlphanumeric() {
+    func testRandomPasswordSurvivesKeyboardLayouts() {
         let p = GuestSecrets.randomPassword(length: 32)
         XCTAssertEqual(p.count, 32)
-        XCTAssertTrue(p.allSatisfy { $0.isLetter || $0.isNumber })
+        // Keys that differ between US, German and French layouts must never appear.
+        XCTAssertTrue(p.allSatisfy { $0.isLetter && !"aqwyzmAQWYZM".contains($0) }, p)
+        XCTAssertEqual(Set(GuestSecrets.passwordAlphabet).count, 40)
     }
 }

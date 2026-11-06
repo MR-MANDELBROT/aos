@@ -274,17 +274,31 @@ final class SetupController: ObservableObject {
             try await self.workspace.provisioner.bootstrap(host: ip) { line in
                 Task { @MainActor in self.note(line) }
             }
+            // Language and the ABC keyboard (which the password typing relies on) apply only at the next login.
+            self.activity = .working(String(localized: "Restarting the workspace once"))
+            self.note("restarting the workspace so language and keyboard apply")
+            try await self.workspace.restart()
+            let address = try await self.startedWorkspace()
             self.step = .screenSharing
-            try await self.workspace.provisioner.openSharingSettings(host: ip)
+            try await self.workspace.provisioner.openSharingSettings(host: address)
         }
+    }
+
+    /// The workspace running and logged in (booted if it was off, e.g. after the app was quit); its address.
+    private func startedWorkspace() async throws -> String {
+        let host = workspace.host
+        if !host.isRunning { try await host.start() }
+        let ip = try await host.waitForAddress(timeout: 300)
+        try await workspace.provisioner.prepareSession(host: ip)
+        workspace.noteActivity()
+        return ip
     }
 
     // MARK: 6. Screen sharing
 
     func verifyScreenSharing() {
         run(String(localized: "Checking screen sharing")) {
-            if !self.workspace.host.isRunning { try await self.workspace.host.start() }
-            let ip = try await self.workspace.host.waitForAddress(timeout: 120)
+            let ip = try await self.startedWorkspace()
             guard try await self.workspace.provisioner.screenSharingEnabled(host: ip) else {
                 throw SetupError.screenSharingOff
             }
@@ -310,14 +324,14 @@ final class SetupController: ObservableObject {
 
     func openSharingSettingsAgain() {
         run(String(localized: "Opening the Sharing settings")) {
-            if !self.workspace.host.isRunning { try await self.workspace.host.start() }
-            let ip = try await self.workspace.host.waitForAddress(timeout: 120)
+            let ip = try await self.startedWorkspace()
             try await self.workspace.provisioner.openSharingSettings(host: ip)
         }
     }
 
     func typeGuestPassword(into view: VMDisplay.Coordinator?) {
         guard let view, let password = try? GuestSecrets(paths: paths).adminPassword(createIfMissing: false) else { return }
+        workspace.noteActivity()
         view.type(password + "\n")
     }
 
