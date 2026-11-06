@@ -172,6 +172,12 @@ while let line = readLine(strippingNewline: true) {
                 q.auth = signature
             }
             relay(id, response)
+        case "display":
+            let response = try requests.call { q in
+                q.op = "companion.display"; q.target = r["target"] as? String; q.text = r["text"] as? String
+                q.auth = signature
+            }
+            relay(id, response, fields: true)
         case "type":
             let response = try requests.call { q in
                 q.op = "companion.type"; q.text = r["text"] as? String; q.auth = signature

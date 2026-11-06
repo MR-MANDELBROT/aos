@@ -278,6 +278,9 @@ extension WorkspaceController {
             answerSignIn(id, SignInAnswer(username: r.username, password: r.password, code: r.totp, login: r.login,
                                           declined: r.decline ?? false, from: r.device ?? "iPhone"))
             return AgentResponse(id: r.id, ok: true, text: "ok")
+        case "companion.display":
+            // The workspace's display in the phone's shape while the phone shows it (Agent/WorkspaceDisplay.swift).
+            return handleDisplay(r)
         case "companion.type":
             // The user types into the workspace from the phone (umlauts and emoji go through the guest's clipboard,
             // as for the agent). Not while the agent signs in.

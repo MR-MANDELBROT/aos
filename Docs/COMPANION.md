@@ -150,6 +150,15 @@ Requests:
 - `{"id":6,"op":"help.done","request":"<id>"}` -> `{"id":6,"ok":true}`
 - `{"id":8,"op":"type","text":"Grüße 😀"}` -> `{"id":8,"ok":true}` (types into the workspace; text beyond ASCII goes
   through the guest's clipboard, as for the agent)
+- `{"id":9,"op":"display","target":"workspace","text":"1200x2322@2"}` -> `{"id":9,"ok":true,"width":1200,"height":2322,"scale":2,"lease":45}`
+  (signed like `type`: `target`, and `text` in `data`). While the iPhone shows the workspace, its display takes the
+  phone's shape: `text` is `WIDTHxHEIGHT@SCALE` in pixels (scale 2: macOS draws 2 pixels per point; the Mac uses 160
+  pixels per inch for it, at which macOS picks exactly that, and 110 for scale 1), or `reset` for the workspace's own
+  size (1280x800). The Mac keeps a size for `lease` seconds; the iPhone sends it again every 20 s while it shows the
+  workspace and `reset` when it stops. Without a renewal (the phone went away, crashed or lost the network), when the
+  workspace is suspended or after it was restored from a saved state, the Mac goes back to the workspace's own size.
+  The agent's tools take the screen as it is; pictures bigger than 1280 pixels on the long side are scaled down for
+  the agent, and its coordinates scaled back up.
 - `{"id":7,"op":"approval.answer","request":"<id>","allowed":true}` -> `{"id":7,"ok":true}` (an agent that can't ask
   itself wants to open the workspace)
 

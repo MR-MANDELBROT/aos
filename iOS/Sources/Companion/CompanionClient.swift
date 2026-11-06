@@ -129,6 +129,13 @@ actor CompanionClient {
         _ = try await request(.type(text: text), timeout: .seconds(60))
     }
 
+    /// Asks for the workspace's display in a size ("WIDTHxHEIGHT@SCALE") or its own size back ("reset"); returns the
+    /// size it got.
+    func display(_ size: String) async throws -> (width: Int, height: Int) {
+        let response = try await request(.display(target: .workspace, size: size), timeout: .seconds(10))
+        return (response.body["width"]?.int ?? 0, response.body["height"]?.int ?? 0)
+    }
+
     /// Sends a request and waits for the answer with its id.
     func request(_ request: CompanionRequest, timeout: Duration = .seconds(20)) async throws -> CompanionResponse {
         if let finished { throw finished }

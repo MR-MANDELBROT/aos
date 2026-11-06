@@ -73,6 +73,9 @@ enum CompanionRequest: Sendable, Equatable {
     case approvalAnswer(request: String, allowed: Bool)
     /// Types text into the running workspace (ASCII as keys, the rest through the guest's clipboard).
     case type(text: String)
+    /// The workspace's display in the phone's shape while the phone shows it: `size` is "WIDTHxHEIGHT@SCALE" or
+    /// "reset" (screen sharing, Docs/COMPANION.md; renewed while the phone shows the workspace).
+    case display(target: ScreenTarget, size: String)
 
     var op: String {
         switch self {
@@ -84,13 +87,14 @@ enum CompanionRequest: Sendable, Equatable {
         case .helpDone: "help.done"
         case .approvalAnswer: "approval.answer"
         case .type: "type"
+        case .display: "display"
         }
     }
 
     /// The operation as aOS on the Mac gets it from `aos-companion` (what the signature names).
     var signedOp: String {
         switch self {
-        case .hello, .status, .subscribe, .screen, .type: "companion." + op
+        case .hello, .status, .subscribe, .screen, .type, .display: "companion." + op
         default: op
         }
     }
@@ -136,6 +140,9 @@ enum CompanionRequest: Sendable, Equatable {
             f.decision = allowed ? "allow" : "deny"
         case .type(let text):
             f.data = CompanionSignature.dataDigest(text: text)
+        case .display(let target, let size):
+            f.target = target.rawValue
+            f.data = CompanionSignature.dataDigest(text: size)
         }
         return f
     }
@@ -176,6 +183,9 @@ enum CompanionRequest: Sendable, Equatable {
             object["allowed"] = .bool(allowed)
         case .type(let text):
             object["text"] = .string(text)
+        case .display(let target, let size):
+            object["target"] = .string(target.rawValue)
+            object["text"] = .string(size)
         }
         if let auth { object["auth"] = auth.json }
         let encoder = JSONEncoder()

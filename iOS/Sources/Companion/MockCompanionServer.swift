@@ -146,6 +146,12 @@ final class MockCompanionServer: @unchecked Sendable {
             })
         case "subscribe", "signin.answer", "help.done", "approval.answer", "type":
             break
+        case "display":
+            // The size it asked for, or the workspace's own one
+            let parts = (object["text"]?.string ?? "").split(separator: "@").first?.split(separator: "x") ?? []
+            body["width"] = .number(Double(parts.count == 2 ? Int(parts[0]) ?? 1280 : 1280))
+            body["height"] = .number(Double(parts.count == 2 ? Int(parts[1]) ?? 800 : 800))
+            body["lease"] = .number(45)
         case "screen":
             guard let target = object["target"]?.string.flatMap(ScreenTarget.init(rawValue:)),
                   let endpoint = state.screens[target] else {
@@ -187,7 +193,7 @@ final class MockCompanionServer: @unchecked Sendable {
     /// What the Mac signs over, read from the line the way the Mac reads it: `aos-companion` passes on only the fields
     /// each operation has, the app derives the decision from them (AOSKit `CompanionSignature.fields(for:auth:)`).
     static func signatureFields(op: String, object: [String: JSONValue], auth: CompanionAuth) -> CompanionSignature.Fields {
-        let macOp = ["hello", "status", "subscribe", "screen", "type"].contains(op) ? "companion." + op : op
+        let macOp = ["hello", "status", "subscribe", "screen", "type", "display"].contains(op) ? "companion." + op : op
         var f = CompanionSignature.Fields(op: macOp, key: auth.key, ts: auth.ts, nonce: auth.nonce)
         func text(_ name: String) -> String? { object[name]?.string }
         switch op {
@@ -204,6 +210,9 @@ final class MockCompanionServer: @unchecked Sendable {
             f.data = CompanionSignature.dataDigest(username: text("username"), password: text("password"),
                                                    totp: text("totp"))
         case "type":
+            f.data = CompanionSignature.dataDigest(text: text("text"))
+        case "display":
+            f.target = text("target") ?? ""
             f.data = CompanionSignature.dataDigest(text: text("text"))
         case "help.done":
             f.request = text("request") ?? ""
