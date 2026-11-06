@@ -35,6 +35,23 @@ final class PairingTests: XCTestCase {
         guard case .failure = PairingRequest.verify(tampered, code: code) else { return XCTFail() }
     }
 
+    func testKeyBlobMustMatchItsType() {
+        // An ed25519 blob announced as ecdsa is refused
+        let ed = "AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+        guard case .failure = PairingRequest.verify(request(key: "ecdsa-sha2-nistp256 " + ed), code: code) else { return XCTFail() }
+        guard case .success = PairingRequest.verify(request(key: "ssh-ed25519 " + ed), code: code) else { return XCTFail() }
+        // A line break or a third part can't sneak in
+        guard case .failure = PairingRequest.verify(request(key: key + "\nssh-rsa AAAA"), code: code) else { return XCTFail() }
+        guard case .failure = PairingRequest.verify(request(key: key + " extra"), code: code) else { return XCTFail() }
+    }
+
+    func testProofReferenceVectorFromThePhone() {
+        // The iPhone app's reference vector (iOS/NOTES.md): same proof on both sides
+        let c = Data((0..<16).map { UInt8($0) })
+        let k = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGsX0fLhLEJH+Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT+NC4v4af5uO5+tKfA+eFivOM1drMV7Oy7ZAaDe/UfU="
+        XCTAssertEqual(proof(k, "Max’s iPhone", code: c), "mrui6J5uTrdDd7yaEdlJQU6kWIO77PVkB04oYtW2SAQ=")
+    }
+
     func testUnsupportedKey() {
         let rsa = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7"
         guard case .failure(let reason) = PairingRequest.verify(request(key: rsa), code: code) else { return XCTFail() }
@@ -77,13 +94,14 @@ final class PairingTests: XCTestCase {
     @MainActor
     func testPairingURL() {
         let session = PairingSession(keys: AuthorizedKeys(url: URL(fileURLWithPath: "/dev/null")))
-        let url = session.makeURL(port: 50123, fingerprint: "SHA256:ab+c/d")
+        let url = session.makeURL(port: 50123, fingerprint: "SHA256:ab+c/d=")
+        XCTAssertTrue(url.contains("k=SHA256%3Aab%2Bc%2Fd%3D"), url)
         let c = URLComponents(string: url)!
         XCTAssertEqual(c.scheme, "annex-pair")
         XCTAssertEqual(c.host, "v1")
         let items = Dictionary(uniqueKeysWithValues: c.queryItems!.map { ($0.name, $0.value ?? "") })
         XCTAssertEqual(items["p"], "50123")
-        XCTAssertEqual(items["k"], "SHA256:ab+c/d", "a + in the fingerprint survives")
+        XCTAssertEqual(items["k"], "SHA256:ab+c/d=", "+ / = in the fingerprint survive")
         XCTAssertEqual(items["s"], "22")
         let codeText = items["c"]!
         XCTAssertFalse(codeText.contains("=") || codeText.contains("+") || codeText.contains("/"))

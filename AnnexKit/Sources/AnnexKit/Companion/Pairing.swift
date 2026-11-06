@@ -197,23 +197,23 @@ public final class PairingSession {
     }
 
     func makeURL(port: UInt16, fingerprint: String) -> String {
-        var c = URLComponents()
-        c.scheme = "annex-pair"
-        c.host = "v1"
         let codeText = code.base64EncodedString().replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
-        c.queryItems = [
-            URLQueryItem(name: "n", value: MacSSH.macName()),
-            URLQueryItem(name: "h", value: MacSSH.addresses().joined(separator: ",")),
-            URLQueryItem(name: "p", value: String(port)),
-            URLQueryItem(name: "s", value: String(sshPort)),
-            URLQueryItem(name: "u", value: NSUserName()),
-            URLQueryItem(name: "k", value: fingerprint),
-            URLQueryItem(name: "c", value: codeText),
+        let items: [(String, String)] = [
+            ("n", MacSSH.macName()),
+            ("h", MacSSH.addresses().joined(separator: ",")),
+            ("p", String(port)),
+            ("s", String(sshPort)),
+            ("u", NSUserName()),
+            ("k", fingerprint),
+            ("c", codeText),
         ]
-        // URLComponents leaves "+" alone in queries; the fingerprint's base64 may contain it.
-        c.percentEncodedQuery = c.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
-        return c.string ?? ""
+        // Every value strictly encoded: only A-Z a-z 0-9 - . _ ~ stay as they are (the fingerprint's base64 has
+        // + / = that must not change meaning).
+        let unreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        let query = items.map { "\($0.0)=\($0.1.addingPercentEncoding(withAllowedCharacters: unreserved) ?? "")" }
+            .joined(separator: "&")
+        return "annex-pair://v1?" + query
     }
 
     private func accept(_ connection: NWConnection) {
@@ -273,6 +273,15 @@ public final class PairingSession {
 
 /// A phone's pairing request: `{"v":1,"device":"...","key":"ecdsa-sha2-nistp256 AAAA...","proof":"<base64>"}` with
 /// proof = HMAC-SHA256(code, key + "\n" + device).
+/// The key type at the start of an SSH public key blob (a 4-byte big-endian length, then the name).
+func blobType(_ blob: Data) -> String? {
+    guard blob.count >= 4 else { return nil }
+    let bytes = [UInt8](blob)
+    let length = Int(bytes[0]) << 24 | Int(bytes[1]) << 16 | Int(bytes[2]) << 8 | Int(bytes[3])
+    guard length > 0, length < 64, bytes.count >= 4 + length else { return nil }
+    return String(bytes: bytes[4..<(4 + length)], encoding: .ascii)
+}
+
 public struct PairingRequest: Sendable {
     public var device: String
     public var key: String
@@ -291,9 +300,11 @@ public struct PairingRequest: Sendable {
         guard HMAC<SHA256>.isValidAuthenticationCode(proof, authenticating: message, using: SymmetricKey(data: code)) else {
             return .failure("wrong code")
         }
-        let parts = key.split(separator: " ")
+        // Exactly "<type> <base64>", and the blob says the same type: nothing else can reach authorized_keys
+        let parts = key.split(separator: " ", omittingEmptySubsequences: false)
         guard parts.count == 2, ["ecdsa-sha2-nistp256", "ssh-ed25519"].contains(String(parts[0])),
-              let blob = Data(base64Encoded: String(parts[1])), blob.count >= 32, blob.count < 1024 else {
+              let blob = Data(base64Encoded: String(parts[1])), blob.count >= 32, blob.count < 1024,
+              blobType(blob) == String(parts[0]) else {
             return .failure("unsupported key")
         }
         let id = SHA256.hash(data: blob).map { String(format: "%02x", $0) }.joined().prefix(12)
