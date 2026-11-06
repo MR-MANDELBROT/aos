@@ -14,7 +14,7 @@ import Foundation
 // Requests: {"op":"status"} {"op":"focus"} {"op":"fill","host":"...","kind":"username|password|code",
 // "username":"...","password":"...","code":"..."}. Answers never contain what was typed.
 
-let helperVersion = "1"
+let helperVersion = "6"
 let guestUser = "annex"
 
 func socketPath(home: String) -> String { "\(home)/Library/Application Support/AnnexHelper/helper.sock" }
@@ -43,15 +43,35 @@ enum AX {
         return (p as! AXUIElement)
     }
 
-    /// The focused element of the frontmost app, if that app is Chrome. Chrome builds the accessibility tree of web
-    /// pages only for assistive apps; AXManualAccessibility asks for it.
-    static func chromeFocus() -> (app: AXUIElement, element: AXUIElement)? {
-        guard let front = NSWorkspace.shared.frontmostApplication,
-              front.bundleIdentifier == "com.google.Chrome" else { return nil }
-        let app = AXUIElementCreateApplication(front.processIdentifier)
+    /// Chrome, if it is the app in front. Found through LaunchServices and asked through accessibility: a
+    /// background app like this one gets no activation news (NSWorkspace's frontmost app goes stale), and the
+    /// system-wide element sometimes has no focused app at all. Chrome builds the accessibility tree of web pages
+    /// only for assistive apps; AXManualAccessibility asks for it.
+    static func chromeApp() -> AXUIElement? {
+        for chrome in NSRunningApplication.runningApplications(withBundleIdentifier: "com.google.Chrome") {
+            let app = AXUIElementCreateApplication(chrome.processIdentifier)
+            enableWebAccessibility(app)
+            if (attribute(app, kAXFrontmostAttribute) as? Bool) == true { return app }
+        }
+        return nil
+    }
+
+    /// Asks Chrome for the accessibility tree of its web pages (as VoiceOver does); Chrome builds it on demand.
+    static func enableWebAccessibility(_ app: AXUIElement) {
         AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
-        guard let f = attribute(app, kAXFocusedUIElementAttribute) else { return nil }
-        return (app, f as! AXUIElement)
+        AXUIElementSetAttributeValue(app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
+    }
+
+    /// The focused element in Chrome, if Chrome has the keyboard focus. Right after the tree was asked for, Chrome
+    /// may need a moment to build it.
+    static func chromeFocus(wait: Double = 4) -> (app: AXUIElement, element: AXUIElement)? {
+        guard let app = chromeApp() else { return nil }
+        let deadline = Date().addingTimeInterval(wait)
+        repeat {
+            if let f = attribute(app, kAXFocusedUIElementAttribute) { return (app, f as! AXUIElement) }
+            usleep(150_000)
+        } while Date() < deadline
+        return nil
     }
 
     /// The web page an element belongs to and its URL.
@@ -118,23 +138,38 @@ enum AX {
 // MARK: Typing
 
 enum Keyboard {
-    static let source = CGEventSource(stateID: .hidSystemState)
+    /// Its own event state: what the user (or screen sharing) holds down doesn't mix into these events.
+    static let source = CGEventSource(stateID: .privateState)
+    static let command: CGKeyCode = 0x37
 
-    static func post(_ key: CGKeyCode, flags: CGEventFlags = []) {
-        for down in [true, false] {
-            let e = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: down)
-            e?.flags = flags
-            e?.post(tap: .cghidEventTap)
-            usleep(8000)
-        }
+    static func event(_ key: CGKeyCode, down: Bool, flags: CGEventFlags) {
+        let e = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: down)
+        e?.flags = flags
+        e?.post(tap: .cghidEventTap)
+        usleep(8000)
     }
 
-    /// Types any text (also characters the keyboard layout doesn't have) as Unicode key events.
+    static func post(_ key: CGKeyCode) {
+        event(key, down: true, flags: [])
+        event(key, down: false, flags: [])
+    }
+
+    /// Command plus a key, pressed and released like a person would (Command down, key, key up, Command up), so no
+    /// modifier stays behind for the characters that follow.
+    static func commandPlus(_ key: CGKeyCode) {
+        event(command, down: true, flags: .maskCommand)
+        event(key, down: true, flags: .maskCommand)
+        event(key, down: false, flags: .maskCommand)
+        event(command, down: false, flags: [])
+    }
+
+    /// Types any text (also characters the keyboard layout doesn't have) as Unicode key events without modifiers.
     static func type(_ text: String) {
         for unit in text.utf16 {
             var u = unit
             for down in [true, false] {
                 let e = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: down)
+                e?.flags = []
                 e?.keyboardSetUnicodeString(stringLength: 1, unicodeString: &u)
                 e?.post(tap: .cghidEventTap)
             }
@@ -142,7 +177,7 @@ enum Keyboard {
         }
     }
 
-    static func selectAll() { post(0x00, flags: .maskCommand) }
+    static func selectAll() { commandPlus(0x00) }
     static func returnKey() { post(0x24) }
 }
 
@@ -153,10 +188,24 @@ func hostMatches(_ url: URL, _ host: String) -> Bool {
     return h == host.lowercased()
 }
 
+/// Why there is no Chrome focus, step by step (for the agent's error message and for diagnosis).
+func focusProblem() -> String {
+    let running = NSRunningApplication.runningApplications(withBundleIdentifier: "com.google.Chrome")
+    guard let chrome = running.first else { return "Chrome is not running" }
+    let app = AXUIElementCreateApplication(chrome.processIdentifier)
+    var front: CFTypeRef?
+    let e1 = AXUIElementCopyAttributeValue(app, kAXFrontmostAttribute as CFString, &front)
+    guard e1 == .success else { return "Chrome doesn't answer accessibility requests (AX error \(e1.rawValue))" }
+    guard (front as? Bool) == true else { return "Chrome is not the app in front" }
+    var focused: CFTypeRef?
+    let e2 = AXUIElementCopyAttributeValue(app, kAXFocusedUIElementAttribute as CFString, &focused)
+    return "nothing in Chrome has the keyboard focus (AX error \(e2.rawValue))"
+}
+
 func currentFocus() -> [String: Any] {
     guard AXIsProcessTrusted() else { return ["ok": false, "error": "the helper is not allowed to use accessibility"] }
     guard let (_, element) = AX.chromeFocus() else {
-        return ["ok": true, "kind": "none", "error": "Chrome is not the frontmost app or nothing has the focus"]
+        return ["ok": true, "kind": "none", "error": focusProblem()]
     }
     guard AX.isTextField(element) else { return ["ok": true, "kind": "none", "error": "the focus is not in a text field"] }
     guard let (_, url) = AX.webArea(of: element), let host = url.host, ["https", "http"].contains(url.scheme ?? "") else {
@@ -170,12 +219,7 @@ func waitForPasswordField(host: String, seconds: Double) -> AXUIElement? {
     let deadline = Date().addingTimeInterval(seconds)
     while Date() < deadline {
         usleep(400_000)
-        guard let front = NSWorkspace.shared.frontmostApplication, front.bundleIdentifier == "com.google.Chrome" else {
-            continue
-        }
-        let app = AXUIElementCreateApplication(front.processIdentifier)
-        AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
-        guard let window = AX.attribute(app, kAXFocusedWindowAttribute) else { continue }
+        guard let app = AX.chromeApp(), let window = AX.attribute(app, kAXFocusedWindowAttribute) else { continue }
         var stack: [AXUIElement] = [window as! AXUIElement]
         var visited = 0
         while let e = stack.popLast(), visited < 3000 {
@@ -341,8 +385,18 @@ func serve() -> Never {
         FileHandle.standardError.write(Data("cannot listen on \(path): \(errno)\n".utf8))
         exit(1)
     }
-    // Ask Chrome for its accessibility tree early (it builds it lazily).
-    _ = AXIsProcessTrusted()
+    // Ask Chrome for its web accessibility tree early and keep asking (it builds it lazily and forgets it when it
+    // restarts), so a sign-in finds the focused field without waiting.
+    DispatchQueue.global().async {
+        while true {
+            if AXIsProcessTrusted() {
+                for chrome in NSRunningApplication.runningApplications(withBundleIdentifier: "com.google.Chrome") {
+                    AX.enableWebAccessibility(AXUIElementCreateApplication(chrome.processIdentifier))
+                }
+            }
+            sleep(10)
+        }
+    }
     DispatchQueue.global().async {
         while true {
             let client = accept(fd, nil, nil)
