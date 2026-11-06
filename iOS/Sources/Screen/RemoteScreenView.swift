@@ -162,6 +162,8 @@ final class RemoteScreenView: UIView, UIGestureRecognizerDelegate {
         geometry.bounds = CGRect(x: 0, y: 0, width: bounds.width, height: max(1, bounds.height - keyboardOverlap))
         // The view ignores the safe area (it draws under the island too); the window's insets say what to avoid.
         geometry.area = bounds.inset(by: window?.safeAreaInsets ?? safeAreaInsets)
+        // The workspace takes this shape (once the view is in its window and knows the real insets).
+        if window != nil, geometry.area.width > 0 { session?.viewerArea = geometry.area.size }
         geometry.displayScale = window?.screen.scale ?? traitCollection.displayScale
         geometry.scaling = options.scaling
         geometry.clampPan()

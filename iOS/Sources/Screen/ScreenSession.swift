@@ -329,7 +329,8 @@ final class ScreenSession {
         displayTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(20))
-                guard !Task.isCancelled, let self, let request = self.displayRequest,
+                // Only while the screen is shown: a failed one lets the Mac's lease run out.
+                guard !Task.isCancelled, let self, self.isRunning, let request = self.displayRequest,
                       let companion = self.mac?.companion else { return }
                 _ = try? await companion.display(request.description)
             }

@@ -1,3 +1,4 @@
+import AOSRFB
 import Foundation
 import Testing
 @testable import aOS
@@ -102,9 +103,13 @@ struct EndToEndTests {
         let screen = model.workspaceScreen
         var options = ScreenOptions()
         options.interval = 0.02
+        // The phone's viewer (iPhone 17 Pro upright, without the safe area): the workspace is asked for that shape
+        screen.viewerArea = CGSize(width: 402, height: 778)
         await screen.start(mac: connection, login: nil, options: options)
         try await waitUntil { screen.phase == .live }
         #expect(screen.size == CGSize(width: 80, height: 50))
+        #expect(companion.received.contains { $0.op == "display" && $0.fields["text"] == .string("1200x2322@2") })
+        #expect(screen.displayRequest == DisplayRequest(width: 1200, height: 2322, scale: 2))
         screen.click(at: CGPoint(x: 30, y: 20))
         try await waitUntil { rfb.log.pointerEvents.contains { $0.buttons == 1 && $0.x == 30 && $0.y == 20 } }
         screen.type("Hi")
@@ -115,6 +120,8 @@ struct EndToEndTests {
         #expect(companion.received.last?.fields["text"] == .string("Grüße"))
         #expect(rfb.log.keyEvents.filter(\.down).count == 3)
         screen.stop()
+        // Stopping gives the workspace its own size back
+        try await waitUntil { companion.received.last?.op == "display" && companion.received.last?.fields["text"] == .string("reset") }
 
         // The Mac no longer has this iPhone's key (removed there, or paired before signing keys): when the
         // subscription ends, subscribing again gets "pair again", and the Mac card says so
