@@ -336,10 +336,11 @@ private struct MacStatusRows: View {
                                    value: power.battery.map { "\($0) %" } ?? String(localized: "Power"),
                                    caption: MacStatusText.batteryCaption(power))
                         let hot = power.thermal == "serious" || power.thermal == "critical"
+                        // Grey while closed, blue while open (like the display), orange when it gets hot.
                         StatusTile(symbol: power.lid == "closed" ? "laptopcomputer.slash" : "laptopcomputer",
-                                   tint: hot ? .orange : BrandColor.indigo,
+                                   tint: hot ? .orange : (power.lid == "open" ? BrandColor.indigo : .secondary),
                                    value: MacStatusText.lidTitle(power),
-                                   caption: MacStatusText.thermalShort(power) ?? String(localized: "Normal temperature"),
+                                   caption: MacStatusText.thermalShort(power) ?? String(localized: "Cool"),
                                    captionTint: hot ? .orange : .secondary)
                     }
                     if let display = status.display {
