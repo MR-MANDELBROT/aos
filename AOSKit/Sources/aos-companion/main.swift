@@ -82,8 +82,13 @@ final class Subscription: @unchecked Sendable {
     func start() -> Bool { lock.withLock { defer { started = true }; return !started } }
 }
 
+// The terminal sessions that outlive the phone's connection (Docs/COMPANION.md, "Terminal sessions").
+if CommandLine.arguments.dropFirst().first == "term" {
+    exit(TermCommand.run(Array(CommandLine.arguments.dropFirst(2))))
+}
+
 guard CommandLine.arguments.dropFirst().first == "serve" else {
-    FileHandle.standardError.write(Data("usage: aos-companion serve\n".utf8))
+    FileHandle.standardError.write(Data("usage: aos-companion serve\n\(TermCommand.usage)\n".utf8))
     exit(2)
 }
 
@@ -198,6 +203,13 @@ while let line = readLine(strippingNewline: true) {
                 q.auth = signature
             }
             relay(id, response)
+        case _ where CompanionControl.ops.contains("companion." + op):
+            // The Overview's status and actions (mac.status, mac.sleep, workspace.start, ...): the parameter, if
+            // any, is `text`, which the signature covers.
+            let response = try requests.call { q in
+                q.op = "companion." + op; q.text = r["text"] as? String; q.auth = signature
+            }
+            relay(id, response, fields: true)
         default:
             answer(id, ok: false, error: "unknown op \(op)")
         }

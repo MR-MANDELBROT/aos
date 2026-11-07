@@ -6,15 +6,43 @@ struct TerminalTab: View {
     @State private var editing: SSHHost?
     @State private var adding = false
     @State private var path: [TerminalSession.Target] = []
+    @State private var macSessions = MacSessionList()
+    @State private var ending: MacTermSession?
 
     var body: some View {
         NavigationStack(path: $path) {
             List {
                 if let mac = model.activeMac {
-                    Section("Your Mac") {
+                    Section {
                         NavigationLink(value: TerminalSession.Target.mac(mac.id)) {
                             HostRow(symbol: "laptopcomputer", title: mac.name, detail: "\(mac.user)@\(mac.lastHost ?? mac.hosts.first ?? "")",
                                     active: model.terminals[.mac(mac.id)]?.isActive == true)
+                        }
+                    } header: {
+                        Text("Your Mac")
+                    }
+                    if !macSessions.sessions.isEmpty {
+                        Section {
+                            ForEach(macSessions.sessions) { session in
+                                Button {
+                                    open(session, on: mac)
+                                } label: {
+                                    MacSessionRow(session: session, home: "/Users/\(mac.user)",
+                                                  isThisPhone: session.id == model.terminals[.mac(mac.id)]?.holderID)
+                                }
+                                .buttonStyle(.plain)
+                                .swipeActions {
+                                    Button("End", systemImage: "xmark.circle", role: .destructive) { ending = session }
+                                }
+                                .contextMenu {
+                                    Button("Open Here", systemImage: "apple.terminal") { open(session, on: mac) }
+                                    Button("End Session", systemImage: "xmark.circle", role: .destructive) { ending = session }
+                                }
+                            }
+                        } header: {
+                            Text("Sessions on the Mac")
+                        } footer: {
+                            Text("They keep running when the connection drops, also with the app closed, and this iPhone picks up where it left off. End the ones you no longer need.")
                         }
                     }
                 }
@@ -65,7 +93,110 @@ struct TerminalTab: View {
                 }
                 #endif
             }
+            .task(id: model.connection?.isConnected == true) { await refreshSessions() }
+            .refreshable { await refreshSessions() }
+            .onChange(of: path) { _, now in if now.isEmpty { Task { await refreshSessions() } } }
+            .onChange(of: model.openTerminal) { _, target in
+                guard let target else { return }
+                model.openTerminal = nil
+                path = [target]
+            }
+            .confirmationDialog("End this session?", isPresented: Binding(get: { ending != nil }, set: { if !$0 { ending = nil } }),
+                                titleVisibility: .visible, presenting: ending) { session in
+                Button("End Session", role: .destructive) {
+                    Task {
+                        await macSessions.end(session, model: model)
+                        ending = nil
+                    }
+                }
+            } message: { _ in
+                Text("The shell on the Mac ends, and so do the programs running in it.")
+            }
         }
+    }
+
+    private func refreshSessions() async {
+        #if DEBUG
+        if model.isDemo { macSessions.showDemo(); return }
+        #endif
+        await macSessions.load(model: model)
+    }
+
+    /// The Mac's terminal on this iPhone shows that session (the one it showed keeps running).
+    private func open(_ session: MacTermSession, on mac: PairedMac) {
+        let terminal = model.terminal(for: .mac(mac.id))
+        path = [.mac(mac.id)]
+        if terminal.holderID != session.id || !terminal.isActive {
+            Task { await terminal.switchTo(session: session.id) }
+        }
+    }
+}
+
+/// The terminal sessions on the paired Mac (`aos-companion term list`).
+@MainActor @Observable
+final class MacSessionList {
+    private(set) var sessions: [MacTermSession] = []
+
+    func load(model: AppModel) async {
+        guard let mac = model.activeMac, let ssh = model.connection?.ssh, ssh.isActive,
+              let data = try? await ssh.run(TermAttach.list(companion: mac.companionPath)),
+              let list = TermAttach.sessions(fromList: data) else { return }
+        sessions = list
+    }
+
+    func end(_ session: MacTermSession, model: AppModel) async {
+        guard let mac = model.activeMac else { return }
+        if let terminal = model.terminals[.mac(mac.id)], terminal.holderID == session.id {
+            await terminal.endSession()
+        } else if let ssh = model.connection?.ssh, ssh.isActive,
+                  let command = TermAttach.end(companion: mac.companionPath, id: session.id) {
+            _ = try? await ssh.run(command)
+        }
+        sessions.removeAll { $0.id == session.id }
+        try? await Task.sleep(for: .milliseconds(400))
+        await load(model: model)
+    }
+
+    #if DEBUG
+    func showDemo() {
+        sessions = [
+            MacTermSession(id: "3fa9c1d2", attached: true, since: Date().addingTimeInterval(-600), from: "ssh 192.168.178.31",
+                           command: "claude", cwd: "/Users/max/Developer/aos"),
+            MacTermSession(id: "7b2e90aa", attached: false, since: Date().addingTimeInterval(-3 * 3600), command: "zsh",
+                           cwd: "/Users/max"),
+        ]
+    }
+    #endif
+}
+
+private struct MacSessionRow: View {
+    let session: MacTermSession
+    let home: String
+    let isThisPhone: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: session.attached ? "apple.terminal.fill" : "apple.terminal")
+                .foregroundStyle(BrandColor.indigo).frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(session.title ?? session.place(home: home)).lineLimit(1)
+                Text(detail).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            if isThisPhone {
+                Text("This iPhone").font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+        .contentShape(Rectangle())
+    }
+
+    private var detail: String {
+        let time = session.since.map { $0.formatted(date: Calendar.current.isDateInToday($0) ? .omitted : .abbreviated, time: .shortened) } ?? ""
+        if session.attached {
+            if isThisPhone { return String(localized: "Open here") }
+            return session.from.map { String(localized: "Open on another device (\($0))") } ?? String(localized: "Open on another device")
+        }
+        return time.isEmpty ? String(localized: "Not open anywhere") : String(localized: "Not open anywhere since \(time)")
     }
 }
 
@@ -105,14 +236,43 @@ struct TerminalScreen: View {
                 ProgressView("Connecting …").padding(20).glassEffect(in: RoundedRectangle(cornerRadius: 20))
             case .failed(let message):
                 StateOverlay(symbol: "exclamationmark.triangle", text: message, action: "Try again") { connect() }
+            case .detached:
+                StateOverlay(symbol: "pause.circle", text: String(localized: "Detached. The session keeps running on the Mac."),
+                             action: "Attach Again") { connect() }
             case .ended:
-                StateOverlay(symbol: "power", text: String(localized: "The session ended."), action: "Connect again") { connect() }
+                switch session.endReason {
+                case .taken:
+                    StateOverlay(symbol: "rectangle.portrait.and.arrow.right",
+                                 text: String(localized: "This session is open on another device now. It keeps running on the Mac."),
+                                 action: "Open It Here") { connect() }
+                case .exited:
+                    StateOverlay(symbol: "power", text: String(localized: "The shell ended."), action: "New Session") {
+                        session.forgetSession()
+                        connect()
+                    }
+                case .ended:
+                    StateOverlay(symbol: "power", text: String(localized: "The session was ended."), action: "New Session") {
+                        session.forgetSession()
+                        connect()
+                    }
+                case .closed:
+                    StateOverlay(symbol: "power", text: String(localized: "The session ended."), action: "Connect again") { connect() }
+                }
             default:
                 EmptyView()
             }
         }
         .overlay(alignment: .top) {
-            if let notice = session.notice {
+            if session.phase == .reconnecting {
+                Label("Reconnecting … The session keeps running on the Mac.", systemImage: "arrow.triangle.2.circlepath")
+                    .font(.footnote.weight(.medium))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .glassEffect(in: Capsule())
+                    .padding(.top, 10)
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
+            } else if let notice = session.notice {
                 Text(notice.text)
                     .font(.callout.weight(.medium).monospacedDigit())
                     .padding(.horizontal, 16)
@@ -125,6 +285,7 @@ struct TerminalScreen: View {
             }
         }
         .animation(.snappy(duration: 0.2), value: session.notice)
+        .animation(.snappy(duration: 0.2), value: session.phase)
         .navigationTitle(session.title)
         .navigationBarTitleDisplayMode(.inline)
         // The terminal gets the rows the tab bar would take.
@@ -148,9 +309,13 @@ struct TerminalScreen: View {
         .onAppear {
             visible = true
             session.setFontSize(model.settings.terminalFontSize)
+            session.view.keyBar.arrows = model.settings.terminalArrowKeys
+            session.view.swipeArrows = model.settings.terminalSwipeArrows
         }
         .onDisappear { visible = false }
         .onChange(of: session.fontSize) { _, size in model.settings.terminalFontSize = Double(size) }
+        .onChange(of: model.settings.terminalArrowKeys) { _, arrows in session.view.keyBar.arrows = arrows }
+        .onChange(of: model.settings.terminalSwipeArrows) { _, on in session.view.swipeArrows = on }
         .onChange(of: keepsScreenOn, initial: true) { _, on in UIApplication.shared.isIdleTimerDisabled = on }
         .task {
             if session.phase == .idle { connect() }
@@ -192,6 +357,8 @@ struct TerminalScreen: View {
     }
 
     private func connect() {
+        // The person opens the terminal: the moment iOS allows asking for time in the background.
+        model.keepAlive.terminalOpened()
         Task {
             #if DEBUG
             if model.isDemo {
@@ -244,12 +411,27 @@ private struct StateOverlay: View {
     }
 }
 
-/// The terminal's menu: copying, text size, keeping the screen on, disconnecting.
+/// The terminal's menu: copying, text size, keeping the screen on, detaching or ending the session.
 private struct TerminalMenu: View {
     @Environment(AppModel.self) private var model
     let session: TerminalSession
+    @State private var confirmEnd = false
+
+    private var isHeldOnTheMac: Bool {
+        if case .mac = session.id { return session.holdsSession && session.holderID != nil }
+        return false
+    }
 
     var body: some View {
+        menu
+            .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
+                Button("End Session", role: .destructive) { Task { await session.endSession() } }
+            } message: {
+                Text("The shell on the Mac ends, and so do the programs running in it.")
+            }
+    }
+
+    private var menu: some View {
         Menu {
             Section {
                 Button("Copy Screen", systemImage: "doc.on.doc") { session.copyScreen() }
@@ -267,7 +449,14 @@ private struct TerminalMenu: View {
                 Toggle("Keep Screen On", systemImage: "sun.max", isOn: Binding(
                     get: { model.settings.terminalKeepsScreenOn }, set: { model.settings.terminalKeepsScreenOn = $0 }))
             }
-            if session.isActive {
+            if isHeldOnTheMac, session.isActive {
+                Section {
+                    Button("Detach", systemImage: "pause.circle") { session.disconnect() }
+                    Button("End Session", systemImage: "xmark.circle", role: .destructive) { confirmEnd = true }
+                } footer: {
+                    Text("Detached, the session keeps running on the Mac.")
+                }
+            } else if session.isActive {
                 Section {
                     Button("Disconnect", systemImage: "xmark.circle", role: .destructive) { session.disconnect() }
                 }

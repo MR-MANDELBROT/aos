@@ -65,7 +65,12 @@ final class MacConnection {
 
     /// Starts connecting (and keeps the connection up) until `stop()`.
     func start() {
-        guard loop == nil else { retryNow(); return }
+        guard loop == nil else {
+            // Back in the foreground with a connection that may have died meanwhile (the Mac slept, the network
+            // changed while the app was suspended): a quick question tells, before the terminal waits on it.
+            if isConnected { probe() } else { retryNow() }
+            return
+        }
         if case .needsAttention = state { return }
         let (stream, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
         wake = continuation
@@ -154,6 +159,30 @@ final class MacConnection {
     func refreshStatus() async {
         guard let companion, companionState == .ready else { return }
         if let status = try? await companion.status() { workspace = status }
+    }
+
+    // MARK: The Overview (the Mac and aOS)
+
+    /// The Mac's battery, lid, staying awake, workspace, Claude Code and Bitwarden, as `mac.status` reported it.
+    private(set) var macStatus: MacStatus?
+    /// aOS on the Mac is older and doesn't know these ops.
+    var macStatusUnsupported: Bool {
+        guard let hello, companionState == .ready else { return false }
+        return !hello.features.contains(MacAction.status.rawValue)
+    }
+
+    func refreshMacStatus() async {
+        guard let companion, companionState == .ready, !macStatusUnsupported else { return }
+        if let result = try? await companion.mac(.status), let status = result.status { macStatus = status }
+    }
+
+    /// An action of the Overview (signed like every request). The status that comes back is shown at once.
+    @discardableResult
+    func perform(_ action: MacAction, value: String? = nil) async throws -> MacActionResult {
+        guard let companion, companionState == .ready else { throw CompanionError.closed }
+        let result = try await companion.mac(action, value: value)
+        if let status = result.status { macStatus = status }
+        return result
     }
 
     // MARK: Running
@@ -267,7 +296,10 @@ final class MacConnection {
         switch event {
         case .workspace(let state):
             if workspace != nil { workspace?.state = state } else { workspace = WorkspaceStatus(state: state) }
-            Task { await refreshStatus() }
+            Task {
+                await refreshStatus()
+                await refreshMacStatus()
+            }
         case .mac(let state, let detail):
             macAppProblem = state == "unavailable" ? detail : nil
         case .subscriptionEnded:
@@ -322,18 +354,49 @@ final class MacConnection {
         let monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { [weak self] path in
             let status = path.status
-            Task { @MainActor in self?.pathChanged(to: status) }
+            let interface = path.availableInterfaces.first.map { "\($0.name) \($0.type)" }
+            Task { @MainActor in self?.pathChanged(to: status, interface: interface) }
         }
         monitor.start(queue: DispatchQueue(label: "dev.marquart.aos.path"))
         pathMonitor = monitor
     }
 
     @ObservationIgnored private var lastPathStatus: NWPath.Status?
+    @ObservationIgnored private var lastInterface: String?
+    @ObservationIgnored private var probing = false
 
-    private func pathChanged(to status: NWPath.Status) {
-        defer { lastPathStatus = status }
+    private func pathChanged(to status: NWPath.Status, interface: String?) {
+        defer {
+            lastPathStatus = status
+            lastInterface = interface
+        }
         // A new network (or the VPN coming up) is a good moment to try again.
         if status == .satisfied, lastPathStatus != nil, !isConnected { retryNow() }
+        // Another way out while connected (Wi-Fi to cellular, another Wi-Fi): the connection may be dead without
+        // anyone noticing for minutes, and the terminal would wait on it.
+        if status == .satisfied, isConnected, lastInterface != nil, interface != lastInterface { probe() }
+    }
+
+    /// Asks the Mac something small; without an answer within 5 s the connection is closed and built again (the
+    /// terminals attach again by themselves).
+    private func probe() {
+        guard !probing, let ssh else { return }
+        probing = true
+        let companion = self.companion
+        Task {
+            defer { probing = false }
+            let alive: Bool
+            if let companion, companionState == .ready {
+                // Any answer counts, also a refusal.
+                alive = (try? await companion.request(.status, timeout: .seconds(5), refusalsThrow: false)) != nil
+            } else {
+                alive = (try? await ssh.run("true", timeout: .seconds(5))) != nil
+            }
+            if !alive, self.ssh === ssh {
+                log.notice("The connection to the Mac didn't answer; connecting again")
+                await ssh.close()
+            }
+        }
     }
 
     #if DEBUG

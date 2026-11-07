@@ -445,28 +445,7 @@ struct TerminalViewInputTests {
         #expect(view.lastOutputText() == "a.txt\nb.txt")
     }
 
-    @Test func theKeyBarLaysOutNarrowAndWide() {
-        let (view, _) = make()
-        let bar = view.keyBar
-        func identifiers(width: CGFloat) -> Set<String> {
-            bar.frame = CGRect(x: 0, y: 0, width: width, height: TerminalKeyBar.height)
-            bar.setNeedsLayout()
-            bar.layoutIfNeeded()
-            var found: Set<String> = []
-            func walk(_ v: UIView) {
-                if let control = v as? UIControl, let id = control.accessibilityIdentifier, control.bounds.height >= 44 { found.insert(id) }
-                v.subviews.forEach(walk)
-            }
-            walk(bar)
-            return found
-        }
-        for width: CGFloat in [375, 402, 874] {
-            let found = identifiers(width: width)
-            for name in ["escape", "ctrl", "alt", "tab", "tab+1", "up", "arrowPad", "function(12)", "text(\"|\")", "text(\"~\")"] {
-                #expect(found.contains(name), "\(name) at \(width) pt")
-            }
-        }
-    }
+    // The key bar's layout: KeyBarViewTests (TerminalAttachTests.swift).
 
     @Test func pasteAsksFirstOnlyWhenLinesWouldRun() {
         let session = TerminalSession(id: .host(UUID()), title: "test")

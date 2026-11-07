@@ -18,6 +18,8 @@ enum Demo {
     /// `-AOSDemoScreen mac|mac-login|mac-login-keyboard`: the Screen tab on the Mac's screen, its login form, the form
     /// with the keyboard up.
     static var screen: String? { UserDefaults.standard.string(forKey: "AOSDemoScreen") }
+    /// `-AOSDemoScroll bottom`: the Overview starts scrolled to its end (screenshots of the lower cards).
+    static var scrollToBottom: Bool { UserDefaults.standard.string(forKey: "AOSDemoScroll") == "bottom" }
     /// `-AOSScreenDirect HOST:PORT`: the workspace screen connects straight to a screen sharing server (the
     /// simulator reaches a workspace VM's address), with the login from the environment variables AOS_SCREEN_USER and
     /// AOS_SCREEN_PASSWORD. For testing the viewer against a real screensharingd.

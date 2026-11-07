@@ -97,6 +97,8 @@ final class AppModel: ObservableObject {
         workspace.bitwarden.log = { [weak self] line in self?.append(line) }
         workspace.bitwarden.onChange = { [weak self] in self?.bitwardenTick += 1 }
         setUpWorkspaceCustody()
+        // The iPhone's Overview (AppModel+Phone.swift).
+        workspace.macControls = self
     }
 
     // MARK: Approval on the Mac
