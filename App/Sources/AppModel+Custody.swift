@@ -194,7 +194,7 @@ extension AppModel {
     // MARK: Starting over
 
     /// Deletes the workspace (the helper removes its disk; the rest of its folder goes to the Trash) and opens the
-    /// setup at its first step. The keys and the password stay with the helper; the new workspace gets them.
+    /// setup at its first step. The helper forgets the keys and the password too: the new workspace gets new ones.
     func resetWorkspace() async {
         append("workspace: deleting it to set it up again")
         if workspace.host.isRunning {
@@ -204,6 +204,8 @@ extension AppModel {
         if custodyMode == .custody {
             do {
                 try await custodyClient.eraseDisk()
+                // The new workspace gets a new password and new keys (made by the helper at the setup's start).
+                try await custodyClient.forgetSecrets()
             } catch {
                 append("workspace: the helper couldn't remove the disk: \(error.localizedDescription)")
                 return

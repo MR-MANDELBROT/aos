@@ -47,6 +47,9 @@ public struct CustodyRequest: Codable, Sendable, Equatable {
         case detachDisk
         /// Removes the disk (the workspace is deleted).
         case eraseDisk
+        /// Removes the keys, the password and the pinned host key, so the next workspace gets new ones from
+        /// `prepare`. Only while there is no disk.
+        case forgetSecrets
     }
 
     /// Which credential `ssh` uses.
@@ -211,6 +214,7 @@ public struct WorkspaceCustodyClient: Sendable {
 
     public func detachDisk() async { _ = await send(CustodyRequest(op: .detachDisk, timeout: 60)) }
     public func eraseDisk() async throws { try await call(CustodyRequest(op: .eraseDisk, timeout: 60)) }
+    public func forgetSecrets() async throws { try await call(CustodyRequest(op: .forgetSecrets)) }
 }
 
 /// A value behind a lock (the custody client and the password the app holds in memory).

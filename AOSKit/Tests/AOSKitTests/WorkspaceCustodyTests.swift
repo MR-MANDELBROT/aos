@@ -204,6 +204,20 @@ final class WorkspaceCustodyTests: XCTestCase {
         XCTAssertFalse(r11.ok)
     }
 
+    func testForgetSecretsOnlyWithoutADisk() async throws {
+        let h = host()
+        _ = await call(h, CustodyRequest(op: .createDisk, gibibytes: 16))
+        let before = await call(h, CustodyRequest(op: .prepare))
+        let refused = await call(h, CustodyRequest(op: .forgetSecrets))
+        XCTAssertFalse(refused.ok)
+        _ = await call(h, CustodyRequest(op: .eraseDisk))
+        let forgot = await call(h, CustodyRequest(op: .forgetSecrets))
+        XCTAssertTrue(forgot.ok, forgot.message ?? "")
+        XCTAssertEqual(forgot.hasKeys, false)
+        let after = await call(h, CustodyRequest(op: .prepare))
+        XCTAssertNotEqual(after.maintenancePublicKey, before.maintenancePublicKey)
+    }
+
     func testAdoptRefusesALink() async throws {
         let h = host()
         let legacy = home.appendingPathComponent("Library/Application Support/\(Brand.name)/VM/disk.img")
