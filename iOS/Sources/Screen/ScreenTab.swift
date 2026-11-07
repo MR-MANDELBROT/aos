@@ -20,7 +20,8 @@ struct ScreenTab: View {
         NavigationStack {
             Group {
                 if let client = session.client, session.phase == .running {
-                    ScreenClientView(session: client) { session.stop() }
+                    let shown = session
+                    ScreenClientView(session: client) { shown.stop() }
                         .ignoresSafeArea()
                         .overlay(alignment: .top) { helpBanner }
                         .id(client.id)
@@ -49,7 +50,13 @@ struct ScreenTab: View {
         .task(id: model.screenTarget) {
             // One screen at a time: the other one lets go (the workspace gets its own size back).
             model.screen(for: model.screenTarget == .mac ? .workspace : .mac).stop()
+            // A closed workspace waits ("Try anyway" on the page); it shows up when it opens.
+            if model.screenTarget == .workspace, !model.isDemo, workspaceClosed { return }
             await start()
+        }
+        .onChange(of: model.connection?.workspace?.state) { _, state in
+            guard state == .open, model.screenTarget == .workspace, session.phase == .idle else { return }
+            Task { await start() }
         }
         // The Mac is back (after a network change, for example): pick the screen up again.
         .onChange(of: model.connection?.isConnected) { _, connected in
@@ -72,6 +79,17 @@ struct ScreenTab: View {
         .onChange(of: session.client?.hasPicture) { _, _ in focusOnHelp() }
         .onDisappear {
             session.stop()
+        }
+        #if DEBUG
+        .onAppear { if model.isDemo, Demo.sheet == "screen-settings" { showSettings = true } }
+        #endif
+    }
+
+    /// The Mac says the workspace isn't open (unknown counts as open: then it's tried).
+    private var workspaceClosed: Bool {
+        switch model.connection?.workspace?.state {
+        case .stopped?, .starting?, .closing?: true
+        default: false
         }
     }
 

@@ -21,6 +21,8 @@ struct ScreenRouteTests {
         #expect(route.login == .account(username: "aos", password: "geheim"))
         #expect(route.followsWindowShape)
         #expect(route.target == .workspace)
+        // The iPhone's clipboard (a copied password, a code) doesn't go to the agent's Mac unless the person turns it on
+        #expect(!route.sharesClipboard)
         #expect(try ScreenRoute.workspace(login, mac: mac, matchShape: false).followsWindowShape == false)
     }
 
@@ -41,6 +43,7 @@ struct ScreenRouteTests {
         #expect(route.login == .account(username: "max", password: "pw"))
         #expect(!route.followsWindowShape)  // the Mac's screen keeps its size: the iPhone turns to it
         #expect(route.name == mac.name)
+        #expect(route.sharesClipboard)  // the person's own Mac: like Universal Clipboard, as in Open Screen Sharing
     }
 
     @Test func eachScreenOfEachMacHasAnIdOfItsOwn() {
@@ -129,10 +132,12 @@ struct ScreenTunnelTests {
         let port = try await forwarder.start()
         defer { forwarder.stop() }
         let session = ScreenClientSession(screen: UUID(), name: "Workspace", port: Int(port),
-                                          login: .account(username: "aos", password: "pw"), followsWindowShape: true)
+                                          login: .account(username: "aos", password: "pw"), followsWindowShape: true,
+                                          sharesClipboard: false)
         session.start()
         try await waitUntil(timeout: .seconds(30)) { session.state == .connected }
         #expect(rfb.log.receivedLogins.map(\.username) == ["aos"])
+        #expect(!session.sharesClipboard)  // the workspace's clipboard sync starts off
         try await waitUntil(timeout: .seconds(10)) { rfb.log.updateCount > 0 }
         session.close()
         #expect(session.state == .ended)
