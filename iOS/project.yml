@@ -120,13 +120,9 @@ targets:
         # updates by push, which aOS doesn't use (no server of its own); kept as asked for (iOS/NOTES.md).
         NSSupportsLiveActivities: true
         NSSupportsLiveActivitiesFrequentUpdates: true
-        # iOS's continued processing task while a terminal is open (TerminalKeepAlive); location only with the
-        # option "Keep alive with location" (off by default).
-        BGTaskSchedulerPermittedIdentifiers:
-          - dev.marquart.aos.ios.terminal.*
+        # Location only with the option "Keep alive with location" (off by default; TerminalKeepAlive).
         UIBackgroundModes:
           - location
-          - processing
         NSLocationWhenInUseUsageDescription: "With “Keep alive with location” on, the location service keeps your terminal running in the background. aOS doesn't use, keep or send your location."
         NSLocalNetworkUsageDescription: "aOS connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted."
         NSBonjourServices:

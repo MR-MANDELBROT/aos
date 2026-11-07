@@ -30,7 +30,6 @@ struct TerminalSettingsForm: View {
 
             Section {
                 Toggle("Live Activity", isOn: $settings.terminalLiveActivity)
-                Toggle("Background time from iOS", isOn: $settings.terminalBackgroundTime)
                 Toggle("Keep alive with location", isOn: Binding(get: { settings.terminalKeepAliveLocation }, set: { on in
                     settings.terminalKeepAliveLocation = on
                     if on { TerminalKeepAlive.requestLocationPermission() }
@@ -43,7 +42,7 @@ struct TerminalSettingsForm: View {
             } header: {
                 Text("In the background")
             } footer: {
-                Text("Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. iOS gives an app time in the background for up to an hour when you open a terminal, and shows it in the Dynamic Island; it can end it earlier. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow.")
+                Text("Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow.")
             }
         }
         .navigationTitle("Terminal")

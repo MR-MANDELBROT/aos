@@ -1,5 +1,4 @@
 import ActivityKit
-import BackgroundTasks
 import CoreLocation
 import os
 import SwiftUI
@@ -11,32 +10,23 @@ private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "backgroun
 ///
 /// - A Live Activity shows the open terminals on the Lock Screen and in the Dynamic Island, with an End button. By
 ///   itself it gives the app no time in the background: it shows, it doesn't keep alive.
-/// - iOS's continued processing task (BGContinuedProcessingTask, iOS 26+): asked for when the person opens a
-///   terminal, it gives the app time in the background for up to an hour, with iOS's own progress in the Dynamic
-///   Island (the person can stop it there). iOS can end it earlier when it needs the resources.
 /// - Optionally the location service (off by default): an app that receives location updates keeps running. aOS asks
 ///   for the coarsest location and does nothing with it; it costs battery, and iOS shows the location arrow.
 ///
-/// When none of them holds, iOS suspends the app about 30 s after it went to the background and the connection
-/// drops; on the Mac the session keeps running and the terminal attaches again when the app comes back.
+/// Without location, iOS suspends the app about 30 s after it went to the background and the connection drops; on
+/// the Mac the session keeps running and the terminal attaches again when the app comes back. (iOS's continued
+/// processing task, BGContinuedProcessingTask, isn't used: its progress in the Dynamic Island read as a task that
+/// runs, not as a terminal that is kept.)
 @MainActor
 final class TerminalKeepAlive: NSObject {
     private let settings: AppSettings
-    /// The terminals that are open (connected, reconnecting or detached on the Mac).
+    /// The terminals that are open (connecting, connected or reconnecting).
     private let open: () -> [TerminalSession]
     private var activity: Activity<TerminalActivityAttributes>?
-    private var continued: BGContinuedProcessingTask?
-    /// A continued task was asked for and not yet given or refused.
-    private var continuedPending = false
-    private var continuedTicker: Task<Void, Never>?
     private var location: CLLocationManager?
     private var locationSession: CLBackgroundActivitySession?
     private var inBackground = false
     private var lastContent: TerminalActivityAttributes.ContentState?
-
-    /// How long the continued task may keep the app (its progress counts this down).
-    static let backgroundMinutes = 60
-    static let taskPrefix = "dev.marquart.aos.ios.terminal."
 
     init(settings: AppSettings, open: @escaping () -> [TerminalSession]) {
         self.settings = settings
@@ -47,21 +37,13 @@ final class TerminalKeepAlive: NSObject {
     }
 
     /// Something holds the app in the background: the connection may stay.
-    var holdsInBackground: Bool { continued != nil || location != nil }
-
-    /// The person opened a terminal (their action is what lets the app ask iOS for background time).
-    func terminalOpened() {
-        startContinuedTaskIfWanted()
-    }
+    var holdsInBackground: Bool { location != nil }
 
     /// A terminal's state changed.
     func terminalsChanged() {
         let sessions = open()
         updateActivity(sessions)
-        if sessions.isEmpty {
-            finishContinuedTask()
-            stopLocation()
-        }
+        if sessions.isEmpty { stopLocation() }
     }
 
     func scenePhaseChanged(_ phase: ScenePhase) {
@@ -84,11 +66,7 @@ final class TerminalKeepAlive: NSObject {
 
     private func updateActivity(_ sessions: [TerminalSession]) {
         let items = sessions.sorted { $0.title < $1.title }.map { s in
-            let state = switch s.phase {
-            case .connected: "connected"
-            case .detached: "detached"
-            default: "reconnecting"
-            }
+            let state = s.phase == .connected ? "connected" : "reconnecting"
             return TerminalActivityAttributes.ContentState.Item(
                 id: s.id.key, title: s.title, held: s.holderID != nil && s.holdsSession, state: state,
                 since: s.connectedSince)
@@ -97,7 +75,7 @@ final class TerminalKeepAlive: NSObject {
             endActivity()
             return
         }
-        let keptBy: String? = location != nil ? "location" : (continued != nil ? "time" : nil)
+        let keptBy: String? = location != nil ? "location" : nil
         let content = TerminalActivityAttributes.ContentState(items: Array(items.prefix(4)), keptBy: keptBy)
         guard content != lastContent || activity == nil else { return }
         lastContent = content
@@ -124,77 +102,6 @@ final class TerminalKeepAlive: NSObject {
         Task {
             for a in Activity<TerminalActivityAttributes>.activities { await a.end(nil, dismissalPolicy: .immediate) }
         }
-    }
-
-    // MARK: iOS's background time
-
-    private func startContinuedTaskIfWanted() {
-        guard settings.terminalBackgroundTime, continued == nil, !continuedPending,
-              UIApplication.shared.applicationState == .active else { return }
-        continuedPending = true
-        let identifier = Self.taskPrefix + UUID().uuidString.prefix(8).lowercased()
-        let registered = BGTaskScheduler.shared.register(forTaskWithIdentifier: identifier, using: .main) { [weak self] task in
-            guard let task = task as? BGContinuedProcessingTask else {
-                task.setTaskCompleted(success: false)
-                return
-            }
-            MainActor.assumeIsolated { self?.started(task) }
-        }
-        guard registered else {
-            continuedPending = false
-            log.notice("Continued processing isn't available here")
-            return
-        }
-        let request = BGContinuedProcessingTaskRequest(
-            identifier: identifier, title: String(localized: "Terminal in the background"),
-            subtitle: String(localized: "aOS keeps your terminal connected."))
-        request.strategy = .fail
-        // iOS 27's way to submit; never from the main thread.
-        Task.detached { [weak self] in
-            BGTaskScheduler.shared.submitTaskRequest(request) { error in
-                guard let error else { return }
-                log.notice("Continued processing not granted: \(String(describing: error), privacy: .public)")
-                Task { @MainActor in self?.continuedPending = false }
-            }
-        }
-    }
-
-    private func started(_ task: BGContinuedProcessingTask) {
-        continuedPending = false
-        continued = task
-        let units = Int64(Self.backgroundMinutes * 6)
-        task.progress.totalUnitCount = units
-        task.progress.completedUnitCount = 0
-        task.expirationHandler = { [weak self] in
-            // iOS needs the resources, or the person stopped it in the Dynamic Island.
-            Task { @MainActor in self?.finishContinuedTask(expired: true) }
-        }
-        log.info("Background time for the terminal granted")
-        updateActivity(open())
-        // Progress every 10 s: the time the app may still stay. Done when no terminal is open or the time is up.
-        continuedTicker = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(10))
-                guard let self, let task = self.continued else { return }
-                if self.open().filter(\.isActive).isEmpty || task.progress.completedUnitCount + 1 >= units {
-                    self.finishContinuedTask()
-                    return
-                }
-                task.progress.completedUnitCount += 1
-                let left = Int((units - task.progress.completedUnitCount) / 6)
-                task.updateTitle(task.title, subtitle: String(localized: "Connected for \(left) more min at most."))
-            }
-        }
-    }
-
-    private func finishContinuedTask(expired: Bool = false) {
-        continuedTicker?.cancel()
-        continuedTicker = nil
-        guard let task = continued else { return }
-        continued = nil
-        if expired { log.info("Background time for the terminal ended by iOS") }
-        task.setTaskCompleted(success: !expired)
-        updateActivity(open())
     }
 
     // MARK: Location (optional)
