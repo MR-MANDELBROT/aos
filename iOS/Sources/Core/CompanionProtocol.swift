@@ -76,6 +76,8 @@ enum CompanionRequest: Sendable, Equatable {
     /// The workspace's display in the phone's shape while the phone shows it: `size` is "WIDTHxHEIGHT@SCALE" or
     /// "reset" (screen sharing, Docs/COMPANION.md; renewed while the phone shows the workspace).
     case display(target: ScreenTarget, size: String)
+    /// The Overview: the Mac's status, or an action on the Mac or aOS (`value` for the stay-awake choice).
+    case mac(MacAction, value: String?)
 
     var op: String {
         switch self {
@@ -88,13 +90,14 @@ enum CompanionRequest: Sendable, Equatable {
         case .approvalAnswer: "approval.answer"
         case .type: "type"
         case .display: "display"
+        case .mac(let action, _): action.rawValue
         }
     }
 
     /// The operation as aOS on the Mac gets it from `aos-companion` (what the signature names).
     var signedOp: String {
         switch self {
-        case .hello, .status, .subscribe, .screen, .type, .display: "companion." + op
+        case .hello, .status, .subscribe, .screen, .type, .display, .mac: "companion." + op
         default: op
         }
     }
@@ -143,6 +146,9 @@ enum CompanionRequest: Sendable, Equatable {
         case .display(let target, let size):
             f.target = target.rawValue
             f.data = CompanionSignature.dataDigest(text: size)
+        case .mac(_, let value):
+            // The parameter is the text, which the signature covers.
+            if let value { f.data = CompanionSignature.dataDigest(text: value) }
         }
         return f
     }
@@ -186,6 +192,8 @@ enum CompanionRequest: Sendable, Equatable {
         case .display(let target, let size):
             object["target"] = .string(target.rawValue)
             object["text"] = .string(size)
+        case .mac(_, let value):
+            if let value { object["text"] = .string(value) }
         }
         if let auth { object["auth"] = auth.json }
         let encoder = JSONEncoder()
@@ -477,10 +485,13 @@ enum CompanionMessage: Equatable, Sendable {
 struct HelloResult: Equatable, Sendable {
     var mac: String
     var aos: String
+    /// What this Mac offers beyond the first version ("mac.status", ..., "term"); empty for an older aOS.
+    var features: Set<String> = []
 
     init(_ r: CompanionResponse) {
         mac = r.body["mac"]?.string ?? ""
         aos = r.body["aos"]?.string ?? ""
+        features = Set((r.body["features"]?.array ?? []).compactMap(\.string))
     }
 }
 
