@@ -7,3 +7,6 @@ DerivedData/
 aOS.xcodeproj/
 .DS_Store
 .claude/
+
+# Built from Open Screen Sharing's Go library by iOS/Tools/libsharing.sh
+iOS/ThirdParty/OpenScreenSharing/Libsharing.xcframework/

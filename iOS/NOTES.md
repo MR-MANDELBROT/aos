@@ -1,7 +1,7 @@
 # aOS for iPhone: notes
 
-Design: `Docs/COMPANION.md`. This file holds what the Mac side has to match, requests for AOSRFB (not changed from
-here), what was learned about the libraries, and what is open.
+Design: `Docs/COMPANION.md`. This file holds what the Mac side has to match, the screen (Open Screen Sharing: origin,
+license, changes), what was learned about the libraries, and what is open.
 
 ## Layout
 
@@ -19,16 +19,21 @@ iOS/
   Sources/Companion             CompanionClient (actor), MockCompanionServer (tests and demo), command line
   Sources/App                   AOSApp, AppModel, MacConnection (reconnects), settings, lock, demo data (debug)
   Sources/{Overview,Pairing,Terminal,Screen,SignIn,Settings,Design}   the UI
+  ThirdParty/OpenScreenSharing  the screen client: Open Screen Sharing's session engine and session UI (framework
+                                target ScreenClient, GPL-3.0: LICENSE, COPYING); Libsharing.xcframework (its Go
+                                library) is built there by Tools/libsharing.sh and not checked in
   Tests                         unit and integration tests (in-process SSH, RFB and pairing servers)
-  Tools                         test.sh, sim.sh, screenshots.sh, localize.sh (+ translations_de.py), render-icon.sh
+  Tools                         test.sh, sim.sh, screenshots.sh, localize.sh (+ translations_de.py,
+                                translations_screen_de.py), screen_strings.sh, libsharing.sh, render-icon.sh
 ```
 
 Run the tests: `iOS/Tools/test.sh`. Run the app with sample data: `iOS/Tools/sim.sh -AOSDemo YES` (debug builds
-only; `-AOSDemoTab screen`, `-AOSDemoSheet signin|signin-code|signin-locked|signin-off|help|pairing|settings|lock|...`,
-see `Sources/App/Demo.swift`).
+only; `-AOSDemoTab screen`, `-AOSDemoScreen mac|mac-login|mac-login-keyboard`,
+`-AOSDemoSheet signin|signin-code|signin-locked|signin-off|help|pairing|settings|lock|...`, see `Sources/App/Demo.swift`).
 Screenshots of every screen, light and dark: `iOS/Tools/screenshots.sh de` (or `en`), into `build/ios-screenshots`.
 Strings: write English in code, German in `Tools/translations_de.py`, then `iOS/Tools/localize.sh`; it refuses
-nothing but reports missing German, mismatched format specifiers and dashes used as punctuation.
+nothing but reports missing German, mismatched format specifiers and dashes used as punctuation. The screen client's
+strings: see "The screen" below.
 
 Only an iOS 26.4 simulator runtime was installed here. The project targets iOS 27; `test.sh` and `sim.sh` lower the
 deployment target for that build only when the simulator is older. The app uses no iOS 27-only API so far.
@@ -89,8 +94,8 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   approvals share one queue and one sheet, in the order they came; "Later" keeps one waiting in the overview.
 - `{"event":"mac","state":"unavailable","detail":"…"}` shows "aOS on the Mac isn't answering right now (…). It
   keeps trying." on the Mac card; any other `mac` state, or a successful heartbeat, clears it.
-- Typing into the workspace screen: text with characters beyond ASCII goes as `{"op":"type","text":"…"}` (all of
-  the inserted text), through the same queue as the keys so the order holds; ASCII stays key events over RFB.
+- Typing into the screens: since 2026-11-07 the screen client types text itself (Unicode keysyms, or Apple's paste
+  over screen sharing where macOS composes), so the iPhone no longer sends `{"op":"type"}`; the op stays on the Mac.
 - Lines that aren't JSON are skipped (a shell's login message, for example); lines up to 1 MiB; unknown fields and
   unknown events are ignored. Request timeout 20 s.
 - `help.done` when the person taps Done.
@@ -108,30 +113,79 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   its own vault, which is gone).
 - Exit status 127 of the exec channel is shown as "aOS isn't installed where it was paired; pair again".
 
-## The screen (iOS/Sources/Screen)
+## The screen: Open Screen Sharing (iOS/Sources/Screen, iOS/ThirdParty/OpenScreenSharing)
 
-- `ScreenSession` runs `RFBClient.events` and hands frames to the view through `onFrame` (not through SwiftUI);
-  `ScreenRenderer` uploads only the changed rectangles into a Metal texture (mipmaps while the picture is shown
-  smaller than its pixels). `ScreenGeometry` (fit, fill, actual pixels, zoom, pan) and `PointerMotion` (trackpad
-  acceleration, wheel steps, momentum) are plain math with tests.
-- The workspace asks for its display in the phone's shape (`display`, renewed every 20 s, `reset` when it stops; the
-  Mac's lease of 45 s covers a phone that vanished). The size is the safe area grown to at least 600x900 points.
-- Settings: quality (automatic: best on Wi-Fi, saver on cellular), picture rate, the Mac's scaling, the workspace's
-  shape and Retina, pointer drawn on the phone or by the Mac, speed, natural scrolling, haptics, toolbar, key bar,
-  statistics.
-- Debug builds: `-AOSScreenDirect HOST:PORT` with `AOS_SCREEN_USER` and `AOS_SCREEN_PASSWORD` in the environment
-  connects the workspace screen straight to a screensharingd (the simulator reaches a workspace VM's address).
+Max's decision (2026-11-07): the Screen tab uses "the complete code and settings of Open Screen Sharing, exactly
+like OSS, only adapted a bit", with the workspace and the Mac as its two screens. aOS's own viewer (Metal renderer,
+geometry, pointer math, controls, built on AOSRFB) is gone.
 
-## Requests for AOSRFB (not changed from here)
+**Origin and license.** Open Screen Sharing by nekohasekai, https://github.com/nekohasekai/open-screen-sharing,
+GPL-3.0 with an extra term: "no derivative work may use the name or imply association with this application without
+prior consent". Taken on 2026-11-07 from Max's fork (`~/Developer/open-screen-sharing`, branch `autofill-passwort`,
+commit 8b19fc9) into `ThirdParty/OpenScreenSharing/Sources`. Every file carries "Based on Open Screen Sharing by
+nekohasekai, GPL-3.0" with the date, aOS's changes are marked `aOS:`; `LICENSE` is OSS's notice, `COPYING` the
+GPL-3.0 text; Settings > Acknowledgements shows both and says aOS isn't associated with the author. Max uses it for
+himself first and asks the author. Before giving the app to anyone else: the author's consent, and the GPL then
+covers the app as a whole (its source offered, libsharing's included).
 
-1. A transport hook: `RFBClient` only connects with NWConnection to host:port, so the iPhone runs a loopback
-   listener (`LocalForwarder`) and bridges each connection to a direct-tcpip channel. An initializer that takes a
-   byte stream (or a connect closure) would remove the listener, a local port that other apps on the phone could
-   connect to while a screen is open (they would still need the screen sharing password).
-2. Input readiness: input waits `inputGrace` (5 s) after connecting; the iPhone shows "input works in a moment".
-   Exposing the connect time (or an `isInputReady`) would let it show this exactly.
-3. Typing beyond ASCII into the workspace: done on the Mac side as the companion op `type` and used (on the Mac's
-   own screen the iPhone uses `pbcopy` over SSH, then cmd+v).
+**What was taken**: Session/ (LibsharingSession, SessionController, DisplayPipeline, decoders, cursors, keys,
+clipboard), SessionUI/ (SessionView, RemoteScreenView with Metal, ScreenInput: touch, trackpad, mouse, pointer lock,
+gestures; floating toolbar, menus, customizing it, keyboard accessory bar, debug panel, tips, drag and drop of files),
+Model/ (its settings, key mappings and shortcuts, toolbar layout, the GRDB store), Settings/ (keyboard, cursor style,
+its settings page), App/ helpers and its menu commands. Packages as in OSS: GRDB 7.11.1, swift-perception 2.0.12,
+swift-atomics. The framework target `ScreenClient` keeps OSS's Swift settings (main actor by default, approachable
+concurrency, member import visibility). libsharing (Go) is `Libsharing.xcframework`, built from OSS's source by
+`Tools/libsharing.sh` (gomobile bind like OSS's `make lib`, iPhone and simulator only; `--copy` takes the checkout's
+own build); `generate.sh` runs it when the framework is missing.
+
+**Left out**: the computer list and editor, discovery and availability, links, pairing with other devices, RDP (its
+Swift branches stay, aOS never opens one; the Go library still has it) and with it sending audio (no microphone code,
+no permission), the macOS app (its code stays compiled out),
+the server mode, updates, OSS's demo, the language picker (iOS has one per app), the fork's password fill panel, and
+"New Connection". High performance (video and audio over UDP) is off: only TCP goes through SSH.
+
+**aOS's changes in the module** (`aOS:`): `SessionRoute.init(computerID:name:host:port:credentials:followsWindowShape:)`
+with `managesLogin = false` (never OSS's sign-in sheet, no saved user name or password, a refused login goes to
+`onLoginRefused`); no thumbnails (aOS keeps no pictures of the screens); `onDisplayArea` (the area OSS fits the picture
+into); `followsWindowShape` (the iPhone isn't turned to the picture); `RemoteScreenUIView.focus(on:)` for help
+requests; caches in `Caches/Screen`; an in-memory store for the demo; the settings page; "Controls" for OSS's
+"Control" menu (one string table: "Control" is the terminal's key). `Bridge/ScreenClient.swift` is aOS's interface
+(`ScreenClientSession`, `ScreenClientView`, `ScreenClientSettings`, `ScreenCommands`, orientation, license texts).
+
+**A session** (`ScreenSession`, `ScreenRoute`): one per screen, one at a time.
+- Workspace: `CompanionClient.workspaceLogin()` (sealed, `ScreenSeal`) gives the VM's address, port and account;
+  `LocalForwarder` listens on 127.0.0.1 (random port) and opens a direct-tcpip channel per connection to that address
+  through the SSH connection (the current one: a session survives the Mac's connection being rebuilt, OSS reconnects
+  by itself); OSS's session connects to 127.0.0.1 and that port with Apple's account login.
+- Mac: the Mac account from the keychain behind Face ID (as before), the tunnel to 127.0.0.1:5900 on the Mac. A
+  refused login ends the session and shows the login form with the reason.
+- The workspace takes the iPhone's shape with aOS's `display` op (OSS's own virtual display needs high performance):
+  before connecting, from the window, then from OSS's measured area (the window without the top safe area upright,
+  without the sides on its side), grown to at least 600x900 points, Retina; renewed every 20 s, `reset` when it
+  stops. So the picture fills the screen; the iPhone turns freely and the workspace follows. The Mac's screen keeps
+  its size and OSS turns the iPhone to it (landscape), with its toolbar in the letterbox.
+- Stored (OSS's GRDB database, Application Support/Screen Sharing.sqlite): OSS's settings and, per screen (ids derived
+  from the paired Mac's id, deleted when unpairing), quality, observe mode, clipboard sync, pointer lock and the
+  screen sharing key it trusts (first use). Never a user name, password or picture.
+- "Sync Clipboard" starts off for the workspace (OSS's default is on): what the iPhone copies, a password or a code,
+  doesn't go to the agent's Mac unless the person turns it on in the session's clipboard menu (remembered). The Mac
+  starts with it on, as in OSS.
+- The orientation lock needs an app delegate (`AOSAppDelegate`); OSS's menu commands are on the scene.
+
+**Strings**: the module looks them up in the main bundle, so they are manual entries of the app's catalog.
+`Tools/screen_strings.sh` adds new ones (export with the module's strings, `screen_strings.py`, then `localize.sh`);
+German in `Tools/translations_screen_de.py` (OSS's own German, reviewed); `translations_de.py` wins for a shared key.
+
+**Demo and debugging**: in the demo the Screen tab shows OSS's real session with a picture from `DemoScreenServer`
+(plain RFB on 127.0.0.1 in the app, debug builds). `-AOSScreenDirect HOST:PORT` with `AOS_SCREEN_USER` and
+`AOS_SCREEN_PASSWORD` connects the workspace screen straight to a screensharingd (the simulator reaches a workspace
+VM's address). libsharing logs to the app's subsystem, category `libsharing`.
+
+## AOSRFB on the iPhone
+
+Only `DisplayRequest` (shared with the Mac) and the forwarder's integration test still use it. The loopback listener
+stays (libsharing dials TCP itself): while a screen is open, other apps on the phone could connect to that port (they
+would still need the screen sharing login).
 
 ## What was learned about the libraries
 
@@ -166,5 +220,8 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   In the background the connection is kept for 25 s, then dropped and rebuilt on return.
 - Unpairing on the iPhone doesn't remove the key on the Mac (the design leaves that to aOS on the Mac).
 - iPhone only (no iPad layout). Landscape works but wasn't tuned.
+- The screen client was tested against in-process servers (Apple's account login over the SSH tunnel, a refused
+  login) and in the simulator's demo; not yet against the real workspace or Mac, nor on a device (rotation, the
+  keyboard bar, pointer lock with a mouse, background and return).
 - Local network denial is detected for pairing (NWConnection path); for SSH (NIO on Network.framework) it shows as
   "not reachable" with the hint about Tailscale and the local network setting.

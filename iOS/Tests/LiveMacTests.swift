@@ -1,14 +1,12 @@
 import Foundation
-import ImageIO
 import Testing
-import UniformTypeIdentifiers
 @testable import aOS
 
 /// Against a real Mac side: aOS's pairing listener (`aosctl pair-test`), an sshd, the real `aos-companion` and
 /// the aOS engine with an open workspace. Runs only when `AOS_LIVE_LINK` holds a pairing link (pass it to
 /// xcodebuild as `TEST_RUNNER_AOS_LIVE_LINK`). An agent on the Mac calls `sign_in` meanwhile; this test answers it
 /// with the test values from `AOS_LIVE_USER` and `AOS_LIVE_PASSWORD` (a test page in the workspace, never a real
-/// account). `AOS_LIVE_OUT` is a folder for a picture of the workspace screen.
+/// account). The workspace's screen connects through the SSH connection with Open Screen Sharing's session.
 @MainActor
 @Suite(.serialized, .enabled(if: ProcessInfo.processInfo.environment["AOS_LIVE_LINK"] != nil))
 struct LiveMacTests {
@@ -59,21 +57,14 @@ struct LiveMacTests {
             #expect(model.signInResults[request.id] == .filled)
         }
 
-        // The workspace screen through the SSH connection (direct-tcpip to the workspace's screen sharing)
+        // The workspace screen through the SSH connection (direct-tcpip to the workspace's screen sharing), with
+        // Open Screen Sharing's session and the login the Mac sealed to this iPhone
         let screen = model.workspaceScreen
-        var options = ScreenOptions()
-        options.interval = 0.2
-        await screen.start(mac: connection, login: nil, options: options)
-        try await waitUntil(timeout: .seconds(40)) { screen.phase == .live && screen.framebuffer?.makeImage() != nil }
-        print("LIVE workspace screen: \(Int(screen.size.width))x\(Int(screen.size.height))")
-        if let out = env["AOS_LIVE_OUT"], let frame = screen.framebuffer?.makeImage() {
-            try await Task.sleep(for: .seconds(2))
-            let url = URL(fileURLWithPath: out).appendingPathComponent("live-workspace.png")
-            if let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) {
-                CGImageDestinationAddImage(dest, screen.framebuffer?.makeImage() ?? frame, nil)
-                print("LIVE picture saved: \(CGImageDestinationFinalize(dest))")
-            }
-        }
+        await screen.start(mac: connection, login: nil, options: ScreenOptions(), area: CGSize(width: 402, height: 812))
+        let client = try #require(screen.client)
+        client.start()
+        try await waitUntil(timeout: .seconds(40)) { client.state == .connected }
+        print("LIVE workspace screen: connected, Apple's screen sharing: \(client.speaksApple), display \(String(describing: screen.displayRequest))")
         screen.stop()
 
         model.unpair(mac)
