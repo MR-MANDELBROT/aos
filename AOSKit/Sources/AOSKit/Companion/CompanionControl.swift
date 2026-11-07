@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import IOKit.ps
 
@@ -15,6 +16,12 @@ public protocol MacControls: AnyObject {
     func sleepMac() async -> MacSleepResult
     /// Settings > General > Staying awake.
     func setStayAwake(_ mode: StayAwake) -> MacControlRefusal?
+    /// Turns the display off or wakes it (`MacDisplayStatus.set(on:)` unless the app does it itself).
+    func setDisplay(on: Bool) async
+}
+
+extension MacControls {
+    public func setDisplay(on: Bool) async { await MacDisplayStatus.set(on: on) }
 }
 
 public struct MacAwakeStatus: Codable, Equatable, Sendable {
@@ -134,18 +141,61 @@ public struct MacPowerStatus: Codable, Equatable, Sendable {
     }
 }
 
+/// Whether a screen of the Mac is lit, as the phone shows it.
+public struct MacDisplayStatus: Codable, Equatable, Sendable {
+    /// on: at least one screen is lit; off: all are asleep; none: no screen is online (the lid is closed and no monitor
+    /// is connected).
+    public var state: String
+    /// Screens other than the built-in one (screen sharing's virtual one doesn't count).
+    public var external: Int
+
+    public init(state: String, external: Int) {
+        self.state = state
+        self.external = external
+    }
+
+    /// What `CGDisplayIsAsleep` says about every online screen.
+    public static func read() -> MacDisplayStatus {
+        var ids = [CGDirectDisplayID](repeating: 0, count: 16)
+        var online: UInt32 = 0
+        guard CGGetOnlineDisplayList(16, &ids, &online) == .success else { return MacDisplayStatus(state: "off", external: 0) }
+        var lit = 0, external = 0, counted = 0
+        for id in ids.prefix(Int(online)) {
+            // Screen sharing's virtual display ("High Performance" mode): vendor 'aapl', model 0x1234, serial 'mvs'.
+            if CGDisplayVendorNumber(id) == 0x6161_706C && CGDisplayModelNumber(id) == 0x1234
+                && CGDisplaySerialNumber(id) == 0x6D76_7300 { continue }
+            counted += 1
+            if CGDisplayIsBuiltin(id) == 0 { external += 1 }
+            if CGDisplayIsAsleep(id) == 0 { lit += 1 }
+        }
+        return MacDisplayStatus(state: lit > 0 ? "on" : (counted == 0 ? "none" : "off"), external: external)
+    }
+
+    /// Off: `pmset displaysleepnow`. On: `caffeinate -u` declares user activity, which wakes a sleeping display
+    /// (a closed lid keeps the built-in one dark). Waits a moment, so the status read afterwards shows the change.
+    public static func set(on: Bool) async {
+        if on {
+            _ = try? await Subprocess.run("/usr/bin/caffeinate", ["-u", "-t", "2"], timeout: 10)
+        } else {
+            _ = try? await Subprocess.run("/usr/bin/pmset", ["displaysleepnow"], timeout: 10)
+        }
+        try? await Task.sleep(nanoseconds: 500_000_000)
+    }
+}
+
 public enum CompanionControl {
     /// The ops (as the app gets them from aos-companion: "companion." and the phone's op).
     public static let status = "companion.mac.status"
     public static let sleep = "companion.mac.sleep"
     public static let displayOff = "companion.mac.display-off"
+    public static let displayOn = "companion.mac.display-on"
     public static let stayAwake = "companion.mac.stay-awake"
     public static let workspaceStart = "companion.workspace.start"
     public static let workspaceStop = "companion.workspace.stop"
     public static let bitwardenLock = "companion.bitwarden.lock"
     public static let sessionRestart = "companion.session.restart"
 
-    public static let ops: Set<String> = [status, sleep, displayOff, stayAwake, workspaceStart, workspaceStop,
+    public static let ops: Set<String> = [status, sleep, displayOff, displayOn, stayAwake, workspaceStart, workspaceStop,
                                           bitwardenLock, sessionRestart]
 
     /// What this Mac offers the phone beyond the first version (`hello` lists it): these ops and the terminal
@@ -181,6 +231,9 @@ extension WorkspaceController {
         var result: [String: Any] = [:]
         if let power = try? JSONSerialization.jsonObject(with: JSONEncoder().encode(MacPowerStatus.read())) {
             result["power"] = power
+        }
+        if let display = try? JSONSerialization.jsonObject(with: JSONEncoder().encode(MacDisplayStatus.read())) {
+            result["display"] = display
         }
         if let awake = macControls?.awakeStatus(), let object = try? JSONSerialization.jsonObject(with: JSONEncoder().encode(awake)) {
             result["awake"] = object
@@ -245,11 +298,11 @@ extension WorkspaceController {
                 return refused(refusal)
             }
 
-        case CompanionControl.displayOff:
-            log("\(from) turns the display off")
-            Task.detached(priority: .utility) {
-                _ = try? await Subprocess.run("/usr/bin/pmset", ["displaysleepnow"], timeout: 10)
-            }
+        case CompanionControl.displayOff, CompanionControl.displayOn:
+            let on = r.op == CompanionControl.displayOn
+            log("\(from) turns the display \(on ? "on" : "off")")
+            // The status that goes back already shows the change.
+            if let controls = macControls { await controls.setDisplay(on: on) } else { await MacDisplayStatus.set(on: on) }
             return done()
 
         case CompanionControl.stayAwake:
