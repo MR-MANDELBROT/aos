@@ -1,9 +1,9 @@
 import ScreenClient
 import SwiftUI
 
-/// Settings > Screen: Open Screen Sharing's settings (general, keyboard, control), with aOS's own rows for the
-/// workspace on top. What a session remembers per screen (quality, clipboard, pointer lock) is chosen in the session's
-/// menu, as in Open Screen Sharing.
+/// Settings > Screen: Open Screen Sharing's settings (general, keyboard, control), with aOS's one setting for both
+/// screens on top: the iPhone's size, and Open Screen Sharing's resolution. What a session remembers per screen
+/// (quality, clipboard, pointer lock) is chosen in the session's menu, as in Open Screen Sharing.
 struct ScreenSettingsPage: View {
     @Environment(AppModel.self) private var model
 
@@ -11,13 +11,17 @@ struct ScreenSettingsPage: View {
         @Bindable var settings = model.settings
         ScreenClientSettings {
             Section {
-                Toggle("The workspace in the iPhone's shape", isOn: $settings.matchWorkspaceShape)
-                Toggle("Retina sharpness", isOn: $settings.retinaWorkspace)
-                    .disabled(!settings.matchWorkspaceShape)
+                Toggle("Screens in the iPhone's size", isOn: $settings.screenMatchesPhone)
+                Picker("Resolution", selection: $settings.screenResolution) {
+                    ForEach(ScreenClient.resolutionScales, id: \.self) { scale in
+                        Text(ScreenClient.resolutionTitle(scale)).tag(scale)
+                    }
+                }
+                .disabled(!settings.screenMatchesPhone)
             } header: {
-                Text("Workspace")
+                Text("Display")
             } footer: {
-                Text("While you watch it, the workspace's display takes the iPhone's shape and fills the screen. Retina draws it twice as sharp with more data. Applies the next time the workspace screen opens.")
+                Text("Both screens take the iPhone's shape and turn with it: aOS resizes the workspace's display, your Mac gets a virtual display in Open Screen Sharing's high performance mode, directly in the same Wi-Fi or with the Tailscale app's VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness.")
             }
         }
     }
@@ -28,7 +32,7 @@ struct AcknowledgementsView: View {
     var body: some View {
         Form {
             Section {
-                Text("The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac, and aOS's sign-in replaces the app's own.")
+                Text("The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac (your Mac in the iPhone's size also directly), and aOS's sign-in replaces the app's own.")
                     .fixedSize(horizontal: false, vertical: true)
                 Link(destination: ScreenClient.sourceCode) {
                     Label("Source code of Open Screen Sharing", systemImage: "chevron.left.forwardslash.chevron.right")

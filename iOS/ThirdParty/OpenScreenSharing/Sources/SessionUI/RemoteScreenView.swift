@@ -15,7 +15,8 @@ struct RemoteScreenView: UIViewRepresentable {
 
     init(controller: SessionController) {
         self.controller = controller
-        matchesWindow = controller.wantsVirtualDisplay
+        // aOS: also the workspace, whose display aOS gives the window's shape.
+        matchesWindow = controller.picturesFollowWindow
         turnsLandscape = controller.platform != .iOS
         preferredOrientation = controller.preferredOrientation
         mode = controller.mode

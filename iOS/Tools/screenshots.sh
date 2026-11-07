@@ -28,10 +28,12 @@ SHOTS=(
   "terminal-list|-AOSDemoTab terminal"
   "terminal|-AOSDemoTab terminal -AOSDemoSheet shell"
   "screen|-AOSDemoTab screen"
+  "screen-workspace|-AOSDemoTab screen -AOSDemoScreen workspace"
   "screen-mac|-AOSDemoTab screen -AOSDemoScreen mac"
   "screen-login|-AOSDemoTab screen -AOSDemoScreen mac-login-keyboard"
-  "screen-settings|-AOSDemoTab screen -AOSDemoScreen mac-login -AOSDemoSheet screen-settings"
+  "screen-settings|-AOSDemoTab screen -AOSDemoSheet screen-settings"
   "screen-help|-AOSDemoTab overview -AOSDemoSheet help"
+  "screen-help-workspace|-AOSDemoTab screen -AOSDemoScreen workspace -AOSDemoSheet help"
 )
 
 for appearance in light dark; do
@@ -44,7 +46,7 @@ for appearance in light dark; do
     xcrun simctl launch --terminate-running-process "$UDID" dev.marquart.aos.ios -AOSDemo YES $args \
       -AppleLanguages "($LANGUAGE)" -AppleLocale "$LOCALE" >/dev/null
     # The screen's sessions need a moment to connect to the demo's screen sharing server
-    sleep 6
+    sleep 8
     xcrun simctl io "$UDID" screenshot "$OUT/$name-$appearance.png" >/dev/null 2>&1
     echo "$OUT/$name-$appearance.png"
   done

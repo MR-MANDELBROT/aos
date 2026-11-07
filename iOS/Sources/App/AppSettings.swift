@@ -26,10 +26,11 @@ final class AppSettings {
 
     // MARK: Screen
 
-    /// The workspace takes the iPhone's shape while the iPhone shows it.
-    var matchWorkspaceShape: Bool { didSet { defaults.set(matchWorkspaceShape, forKey: "matchWorkspaceShape") } }
-    /// ... drawn at Retina sharpness (twice the pixels; more data).
-    var retinaWorkspace: Bool { didSet { defaults.set(retinaWorkspace, forKey: "retinaWorkspace") } }
+    /// Both screens take the iPhone's shape while the iPhone shows them: the workspace through aOS's display request,
+    /// the Mac through Open Screen Sharing's virtual display (direct path, high performance).
+    var screenMatchesPhone: Bool { didSet { defaults.set(screenMatchesPhone, forKey: "screenMatchesPhone") } }
+    /// Open Screen Sharing's resolution for both (1x to 2x): more room, less sharp.
+    var screenResolution: Double { didSet { defaults.set(screenResolution, forKey: "screenResolution") } }
 
     static let autoLockChoices = [0, 1, 5, 15, 60]
 
@@ -47,7 +48,9 @@ final class AppSettings {
         // An option of an earlier version (iOS's continued processing task), gone.
         defaults.removeObject(forKey: "terminalBackgroundTime")
         terminalKeepAliveLocation = bool("terminalKeepAliveLocation", false)
-        matchWorkspaceShape = bool("matchWorkspaceShape", true)
-        retinaWorkspace = bool("retinaWorkspace", true)
+        // Before: the workspace alone took the iPhone's shape ("matchWorkspaceShape")
+        screenMatchesPhone = bool("screenMatchesPhone", bool("matchWorkspaceShape", true))
+        let resolution = defaults.double(forKey: "screenResolution")
+        screenResolution = (1...2).contains(resolution) ? resolution : 1
     }
 }

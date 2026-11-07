@@ -69,15 +69,21 @@ struct RequestQueueTests {
         #expect(model.presentedSignIn == locked)
     }
 
-    @Test func helpRequestsOpenTheWorkspaceScreen() {
+    @Test func helpRequestsOpenTheScreenTabWithoutConnecting() {
         let model = AppModel(isDemo: true)
         model.tab = .terminal
         model.screenTarget = .mac
+        #expect(model.screenRequest == .mac)  // set from elsewhere: a tap on that screen
+        model.screenRequest = nil
         let help = HelpRequest(id: "h1", agent: "Codex", purpose: "Captcha", region: nil)
         model.handle(.help(help))
         #expect(model.tab == .screen)
-        #expect(model.screenTarget == .workspace)
         #expect(model.activeHelp == help)
+        // Nothing connects by itself: the banner's "Show the workspace" does
+        #expect(model.screenRequest == nil)
+        // Opened from the overview, it is a tap on the workspace
+        model.showHelp(help)
+        #expect(model.screenRequest == .workspace)
         model.handle(.helpClosed(request: "h1"))
         #expect(model.activeHelp == nil)
         #expect(model.helpRequests.isEmpty)

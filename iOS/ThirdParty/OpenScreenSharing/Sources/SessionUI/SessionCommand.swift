@@ -187,7 +187,9 @@ extension SessionController {
     }
 
     var offersResolution: Bool {
+        // aOS: the workspace too, whose display aOS sizes with the same resolution.
         platform != .iOS && wantsVirtualDisplay && (capabilities.isEmpty || capabilities.contains(.virtualDisplay))
+            || route.followsWindowShape
     }
 }
 

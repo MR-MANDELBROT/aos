@@ -1,6 +1,7 @@
 import AOSRFB
 import CoreGraphics
 import Foundation
+import Network
 import ScreenClient
 import Testing
 @testable import aOS
@@ -62,11 +63,29 @@ struct ScreenRouteTests {
             == CGSize(width: 402, height: 812))
         #expect(ScreenRoute.pictureArea(window: CGSize(width: 874, height: 402), top: 0, leading: 62, trailing: 62)
             == CGSize(width: 750, height: 402))
-        // Grown until macOS has room (600 points on the short side), Retina: exactly the area's shape
-        let upright = DisplayRequest.fitting(points: CGSize(width: 402, height: 812), retina: true)
-        #expect(upright == DisplayRequest(width: 1200, height: 2424, scale: 2))
-        #expect(abs(1200.0 / 2424.0 - 402.0 / 812.0) < 0.001)
-        #expect(DisplayRequest.fitting(points: CGSize(width: 750, height: 402), retina: true)?.description == "2238x1200@2")
+        // Sized as Open Screen Sharing sizes the Mac's virtual display: grown until the short side has 525 points
+        // (the long one 800), two pixels per point on a Retina screen; the area's shape
+        let upright = ScreenRoute.display(for: ScreenArea(points: CGSize(width: 402, height: 812), screenScale: 3,
+                                                          resolutionScale: 1))
+        #expect(upright == DisplayRequest(width: 1050, height: 2120, scale: 2))
+        #expect(abs(1050.0 / 2120.0 - 402.0 / 812.0) < 0.002)
+        let sideways = ScreenArea(points: CGSize(width: 750, height: 402), screenScale: 3, resolutionScale: 1)
+        #expect(ScreenRoute.display(for: sideways)?.description == "1958x1050@2")
+        // Open Screen Sharing's resolution: 1.5x the points, more room
+        #expect(ScreenRoute.display(for: ScreenArea(points: CGSize(width: 402, height: 812), screenScale: 3,
+                                                    resolutionScale: 1.5))?.description == "1206x2436@2")
+        // A screen without Retina: one pixel per point
+        #expect(ScreenRoute.display(for: ScreenArea(points: CGSize(width: 1024, height: 700), screenScale: 1,
+                                                    resolutionScale: 1))?.description == "1024x700@1")
+        #expect(ScreenRoute.display(for: ScreenArea(points: .zero, screenScale: 3, resolutionScale: 1)) == nil)
+    }
+
+    @Test func bothScreensGetTheSameSize() {
+        // The workspace's display request and the Mac's virtual display (Open Screen Sharing's VirtualDisplayMode)
+        let size = ScreenClient.displaySize(fitting: CGSize(width: 750, height: 402), screenScale: 3, resolutionScale: 1)
+        #expect(size == ScreenDisplaySize(width: 979, height: 525, density: 2))
+        #expect(ScreenClient.resolutionScales == [1, 1.25, 1.5, 1.75, 2])
+        #expect(ScreenClient.defaultResolutionScale == 1)
     }
 
     @Test func theDisplayRequestIsSignedWithItsSize() throws {
@@ -109,18 +128,114 @@ struct ScreenSettingsTests {
         return d
     }
 
-    @Test func theWorkspaceTakesThePhonesShapeByDefault() {
+    @Test func bothScreensTakeThePhonesSizeByDefault() {
         let options = ScreenOptions(settings: AppSettings(defaults: defaults()))
-        #expect(options.matchShape && options.retina)
+        #expect(options.matchesPhone)
+        #expect(options.resolutionScale == 1)
     }
 
     @Test func choicesAreKept() {
         let d = defaults()
         let s = AppSettings(defaults: d)
-        s.matchWorkspaceShape = false
-        s.retinaWorkspace = false
+        s.screenMatchesPhone = false
+        s.screenResolution = 1.5
         let again = ScreenOptions(settings: AppSettings(defaults: d))
-        #expect(!again.matchShape && !again.retina)
+        #expect(!again.matchesPhone)
+        #expect(again.resolutionScale == 1.5)
+    }
+
+    @Test func theOldWorkspaceChoiceCarriesOver() {
+        let d = defaults()
+        d.set(false, forKey: "matchWorkspaceShape")
+        #expect(!AppSettings(defaults: d).screenMatchesPhone)
+        // A resolution outside Open Screen Sharing's 1x to 2x is Native
+        d.set(7.0, forKey: "screenResolution")
+        #expect(AppSettings(defaults: d).screenResolution == 1)
+    }
+}
+
+/// The direct path to the Mac (Open Screen Sharing's high performance needs UDP to the Mac's own address): from the way
+/// the SSH connection went, never loopback, not through aOS's own Tailscale node without the Tailscale app's VPN.
+struct DirectPathTests {
+    private let tailnet = ["100.101.102.103", "aos-maxs-macbook-pro.tail4c2a.ts.net"]
+
+    @Test func theSameNetworkUsesTheAddressSSHReached() {
+        #expect(DirectPath.candidate(route: .host("Maxs-MacBook-Pro.local"), remote: "192.168.178.24", tailnetHosts: tailnet,
+                                     systemVPN: false) == .address("192.168.178.24"))
+        #expect(DirectPath.candidate(route: .host("192.168.178.24"), remote: nil, tailnetHosts: [], systemVPN: false)
+            == .address("192.168.178.24"))
+        #expect(DirectPath.candidate(route: .bonjour("Max’s MacBook Pro"), remote: "192.168.178.24", tailnetHosts: [],
+                                     systemVPN: false) == .address("192.168.178.24"))
+        #expect(DirectPath.network(for: "192.168.178.24") == .localNetwork)
+    }
+
+    @Test func theTailnetNeedsTheTailscaleAppsVPN() {
+        // Through the Tailscale app's VPN: libsharing's TCP and UDP go there as well
+        #expect(DirectPath.candidate(route: .host("100.101.102.103"), remote: "100.101.102.103", tailnetHosts: tailnet,
+                                     systemVPN: true) == .address("100.101.102.103"))
+        #expect(DirectPath.network(for: "100.101.102.103") == .internet)
+        #expect(DirectPath.network(for: "aos-maxs-macbook-pro.tail4c2a.ts.net") == .internet)
+        #expect(DirectPath.network(for: "fd7a:115c:a1e0::1234") == .internet)
+        // aOS's own node carries only the app's SSH connection
+        #expect(DirectPath.candidate(route: .tailnet("aos-maxs-macbook-pro.tail4c2a.ts.net"), remote: "127.0.0.1",
+                                     tailnetHosts: tailnet, systemVPN: false) == .tailnetWithoutVPN)
+        // ... with the Tailscale app's VPN on as well, the Mac's tailnet address (IPv4 first)
+        #expect(DirectPath.candidate(route: .tailnet("aos-maxs-macbook-pro.tail4c2a.ts.net"), remote: nil,
+                                     tailnetHosts: tailnet, systemVPN: true) == .address("100.101.102.103"))
+    }
+
+    @Test func loopbackIsNoPath() {
+        #expect(DirectPath.candidate(route: .host("127.0.0.1"), remote: "127.0.0.1", tailnetHosts: [], systemVPN: false)
+            == .noAddress)
+        #expect(DirectPath.candidate(route: .host("localhost"), remote: "::1", tailnetHosts: [], systemVPN: false) == .noAddress)
+        #expect(DirectPath.candidate(route: .bonjour("Mac"), remote: nil, tailnetHosts: [], systemVPN: false) == .noAddress)
+        #expect(DirectPath.isLoopback("127.0.0.2") && DirectPath.isLoopback("::1") && !DirectPath.isLoopback("10.0.0.1"))
+    }
+
+    @Test func reachableIsAQuickTCPCheck() async throws {
+        let rfb = try await FakeRFBServer.start()
+        #expect(await DirectPath.reachable(host: "127.0.0.1", port: rfb.port))
+        await rfb.stop()
+        let started = ContinuousClock.now
+        #expect(await DirectPath.reachable(host: "127.0.0.1", port: rfb.port) == false)
+        #expect(ContinuousClock.now - started < .seconds(3))
+    }
+}
+
+/// The cards' last pictures stay on the iPhone, protected.
+@MainActor
+struct ScreenPicturesTests {
+    @Test func picturesAreKeptProtectedAndOutOfBackups() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pictures-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = ScreenPictures(directory: directory)
+        let id = UUID()
+        #expect(store.picture(for: id) == nil)
+        let jpeg = Data([0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3])
+        store.save(jpeg, for: id)
+        #expect(store.picture(for: id) == jpeg)
+        // The next launch reads it from the file
+        #expect(ScreenPictures(directory: directory).picture(for: id) == jpeg)
+        let file = directory.appendingPathComponent("\(id.uuidString).jpg")
+        #if targetEnvironment(simulator)
+        // The simulator keeps no protection classes (it has no data protection); on the iPhone the file has .complete
+        #expect(FileManager.default.fileExists(atPath: file.path))
+        #else
+        let attributes = try FileManager.default.attributesOfItem(atPath: file.path)
+        #expect(attributes[.protectionKey] as? FileProtectionType == .complete)
+        #endif
+        #expect(try directory.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup == true)
+        store.forget(id)
+        #expect(store.picture(for: id) == nil)
+        #expect(!FileManager.default.fileExists(atPath: file.path))
+    }
+
+    @Test func theDemoKeepsThemInMemoryOnly() {
+        let store = ScreenPictures(directory: nil)
+        let id = UUID()
+        store.save(Data([1, 2, 3]), for: id)
+        #expect(store.picture(for: id) == Data([1, 2, 3]))
+        #expect(store.revision == 1)
     }
 }
 
@@ -153,6 +268,33 @@ struct ScreenTunnelTests {
         try await waitUntil(timeout: .seconds(10)) { rfb.log.updateCount > 0 }
         session.close()
         #expect(session.state == .ended)
+    }
+
+    @Test func theSetupCheckLearnsTheScreenSharingKeyThroughTheTunnel() async throws {
+        let key = DeviceKey.ephemeral()
+        let rfb = try await FakeRFBServer.start(account: .init(username: "max", password: "richtig"))
+        let server = try await TestSSHServer.start(allowedKey: key)
+        defer { Task { await server.stop(); await rfb.stop() } }
+        let ssh = try await SSHConnection.connect(hosts: ["127.0.0.1"], port: server.port,
+                                                  login: SSHLogin(username: "max", key: key),
+                                                  hostKey: .pinned(server.hostKeyLine))
+        defer { Task { await ssh.close() } }
+        let forwarder = LocalForwarder(targetHost: "127.0.0.1", targetPort: rfb.port) { ssh }
+        let port = try await forwarder.start()
+        defer { forwarder.stop() }
+
+        let screen = UUID()
+        #expect(await ScreenClient.checkServer(screen: screen, name: "Mac", port: Int(port),
+                                               login: .account(username: "max", password: "falsch")) == .loginRefused)
+        #expect(ScreenClient.record(of: screen)?.knowsServerKey == false)
+        // The server's key, as it came through SSH, is what a direct connection is checked against later; this server
+        // has no high performance (no Apple extensions)
+        let check = await ScreenClient.checkServer(screen: screen, name: "Mac", port: Int(port),
+                                                   login: .account(username: "max", password: "richtig"))
+        #expect(check == .ok(highPerformance: false, knowsServerKey: true))
+        #expect(ScreenClient.record(of: screen)?.knowsServerKey == true)
+        ScreenClient.forget(screen: screen)
+        #expect(ScreenClient.record(of: screen) == nil)
     }
 
     @Test func aRefusedLoginGoesBackToAOS() async throws {
