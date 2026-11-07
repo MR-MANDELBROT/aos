@@ -58,10 +58,13 @@ APP="$OUT/export/aOS.app"
 
 say "checking the signature"
 codesign --verify --deep --strict --verbose=2 "$APP" 2>&1 | tail -2
-codesign -dvv "$APP" 2>&1 | grep -q "Authority=Developer ID Application: .*($TEAM)" || die "not signed with Developer ID ($TEAM)"
-codesign -d --entitlements - "$APP" 2>/dev/null | grep -q com.apple.security.virtualization || die "virtualization entitlement missing"
+# Read into a variable first: with pipefail, grep -q ending early makes codesign's SIGPIPE fail the pipe.
+SIGNATURE="$(codesign -dvv "$APP" 2>&1)"
+grep -q "Authority=Developer ID Application: .*($TEAM)" <<<"$SIGNATURE" || die "not signed with Developer ID ($TEAM)"
+grep -q com.apple.security.virtualization <<<"$(codesign -d --entitlements - "$APP" 2>/dev/null)" \
+  || die "virtualization entitlement missing"
 for tool in aos-mcp aos-session aos-powerd aos-tailnet; do
-  codesign -dv "$APP/Contents/MacOS/$tool" 2>&1 | grep -q "flags=.*runtime" || die "$tool lacks the hardened runtime"
+  grep -q "flags=.*runtime" <<<"$(codesign -dv "$APP/Contents/MacOS/$tool" 2>&1)" || die "$tool lacks the hardened runtime"
 done
 
 say "notarizing the app"
