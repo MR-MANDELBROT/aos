@@ -35,6 +35,8 @@ nonisolated final class LibsharingRemoteSession: @unchecked Sendable {
             case nil: LibsharingPlatformUnknown
             }
         options.trustedFingerprint = configuration.trustedFingerprint
+        // aOS: see SessionConfiguration.requiresTrustedKey.
+        options.requireTrustedKey = configuration.requiresTrustedKey
         options.allowUnverifiedLogin = configuration.allowsUnverifiedLogin
         options.keyboardLayout = Int32(configuration.keyboardLayout)
         options.audio = configuration.receivesAudio

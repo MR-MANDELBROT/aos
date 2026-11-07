@@ -179,8 +179,8 @@ final class ScreenSession {
     @ObservationIgnored private var displayTask: Task<Void, Never>?
     @ObservationIgnored private var renewTask: Task<Void, Never>?
     @ObservationIgnored private var watchTask: Task<Void, Never>?
-    /// When the direct path last failed, per address: not tried again for a while.
-    @ObservationIgnored private var directFailures: [String: Date] = [:]
+    /// When the direct path last failed and why, per address: not tried again for a while.
+    @ObservationIgnored private var directFailures: [String: (at: Date, reason: String)] = [:]
     @ObservationIgnored private var resuming = false
     /// Macs whose screen sharing offers no high performance (learned this run).
     @ObservationIgnored private var withoutHighPerformance: Set<UUID> = []
@@ -276,7 +276,10 @@ final class ScreenSession {
         self.options = options
         self.mac = mac
         self.login = login
-        if target == .mac { tunnelReason = nil }
+        if target == .mac {
+            tunnelReason = nil
+            tunnelDetail = nil
+        }
         do {
             guard let ssh = mac.ssh, ssh.isActive else { throw ScreenError.notConnected }
             let route: ScreenRoute
@@ -313,50 +316,47 @@ final class ScreenSession {
         switch await Self.directCandidate(ssh, mac) {
         case .address(let address): host = address
         case .noAddress:
-            tunnelReason = .noAddress
-            return .tunnel
+            return tunnel(.noAddress, String(localized: "SSH reached the Mac at \(ssh.host), not at an address in a network"))
         case .tailnetWithoutVPN:
-            tunnelReason = .tailnetWithoutVPN
-            return .tunnel
+            return tunnel(.tailnetWithoutVPN, nil)
         }
-        if let failed = directFailures[host], Date().timeIntervalSince(failed) < 10 * 60 {
-            tunnelReason = .failed
-            tunnelDetail = String(localized: "it failed a few minutes ago; tried again after 10 minutes")
-            return .tunnel
+        if let failure = directFailures[host], Date().timeIntervalSince(failure.at) < 10 * 60 {
+            let minutes = max(1, Int(Date().timeIntervalSince(failure.at) / 60))
+            return tunnel(.failed, String(localized: "\(host) failed \(minutes) min ago, tried again after 10 minutes: \(failure.reason)"))
         }
-        guard !withoutHighPerformance.contains(route.screenID) else {
-            tunnelReason = .noHighPerformance
-            return .tunnel
-        }
-        // A direct connection is checked against the screen sharing key the Mac showed through SSH: without it a
-        // stranger in the network could pose as the Mac and get the password.
+        guard !withoutHighPerformance.contains(route.screenID) else { return tunnel(.noHighPerformance, nil) }
+        // A direct connection is checked against the screen sharing key the Mac showed through SSH: only with that key
+        // does the direct session sign in at all (libsharing's RequireTrustedKey, aOS's patch), so a stranger in the
+        // network posing as the Mac gets nothing of the login. The first time per Mac, Open Screen Sharing's setup check
+        // signs in once through the tunnel to learn it.
         if ScreenClient.record(of: route.screenID)?.knowsServerKey != true {
             switch await ScreenClient.checkServer(screen: route.screenID, name: route.name, port: port, login: route.login) {
-            case .ok(let highPerformance, let knowsKey):
+            case .ok(let highPerformance, let knowsKey, let security):
                 if !highPerformance { withoutHighPerformance.insert(route.screenID) }
-                guard highPerformance, knowsKey else {
-                    tunnelReason = highPerformance ? .failed : .noHighPerformance
-                    tunnelDetail = highPerformance ? String(localized: "the Mac's screen sharing key couldn't be learned") : nil
-                    return .tunnel
+                guard highPerformance else { return tunnel(.noHighPerformance, security) }
+                guard knowsKey else {
+                    return tunnel(.failed, String(localized: "the Mac showed no screen sharing key through SSH (\(security))"))
                 }
             case .loginRefused:
-                tunnelReason = .failed
-                tunnelDetail = String(localized: "the Mac refused the login")
-                return .tunnel
-            case .failed:
-                // The session through the tunnel says what's wrong (and asks for another login if it was refused).
-                tunnelReason = .failed
-                tunnelDetail = String(localized: "the check through SSH failed")
-                return .tunnel
+                // The session through the tunnel asks for another login.
+                return tunnel(.failed, String(localized: "the Mac refused the login in the check through SSH"))
+            case .failed(let message):
+                return tunnel(.failed, String(localized: "the check through SSH failed: \(message)"))
             }
         }
         guard await DirectPath.reachable(host: host, port: Self.directPort) else {
-            tunnelReason = .unreachable
-            return .tunnel
+            return tunnel(.unreachable, String(localized: "nothing answered at \(host), port \(Self.directPort)"))
         }
         tunnelReason = nil
         tunnelDetail = nil
         return .direct(host: host, network: DirectPath.network(for: host))
+    }
+
+    /// Through the tunnel, and why (shown on the card, for telling causes apart).
+    private func tunnel(_ reason: TunnelReason, _ detail: String?) -> ScreenPath {
+        tunnelReason = reason
+        tunnelDetail = detail
+        return .tunnel
     }
 
     /// Opens the session for a route: through the tunnel's listener, or on the direct path.
@@ -427,7 +427,7 @@ final class ScreenSession {
     private func leaveDirectPath(address: String, reason: String) {
         guard let route, path?.isDirect == true else { return }
         log.notice("Direct path to \(address, privacy: .public) given up (\(reason, privacy: .public)); through SSH")
-        directFailures[address] = Date()
+        directFailures[address] = (Date(), reason)
         if reason.contains("no high performance") { withoutHighPerformance.insert(route.screenID) }
         tunnelReason = reason.contains("no high performance") ? .noHighPerformance : .failed
         tunnelDetail = reason

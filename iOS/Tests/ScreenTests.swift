@@ -288,13 +288,69 @@ struct ScreenTunnelTests {
                                                login: .account(username: "max", password: "falsch")) == .loginRefused)
         #expect(ScreenClient.record(of: screen)?.knowsServerKey == false)
         // The server's key, as it came through SSH, is what a direct connection is checked against later; this server
-        // has no high performance (no Apple extensions)
+        // has no high performance (no Apple extensions). The check says what the server offered and what was used.
         let check = await ScreenClient.checkServer(screen: screen, name: "Mac", port: Int(port),
                                                    login: .account(username: "max", password: "richtig"))
-        #expect(check == .ok(highPerformance: false, knowsServerKey: true))
+        #expect(check == .ok(highPerformance: false, knowsServerKey: true,
+                             security: "offered apple-rsa-srp(33), used apple-rsa-srp(33)"))
         #expect(ScreenClient.record(of: screen)?.knowsServerKey == true)
         ScreenClient.forget(screen: screen)
         #expect(ScreenClient.record(of: screen) == nil)
+    }
+
+    /// The direct path signs in only with the key learned through SSH (libsharing's RequireTrustedKey, aOS's patch):
+    /// a server with another key, one without a key learned, or one without Apple's RSA login gets nothing of the
+    /// login. (Apple's RSA login with SRP inside, as screensharingd offers it, checks the key too: the patch's Go tests.)
+    @Test func theDirectPathSignsInOnlyWithTheKeyLearnedThroughSSH() async throws {
+        let key = DeviceKey.ephemeral()
+        let mac = try await FakeRFBServer.start(account: .init(username: "max", password: "richtig"))
+        let stranger = try await FakeRFBServer.start(account: .init(username: "max", password: "richtig"))
+        let noLogin = try await FakeRFBServer.start()
+        let server = try await TestSSHServer.start(allowedKey: key)
+        defer { Task { await server.stop(); await mac.stop(); await stranger.stop(); await noLogin.stop() } }
+        let ssh = try await SSHConnection.connect(hosts: ["127.0.0.1"], port: server.port,
+                                                  login: SSHLogin(username: "max", key: key),
+                                                  hostKey: .pinned(server.hostKeyLine))
+        defer { Task { await ssh.close() } }
+        let forwarder = LocalForwarder(targetHost: "127.0.0.1", targetPort: mac.port) { ssh }
+        let port = try await forwarder.start()
+        defer { forwarder.stop() }
+        let login = ScreenLogin.account(username: "max", password: "richtig")
+
+        final class Reasons { var all: [String] = [] }
+        func direct(_ screen: UUID, to server: FakeRFBServer) async throws -> String {
+            let reasons = Reasons()
+            let session = ScreenClientSession(screen: screen, name: "Mac", port: server.port, login: login,
+                                              followsWindowShape: false, highPerformance: .localNetwork)
+            session.onDirectPathFailed = { reasons.all.append($0) }
+            session.start()
+            try await waitUntil(timeout: .seconds(20)) { !reasons.all.isEmpty }
+            session.close()
+            return reasons.all[0]
+        }
+
+        // No key learned yet: nothing is sent
+        let unknown = UUID()
+        let noKey = try await direct(unknown, to: mac)
+        #expect(noKey.contains("no trusted server key"))
+        #expect(mac.log.receivedLogins.isEmpty)
+
+        // The Mac's key, learned through SSH
+        let screen = UUID()
+        defer { ScreenClient.forget(screen: screen); ScreenClient.forget(screen: unknown) }
+        if case .ok(_, let knowsKey, _) = await ScreenClient.checkServer(screen: screen, name: "Mac", port: Int(port),
+                                                                         login: login) {
+            #expect(knowsKey)
+        } else {
+            Issue.record("the check through SSH failed")
+        }
+        // A stranger with another key gets no login, though it would take the same password
+        let changed = try await direct(screen, to: stranger)
+        #expect(changed.contains("server key changed"))
+        #expect(stranger.log.receivedLogins.isEmpty)
+        // A server without Apple's RSA login (no key to check) gets none either
+        let unsupported = try await direct(screen, to: noLogin)
+        #expect(unsupported.contains("offers security types"))
     }
 
     @Test func aRefusedLoginGoesBackToAOS() async throws {

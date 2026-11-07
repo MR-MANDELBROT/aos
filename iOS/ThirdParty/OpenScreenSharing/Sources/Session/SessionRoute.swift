@@ -24,6 +24,9 @@ nonisolated struct SessionRoute: Codable, Hashable, Identifiable, Sendable {
     /// aOS: aOS gives the screen the window's shape itself (the workspace's display request); the session sends no
     /// virtual display of its own for it. Like a virtual display, the picture follows the iPhone in every orientation.
     var followsWindowShape = false
+    /// aOS: the connection isn't authenticated by its way (aOS's direct path to the Mac, outside the SSH tunnel): only
+    /// Apple's RSA login, and only with the screen sharing key aOS learned through SSH (`trustedFingerprint`).
+    var requiresTrustedKey = false
 
     var address: ComputerAddress {
         ComputerAddress(host: host, port: port)
@@ -50,7 +53,7 @@ nonisolated struct SessionRoute: Codable, Hashable, Identifiable, Sendable {
     /// standard mode: high performance needs a direct UDP path, and only TCP goes through SSH. Or the Mac on aOS's
     /// direct path (its address on the network), with high performance and the virtual display.
     init(computerID: UUID, name: String, host: String, port: Int, credentials: SessionCredentials, followsWindowShape: Bool,
-         usesHighPerformance: Bool = false) {
+         usesHighPerformance: Bool = false, requiresTrustedKey: Bool = false) {
         self.computerID = computerID
         self.name = name
         self.host = host
@@ -60,6 +63,7 @@ nonisolated struct SessionRoute: Codable, Hashable, Identifiable, Sendable {
         model = nil
         remoteProtocol = .vnc
         self.usesHighPerformance = usesHighPerformance
+        self.requiresTrustedKey = requiresTrustedKey
         deviceType = .mac
         managesLogin = false
         self.followsWindowShape = followsWindowShape
