@@ -114,7 +114,8 @@ targets:
     postBuildScripts:
       # aos-powerd starts it as the hidden user _aostailnet (Docs/DESIGN.md, "Reaching the Mac on the go")
       - name: Copy aos-tailnet
-        script: ditto "$SCRIPT_INPUT_FILE_0" "$SCRIPT_OUTPUT_FILE_0"
+        # A new file every time (the script sandbox lets it write only this path; no temporary file beside it)
+        script: rm -f "$SCRIPT_OUTPUT_FILE_0" && cp "$SCRIPT_INPUT_FILE_0" "$SCRIPT_OUTPUT_FILE_0"
         inputFiles:
           - $(BUILT_PRODUCTS_DIR)/aos-tailnet
         outputFiles:
