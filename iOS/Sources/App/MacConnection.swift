@@ -254,6 +254,8 @@ final class MacConnection {
                 await serve(connection)
                 ssh = nil
                 companion = nil
+                // No companion without the connection: nothing reads as current any more (the Overview's cards).
+                if companionState != .needsPairing { companionState = .notStarted }
                 if Task.isCancelled { return }
                 log.info("Connection to the Mac ended; reconnecting")
                 // A connection that lived a while: reconnect right away. One that ended at once: back off.
