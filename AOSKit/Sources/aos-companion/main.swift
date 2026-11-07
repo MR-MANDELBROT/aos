@@ -199,6 +199,13 @@ while let line = readLine(strippingNewline: true) {
                 q.auth = signature
             }
             relay(id, response)
+        case _ where CompanionControl.ops.contains("companion." + op):
+            // The Overview's status and actions (mac.status, mac.sleep, workspace.start, ...): the parameter, if
+            // any, is `text`, which the signature covers.
+            let response = try requests.call { q in
+                q.op = "companion." + op; q.text = r["text"] as? String; q.auth = signature
+            }
+            relay(id, response, fields: true)
         default:
             answer(id, ok: false, error: "unknown op \(op)")
         }
