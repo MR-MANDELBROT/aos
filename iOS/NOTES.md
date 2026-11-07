@@ -19,6 +19,11 @@ iOS/
   Sources/Companion             CompanionClient (actor), MockCompanionServer (tests and demo), command line
   Sources/App                   AOSApp, AppModel, MacConnection (reconnects), settings, lock, demo data (debug)
   Sources/{Overview,Pairing,Terminal,Screen,SignIn,Settings,Design}   the UI
+  Sources/Tailnet               aOS's own Tailscale node (EmbeddedTailnet: Tailnetkit, its state, the sign-in
+                                session) and Settings > Connection; the order of routes is Sources/Core/ConnectionPlan
+  Frameworks                    Tailnetkit.xcframework (aOS's Tailscale node, Tailnet/ as a C library), built by
+                                generate.sh with ../Tailnet/build.sh ios when missing or older than its Go sources;
+                                not checked in (needs Go; the first build fetches the toolchain go.mod asks for)
   Shared                        compiled into the app and the widget extension: the Live Activity's attributes and
                                 its End button (an App Intent that runs in the app)
   ThirdParty/OpenScreenSharing  the screen client: Open Screen Sharing's session engine and session UI (framework
@@ -28,7 +33,8 @@ iOS/
   Tests                         unit and integration tests (in-process SSH, RFB and pairing servers, the Mac's
                                 terminal sessions played by the test SSH server)
   Tools                         test.sh, sim.sh, screenshots.sh, localize.sh (+ translations_de.py,
-                                translations_screen_de.py), screen_strings.sh, libsharing.sh, render-icon.sh
+                                translations_screen_de.py), screen_strings.sh, libsharing.sh, render-icon.sh,
+                                test-tailnet.sh (the end-to-end test of aOS's Tailscale against a test tailnet)
 ```
 
 Run the tests: `iOS/Tools/test.sh`. Run the app with sample data: `iOS/Tools/sim.sh -AOSDemo YES` (debug builds
@@ -71,6 +77,11 @@ Pairing (`Sources/Core/PairingLink.swift`, tests in `Tests/PairingTests.swift`):
   "the Mac ended the pairing, show a new code".
 - The iPhone connects to the pairing port of each host in `h` in order; if none answers it browses Bonjour for
   `_aos-pair._tcp` (a service named like `n` wins, otherwise the only one found).
+- On the go (optional, since the Mac's step "On the go"): `w` = `app`, `aos` or `lan` (anything else counts as
+  none), `t` = the Mac's tailnet hosts (IPv4 in 100.64.0.0/10 first, then the MagicDNS name; plausible hosts only,
+  each once), `tn` = the tailnet's name (no control characters, at most 128 characters). The tailnet hosts are in `h`
+  as well, after the local ones. Kept with the paired Mac (`PairedMac.way`, `tailnetHosts`, `tailnetName`); a Mac
+  paired earlier has none, and the tailnet addresses and names among its `h` count as its tailnet hosts.
 - `authorized_keys` options: the terminal needs a PTY and the screens need port forwarding (direct-tcpip to
   127.0.0.1:5900 and to the VM). `no-agent-forwarding,no-X11-forwarding` as in the design is fine; `restrict` or
   `command=` would break the terminal and the screens.
@@ -293,6 +304,37 @@ Only `DisplayRequest` (shared with the Mac) and the forwarder's integration test
 stays (libsharing dials TCP itself): while a screen is open, other apps on the phone could connect to that port (they
 would still need the screen sharing login).
 
+## aOS's own Tailscale (iOS/Sources/Tailnet)
+
+- `EmbeddedTailnet` runs Tailnetkit (Tailnet/tailnetkit, the same Go code as the Mac's node: tsnet with aOS's build
+  tags, no peer API or other services; Docs/DESIGN.md, "Reaching the Mac on the go"). State in Application
+  Support/Tailnet, file protection until the first unlock, excluded from backups; named `aos-<iPhone's name>`;
+  "set up" is remembered in UserDefaults (`tailnetSetUp`, `tailnetHostname`), not secret. It starts when the app
+  becomes active and with the Mac connection, polls its status every 3 s (every second while the sign-in page is
+  open) and posts `.aosTailnetReady` when it runs (the Mac connection tries again at once).
+- A C library, not gomobile: Open Screen Sharing's libsharing is a gomobile framework in the same app, and two
+  gomobile frameworks define the same Objective-C classes (GoSeqRef, RefCounter, RefTracker, Universeerror,
+  goSeqDictionary: "implemented in both", undefined which one is used). Tailnetkit is `go build
+  -buildmode=c-archive` in a static framework (header `tailnetkit.h`, module map), so the app holds two Go runtimes,
+  one in the app's image and one in ScreenClient.framework. Go doesn't promise that two runtimes in one process
+  work; they do in the end-to-end test (both loaded, Tailnetkit signing in, dialing, carrying SSH). If it ever
+  shows problems: build libsharing and tailnetkit into one Go library.
+- The sign-in: Tailscale's sign-in URL from the node's status (only https pages of tailscale.com) in an
+  `ASWebAuthenticationSession` with Safari's cookies (callback scheme `aos-tailnet`, never called: Tailscale's page
+  doesn't lead back), closed by the app once the node runs.
+- Dialing: `tailnetkit_dial` returns one end of a socket pair (close on exec, no SIGPIPE) whose other end is spliced
+  to the tailnet connection; `SSHConnection` puts it into a NIOPosix channel (`ClientBootstrap.withConnectedSocket`)
+  with the same `HoldUntilSSHStarts` and Citadel setup as the Network.framework path (`SSHRoute.tailnet`). Bonjour
+  is `SSHRoute.bonjour` (an NWEndpoint service `_ssh._tcp`).
+- The Tailscale app's VPN counts as active when a utun interface has an address in 100.64.0.0/10 or
+  fd7a:115c:a1e0::/48 (`TailnetVPN`, AOSTailnet).
+- Tests: `TailnetTests` (link fields, the order of routes, sign-in page check, names, the node's status, SSH and the
+  companion through a socket pair, a tailnet node that can't pose as the Mac, the same network winning, no node);
+  `TailnetEndToEndTests` with `Tools/test-tailnet.sh <simulator>`: a whole tailnet on this Mac (Tailscale's test
+  coordination server, DERP, a "Mac" node with aOS's code; `../Tailnet/build.sh testnet`), the real Tailnetkit node in
+  the simulator signs in, reaches the test SSH server on port 22 of the Mac node by address and name with the pinned
+  host key, runs the companion, and finds the other ports closed. Skipped without the test tailnet.
+
 ## What was learned about the libraries
 
 - **Citadel is pinned to 0.12.0**: 0.12.1 replaced its swift-nio-ssh dependency (the Citadel author's fork,
@@ -335,3 +377,7 @@ would still need the screen sharing login).
   keyboard bar, pointer lock with a mouse, background and return).
 - Local network denial is detected for pairing (NWConnection path); for SSH (NIO on Network.framework) it shows as
   "not reachable" with the hint about Tailscale and the local network setting.
+- aOS's Tailscale: not run against Tailscale's real coordination server (no account here) nor on a device: the
+  sign-in in the web authentication session with a real identity provider, closing it when the node runs, the node
+  after the app was suspended (it reconnects on return), cellular, and the Tailscale app's VPN and aOS's node at the
+  same time.

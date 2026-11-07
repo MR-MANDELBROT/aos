@@ -38,7 +38,8 @@ user, wherever they are:
 - **Connection: SSH.** The Mac's Remote Login (OpenSSH) carries everything: the terminal, the companion API (an exec
   channel running `aos-companion serve`), and the screens (direct-tcpip channels to 127.0.0.1:5900 for the Mac and
   to the workspace VM). No new server, no listening port beyond OpenSSH, strong crypto, pinned host key. Outside the
-  home network the user needs a way to reach the Mac (Tailscale or another VPN); the app shows this plainly.
+  home network it goes through Tailscale (2026-11-07, "Connecting" below): the person's own Tailscale app, or aOS's
+  own Tailscale node on the Mac and in the iPhone app; or only the same network.
 - **Keys**: the iPhone's SSH key is a P-256 key in the Secure Enclave (software key in the keychain on the simulator).
   It never leaves the device. A second key of the same kind signs every companion request; the Mac got its public
   half at pairing and acts only on requests signed with it ("Signed requests", 2026-11-06, after a security review:
@@ -53,9 +54,16 @@ user, wherever they are:
    System Settings > General > Sharing. It starts a pairing listener: TCP on a random port, advertised over Bonjour
    as `_aos-pair._tcp`, open for 3 minutes and for one pairing.
 2. It shows a QR code with the URL
-   `aos-pair://v1?n=<Mac name>&h=<host1>,<host2>&p=<pairing port>&s=22&u=<user>&k=<host key fingerprint>&c=<code>`
-   (all values percent-encoded).
-   - `h`: names and addresses to try in order: `<name>.local`, IPv4 addresses of active interfaces, Tailscale name.
+   `aos-pair://v1?n=<Mac name>&h=<host1>,<host2>&p=<pairing port>&s=22&u=<user>&k=<host key fingerprint>&c=<code>&w=<way>&t=<tailnet hosts>&tn=<tailnet>`
+   (all values percent-encoded; `w`, `t` and `tn` since the setup step "On the go", only once a way was chosen).
+   - `h`: names and addresses to try in order: `<name>.local`, IPv4 addresses of active interfaces (VPNs among them
+     last), then the tailnet hosts of `t` (so an iPhone that doesn't know `t` still tries them).
+   - `w`: how the iPhone reaches the Mac on the go: `app` (the person's Tailscale app), `aos` (aOS's own Tailscale
+     node), `lan` (only on the same network). Unknown values count as none.
+   - `t`: the Mac's tailnet hosts, comma separated: its IPv4 address (100.64.0.0/10) first, then its MagicDNS name
+     (`aos-maxs-macbook-pro.tail1234.ts.net`). Empty for `lan`.
+   - `tn`: the tailnet's name (often the account's email address), so the iPhone can say which account to sign in
+     with.
    - `k`: the SHA-256 fingerprint of the Mac's ed25519 SSH host key in OpenSSH form without padding
      (`SHA256:...`, as `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` prints it).
    - `c`: 16 random bytes, base64url without padding. Only in the QR code, never sent.
@@ -78,9 +86,35 @@ user, wherever they are:
 5. The iPhone connects over SSH (user `u`, port `s`) and accepts the Mac only if its host key matches `k`. From then
    on the host key is pinned.
 
+After a change of the way on the Mac, the person pairs the iPhone again (the Mac's Settings > Connection says so).
+
 Unpairing: the iPhone forgets the host; aOS on the Mac lists paired devices and removes their line from
 `authorized_keys` and their signing key from the keychain. A phone listed in `authorized_keys` without a signing key
 (paired before version 2) shows "Pair it again to approve from it".
+
+## Connecting (the iPhone's order, 2026-11-07)
+
+The iPhone tries the Mac in this order (`ConnectionPlan`), each attempt a moment after the one before, and keeps the
+first complete SSH login (the host key always the one pinned at pairing):
+
+1. The same network: the hosts of `h` that aren't tailnet hosts, the one that worked last first.
+2. The tailnet: the hosts of `t` (for a Mac paired before `t` existed, the tailnet addresses and names among `h`),
+   first through aOS's own Tailscale node in the app (when it is set up and runs), then through the Tailscale app's
+   VPN (when a utun interface has an address in 100.64.0.0/10 or fd7a:115c:a1e0::/48).
+3. Bonjour: the Mac's SSH server as `_ssh._tcp` by the Mac's name.
+
+aOS's own node on the iPhone (Tailnetkit, `Tailnet/tailnetkit`): set up from the pairing (when `w` is `aos`) or from
+Settings > Connection, named `aos-<iPhone's name>`, signed in with the person's Tailscale account (the one of the
+Mac's tailnet) in a web authentication session; the session closes when the node runs. It listens on nothing; the
+app dials the Mac's tailnet address through it and gets a connected socket for SwiftNIO. It also reaches a Mac that
+uses the Tailscale app, in the same tailnet.
+
+Settings > Connection on the iPhone: how it is connected now (same network, aOS's Tailscale, the Tailscale app,
+found by name), the Mac's way, whether the Tailscale app's VPN is on, aOS's Tailscale on this iPhone (name, address,
+tailnet, key expiry; a warning when the Mac is in another tailnet), aOS's devices in the tailnet (online or last
+seen, key expiry), Reconnect, Sign Out (this iPhone leaves the tailnet, its state is deleted) and the Tailscale admin
+console. On the Mac, Settings > Connection shows the same for the Mac (see Docs/DESIGN.md, "Reaching the Mac on the
+go").
 
 ## Signed requests
 
@@ -324,7 +358,8 @@ Chrome, so a filled password can't be read back.
 ## iPhone app structure
 
 - XcodeGen spec `iOS/project.yml`, target `aOS` (bundle `dev.marquart.aos.ios`, iOS 27), packages: `AOSKit`
-  (local, product `AOSRFB`), Citadel (SSH, on SwiftNIO SSH), SwiftTerm; the framework target `ScreenClient` (Open
+  (local, products `AOSRFB` and `AOSTailnet`), Citadel (SSH, on SwiftNIO SSH), SwiftTerm; `Tailnetkit.xcframework`
+  (aOS's Tailscale node, a C library built from `Tailnet/` by iOS/generate.sh); the framework target `ScreenClient` (Open
   Screen Sharing's session code with its Go library libsharing, GRDB, swift-perception, swift-atomics). Widget
   extension `AOSWidgets` (`dev.marquart.aos.ios.widgets`): the Live Activity of the open terminals.
 - Tabs: Overview (Mac with battery, lid and staying awake, requests, workspace, aOS's Claude Code session and

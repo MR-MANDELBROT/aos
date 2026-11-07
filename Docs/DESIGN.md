@@ -305,13 +305,16 @@ the iPhone again (the code tells it the way).
     same format the Tailscale app prints.
   - **The helper's version** is 4 (the `tailnet` call); its other calls are unchanged. An older helper is left alone
     until it exits (the app waits for it), a replaced binary makes way (above).
-- **aOS's own node on the iPhone** (`Tailnetkit.xcframework`, the same Go package bound with gomobile,
-  `Tailnet/tailnetkit`): the state is in the app's container (Application Support/Tailnet, file protection until the
+- **aOS's own node on the iPhone** (`Tailnetkit.xcframework`, built by iOS/generate.sh: the same Go package as a C
+  library, `go build -buildmode=c-archive` of `Tailnet/tailnetkit` in a static framework with `tailnetkit.h`; not
+  gomobile, because Open Screen Sharing's gomobile library is in the app too and two of them define the same
+  Objective-C classes, GoSeqRef and others; two Go runtimes in one process, each in its own image, are what the
+  end-to-end test runs): the state is in the app's container (Application Support/Tailnet, file protection until the
   first unlock, excluded from backups so the keys never move to another device), named `aos-<iPhone's name>`. The
   sign-in runs in an `ASWebAuthenticationSession` (it shares Safari's sign-ins); Tailscale's page doesn't lead back
   to the app, so the app closes the session once the node runs. The node listens on nothing; the app dials the Mac
-  through it: `DialFD` returns one end of a socket pair whose other end is spliced to the tailnet connection, and
-  SwiftNIO takes that socket as its channel (`SSHRoute.tailnet`).
+  through it: `tailnetkit_dial` returns one end of a socket pair whose other end is spliced to the tailnet connection,
+  and SwiftNIO takes that socket as its channel (`SSHRoute.tailnet`).
 - **The phone's order** (`ConnectionPlan`, tested): the same network first (the address that worked last first among
   them), then the tailnet (aOS's node in the app, then the Tailscale app's VPN, detected as a utun interface with an
   address in 100.64.0.0/10 or fd7a:115c:a1e0::/48), then Bonjour (`_ssh._tcp` by the Mac's name). The attempts start
@@ -327,7 +330,10 @@ the iPhone again (the code tells it the way).
   addresses finds only 22, the node offers no peer API, the interactive sign-in and the sign-out, the line protocol,
   and aos-tailnet itself over stdin and stdout. AOSKit tests the helper's custody with a stand-in node (start, sign
   in, stop, start again after a restart, after a crash, sign out, an executable that isn't aOS's), the request
-  checks, the status JSON, the recommendation and the link.
+  checks, the status JSON, the recommendation and the link. End to end on the iPhone (`iOS/Tools/test-tailnet.sh`:
+  a whole test tailnet on this Mac, `Tailnet/build.sh testnet`): the app's real Tailnetkit node in the simulator
+  signs in through a sign-in URL, dials the Mac node's port 22 by address and by name, logs in with the pinned host
+  key, runs the companion over it, and finds the other ports closed.
 
 ## Signing in for the agent
 
