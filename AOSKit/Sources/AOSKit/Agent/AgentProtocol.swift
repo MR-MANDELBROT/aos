@@ -52,7 +52,7 @@ public struct AgentRequest: Codable, Sendable {
     /// companion.events: the subscription the app gave for a signed companion.subscribe.
     public var subscription: String?
     /// companion.screen: the phone's one-time P-256 key-agreement key (base64 X9.63); the workspace's login is sealed
-    /// to it (AOSChannel `ScreenSeal`). Signed as part of `data`.
+    /// to it (Companion/ScreenSeal.swift). Signed as part of `data`.
     public var reply: String?
 
     public init(id: Int, op: String) { self.id = id; self.op = op }
