@@ -299,11 +299,32 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   only see the profile files, not a running Chrome's memory). So: approve sign-ins for agents you trust
   with the account, and prefer accounts with two-factor sign-in. On the Mac's side (since build 9): Bitwarden's
   files, its session key and the master password are out of reach of the user's other programs (above), and
-  `put_file` refuses aOS's data, Bitwarden's folders and the browsers' profiles. Still open against a program that
-  runs as the user with a shell (a coding agent): the workspace's keys (`aOS/Keys`: the maintenance SSH key, the
-  workspace account's password) are files of the user, so such a program could take over the workspace and watch
-  a login that the person approved being typed there; moving them into the helper is the next step. The vault as a
-  whole, other logins and the master password stay out of its reach. Approvals from the iPhone: only requests signed with the paired phone's key count, so a
+  `put_file` refuses aOS's data, Bitwarden's folders and the browsers' profiles. Since build 11 the workspace's keys and disk
+  are in the helper's custody too (AOSKit Guest/WorkspaceCustody.swift; WorkspaceCustodyHost runs in aos-powerd):
+  the maintenance and stop keys, the pinned host key and the account's password live in a folder of the hidden user
+  `_aosworkspace` (0700), `ssh` to the guest runs as that user, started by the helper, and the app only asks for
+  commands to run (it holds the account's password in memory: it types it in the setup and logs in to screen
+  sharing). The disk image lives in /Library/Application Support/aOS/Workspace (root, 0700); the helper attaches it
+  without mounting (hdiutil, raw) and hands the app an open descriptor of the device for the VM
+  (VZDiskBlockDeviceStorageDeviceAttachment); the device files belong to root:operator 0640, and while it is
+  attached a Disk Arbitration approval session in the helper refuses mounting, unmounting and ejecting anything on
+  it (an administrator on the console may otherwise mount any attached volume; measured: macOS tries to mount the
+  workspace's volumes right after the attach). Once the VM opens the device, macOS removes its partitions anyway.
+  The helper detaches the disk when the VM stops or the app's connection ends, and doesn't exit while it is
+  attached. The host key is pinned under the fixed name `aos-workspace`, whatever the address: a VM someone else
+  starts can't pass for the workspace; only a disk the helper created or took over may pin a new key on its first
+  connection. Only the signed aOS app may talk to the helper. A workspace of an earlier aOS is handed over at the
+  first launch (keys, password and the host key the earlier version recorded; the disk while the workspace is off),
+  the user's copies are removed (not to the Trash: they would stay readable there), and at the next start the
+  guest gets new keys and a new password (Provisioner.rotateSecrets: the new keys go in beside the old ones and are
+  tried first; the password changes in the account's session with its login keychain, see aos-guest-helper
+  Rekey.swift; the automatic login follows through sysadminctl's prompt on a pseudo terminal; secrets only on
+  stdin). If the automatic login ever loses the password, the next start finds the workspace at the login window,
+  sets it again and restarts the guest once. Still open: the VM's saved state (only when sign-ins are kept: the
+  workspace is suspended instead of shut down) and its NVRAM file stay files of the user, because Virtualization
+  opens them by path in its own process; Apple encrypts the saved state for this user on this Mac, so a program
+  running as the user could restore it in a VM of its own (with a disk of its own; the real one stays out of reach).
+  The vault as a whole, other logins and the master password stay out of its reach. Approvals from the iPhone: only requests signed with the paired phone's key count, so a
   program on the Mac (a coding agent with a shell, as the same user) can't approve a sign-in, finish a help or
   approval request, read the open requests or get the workspace's screen sharing login through the agent socket.
   It can still stop the phone's requests (delete the keychain item, rewrite authorized_keys, replace what the phone
