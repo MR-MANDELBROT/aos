@@ -227,6 +227,95 @@ enum PasteEncoder {
     }
 }
 
+/// The arrows in the middle of the key bar (Settings > Terminal).
+enum TerminalArrowKeys: String, CaseIterable, Identifiable, Sendable {
+    /// One pad: swipe from it towards a direction.
+    case pad
+    /// ← ↑ → ↓ as keys of their own.
+    case fourKeys
+    var id: String { rawValue }
+}
+
+/// How the key bar divides its width: every key is `keyWidth` wide (a calm row like a keyboard's), the arrows sit in
+/// the middle and `leading` keys fill the half to their left exactly, so at the start of the scroll the arrows are in
+/// the middle of the screen. The rest follows to the right; the whole row scrolls.
+struct KeyBarLayout: Equatable, Sendable {
+    /// Width of one key (the touch area; the plate is 6 pt narrower).
+    var keyWidth: CGFloat
+    /// Keys to the left of the arrows.
+    var leading: Int
+    /// The arrow pad, or the four arrow keys together.
+    var centerWidth: CGFloat
+
+    static let padWidth: CGFloat = 60
+    /// Keys get at least this much room (a 40 pt plate, a 46 pt touch area).
+    static let minimumKey: CGFloat = 46
+
+    init(keyWidth: CGFloat, leading: Int, centerWidth: CGFloat) {
+        self.keyWidth = keyWidth
+        self.leading = leading
+        self.centerWidth = centerWidth
+    }
+
+    /// The layout for a bar `width` points wide (what the scroll area shows).
+    init(width: CGFloat, arrows: TerminalArrowKeys) {
+        let half = max(width, 2 * Self.minimumKey) / 2
+        switch arrows {
+        case .pad:
+            let room = half - Self.padWidth / 2
+            let n = max(1, Int((room / Self.minimumKey).rounded(.down)))
+            self.init(keyWidth: room / CGFloat(n), leading: n, centerWidth: Self.padWidth)
+        case .fourKeys:
+            // Four arrow keys and the keys on the left all as wide as one another: n + 2 keys fill half the bar.
+            let slots = max(2, Int((half / Self.minimumKey).rounded(.down)))
+            let key = half / CGFloat(slots)
+            self.init(keyWidth: key, leading: slots - 2, centerWidth: 4 * key)
+        }
+    }
+
+    /// Where the middle of the arrows is at the start of the scroll (it should be the bar's middle).
+    var centerMidX: CGFloat { CGFloat(leading) * keyWidth + centerWidth / 2 }
+}
+
+/// Swiping on the terminal itself sends arrow keys, like the key bar's pad (Settings > Terminal, on by default).
+/// The rule, decided once the finger has moved `deadZone` points (and only if it started moving within
+/// `startWindow`; a finger that rests first is a long press, which selects text):
+///
+/// - Sideways: ← or →, anywhere on the terminal (sideways drags do nothing else there).
+/// - Up or down: ↑ or ↓ only for a quick flick, and only while the terminal shows its end (not scrolled back).
+///   A slower drag scrolls the scrollback as always; once scrolled back, flicks scroll too.
+/// - Then like on the pad: keep the finger down to repeat, faster the farther it is from where it started; moving
+///   back past the start sends the other direction.
+/// - Never with two fingers (pinch, scrolling in full-screen programs), on a selection or its handles, at the screen's
+///   left edge (the system's back swipe), or while text is selected.
+enum TerminalSwipe {
+    enum Decision: Equatable, Sendable {
+        /// Arrow keys: the gesture is ours.
+        case arrows
+        /// The terminal scrolls (or a full-screen program gets the drag): the gesture is the terminal's.
+        case scroll
+        /// Too late: the finger rested before it moved (a long press).
+        case none
+    }
+
+    static let deadZone: CGFloat = 12
+    /// Faster than this (points per second) when it leaves the dead zone: a flick.
+    static let flickSpeed: CGFloat = 450
+    static let startWindow: TimeInterval = 0.3
+    /// Touches that begin this close to the screen's left edge belong to the system's back swipe.
+    static let edgeMargin: CGFloat = 24
+
+    /// nil while the finger is still inside the dead zone.
+    static func decide(translation: CGSize, velocity: CGPoint, elapsed: TimeInterval, atEnd: Bool) -> Decision? {
+        guard hypot(translation.width, translation.height) >= deadZone else {
+            return elapsed > startWindow ? Decision.none : nil
+        }
+        guard elapsed <= startWindow else { return Decision.none }
+        if abs(translation.width) >= abs(translation.height) * 1.2 { return .arrows }
+        return atEnd && abs(velocity.y) >= flickSpeed ? .arrows : .scroll
+    }
+}
+
 /// The swipe pad of the key bar: a drag from the pad sends arrows in its direction, faster the farther it goes.
 enum ArrowPad {
     static let deadZone: CGFloat = 12

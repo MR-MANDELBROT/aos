@@ -206,6 +206,35 @@ final class SSHConnection: @unchecked Sendable {
         try await SessionChannel.open(on: channel, mode: .shell(term: term, columns: columns, rows: rows))
     }
 
+    /// A command in a pseudo terminal (the Mac's terminal sessions: `aos-companion term attach`).
+    func terminal(command: String, term: String = "xterm-256color", columns: Int, rows: Int) async throws -> SessionChannel {
+        try await SessionChannel.open(on: channel, mode: .terminalCommand(command, term: term, columns: columns, rows: rows))
+    }
+
+    /// Runs a command and collects what it prints (at most `limit` bytes), for `term list` and `term end`.
+    func run(_ command: String, timeout: Duration = .seconds(15), limit: Int = 1 << 20) async throws -> Data {
+        let channel = try await exec(command)
+        return try await withThrowingTaskGroup(of: Data.self) { group in
+            group.addTask {
+                var out = Data()
+                for try await chunk in channel.output {
+                    out.append(chunk)
+                    if out.count > limit { break }
+                }
+                return out
+            }
+            group.addTask {
+                try await Task.sleep(for: timeout)
+                await channel.close()
+                throw CancellationError()
+            }
+            defer { group.cancelAll() }
+            let result = try await group.next() ?? Data()
+            await channel.close()
+            return result
+        }
+    }
+
     /// A TCP connection from the server to `targetHost:targetPort` (as `ssh -L` does). `handler` gets the bytes as
     /// `ByteBuffer`s and may write `ByteBuffer`s back.
     func directTCPIP(to targetHost: String, port targetPort: Int,

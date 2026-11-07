@@ -160,15 +160,27 @@ actor CompanionClient {
         return (response.body["width"]?.int ?? 0, response.body["height"]?.int ?? 0)
     }
 
-    /// Sends a request and waits for the answer with its id.
-    func request(_ request: CompanionRequest, timeout: Duration = .seconds(20)) async throws -> CompanionResponse {
-        try await send(request, timeout: timeout).response
+    /// The Overview: the Mac's status, or an action. A refusal comes as `MacRefusal` with the Mac's code.
+    func mac(_ action: MacAction, value: String? = nil) async throws -> MacActionResult {
+        let response = try await request(.mac(action, value: value), refusalsThrow: false)
+        guard response.ok else {
+            if response.code == "pair-again" { throw CompanionError.pairAgain }
+            throw MacRefusal(code: response.code, message: response.error ?? "")
+        }
+        return MacActionResult(response)
+    }
+
+    /// Sends a request and waits for the answer with its id. `refusalsThrow: false` returns an `ok: false` answer
+    /// as it is.
+    func request(_ request: CompanionRequest, timeout: Duration = .seconds(20),
+                 refusalsThrow: Bool = true) async throws -> CompanionResponse {
+        try await send(request, timeout: timeout, refusalsThrow: refusalsThrow).response
     }
 
     /// Sends a request, waits for its answer; also returns the signature it went with (the sealed screen login is
     /// bound to its nonce).
-    private func send(_ request: CompanionRequest, timeout: Duration = .seconds(20)) async throws
-        -> (response: CompanionResponse, auth: CompanionAuth?) {
+    private func send(_ request: CompanionRequest, timeout: Duration = .seconds(20), refusalsThrow: Bool = true)
+        async throws -> (response: CompanionResponse, auth: CompanionAuth?) {
         if let finished { throw finished }
         let id = nextID
         nextID += 1
@@ -191,6 +203,7 @@ actor CompanionClient {
         }
         guard response.ok else {
             log.notice("Companion \(op, privacy: .public) refused (\(response.code ?? "", privacy: .public)): \(response.error ?? "", privacy: .public)")
+            if !refusalsThrow { return (response, auth) }
             if response.code == "pair-again" { throw CompanionError.pairAgain }
             throw CompanionError.refused(response.error ?? String(localized: "aOS on the Mac said no."))
         }

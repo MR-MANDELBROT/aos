@@ -16,6 +16,12 @@ final class MockCompanionServer: @unchecked Sendable {
         ]
         /// Requests the server answers with `ok: false` and this message.
         var refuse: [String: String] = [:]
+        /// ... and with this code (the Overview's actions: "sleep-disabled", "not-set-up", ...).
+        var refuseCode: [String: String] = [:]
+        /// What `mac.status` reports; the actions change it as the Mac would.
+        var macStatus = MockCompanionServer.demoMacStatus
+        /// The Mac is older and doesn't know the Overview's ops.
+        var oldMac = false
         /// The phone the Mac knows: with it set, every request must be signed by that phone, as aOS on the Mac
         /// checks it (refused with "pair-again" without, "invalid" for a bad signature or a nonce seen before).
         var trustedPhone: TrustedSigner?
@@ -129,13 +135,26 @@ final class MockCompanionServer: @unchecked Sendable {
         }
         if op == "subscribe" { lock.withLock { subscribed = true } }
         if let message = state.refuse[op] {
-            return Self.encode(["id": .number(Double(id)), "ok": .bool(false), "error": .string(message)])
+            var refusal: [String: JSONValue] = ["id": .number(Double(id)), "ok": .bool(false), "error": .string(message)]
+            if let code = state.refuseCode[op] { refusal["code"] = .string(code) }
+            return Self.encode(refusal)
         }
         var body: [String: JSONValue] = ["id": .number(Double(id)), "ok": .bool(true)]
+        if let action = MacAction(rawValue: op), !state.oldMac {
+            body["status"] = .object(macAction(action, value: object["text"]?.string))
+            if action == .sleep {
+                body["sleeping"] = .bool(true)
+                body["after"] = .number(1.5)
+            }
+            return Self.encode(body)
+        }
         switch op {
         case "hello":
             body["mac"] = .string(state.macName)
             body["aos"] = .string(state.aosVersion)
+            if !state.oldMac {
+                body["features"] = .array((MacAction.allCases.map(\.rawValue) + ["term"]).map { .string($0) })
+            }
         case "status":
             var workspace: [String: JSONValue] = ["state": .string(Self.raw(state.workspace.state)),
                                                   "purpose": .string(state.workspace.purpose)]
@@ -183,6 +202,57 @@ final class MockCompanionServer: @unchecked Sendable {
         return Self.encode(body)
     }
 
+    // MARK: The Overview
+
+    /// A MacBook on battery with the lid open, staying awake with the lid closed, the workspace open for the agent.
+    static let demoMacStatus: [String: JSONValue] = [
+        "power": .object(["source": .string("battery"), "battery": .number(76), "charging": .bool(false),
+                          "minutes": .number(312), "lid": .string("open"), "thermal": .string("nominal")]),
+        "awake": .object(["setting": .string("lidClosed"), "holding": .bool(true), "lidClosedMode": .bool(false),
+                          "helper": .string("enabled"), "otherService": .bool(false)]),
+        "workspace": .object(["state": .string("open"), "setupComplete": .bool(true),
+                              "purpose": .string("Rechnungen herunterladen"),
+                              "until": .string(ISO8601.format(Date().addingTimeInterval(25 * 60)))]),
+        "session": .object(["enabled": .bool(true), "state": .string("running"),
+                            "since": .string(ISO8601.format(Date().addingTimeInterval(-3 * 3600)))]),
+        "newChats": .object(["enabled": .bool(true), "state": .string("running")]),
+        "kept": .object(["enabled": .bool(true), "running": .number(2)]),
+        "bitwarden": .object(["state": .string("unlocked")]),
+    ]
+
+    /// What the Mac does for an action, on the status it reports.
+    private func macAction(_ action: MacAction, value: String?) -> [String: JSONValue] {
+        lock.withLock {
+            var status = state.macStatus
+            func set(_ section: String, _ key: String, _ v: JSONValue) {
+                var o = status[section]?.object ?? [:]
+                o[key] = v
+                status[section] = .object(o)
+            }
+            switch action {
+            case .stayAwake:
+                if let value { set("awake", "setting", .string(value)); set("awake", "holding", .bool(value == "lidClosed")) }
+            case .workspaceStart:
+                set("workspace", "state", .string("starting"))
+            case .workspaceStop:
+                set("workspace", "state", .string("stopped"))
+                if var w = status["workspace"]?.object {
+                    w["purpose"] = nil
+                    w["until"] = nil
+                    status["workspace"] = .object(w)
+                }
+            case .bitwardenLock:
+                set("bitwarden", "state", .string("locked"))
+            case .sessionRestart:
+                set("session", "state", .string("restarting"))
+            case .status, .sleep, .displayOff:
+                break
+            }
+            state.macStatus = status
+            return status
+        }
+    }
+
     // MARK: Signatures (as aOS on the Mac checks them)
 
     /// Why the Mac would refuse this request, or nil if the trusted phone signed it.
@@ -209,9 +279,15 @@ final class MockCompanionServer: @unchecked Sendable {
     /// What the Mac signs over, read from the line the way the Mac reads it: `aos-companion` passes on only the fields
     /// each operation has, the app derives the decision from them (AOSKit `CompanionSignature.fields(for:auth:)`).
     static func signatureFields(op: String, object: [String: JSONValue], auth: CompanionAuth) -> CompanionSignature.Fields {
-        let macOp = ["hello", "status", "subscribe", "screen", "type", "display"].contains(op) ? "companion." + op : op
+        let macOp = ["hello", "status", "subscribe", "screen", "type", "display"].contains(op) || MacAction(rawValue: op) != nil
+            ? "companion." + op : op
         var f = CompanionSignature.Fields(op: macOp, key: auth.key, ts: auth.ts, nonce: auth.nonce)
         func text(_ name: String) -> String? { object[name]?.string }
+        if MacAction(rawValue: op) != nil {
+            // aos-companion passes on only the text; the app signs over it.
+            if let value = text("text") { f.data = CompanionSignature.dataDigest(text: value) }
+            return f
+        }
         switch op {
         case "screen":
             f.target = text("target") == "workspace" ? "workspace" : "mac"
@@ -294,6 +370,7 @@ final class MockCompanionServer: @unchecked Sendable {
         switch state {
         case .stopped: "stopped"
         case .starting: "starting"
+        case .running: "running"
         case .open: "open"
         case .closing: "closing"
         case .other(let s): s

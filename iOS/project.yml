@@ -32,12 +32,23 @@ packages:
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
     from: 1.2.0
+  # The screen client (target ScreenClient, Open Screen Sharing's session code) uses these, at the versions Open Screen
+  # Sharing resolves.
+  GRDB:
+    url: https://github.com/groue/GRDB.swift
+    exactVersion: 7.11.1
+  swift-perception:
+    url: https://github.com/pointfreeco/swift-perception
+    exactVersion: 2.0.12
+  swift-atomics:
+    url: https://github.com/apple/swift-atomics.git
+    from: 1.3.1
 
 settings:
   base:
     DEVELOPMENT_TEAM: S3725YB7V6
     MARKETING_VERSION: 0.1.0
-    CURRENT_PROJECT_VERSION: 1
+    CURRENT_PROJECT_VERSION: 2
     SWIFT_VERSION: "6.0"
     IPHONEOS_DEPLOYMENT_TARGET: "27.0"
     TARGETED_DEVICE_FAMILY: "1"
@@ -56,6 +67,8 @@ targets:
     platform: iOS
     sources:
       - path: Sources
+      # Shared with the widget extension: the Live Activity of the open terminals.
+      - path: Shared
       - path: Resources
         excludes:
           - "AppIcon.icon"
@@ -63,6 +76,8 @@ targets:
         type: file
         buildPhase: resources
     dependencies:
+      - target: AOSWidgets
+        embed: true
       - package: AOSKit
         product: AOSRFB
       # Tailscale's status, the ways to reach the Mac, Tailscale's address ranges (shared with the Mac app)
@@ -81,6 +96,7 @@ targets:
       - package: swift-nio-transport-services
         product: NIOTransportServices
       - package: SwiftTerm
+      - target: ScreenClient
     info:
       path: Info.plist
       properties:
@@ -97,11 +113,27 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        # aos-pair:// links from the Mac's QR code (the Camera app offers to open them in aOS)
+        # aos-pair:// links from the Mac's QR code (the Camera app offers to open them in aOS); aos://terminal/...
+        # from the Live Activity
         CFBundleURLTypes:
           - CFBundleURLName: dev.marquart.aos.pair
             CFBundleURLSchemes:
               - aos-pair
+          - CFBundleURLName: dev.marquart.aos.ios.links
+            CFBundleURLSchemes:
+              - aos
+        # The open terminals on the Lock Screen and in the Dynamic Island. Frequent updates only raise the budget for
+        # updates by push, which aOS doesn't use (no server of its own); kept as asked for (iOS/NOTES.md).
+        NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: true
+        # iOS's continued processing task while a terminal is open (TerminalKeepAlive); location only with the
+        # option "Keep alive with location" (off by default).
+        BGTaskSchedulerPermittedIdentifiers:
+          - dev.marquart.aos.ios.terminal.*
+        UIBackgroundModes:
+          - location
+          - processing
+        NSLocationWhenInUseUsageDescription: "With “Keep alive with location” on, the location service keeps your terminal running in the background. aOS doesn't use, keep or send your location."
         NSLocalNetworkUsageDescription: "aOS connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted."
         NSBonjourServices:
           - _aos-pair._tcp
@@ -115,6 +147,67 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_UILaunchScreen_Generation: NO
+
+  # The screen: Open Screen Sharing's session engine and session UI (GPL-3.0, iOS/ThirdParty/OpenScreenSharing) with
+  # its Go library libsharing (Libsharing.xcframework, built by iOS/Tools/libsharing.sh, not checked in). A module of
+  # its own so it keeps Open Screen Sharing's Swift settings (main actor by default). Its strings are in the app's
+  # catalog (the code looks them up in the main bundle).
+  ScreenClient:
+    type: framework
+    platform: iOS
+    sources:
+      - path: ThirdParty/OpenScreenSharing/Sources
+      # Shown in the app (Settings > Acknowledgements)
+      - path: ThirdParty/OpenScreenSharing/LICENSE
+        type: file
+        buildPhase: resources
+      - path: ThirdParty/OpenScreenSharing/COPYING
+        type: file
+        buildPhase: resources
+    dependencies:
+      - framework: ThirdParty/OpenScreenSharing/Libsharing.xcframework
+        embed: false
+      - package: GRDB
+      - package: swift-perception
+        product: Perception
+      - package: swift-atomics
+        product: Atomics
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.aos.ios.screenclient
+        PRODUCT_NAME: ScreenClient
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+        # Its strings are manual entries of the app's catalog (Tools/screen_strings.sh), not a catalog of its own:
+        # localize.sh's export and import leave the module out
+        SWIFT_EMIT_LOC_STRINGS: NO
+        LOCALIZATION_EXPORT_SUPPORTED: NO
+        SKIP_INSTALL: YES
+        # iPhone only: libsharing has no Mac Catalyst build (the string export would try one)
+        SUPPORTS_MACCATALYST: NO
+  # The Live Activity of the open terminals (Widgets/, with Shared/ from the app).
+  AOSWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: Shared
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: aOS
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.aos.ios.widgets
+        PRODUCT_NAME: AOSWidgets
+        SKIP_INSTALL: YES
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: ""
 
   AOSTests:
     type: bundle.unit-test

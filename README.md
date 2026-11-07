@@ -12,7 +12,9 @@ phone even after the window or terminal that ran them closed (Remote Control).
 
 **aOS for iPhone** (in `iOS/`) pairs with the Mac by QR code: approve sign-ins with Face ID (one of your Bitwarden
 logins, or from another password manager through AutoFill; the iPhone never talks to Bitwarden), open your Mac's
-terminal, and watch and control your Mac and the workspace.
+terminal (its sessions keep running on the Mac when the connection drops and pick up where they left off), see the
+Mac's battery, lid and staying awake and put it to sleep, start or close the workspace, and watch and control your
+Mac and the workspace.
 
 aOS is not made by or affiliated with Anthropic, OpenAI, Google, Microsoft or any other agent's maker.
 
@@ -56,7 +58,7 @@ Opening the workspace always needs the user's yes:
 | `aOS.app` | Menu bar app: setup, settings, the workspace window, and the workspace engine (runs the VM with Apple's Virtualization framework, talks to the guest over SSH and screen sharing) |
 | `aos-mcp` | MCP server that the agent starts. Its tools (open, screenshot, click, type, keys, scroll, drag, files, close) go to the app over a private socket |
 | `aos-session` | LaunchAgent: keeps Claude Code conversations reachable (resumes them with Remote Control when no other process has them) and the optional always-on session |
-| `aos-companion` | What the iPhone app runs over SSH: requests and events between the phone and the app |
+| `aos-companion` | What the iPhone app runs over SSH: requests and events between the phone and the app, and the terminal sessions that outlive the connection (`aos-companion term`) |
 | `aos-powerd` | Optional privileged helper (LaunchDaemon you allow once in Login Items): keeps the Mac awake with the lid closed (`pmset disablesleep`, as a lease aOS renews), sets your iPhone hotspot's join settings, rejoins known networks. Only aOS may talk to it; it stays out of the way of Cloupi's own wake service |
 | Bitwarden's `bw` | Bitwarden's official command line tool, not part of aOS: downloaded from Bitwarden when you sign in (or yours, if it is Bitwarden's signed build), checked by its signature before every use; aOS runs it to sign in to your Bitwarden account and to get the login you approve |
 | Guest kit | Scripts and the helper that run inside the VM: SSH lock-down, Chrome policies, orderly shutdown, sign-ins (aOS Helper) |

@@ -90,6 +90,24 @@
           }
         }
       }
+    },
+    "NSLocationWhenInUseUsageDescription" : {
+      "comment" : "Privacy - Location When In Use Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit „Mit Ortungsdienst wach halten“ hält der Ortungsdienst dein Terminal im Hintergrund am Laufen. aOS nutzt, speichert und sendet deinen Standort nicht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "With “Keep alive with location” on, the location service keeps your terminal running in the background. aOS doesn't use, keep or send your location."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
