@@ -57,7 +57,11 @@ final class TailnetController: ObservableObject {
     /// again after an update; the helper then starts the node).
     func start() {
         guard timer == nil else { return }
-        refresh()
+        // The helper only when aOS's node is the way (a call starts it, and it would stay two minutes for nothing).
+        Task {
+            await readApp()
+            if way == .aosTailscale { await readNode() }
+        }
         timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
             Task { @MainActor in
                 let controller = TailnetController.shared
