@@ -30,7 +30,7 @@ struct SettingsView<Extra: View>: View {
                 NavigationLink {
                     ControlSettingsView()
                 } label: {
-                    Label("Control", systemImage: "slider.horizontal.3")
+                    Label("Controls", systemImage: "slider.horizontal.3")  // aOS: "Control" is the terminal's key
                 }
             }
             Section("About") {
@@ -68,7 +68,7 @@ private struct ControlSettingsView: View {
                     }
                 }
             }
-            .navigationTitle("Control")
+            .navigationTitle("Controls")
         }
     }
 }

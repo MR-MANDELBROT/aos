@@ -31,6 +31,116 @@
         }
       }
     },
+    "“%@” Declined the Request" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat die Anfrage abgelehnt"
+          }
+        }
+      }
+    },
+    "“%@” Doesn’t Support High Performance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ unterstützt den Hochleistungsmodus nicht"
+          }
+        }
+      }
+    },
+    "“%@” Ended Screen Sharing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat die Bildschirmfreigabe beendet"
+          }
+        }
+      }
+    },
+    "“%@” Ended the Session" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat die Sitzung beendet"
+          }
+        }
+      }
+    },
+    "“%@” Has a New Certificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat ein neues Zertifikat"
+          }
+        }
+      }
+    },
+    "“%@” Is Already in Use" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird bereits verwendet"
+          }
+        }
+      }
+    },
+    "“%@” Is in Use" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird gerade verwendet"
+          }
+        }
+      }
+    },
+    "“%@” is using it right now." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ verwendet den Mac gerade."
+          }
+        }
+      }
+    },
+    "“%@” Isn’t Supported" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird nicht unterstützt"
+          }
+        }
+      }
+    },
+    "“%@” Refused High Performance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat den Hochleistungsmodus abgelehnt"
+          }
+        }
+      }
+    },
     "%@ answered with a different SSH key (%@). If the Mac was set up again, pair it again." : {
       "localizations" : {
         "de" : {
@@ -195,6 +305,17 @@
         }
       }
     },
+    "%@×" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@×"
+          }
+        }
+      }
+    },
     "%lld pt · %lld × %lld" : {
       "localizations" : {
         "de" : {
@@ -238,6 +359,7 @@
       }
     },
     "A mouse or trackpad on the iPhone points, clicks and scrolls directly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -257,6 +379,17 @@
         }
       }
     },
+    "About" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info"
+          }
+        }
+      }
+    },
     "Account name" : {
       "localizations" : {
         "de" : {
@@ -267,12 +400,67 @@
         }
       }
     },
+    "Acknowledgements" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Danksagungen"
+          }
+        }
+      }
+    },
     "Actual pixels" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Originalpixel"
+          }
+        }
+      }
+    },
+    "Adaptive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angepasst"
+          }
+        }
+      }
+    },
+    "Adaptive Quality" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angepasste Qualität"
+          }
+        }
+      }
+    },
+    "Add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzufügen"
+          }
+        }
+      }
+    },
+    "Add %@ to Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ zur Symbolleiste hinzufügen"
           }
         }
       }
@@ -283,6 +471,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rechner hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Mapping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuordnung hinzufügen"
           }
         }
       }
@@ -337,6 +536,28 @@
         }
       }
     },
+    "All" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        }
+      }
+    },
+    "All Displays" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Displays"
+          }
+        }
+      }
+    },
     "Allow" : {
       "localizations" : {
         "de" : {
@@ -357,12 +578,35 @@
         }
       }
     },
+    "Alt Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alt-Taste"
+          }
+        }
+      }
+    },
     "Always" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Immer"
+          }
+        }
+      }
+    },
+    "Another Device Is Using High Performance on “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderes Gerät verwendet den Hochleistungsmodus auf „%@“"
           }
         }
       }
@@ -403,6 +647,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS ist gesperrt"
+          }
+        }
+      }
+    },
+    "aOS is not made by the author of Open Screen Sharing and is not associated with it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS stammt nicht vom Autor von Open Screen Sharing und steht nicht mit ihm in Verbindung."
           }
         }
       }
@@ -527,6 +781,16 @@
         }
       }
     },
+    "aOS on the Mac sent no screen sharing login for the workspace." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf dem Mac hat keine Anmeldung für die Bildschirmfreigabe des Arbeitsplatzes geschickt."
+          }
+        }
+      }
+    },
     "aOS on the Mac stopped answering." : {
       "localizations" : {
         "de" : {
@@ -577,12 +841,57 @@
         }
       }
     },
+    "App Switcher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Umschalter"
+          }
+        }
+      }
+    },
     "App windows" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "App-Fenster"
+          }
+        }
+      }
+    },
+    "App Windows" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Fenster"
+          }
+        }
+      }
+    },
+    "Apple Key Mappings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple-Tastenzuordnungen"
+          }
+        }
+      }
+    },
+    "Applies to the next key or click." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gilt für den nächsten Tastendruck oder Klick."
           }
         }
       }
@@ -627,12 +936,45 @@
         }
       }
     },
+    "Apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps"
+          }
+        }
+      }
+    },
     "Arrow pad" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pfeilfeld"
+          }
+        }
+      }
+    },
+    "Ask for Permission Instead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stattdessen um Erlaubnis bitten"
+          }
+        }
+      }
+    },
+    "Ask to Share Their Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um Freigabe des Bildschirms bitten"
           }
         }
       }
@@ -658,6 +1000,7 @@
       }
     },
     "Automatic" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -668,6 +1011,7 @@
       }
     },
     "Automatic shows all colours on Wi-Fi and fewer on a cellular connection. Every quality keeps text sharp." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -678,6 +1022,7 @@
       }
     },
     "Balanced" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -688,6 +1033,7 @@
       }
     },
     "Balanced (thousands of colours)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -698,6 +1044,7 @@
       }
     },
     "Best (all colours)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -747,6 +1094,61 @@
         }
       }
     },
+    "Cache" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache"
+          }
+        }
+      }
+    },
+    "Cache Size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache-Größe"
+          }
+        }
+      }
+    },
+    "Can’t Play the Computer’s Sound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton des Computers kann nicht wiedergegeben werden"
+          }
+        }
+      }
+    },
+    "Can’t Play the Mac’s Sound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton des Mac kann nicht wiedergegeben werden"
+          }
+        }
+      }
+    },
+    "Can’t Use the Microphone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon kann nicht verwendet werden"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "localizations" : {
         "de" : {
@@ -757,12 +1159,34 @@
         }
       }
     },
+    "Canceled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgebrochen"
+          }
+        }
+      }
+    },
     "Change login" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldung ändern"
+          }
+        }
+      }
+    },
+    "Changing Resolution…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auflösung wird geändert …"
           }
         }
       }
@@ -787,6 +1211,28 @@
         }
       }
     },
+    "Clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear-Taste"
+          }
+        }
+      }
+    },
+    "Clear Cache" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache leeren"
+          }
+        }
+      }
+    },
     "Clear Scrollback" : {
       "localizations" : {
         "de" : {
@@ -797,7 +1243,52 @@
         }
       }
     },
+    "Clear Shortcut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurzbefehl löschen"
+          }
+        }
+      }
+    },
+    "Click" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicken"
+          }
+        }
+      }
+    },
+    "Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage"
+          }
+        }
+      }
+    },
+    "Clipboard Sync Asks Before Each Paste" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Zwischenablage synchronisieren“ fragt vor jedem Einsetzen nach"
+          }
+        }
+      }
+    },
     "Close" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -808,6 +1299,7 @@
       }
     },
     "Close window" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -837,6 +1329,17 @@
         }
       }
     },
+    "Command Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command-Taste"
+          }
+        }
+      }
+    },
     "Connect" : {
       "localizations" : {
         "de" : {
@@ -847,12 +1350,34 @@
         }
       }
     },
+    "Connect a keyboard to set up shortcuts." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde eine Tastatur, um Kurzbefehle einzurichten."
+          }
+        }
+      }
+    },
     "Connect again" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neu verbinden"
+          }
+        }
+      }
+    },
+    "Connect Anyway" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trotzdem verbinden"
           }
         }
       }
@@ -897,6 +1422,28 @@
         }
       }
     },
+    "Connecting…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden …"
+          }
+        }
+      }
+    },
+    "Connection interrupted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung unterbrochen"
+          }
+        }
+      }
+    },
     "Continue" : {
       "localizations" : {
         "de" : {
@@ -917,7 +1464,19 @@
         }
       }
     },
+    "Control Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control-Taste"
+          }
+        }
+      }
+    },
     "Controls" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -977,7 +1536,151 @@
         }
       }
     },
+    "Couldn’t Cancel Drag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ziehen konnte nicht abgebrochen werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Clear the Cache" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache konnte nicht geleert werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Connect to “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung mit „%@“ konnte nicht hergestellt werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Delete “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht gelöscht werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Find “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wurde nicht gefunden"
+          }
+        }
+      }
+    },
+    "Couldn’t Finish Transferring Files" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Dateiübertragung konnte nicht abgeschlossen werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Get “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht abgerufen werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Import “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht importiert werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Receive the Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage konnte nicht empfangen werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Save “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht gesichert werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Send “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht gesendet werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Send the Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage konnte nicht gesendet werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Sign In to “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung bei „%@“ fehlgeschlagen"
+          }
+        }
+      }
+    },
     "Couldn't type „%@“." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -987,7 +1690,74 @@
         }
       }
     },
+    "Couldn’t Verify “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht überprüft werden"
+          }
+        }
+      }
+    },
+    "Ctrl Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strg-Taste"
+          }
+        }
+      }
+    },
+    "Cursor Style" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigerstil"
+          }
+        }
+      }
+    },
+    "Custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigene"
+          }
+        }
+      }
+    },
+    "Customize Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste anpassen"
+          }
+        }
+      }
+    },
+    "Customize Toolbar…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste anpassen …"
+          }
+        }
+      }
+    },
     "Cut" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -998,11 +1768,34 @@
       }
     },
     "Data saver (4096 colours)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datensparend (4096 Farben)"
+          }
+        }
+      }
+    },
+    "Debug" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug"
+          }
+        }
+      }
+    },
+    "Debug Panel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug-Panel"
           }
         }
       }
@@ -1077,6 +1870,39 @@
         }
       }
     },
+    "Delete Mapping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuordnung löschen"
+          }
+        }
+      }
+    },
+    "Desktop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibtisch"
+          }
+        }
+      }
+    },
+    "Dictation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diktat"
+          }
+        }
+      }
+    },
     "Direct" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1105,6 +1931,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trennen"
+          }
+        }
+      }
+    },
+    "Disconnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung getrennt"
+          }
+        }
+      }
+    },
+    "Disconnected from “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung mit „%@“ getrennt"
+          }
+        }
+      }
+    },
+    "Display %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display %lld"
+          }
+        }
+      }
+    },
+    "Displays" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Displays"
           }
         }
       }
@@ -1150,6 +2020,7 @@
       }
     },
     "Drag one finger: drag (select, move windows)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1171,6 +2042,7 @@
       }
     },
     "Drag one finger: move the pointer (faster moves go further)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1181,6 +2053,7 @@
       }
     },
     "Drawn on the iPhone" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1191,6 +2064,7 @@
       }
     },
     "Drawn on the iPhone, the pointer moves without delay. From the Mac it also shows where your agent points." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1201,6 +2075,45 @@
       }
     },
     "Edit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit Mapping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuordnung bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit Menu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
+    "Editing" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1231,11 +2144,34 @@
       }
     },
     "Ends the screen connection" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beendet die Verbindung zum Bildschirm"
+          }
+        }
+      }
+    },
+    "Enter the password to sign in to “%@”." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib das Passwort ein, um dich bei „%@“ anzumelden."
+          }
+        }
+      }
+    },
+    "Enter the user name and password to sign in to “%@”." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib den Benutzernamen und das Passwort ein, um dich bei „%@“ anzumelden."
           }
         }
       }
@@ -1261,6 +2197,7 @@
       }
     },
     "Extra keys above the keyboard" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1280,7 +2217,30 @@
         }
       }
     },
+    "File" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ablage"
+          }
+        }
+      }
+    },
+    "File transfer failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragung fehlgeschlagen"
+          }
+        }
+      }
+    },
     "Fill" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1311,6 +2271,7 @@
       }
     },
     "Find" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1341,6 +2302,7 @@
       }
     },
     "Fit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1361,6 +2323,7 @@
       }
     },
     "Force quit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1390,6 +2353,17 @@
         }
       }
     },
+    "Forward Delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorwärts löschen"
+          }
+        }
+      }
+    },
     "From another password app" : {
       "localizations" : {
         "de" : {
@@ -1411,6 +2385,7 @@
       }
     },
     "From the Mac" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1420,7 +2395,30 @@
         }
       }
     },
+    "Full" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoch"
+          }
+        }
+      }
+    },
+    "Full Quality" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hohe Qualität"
+          }
+        }
+      }
+    },
     "Full screen, with the trackpad or touch." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1430,7 +2428,18 @@
         }
       }
     },
+    "Full screen, with touch, the keyboard and a trackpad or mouse." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Vollbild, mit Berührung, Tastatur und Trackpad oder Maus."
+          }
+        }
+      }
+    },
     "Function keys" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1440,7 +2449,30 @@
         }
       }
     },
+    "Function Keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funktionstasten"
+          }
+        }
+      }
+    },
+    "General" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allgemein"
+          }
+        }
+      }
+    },
     "Gestures" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1450,7 +2482,28 @@
         }
       }
     },
+    "GNU General Public License" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GNU General Public License"
+          }
+        }
+      }
+    },
+    "GNU General Public License, version 3" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GNU General Public License, Version 3"
+          }
+        }
+      }
+    },
     "Gray (least data)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1461,6 +2514,7 @@
       }
     },
     "Haptic feedback" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1481,6 +2535,7 @@
       }
     },
     "Hide keyboard" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1501,11 +2556,45 @@
       }
     },
     "Hide the toolbar by itself" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Werkzeugleiste von selbst ausblenden"
+          }
+        }
+      }
+    },
+    "Hide Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste ausblenden"
+          }
+        }
+      }
+    },
+    "High Dynamic Range" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoher Dynamikumfang (HDR)"
+          }
+        }
+      }
+    },
+    "High Performance Stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochleistungsmodus beendet"
           }
         }
       }
@@ -1520,6 +2609,17 @@
         }
       }
     },
+    "Home Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home-Bildschirm"
+          }
+        }
+      }
+    },
     "How the iPhone reaches it" : {
       "localizations" : {
         "de" : {
@@ -1530,7 +2630,30 @@
         }
       }
     },
+    "Import" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importieren"
+          }
+        }
+      }
+    },
+    "In More" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In „Mehr“"
+          }
+        }
+      }
+    },
     "In the iPhone's shape" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1551,11 +2674,23 @@
       }
     },
     "Input works in a moment …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eingaben gehen gleich …"
+          }
+        }
+      }
+    },
+    "iPad Style" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad-Stil"
           }
         }
       }
@@ -1600,6 +2735,50 @@
         }
       }
     },
+    "It’s assigned to “%@”. Replacing it removes that shortcut." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Kurzbefehl ist „%@“ zugewiesen. Beim Ersetzen wird er dort entfernt."
+          }
+        }
+      }
+    },
+    "It’s mapped to %@. Replacing it removes that mapping." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er ist %@ zugeordnet. Beim Ersetzen wird diese Zuordnung entfernt."
+          }
+        }
+      }
+    },
+    "It’s mapped to %@. Replacing it removes those mappings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er ist %@ zugeordnet. Beim Ersetzen werden diese Zuordnungen entfernt."
+          }
+        }
+      }
+    },
+    "Item" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekt"
+          }
+        }
+      }
+    },
     "Keep Screen On" : {
       "localizations" : {
         "de" : {
@@ -1630,12 +2809,35 @@
         }
       }
     },
+    "Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taste"
+          }
+        }
+      }
+    },
     "Keyboard" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tastatur"
+          }
+        }
+      }
+    },
+    "Keyboard Input for Mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastatureingabe für den Mac"
           }
         }
       }
@@ -1652,6 +2854,7 @@
       }
     },
     "Keyboard: type; ⌘ ⌥ ⌃ ⇧ in the key bar apply to the next key, tapped twice they stay on" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1667,6 +2870,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schlüsselbund"
+          }
+        }
+      }
+    },
+    "Keypad" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ziffernblock"
+          }
+        }
+      }
+    },
+    "Keypad %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (Ziffernblock)"
+          }
+        }
+      }
+    },
+    "Keypad Enter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter (Ziffernblock)"
           }
         }
       }
@@ -1687,6 +2923,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pfeil nach links"
+          }
+        }
+      }
+    },
+    "License notice" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lizenzhinweis"
+          }
+        }
+      }
+    },
+    "Lock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sperren"
           }
         }
       }
@@ -1721,12 +2978,34 @@
         }
       }
     },
+    "Log In to Your Own Session" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei eigener Sitzung anmelden"
+          }
+        }
+      }
+    },
     "Log in with" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmelden mit"
+          }
+        }
+      }
+    },
+    "Lost the Connection to “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung mit „%@“ verloren"
           }
         }
       }
@@ -1741,7 +3020,30 @@
         }
       }
     },
+    "Main Display" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hauptdisplay"
+          }
+        }
+      }
+    },
+    "Microphone access is turned off in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mikrofonzugriff ist in „Einstellungen“ deaktiviert."
+          }
+        }
+      }
+    },
     "Mission Control" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1752,6 +3054,7 @@
       }
     },
     "More" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1761,7 +3064,30 @@
         }
       }
     },
+    "Move Down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach unten bewegen"
+          }
+        }
+      }
+    },
+    "Move Up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach oben bewegen"
+          }
+        }
+      }
+    },
     "Moves the pointer (trackpad)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1801,12 +3127,46 @@
         }
       }
     },
+    "Native" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nativ"
+          }
+        }
+      }
+    },
+    "Native Touch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Native Touch-Eingabe"
+          }
+        }
+      }
+    },
     "Natural scrolling" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Natürliches Scrollen"
+          }
+        }
+      }
+    },
+    "Navigation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation"
           }
         }
       }
@@ -1817,6 +3177,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Braucht dich"
+          }
+        }
+      }
+    },
+    "New connections start with clipboard sync turned off. To sync what you copy to the Mac without being asked each time, choose Allow for Paste from Other Apps in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei neuen Verbindungen ist „Zwischenablage synchronisieren“ zunächst deaktiviert. Damit Kopiertes ohne Nachfrage mit dem Mac synchronisiert wird, wähle in „Einstellungen“ für „Aus anderen Apps einsetzen“ die Option „Erlauben“."
           }
         }
       }
@@ -1832,11 +3203,23 @@
       }
     },
     "New tab" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuer Tab"
+          }
+        }
+      }
+    },
+    "Next Tip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächster Tipp"
           }
         }
       }
@@ -1857,6 +3240,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Noch keine Rechner"
+          }
+        }
+      }
+    },
+    "No Keyboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Tastatur"
           }
         }
       }
@@ -1921,12 +3315,45 @@
         }
       }
     },
+    "None" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne"
+          }
+        }
+      }
+    },
     "Not allowed. The workspace stays closed." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht erlaubt. Der Arbeitsplatz bleibt geschlossen."
+          }
+        }
+      }
+    },
+    "Not Available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Not available while observing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Beobachten nicht verfügbar"
           }
         }
       }
@@ -1981,6 +3408,17 @@
         }
       }
     },
+    "Observe Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beobachtungsmodus"
+          }
+        }
+      }
+    },
     "Off" : {
       "localizations" : {
         "de" : {
@@ -1992,6 +3430,7 @@
       }
     },
     "OK" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2002,6 +3441,7 @@
       }
     },
     "On" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2042,6 +3482,7 @@
       }
     },
     "One finger" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2081,6 +3522,27 @@
         }
       }
     },
+    "Open Screen Sharing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Screen Sharing"
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen öffnen"
+          }
+        }
+      }
+    },
     "Open the workspace" : {
       "localizations" : {
         "de" : {
@@ -2111,6 +3573,17 @@
         }
       }
     },
+    "Option Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option-Taste"
+          }
+        }
+      }
+    },
     "Or paste the link" : {
       "localizations" : {
         "de" : {
@@ -2137,6 +3610,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weitere Rechner"
+          }
+        }
+      }
+    },
+    "Others" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere"
           }
         }
       }
@@ -2311,6 +3795,17 @@
         }
       }
     },
+    "Password Fields Take Only English Characters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwortfelder akzeptieren nur englische Zeichen"
+          }
+        }
+      }
+    },
     "Paste" : {
       "localizations" : {
         "de" : {
@@ -2331,7 +3826,19 @@
         }
       }
     },
+    "PC Key Mappings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PC-Tastenzuordnungen"
+          }
+        }
+      }
+    },
     "Picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2342,6 +3849,7 @@
       }
     },
     "Picture rate" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2352,6 +3860,7 @@
       }
     },
     "Picture rate and data" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2362,6 +3871,7 @@
       }
     },
     "Pinch: zoom, moving the fingers moves the picture. Three fingers: move the zoomed picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2403,6 +3913,7 @@
       }
     },
     "Pointer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2412,7 +3923,19 @@
         }
       }
     },
+    "Pointer Lock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigersperre"
+          }
+        }
+      }
+    },
     "Pointer speed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2432,6 +3955,28 @@
         }
       }
     },
+    "Preparing Remote Cursors…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernte Zeiger werden vorbereitet …"
+          }
+        }
+      }
+    },
+    "Press Gesture" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drückgeste"
+          }
+        }
+      }
+    },
     "Public key" : {
       "localizations" : {
         "de" : {
@@ -2443,6 +3988,7 @@
       }
     },
     "Quality" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2453,6 +3999,7 @@
       }
     },
     "Quit app" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2462,7 +4009,63 @@
         }
       }
     },
+    "Raising the resolution by scaling reduces sharpness and increases bandwidth use and picture latency." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine durch Skalierung erhöhte Auflösung verringert die Schärfe und erhöht Bandbreitenbedarf und Bildlatenz."
+          }
+        }
+      }
+    },
+    "Receive Audio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio empfangen"
+          }
+        }
+      }
+    },
+    "Receive Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage empfangen"
+          }
+        }
+      }
+    },
+    "Receiving “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird empfangen"
+          }
+        }
+      }
+    },
+    "Reconnecting…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut verbinden …"
+          }
+        }
+      }
+    },
     "Reload" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2472,12 +4075,123 @@
         }
       }
     },
+    "Remember Password" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort merken"
+          }
+        }
+      }
+    },
     "Remote screen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entfernter Bildschirm"
+          }
+        }
+      }
+    },
+    "Remote Style" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernter Stil"
+          }
+        }
+      }
+    },
+    "Remove from Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus der Symbolleiste entfernen"
+          }
+        }
+      }
+    },
+    "Replace" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzen"
+          }
+        }
+      }
+    },
+    "Reset to Default" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset Toolbar?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste zurücksetzen?"
+          }
+        }
+      }
+    },
+    "Resolution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auflösung"
+          }
+        }
+      }
+    },
+    "Resolution…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auflösung …"
+          }
+        }
+      }
+    },
+    "Restore Defaults" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard wiederherstellen"
           }
         }
       }
@@ -2488,6 +4202,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retina-Schärfe"
+          }
+        }
+      }
+    },
+    "Return" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilenschalter"
           }
         }
       }
@@ -2508,6 +4233,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sofort"
+          }
+        }
+      }
+    },
+    "Right-Click" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechtsklick"
           }
         }
       }
@@ -2543,11 +4279,23 @@
       }
     },
     "Saves data" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spart Daten"
+          }
+        }
+      }
+    },
+    "Scaling" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skalieren"
           }
         }
       }
@@ -2578,6 +4326,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm kopiert"
+          }
+        }
+      }
+    },
+    "Screen of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm von %@"
           }
         }
       }
@@ -2613,6 +4372,7 @@
       }
     },
     "Screen statistics" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2623,6 +4383,7 @@
       }
     },
     "Screenshot of an area" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2653,6 +4414,7 @@
       }
     },
     "Select all" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2668,6 +4430,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alles auswählen"
+          }
+        }
+      }
+    },
+    "Send Audio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio senden"
+          }
+        }
+      }
+    },
+    "Send Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage senden"
           }
         }
       }
@@ -2692,12 +4476,45 @@
         }
       }
     },
+    "Send to Desktop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An den Schreibtisch senden"
+          }
+        }
+      }
+    },
     "Sending …" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sende …"
+          }
+        }
+      }
+    },
+    "Sending “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird gesendet"
+          }
+        }
+      }
+    },
+    "Sends" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendet"
           }
         }
       }
@@ -2752,7 +4569,29 @@
         }
       }
     },
+    "Share the Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm freigeben"
+          }
+        }
+      }
+    },
     "Shift" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umschalttaste"
+          }
+        }
+      }
+    },
+    "Shift Key" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2772,12 +4611,24 @@
         }
       }
     },
-    "Shortcuts" : {
+    "Shortcut" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tastenkürzel"
+            "value" : "Kurzbefehl"
+          }
+        }
+      }
+    },
+    "Shortcuts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurzbefehle"
           }
         }
       }
@@ -2788,6 +4639,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tastatur einblenden"
+          }
+        }
+      }
+    },
+    "Show or Hide Keyboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastatur ein- oder ausblenden"
           }
         }
       }
@@ -2813,11 +4675,67 @@
       }
     },
     "Show the screen's toolbar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Werkzeugleiste des Bildschirms zeigen"
+          }
+        }
+      }
+    },
+    "Show Tips" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipps anzeigen"
+          }
+        }
+      }
+    },
+    "Show Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste einblenden"
+          }
+        }
+      }
+    },
+    "Show/Hide Keyboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastatur ein-/ausblenden"
+          }
+        }
+      }
+    },
+    "Show/Hide Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste ein-/ausblenden"
+          }
+        }
+      }
+    },
+    "Sign In" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmelden"
           }
         }
       }
@@ -2863,6 +4781,7 @@
       }
     },
     "Size" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2893,6 +4812,7 @@
       }
     },
     "Smooth" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2902,7 +4822,73 @@
         }
       }
     },
+    "Some Characters Can’t Be Typed on “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Zeichen können auf „%@“ nicht eingegeben werden"
+          }
+        }
+      }
+    },
+    "Someone at the Mac needs to accept." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jemand am Mac muss die Anfrage annehmen."
+          }
+        }
+      }
+    },
+    "Sound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton"
+          }
+        }
+      }
+    },
+    "Source Code" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quellcode"
+          }
+        }
+      }
+    },
+    "Source code of Open Screen Sharing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quellcode von Open Screen Sharing"
+          }
+        }
+      }
+    },
+    "Space" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leertaste"
+          }
+        }
+      }
+    },
     "Spotlight" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2982,6 +4968,17 @@
         }
       }
     },
+    "Starting High Performance…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochleistungsmodus wird gestartet …"
+          }
+        }
+      }
+    },
     "Stay in touch with your agent's Mac, wherever you are." : {
       "localizations" : {
         "de" : {
@@ -3013,6 +5010,7 @@
       }
     },
     "Switch app" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3029,6 +5027,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wechselt, was ein Finger auf dem Bildschirm macht"
+          }
+        }
+      }
+    },
+    "Sync Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage synchronisieren"
+          }
+        }
+      }
+    },
+    "System" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
           }
         }
       }
@@ -3065,6 +5085,7 @@
       }
     },
     "Tap: click where the pointer is. Tap twice: double click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3086,6 +5107,7 @@
       }
     },
     "Tap: click where you tap. Tap twice: double click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3111,6 +5133,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Terminaltasten"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
           }
         }
       }
@@ -3245,6 +5278,17 @@
         }
       }
     },
+    "The item isn’t available on the Mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Objekt ist auf dem Mac nicht verfügbar"
+          }
+        }
+      }
+    },
     "The key isn't available." : {
       "localizations" : {
         "de" : {
@@ -3261,6 +5305,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Schlüssel dieses Rechners hat sich geändert"
+          }
+        }
+      }
+    },
+    "The Mac account for screen sharing is missing." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac-Account für die Bildschirmfreigabe fehlt."
           }
         }
       }
@@ -3285,6 +5339,17 @@
         }
       }
     },
+    "The Mac can’t write to the folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac kann nicht in den Ordner schreiben"
+          }
+        }
+      }
+    },
     "The Mac didn't accept the account name or password for screen sharing." : {
       "localizations" : {
         "de" : {
@@ -3301,6 +5366,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac hat nicht geantwortet. Prüfe, ob das iPhone im selben Netzwerk ist wie der Mac und ob der Kopplungscode noch angezeigt wird."
+          }
+        }
+      }
+    },
+    "The Mac doesn’t allow file transfers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac erlaubt keine Dateiübertragungen"
+          }
+        }
+      }
+    },
+    "The Mac doesn’t have permission to read the item" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac hat keine Berechtigung zum Lesen des Objekts"
+          }
+        }
+      }
+    },
+    "The Mac doesn’t support file transfers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac unterstützt keine Dateiübertragungen"
           }
         }
       }
@@ -3365,6 +5463,17 @@
         }
       }
     },
+    "The Mac’s disk is full" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Festplatte des Mac ist voll"
+          }
+        }
+      }
+    },
     "The Mac's key is unknown." : {
       "localizations" : {
         "de" : {
@@ -3376,6 +5485,7 @@
       }
     },
     "The Mac's screen isn't shared. Turn on Screen Sharing on the Mac in System Settings > General > Sharing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3411,6 +5521,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Seite fragt nach dem Benutzernamen."
+          }
+        }
+      }
+    },
+    "The password is incorrect." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Passwort ist falsch."
           }
         }
       }
@@ -3486,11 +5607,22 @@
       }
     },
     "The screen connection ended." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Bildschirmverbindung ist beendet."
+          }
+        }
+      }
+    },
+    "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac, and aOS's sign-in replaces the app's own." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirm des Arbeitsplatzes und des Macs beruht auf Open Screen Sharing von nekohasekai, verwendet unter der GNU General Public License, Version 3. aOS hat es für sich angepasst: Die Bildschirme kommen über die Verbindung zu deinem Mac, und die Anmeldung von aOS ersetzt die eigene der App."
           }
         }
       }
@@ -3515,6 +5647,17 @@
         }
       }
     },
+    "The user name or password is incorrect." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Benutzername oder das Passwort ist falsch."
+          }
+        }
+      }
+    },
     "The workspace" : {
       "localizations" : {
         "de" : {
@@ -3526,11 +5669,22 @@
       }
     },
     "The workspace didn't accept the screen sharing login." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz hat die Anmeldung der Bildschirmfreigabe nicht angenommen."
+          }
+        }
+      }
+    },
+    "The workspace in the iPhone's shape" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz in der Form des iPhones"
           }
         }
       }
@@ -3556,6 +5710,7 @@
       }
     },
     "The workspace screen isn't available. Is the workspace open?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3591,6 +5746,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Code stammt von einem neueren aOS. Aktualisiere die App auf diesem iPhone."
+          }
+        }
+      }
+    },
+    "This computer only offers an older sign-in method that can’t confirm its identity. If another device is pretending to be this computer, it could see your password." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Computer bietet nur eine ältere Anmeldemethode an, die seine Identität nicht bestätigen kann. Wenn sich ein anderes Gerät als dieser Computer ausgibt, könnte es dein Passwort sehen."
+          }
+        }
+      }
+    },
+    "This Device Can’t Play High Performance Video" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Gerät kann kein Video im Hochleistungsmodus wiedergeben"
+          }
+        }
+      }
+    },
+    "This device can’t read or write the file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Gerät kann die Datei nicht lesen oder schreiben"
+          }
+        }
+      }
+    },
+    "This Device Can’t Show HDR" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Gerät kann kein HDR anzeigen"
           }
         }
       }
@@ -3645,6 +5844,28 @@
         }
       }
     },
+    "This is expected after the computer is reinstalled or renews its certificate. If neither happened, another device may be pretending to be this computer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist normal, nachdem der Computer neu installiert wurde oder sein Zertifikat erneuert hat. Wenn beides nicht der Fall ist, gibt sich möglicherweise ein anderes Gerät als dieser Computer aus."
+          }
+        }
+      }
+    },
+    "This is expected after the Mac is reinstalled. If it wasn’t, another device may be pretending to be this Mac." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist normal, nachdem der Mac neu installiert wurde. Wenn das nicht der Fall ist, gibt sich möglicherweise ein anderes Gerät als dieser Mac aus."
+          }
+        }
+      }
+    },
     "This request couldn't be signed." : {
       "localizations" : {
         "de" : {
@@ -3665,6 +5886,17 @@
         }
       }
     },
+    "Tips" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipps"
+          }
+        }
+      }
+    },
     "To log in to another computer with this iPhone's key, add this line to ~/.ssh/authorized_keys there. The public key isn't secret." : {
       "localizations" : {
         "de" : {
@@ -3676,6 +5908,7 @@
       }
     },
     "Touch" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3686,6 +5919,7 @@
       }
     },
     "Touch (one finger touches the screen)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3695,7 +5929,19 @@
         }
       }
     },
+    "Touch and hold anywhere on the screen for a while to simulate a press." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte eine beliebige Stelle auf dem Bildschirm eine Weile gedrückt, um ein Drücken zu simulieren."
+          }
+        }
+      }
+    },
     "Touch and hold, then move: drag (select, move windows)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3706,6 +5952,7 @@
       }
     },
     "Touch and hold: right click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3716,6 +5963,7 @@
       }
     },
     "Touches directly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3726,6 +5974,7 @@
       }
     },
     "Trackpad" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3736,6 +5985,7 @@
       }
     },
     "Trackpad (one finger moves the pointer)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3797,6 +6047,7 @@
       }
     },
     "Two fingers: scroll (it glides on after a flick)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3818,11 +6069,34 @@
       }
     },
     "Two-finger tap: right click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit zwei Fingern tippen: Rechtsklick"
+          }
+        }
+      }
+    },
+    "Type Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taste eingeben"
+          }
+        }
+      }
+    },
+    "Type Shortcut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurzbefehl eingeben"
           }
         }
       }
@@ -3838,11 +6112,23 @@
       }
     },
     "Undo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Widerrufen"
+          }
+        }
+      }
+    },
+    "Unlock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperren"
           }
         }
       }
@@ -3987,6 +6273,17 @@
         }
       }
     },
+    "User Name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzername"
+          }
+        }
+      }
+    },
     "User name or email" : {
       "localizations" : {
         "de" : {
@@ -4007,12 +6304,46 @@
         }
       }
     },
+    "View" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darstellung"
+          }
+        }
+      }
+    },
     "Viewer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ansicht"
+          }
+        }
+      }
+    },
+    "Virtual Display" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Virtuelles Display"
+          }
+        }
+      }
+    },
+    "Waiting for Permission…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf Erlaubnis …"
           }
         }
       }
@@ -4037,12 +6368,68 @@
         }
       }
     },
+    "When Magic Keyboard is connected, you can also use %@ Dictation and the %@ emoji keyboard on this iPad." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn das Magic Keyboard verbunden ist, kannst du auf diesem iPad auch das Diktat %1$@ und die Emoji-Tastatur %2$@ verwenden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When Magic Keyboard is connected, you can also use %1$@ Dictation and the %2$@ emoji keyboard on this iPad."
+          }
+        }
+      }
+    },
+    "When using a mouse or trackpad, turn on %@ › %@ so moving to the edge of the screen won’t open the Dock or Control Center." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn du eine Maus oder ein Trackpad verwendest, aktiviere „%1$@“ > „%2$@“, damit sich am Bildschirmrand nicht das Dock oder das Kontrollzentrum öffnet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When using a mouse or trackpad, turn on %1$@ › %2$@ so moving to the edge of the screen won’t open the Dock or Control Center."
+          }
+        }
+      }
+    },
+    "While you watch it, the workspace's display takes the iPhone's shape and fills the screen. Retina draws it twice as sharp with more data. Applies the next time the workspace screen opens." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während du zusiehst, nimmt der Bildschirm des Arbeitsplatzes die Form des iPhones an und füllt das Display. Retina zeichnet ihn doppelt so scharf, mit mehr Daten. Gilt ab dem nächsten Öffnen des Arbeitsplatzes."
+          }
+        }
+      }
+    },
     "While you watch, the workspace's screen takes the shape of your iPhone, upright or sideways. It gets its own size back when you stop. Retina draws twice the pixels: sharper, more data." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Während du zusiehst, nimmt der Bildschirm des Arbeitsplatzes die Form deines iPhones an, hochkant oder quer. Wenn du aufhörst, bekommt er seine eigene Größe zurück. Retina zeichnet doppelt so viele Pixel: schärfer, mehr Daten."
+          }
+        }
+      }
+    },
+    "Windows Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows-Taste"
           }
         }
       }
@@ -4083,6 +6470,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anfrage für den Arbeitsplatz"
+          }
+        }
+      }
+    },
+    "You Can’t Control Your Own Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigener Bildschirm kann nicht gesteuert werden"
+          }
+        }
+      }
+    },
+    "Your account is logged in at the Mac." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Account ist auf dem Mac angemeldet."
           }
         }
       }
@@ -4197,12 +6606,57 @@
         }
       }
     },
+    "Zoom Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoommodus"
+          }
+        }
+      }
+    },
     "Zoom out" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Herauszoomen"
+          }
+        }
+      }
+    },
+    "Zoom to Actual Size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Originalgröße zoomen"
+          }
+        }
+      }
+    },
+    "Zoom to Fit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größe anpassen"
+          }
+        }
+      }
+    },
+    "Zoom to Fit / Actual Size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größe anpassen / Originalgröße"
           }
         }
       }
