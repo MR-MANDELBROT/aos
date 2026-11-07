@@ -10,6 +10,7 @@ enum MacAction: String, Sendable, CaseIterable {
     case displayOff = "mac.display-off"
     case displayOn = "mac.display-on"
     case stayAwake = "mac.stay-awake"
+    case batteryLimit = "mac.battery-limit"
     case workspaceStart = "workspace.start"
     case workspaceStop = "workspace.stop"
     case bitwardenLock = "bitwarden.lock"
@@ -54,6 +55,9 @@ struct MacStatus: Equatable, Sendable {
         var helper: String
         /// Another service owns sleep on this Mac.
         var otherService: Bool
+        /// On battery with the lid closed: awake down to this level (0: no limit); nil from an older Mac.
+        var batteryLimit: Int? = nil
+        var batteryLimits: [Int] = []
     }
 
     struct Workspace: Equatable, Sendable {
@@ -120,7 +124,8 @@ struct MacStatus: Equatable, Sendable {
         if let a = o["awake"]?.object, let setting = a["setting"]?.string.flatMap(MacStayAwake.init(rawValue:)) {
             awake = Awake(setting: setting, holding: a["holding"]?.bool ?? false, lidClosedMode: a["lidClosedMode"]?.bool ?? false,
                           blocker: a["blocker"]?.string, helper: a["helper"]?.string ?? "notRegistered",
-                          otherService: a["otherService"]?.bool ?? false)
+                          otherService: a["otherService"]?.bool ?? false, batteryLimit: a["batteryLimit"]?.int,
+                          batteryLimits: a["batteryLimits"]?.array?.compactMap(\.int) ?? [])
         }
         if let w = o["workspace"]?.object {
             workspace = Workspace(state: w["state"]?.string ?? "stopped", setupComplete: w["setupComplete"]?.bool ?? true,

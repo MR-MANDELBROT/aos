@@ -17,6 +17,11 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// prevented), or also with the lid closed (aOS's background helper; other apps freeze meanwhile).
     /// Settings written before this existed carry `keepAwake` (true: while the lid is open).
     public var stayAwake: StayAwake = .lidOpen
+    /// With the lid closed on battery, the Mac stays awake down to this battery level (percent), then sleeps as
+    /// usual. 0: no limit (only the helper's emergency floor, `HoldPolicy.floorPercent`, so it doesn't die).
+    public var stayAwakeMinBattery: Int = AwakePolicy.minBatteryPercent
+    /// The levels the settings offer (0: no limit).
+    public static let stayAwakeMinBatteryChoices = [0, 5, 10, 20, 30, 50]
     /// How the Mac joins the user's iPhone hotspot; nil until the user answered the question (then aOS leaves
     /// macOS's own settings alone).
     public var hotspotJoin: HotspotJoin?
@@ -76,6 +81,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case newChats, newChatsFolder, signOutWebsites, shareApplications
         case bitwardenLockHours
         case reachWay
+        case stayAwakeMinBattery
     }
 
     /// Keys of earlier versions, read once and written in their new form.
@@ -114,6 +120,8 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         shareApplications = try c.decodeIfPresent(Bool.self, forKey: .shareApplications) ?? d.shareApplications
         bitwardenLockHours = min(max(try c.decodeIfPresent(Int.self, forKey: .bitwardenLockHours) ?? d.bitwardenLockHours, 0), 24)
         reachWay = try? c.decodeIfPresent(ReachWay.self, forKey: .reachWay)
+        stayAwakeMinBattery = min(max(try c.decodeIfPresent(Int.self, forKey: .stayAwakeMinBattery) ?? d.stayAwakeMinBattery,
+                                      0), 90)
     }
 
     /// The folder new chats from the Claude app start in.

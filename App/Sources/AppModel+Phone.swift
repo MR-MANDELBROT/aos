@@ -9,7 +9,8 @@ extension AppModel: MacControls {
         MacAwakeStatus(setting: settings.stayAwake, holding: power.holding,
                        lidClosedMode: power.decision.lidClosedMode && power.holding,
                        blocker: power.decision.blocker?.rawValue, helper: Self.helperName(power.helperStatus),
-                       otherService: power.cloupiPresent)
+                       otherService: power.cloupiPresent, batteryLimit: settings.stayAwakeMinBattery,
+                       batteryLimits: AgentSettings.stayAwakeMinBatteryChoices)
     }
 
     func sleepMac() async -> MacSleepResult {
@@ -22,6 +23,12 @@ extension AppModel: MacControls {
         update { $0.stayAwake = mode }
         // With the lid closed only the background helper holds the Mac; macOS asks the person once to allow it.
         if mode == .lidClosed { power.ensureHelperRegistered() }
+        return nil
+    }
+
+    func setBatteryLimit(_ percent: Int) -> MacControlRefusal? {
+        guard !power.cloupiPresent else { return .otherService }
+        update { $0.stayAwakeMinBattery = percent }
         return nil
     }
 

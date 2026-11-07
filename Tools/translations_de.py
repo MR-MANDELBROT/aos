@@ -765,4 +765,8 @@ DE.update({
     "key doesn't expire": "Schlüssel läuft nicht ab",
     "key expires %@": "Schlüssel läuft ab am %@",
     "Away from your Wi-Fi, the iPhone reaches this Mac through Tailscale: your own Tailscale app, or the one %@ sets up. Choose the way under Connection.": "Außerhalb deines WLANs erreicht das iPhone diesen Mac über Tailscale: deine eigene Tailscale-App oder das Tailscale, das %@ einrichtet. Den Weg wählst du unter „Verbindung“.",
+    "On battery, stay awake down to": "Im Akkubetrieb wach bis",
+    "The Mac also stays awake with the lid closed, on battery too. Meanwhile %@ freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. On battery it stays awake down to the level you choose below; then, or when it gets too hot, the Mac sleeps.": "Der Mac bleibt auch mit geschlossenem Deckel wach, auch im Akkubetrieb. Solange friert %@ deine anderen Apps ein und schaltet den Bildschirm aus; wenn du den Deckel aufklappst, läuft alles weiter. Claude, Terminals, Code-Editoren und deine Agents arbeiten weiter. Im Akkubetrieb bleibt er bis zu dem Akkustand wach, den du unten wählst; dann, oder wenn er zu heiß wird, schläft der Mac.",
+    "Battery below %lld percent: the Mac may sleep now.": "Akku unter %lld Prozent: Der Mac darf jetzt schlafen.",
+    "No limit": "Kein Limit",
 })

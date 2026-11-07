@@ -30,6 +30,8 @@ final class CompanionControlTests: XCTestCase {
         /// Never the real display: the tests run on a Mac someone uses.
         var displays: [Bool] = []
         func setDisplay(on: Bool) async { displays.append(on) }
+        var batteryLimit = 10
+        func setBatteryLimit(_ percent: Int) -> MacControlRefusal? { batteryLimit = percent; return nil }
     }
 
     final class LogBox: @unchecked Sendable { var lines: [String] = [] }

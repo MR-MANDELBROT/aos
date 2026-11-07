@@ -273,8 +273,13 @@ struct BitwardenSettings: View {
             LabeledContent("Status") {
                 Label("Locked", systemImage: "lock.fill").foregroundStyle(.secondary)
             }
-            HStack {
-                SecureField("Master password", text: $password)
+            // A visible field of its own: in the form a SecureField's title becomes the row's label and the field
+            // itself a borderless strip beside the button, so nobody saw where to type.
+            HStack(spacing: 10) {
+                SecureField("", text: $password, prompt: Text("Master password"))
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: .infinity)
                     .textContentType(.password)
                     .focused($focus, equals: .password)
                     .onSubmit(unlock)

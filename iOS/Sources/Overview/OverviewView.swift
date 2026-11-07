@@ -363,6 +363,26 @@ private struct MacStatusRows: View {
                         .disabled(actions.running != nil)
                     }
                 }
+                // On the go: down to which battery level the Mac stays awake with the lid closed.
+                if !awake.otherService, awake.setting == .lidClosed, let limit = awake.batteryLimit, !awake.batteryLimits.isEmpty {
+                    OverviewRow(symbol: "battery.50", title: String(localized: "On battery, awake down to"),
+                                detail: MacStatusText.batteryLimitDetail(limit)) {
+                        Menu {
+                            Picker("On battery, awake down to", selection: Binding(get: { limit }, set: { p in
+                                actions.run(.batteryLimit, value: String(p), on: connection)
+                            })) {
+                                ForEach(awake.batteryLimits, id: \.self) { p in Text(MacStatusText.batteryLimitName(p)).tag(p) }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(MacStatusText.batteryLimitName(limit))
+                                Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                            }
+                            .font(.subheadline)
+                        }
+                        .disabled(actions.running != nil)
+                    }
+                }
             }
         }
     }
@@ -370,6 +390,15 @@ private struct MacStatusRows: View {
 
 /// The Mac's status in words (and symbols), kept apart from the views for the tests.
 enum MacStatusText {
+    static func batteryLimitName(_ percent: Int) -> String {
+        percent == 0 ? String(localized: "No limit") : "\(percent) %"
+    }
+
+    static func batteryLimitDetail(_ percent: Int) -> String {
+        percent == 0 ? String(localized: "Until the battery is almost empty (2 percent).")
+            : String(localized: "Below that the Mac sleeps as usual.")
+    }
+
     static func batterySymbol(_ p: MacStatus.Power) -> String {
         guard let level = p.battery else { return "powerplug" }
         if p.charging == true { return "battery.100percent.bolt" }
@@ -457,7 +486,7 @@ enum MacStatusText {
     static func awakeDetail(_ a: MacStatus.Awake) -> String {
         if a.otherService { return String(localized: "Another service takes care of this on the Mac.") }
         switch a.blocker {
-        case "lowBattery": return String(localized: "Battery below 10 percent: the Mac may sleep now.")
+        case "lowBattery": return String(localized: "Battery below the level set on the Mac: it may sleep now.")
         case "thermal": return String(localized: "The Mac is too hot: it may sleep now.")
         case "nothingToKeep": return String(localized: "Nothing to keep reachable right now: the Mac sleeps as usual.")
         case "helperNotReady":

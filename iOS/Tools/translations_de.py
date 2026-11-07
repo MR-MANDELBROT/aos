@@ -784,4 +784,13 @@ DE.update({
     "Only on the same network: on the go the iPhone doesn't reach this Mac.":
         'Nur im selben Netzwerk: Unterwegs erreicht das iPhone diesen Mac nicht.',
     'Set Up Tailscale for on the Go': 'Tailscale für unterwegs einrichten',
+    'Battery below the level set on the Mac: it may sleep now.': 'Akku unter dem Stand, der auf dem Mac eingestellt ist: Er darf jetzt schlafen.',
+    'On battery, awake down to': 'Im Akkubetrieb wach bis',
+    'No limit': 'Kein Limit',
+    'Until the battery is almost empty (2 percent).': 'Bis der Akku fast leer ist (2 Prozent).',
+    'Below that the Mac sleeps as usual.': 'Darunter schläft der Mac wie gewohnt.',
+    'it failed a few minutes ago; tried again after 10 minutes': 'er ist vor ein paar Minuten gescheitert; nach 10 Minuten wird es wieder versucht',
+    "the Mac's screen sharing key couldn't be learned": 'der Schlüssel der Bildschirmfreigabe des Macs ließ sich nicht lernen',
+    'the Mac refused the login': 'der Mac hat die Anmeldung abgelehnt',
+    'the check through SSH failed': 'die Prüfung über SSH ist gescheitert',
 })

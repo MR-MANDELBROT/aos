@@ -17,10 +17,12 @@ public struct AwakeFacts: Equatable, Sendable {
     public var cloupiPresent: Bool
     /// aOS's background helper is registered and allowed (SMAppService status enabled).
     public var helperReady: Bool
+    /// The person's level: on battery below it, the lid-closed hold rests (AgentSettings.stayAwakeMinBattery).
+    public var minBatteryPercent: Int
 
     public init(setting: StayAwake, needed: Bool, lidClosed: Bool?, onAC: Bool, batteryPercent: Int?,
                 thermalCritical: Bool = false, externalDisplay: Bool = false, cloupiPresent: Bool = false,
-                helperReady: Bool) {
+                helperReady: Bool, minBatteryPercent: Int = AwakePolicy.minBatteryPercent) {
         self.setting = setting
         self.needed = needed
         self.lidClosed = lidClosed
@@ -30,6 +32,7 @@ public struct AwakeFacts: Equatable, Sendable {
         self.externalDisplay = externalDisplay
         self.cloupiPresent = cloupiPresent
         self.helperReady = helperReady
+        self.minBatteryPercent = max(minBatteryPercent, HoldPolicy.floorPercent)
     }
 }
 
@@ -41,7 +44,8 @@ public enum AwakeBlocker: String, Equatable, Sendable {
     case nothingToKeep
     /// "Also with the lid closed" needs the background helper, which isn't registered or allowed yet.
     case helperNotReady
-    /// On battery below `AwakePolicy.minBatteryPercent`: the Mac may sleep, so the battery doesn't run flat.
+    /// On battery below the person's level (`AwakeFacts.minBatteryPercent`): the Mac may sleep, so the battery
+    /// doesn't run flat.
     case lowBattery
     /// The Mac is too hot (in a bag): it may sleep.
     case thermal
@@ -68,7 +72,8 @@ public struct AwakeDecision: Equatable, Sendable {
 
 /// The app's side: pure, tested in AwakePolicyTests.
 public enum AwakePolicy {
-    /// Below this, on battery, the lid-closed hold rests (the Mac sleeps as usual), like Cloupi's "Wach bleiben".
+    /// The default level: below it, on battery, the lid-closed hold rests (the Mac sleeps as usual), like Cloupi's
+    /// "Wach bleiben". The person can choose another one (AgentSettings.stayAwakeMinBattery).
     public static let minBatteryPercent = 10
 
     public static func decide(_ f: AwakeFacts) -> AwakeDecision {
@@ -80,7 +85,7 @@ public enum AwakePolicy {
         guard f.setting == .lidClosed else { return d }
         if !f.helperReady {
             d.blocker = .helperNotReady
-        } else if !f.onAC, let p = f.batteryPercent, p < minBatteryPercent {
+        } else if !f.onAC, let p = f.batteryPercent, p < f.minBatteryPercent {
             d.blocker = .lowBattery
         } else if f.thermalCritical {
             d.blocker = .thermal
@@ -99,13 +104,17 @@ public enum HoldPolicy {
     public static let maxLeaseSeconds = 180
     /// How often the app renews.
     public static let renewSeconds: TimeInterval = 30
+    /// The helper's own emergency floor, whatever the app asks: below it on battery the Mac always sleeps, so it
+    /// doesn't run flat and switch off hard (with the workspace running). The person's level is the app's (it stops
+    /// renewing the lease below it); "no limit" means this floor.
+    public static let floorPercent = 2
 
     public static func clampedLease(_ seconds: Int) -> Int { min(max(seconds, 0), maxLeaseSeconds) }
 
     public static func shouldHold(leaseUntil: Date?, now: Date, cloupiPresent: Bool, onAC: Bool,
                                   batteryPercent: Int?, thermalCritical: Bool) -> Bool {
         guard let until = leaseUntil, until > now, !cloupiPresent, !thermalCritical else { return false }
-        if !onAC, let p = batteryPercent, p < AwakePolicy.minBatteryPercent { return false }
+        if !onAC, let p = batteryPercent, p < floorPercent { return false }
         return true
     }
 

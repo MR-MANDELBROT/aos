@@ -1034,7 +1034,18 @@
         }
       }
     },
+    "Battery below %lld percent: the Mac may sleep now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akku unter %lld Prozent: Der Mac darf jetzt schlafen."
+          }
+        }
+      }
+    },
     "Battery below 10 percent: the Mac may sleep now." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2204,6 +2215,7 @@
       }
     },
     "Finishing the workspace" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2756,6 +2768,7 @@
       }
     },
     "Later" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3263,6 +3276,16 @@
         }
       }
     },
+    "No limit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Limit"
+          }
+        }
+      }
+    },
     "No login for this website in Bitwarden." : {
       "localizations" : {
         "de" : {
@@ -3536,6 +3559,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "bei %@. Gib auf deinem iPhone oder hier frei."
+          }
+        }
+      }
+    },
+    "On battery, stay awake down to" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Akkubetrieb wach bis"
           }
         }
       }
@@ -5402,11 +5435,22 @@
       }
     },
     "The Mac also stays awake with the lid closed, on battery too. Meanwhile %@ freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. Below 10 percent battery, or when it gets too hot, the Mac sleeps." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac bleibt auch mit geschlossenem Deckel wach, auch im Akkubetrieb. Solange friert %@ deine anderen Apps ein und schaltet den Bildschirm aus; klappst du ihn auf, läuft alles weiter. Claude, Terminals, Code-Editoren und deine Agents laufen weiter. Unter 10 Prozent Akku oder wenn er zu heiß wird, schläft der Mac."
+          }
+        }
+      }
+    },
+    "The Mac also stays awake with the lid closed, on battery too. Meanwhile %@ freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. On battery it stays awake down to the level you choose below; then, or when it gets too hot, the Mac sleeps." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac bleibt auch mit geschlossenem Deckel wach, auch im Akkubetrieb. Solange friert %@ deine anderen Apps ein und schaltet den Bildschirm aus; wenn du den Deckel aufklappst, läuft alles weiter. Claude, Terminals, Code-Editoren und deine Agents arbeiten weiter. Im Akkubetrieb bleibt er bis zu dem Akkustand wach, den du unten wählst; dann, oder wenn er zu heiß wird, schläft der Mac."
           }
         }
       }
