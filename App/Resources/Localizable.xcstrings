@@ -92,6 +92,22 @@
         }
       }
     },
+    "%@ brings Tailscale along, on this Mac and in %@ on your iPhone: no VPN, no extra app. You sign in once on each device, in the browser, with your Tailscale account (you can create one there). In your tailnet only this Mac's SSH is reachable, nothing else." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ bringt Tailscale mit, auf diesem Mac und in %2$@ auf deinem iPhone: kein VPN, keine zusätzliche App. Du meldest dich auf jedem Gerät einmal im Browser mit deinem Tailscale-Konto an (dort kannst du auch eins anlegen). In deinem Tailnet ist von diesem Mac nur SSH erreichbar, sonst nichts."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ brings Tailscale along, on this Mac and in %2$@ on your iPhone: no VPN, no extra app. You sign in once on each device, in the browser, with your Tailscale account (you can create one there). In your tailnet only this Mac's SSH is reachable, nothing else."
+          }
+        }
+      }
+    },
     "%@ changes this in macOS's Wi-Fi settings for you." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -119,6 +135,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ legt den virtuellen Mac an und installiert macOS darin. Das dauert etwa 10 Minuten; du kannst so lange weiterarbeiten."
+          }
+        }
+      }
+    },
+    "%@ devices" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geräte von %@"
           }
         }
       }
@@ -183,6 +209,16 @@
         }
       }
     },
+    "%@ only reads the Tailscale app's status and never changes its settings." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ liest nur den Zustand der Tailscale-App und ändert nie ihre Einstellungen."
+          }
+        }
+      }
+    },
     "%@ paired, not connected now" : {
       "localizations" : {
         "de" : {
@@ -205,6 +241,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ runs Bitwarden's official command line tool as a program of its own and checks Bitwarden's signature before using it. It isn't part of %2$@."
+          }
+        }
+      }
+    },
+    "%@ sets up Tailscale" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ richtet Tailscale ein"
           }
         }
       }
@@ -291,6 +337,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eigene Sitzung von %@"
+          }
+        }
+      }
+    },
+    "%@'s Tailscale runs in its background helper. Allow it in %@'s settings (General)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Tailscale von %1$@ läuft in seinem Hintergrunddienst. Erlaube ihn in den Einstellungen von %2$@ (Allgemein)."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@'s Tailscale runs in its background helper. Allow it in %2$@'s settings (General)."
           }
         }
       }
@@ -496,6 +558,16 @@
         }
       }
     },
+    "Address" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse"
+          }
+        }
+      }
+    },
     "After %lld hours" : {
       "localizations" : {
         "de" : {
@@ -512,6 +584,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nach 1 Stunde"
+          }
+        }
+      }
+    },
+    "After you change the way, pair your iPhone again: the pairing code tells it how to reach this Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn du den Weg änderst, kopple dein iPhone neu: Der Kopplungscode sagt ihm, wie es diesen Mac erreicht."
           }
         }
       }
@@ -818,6 +900,26 @@
         }
       }
     },
+    "At home your iPhone reaches this Mac by itself. On the go it goes through Tailscale, a private network of your own devices." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu Hause erreicht dein iPhone diesen Mac von selbst. Unterwegs geht es über Tailscale, ein privates Netz deiner eigenen Geräte."
+          }
+        }
+      }
+    },
+    "At home your iPhone reaches this Mac by itself. On the go it needs a private network between your devices: %@ uses Tailscale for that. Choose how; you can change it later in the settings." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu Hause erreicht dein iPhone diesen Mac von selbst. Unterwegs braucht es ein privates Netz zwischen deinen Geräten: %@ nutzt dafür Tailscale. Wähle, wie; du kannst es später in den Einstellungen ändern."
+          }
+        }
+      }
+    },
     "At least 8 GB of memory are required (this Mac has %llu GB)." : {
       "localizations" : {
         "de" : {
@@ -892,11 +994,22 @@
       }
     },
     "Away from your Wi-Fi, the iPhone reaches this Mac through a VPN such as Tailscale. With it on both devices, the app finds the Mac by itself." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Außerhalb deines WLANs erreicht das iPhone diesen Mac über ein VPN wie Tailscale. Ist es auf beiden Geräten an, findet die App den Mac von selbst."
+          }
+        }
+      }
+    },
+    "Away from your Wi-Fi, the iPhone reaches this Mac through Tailscale: your own Tailscale app, or the one %@ sets up. Choose the way under Connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Außerhalb deines WLANs erreicht das iPhone diesen Mac über Tailscale: deine eigene Tailscale-App oder das Tailscale, das %@ einrichtet. Den Weg wählst du unter „Verbindung“."
           }
         }
       }
@@ -1207,6 +1320,16 @@
       }
     },
     "Check again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut prüfen"
+          }
+        }
+      }
+    },
+    "Check Again" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1602,12 +1725,38 @@
         }
       }
     },
+    "Connected: %@ (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden: %1$@ (%2$@)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connected: %1$@ (%2$@)"
+          }
+        }
+      }
+    },
     "Connecting your agents" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbinde deine Agents"
+          }
+        }
+      }
+    },
+    "Connection" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung"
           }
         }
       }
@@ -2316,6 +2465,22 @@
         }
       }
     },
+    "If you install the Tailscale app later and sign in with the same account, %@'s devices appear in the same tailnet, and you manage them there like any other device. The Tailscale app can't take over %@'s connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installierst du später die Tailscale-App und meldest dich mit demselben Konto an, erscheinen die Geräte von %1$@ im selben Tailnet, und du verwaltest sie dort wie jedes andere Gerät. Die Verbindung von %2$@ übernehmen kann die Tailscale-App nicht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "If you install the Tailscale app later and sign in with the same account, %1$@'s devices appear in the same tailnet, and you manage them there like any other device. The Tailscale app can't take over %2$@'s connection."
+          }
+        }
+      }
+    },
     "In the menu bar" : {
       "localizations" : {
         "de" : {
@@ -2540,6 +2705,56 @@
         }
       }
     },
+    "Key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel"
+          }
+        }
+      }
+    },
+    "key doesn't expire" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel läuft nicht ab"
+          }
+        }
+      }
+    },
+    "key expired" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel abgelaufen"
+          }
+        }
+      }
+    },
+    "key expires %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel läuft ab am %@"
+          }
+        }
+      }
+    },
+    "last seen %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zuletzt gesehen %@"
+          }
+        }
+      }
+    },
     "Last sync" : {
       "localizations" : {
         "de" : {
@@ -2656,6 +2871,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuestes macOS suchen"
+          }
+        }
+      }
+    },
+    "Looking for Tailscale …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suche nach Tailscale …"
           }
         }
       }
@@ -2856,6 +3081,16 @@
         }
       }
     },
+    "Name" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
+    },
     "Name in the Claude app" : {
       "localizations" : {
         "de" : {
@@ -2984,6 +3219,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neueste Aktivität zuerst, angeheftete ganz oben."
+          }
+        }
+      }
+    },
+    "No %@ devices in this tailnet yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Geräte von %@ in diesem Tailnet."
           }
         }
       }
@@ -3255,6 +3500,16 @@
         }
       }
     },
+    "offline" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "offline"
+          }
+        }
+      }
+    },
     "on" : {
       "localizations" : {
         "de" : {
@@ -3377,6 +3632,26 @@
         }
       }
     },
+    "online" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "online"
+          }
+        }
+      }
+    },
+    "Only on the same network (SSH)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur im selben Netzwerk (SSH)"
+          }
+        }
+      }
+    },
     "Only pinned ones" : {
       "localizations" : {
         "de" : {
@@ -3491,12 +3766,42 @@
         }
       }
     },
+    "Open the Admin Console" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwaltung öffnen"
+          }
+        }
+      }
+    },
     "Open the Claude app: the session \"%@\" appears with a computer icon." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffne die Claude-App: Die Sitzung „%@“ erscheint mit einem Computersymbol."
+          }
+        }
+      }
+    },
+    "Open the Sign-In Page Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldeseite noch einmal öffnen"
+          }
+        }
+      }
+    },
+    "Open the Tailscale Admin Console" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale-Verwaltung öffnen"
           }
         }
       }
@@ -3779,6 +4084,16 @@
         }
       }
     },
+    "Reaching this Mac on the go" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Mac unterwegs erreichen"
+          }
+        }
+      }
+    },
     "Ready" : {
       "localizations" : {
         "de" : {
@@ -3825,6 +4140,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Empfohlen: alle außer google.com. Die Anmeldungen deines Agents enden dann mit jeder Nutzung, und Google zeigt weniger Captchas."
+          }
+        }
+      }
+    },
+    "Reconnect" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu verbinden"
           }
         }
       }
@@ -4122,6 +4447,16 @@
         }
       }
     },
+    "Set Up Tailscale …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale einrichten …"
+          }
+        }
+      }
+    },
     "Setting up the workspace (installs Chrome, a few minutes)" : {
       "localizations" : {
         "de" : {
@@ -4308,6 +4643,26 @@
         }
       }
     },
+    "Sign in to Tailscale again: you signed out, or this Mac's key expired." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich wieder bei Tailscale an: Du hast dich abgemeldet, oder der Schlüssel dieses Macs ist abgelaufen."
+          }
+        }
+      }
+    },
+    "Sign in to Tailscale in your browser. %@ waits here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich im Browser bei Tailscale an. %@ wartet hier."
+          }
+        }
+      }
+    },
     "Sign Out" : {
       "localizations" : {
         "de" : {
@@ -4318,12 +4673,42 @@
         }
       }
     },
+    "Sign Out …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abmelden …"
+          }
+        }
+      }
+    },
+    "Sign out of Tailscale?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von Tailscale abmelden?"
+          }
+        }
+      }
+    },
     "Sign out of websites when it closes" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Websites beim Schließen abmelden"
+          }
+        }
+      }
+    },
+    "Sign Out removes this Mac from the tailnet and deletes its Tailscale keys. Its keys are kept by %@'s background helper, where no other program of yours can read them." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Abmelden“ nimmt diesen Mac aus dem Tailnet und löscht seine Tailscale-Schlüssel. Die Schlüssel verwahrt der Hintergrunddienst von %@, wo kein anderes Programm von dir sie lesen kann."
           }
         }
       }
@@ -4396,6 +4781,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bei Claude Code angemeldet"
+          }
+        }
+      }
+    },
+    "Signed in. The tailnet's admin still has to approve this Mac in the Tailscale admin console." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angemeldet. Die Verwaltung des Tailnets muss diesen Mac noch in der Tailscale-Verwaltung freigeben."
           }
         }
       }
@@ -4756,6 +5151,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Systemeinstellungen öffnen sich bei „Anmeldeobjekte & Erweiterungen“: Schalte dort unter „Im Hintergrund erlauben“ aOS ein."
+          }
+        }
+      }
+    },
+    "Tailnet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailnet"
+          }
+        }
+      }
+    },
+    "Tailnet: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailnet: %@"
+          }
+        }
+      }
+    },
+    "Tailscale is on this Mac but not connected. Open it and sign in, then click Check Again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale ist auf diesem Mac, aber nicht verbunden. Öffne es und melde dich an, dann klicke auf „Erneut prüfen“."
+          }
+        }
+      }
+    },
+    "Tailscale isn't on this Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale ist nicht auf diesem Mac."
+          }
+        }
+      }
+    },
+    "Tailscale runs on this Mac. %@ puts this Mac's Tailscale address into the pairing code. On your iPhone you need the Tailscale app too, signed in with the same account." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale läuft auf diesem Mac. %@ schreibt die Tailscale-Adresse dieses Macs in den Kopplungscode. Auf deinem iPhone brauchst du die Tailscale-App auch, angemeldet mit demselben Konto."
           }
         }
       }
@@ -5234,6 +5679,16 @@
         }
       }
     },
+    "this Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dieser Mac"
+          }
+        }
+      }
+    },
     "This Mac" : {
       "localizations" : {
         "de" : {
@@ -5260,6 +5715,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Mac kann keine virtuellen Maschinen ausführen. aOS braucht einen Mac mit Apple Silicon und kann nicht selbst in einer virtuellen Maschine laufen."
+          }
+        }
+      }
+    },
+    "This Mac in the tailnet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Mac im Tailnet"
+          }
+        }
+      }
+    },
+    "This Mac leaves your tailnet. Your iPhone then reaches it only on the same network, until you set Tailscale up again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Mac verlässt dein Tailnet. Dein iPhone erreicht ihn dann nur noch im selben Netzwerk, bis du Tailscale wieder einrichtest."
           }
         }
       }
@@ -5434,6 +5909,16 @@
         }
       }
     },
+    "Users, access rules and your other devices are in Tailscale's admin console." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer, Zugriffsregeln und deine anderen Geräte findest du in der Verwaltung von Tailscale."
+          }
+        }
+      }
+    },
     "Verification code" : {
       "localizations" : {
         "de" : {
@@ -5510,6 +5995,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wartet bis %@"
+          }
+        }
+      }
+    },
+    "Way" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weg"
           }
         }
       }
@@ -5896,6 +6391,16 @@
         }
       }
     },
+    "Your browser opens Tailscale's sign-in page. %@ never sees your Tailscale account." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Browser öffnet die Anmeldeseite von Tailscale. %@ sieht dein Tailscale-Konto nie."
+          }
+        }
+      }
+    },
     "Your Claude Code conversations stay in the Claude app on your phone." : {
       "localizations" : {
         "de" : {
@@ -5927,6 +6432,16 @@
         }
       }
     },
+    "Your iPhone reaches this Mac on the same Wi-Fi, or when the Mac is on your iPhone's hotspot. Nothing to set up." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein iPhone erreicht diesen Mac im selben WLAN oder wenn der Mac im Hotspot deines iPhones ist. Nichts einzurichten."
+          }
+        }
+      }
+    },
     "Your iPhone's hotspot with the lid closed" : {
       "localizations" : {
         "de" : {
@@ -5954,6 +6469,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Master-Passwort geht einmal an das Befehlszeilenprogramm von Bitwarden und wird nicht gespeichert. Fragt Bitwarden nach einem Code oder einer Prüfung, beantwortest du sie im selben Fenster."
+          }
+        }
+      }
+    },
+    "Your Tailscale app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Tailscale-App"
           }
         }
       }

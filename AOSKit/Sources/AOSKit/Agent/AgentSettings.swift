@@ -57,6 +57,9 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// The Mac's programs are available in the workspace (read only, they start without the user's data).
     public var shareApplications: Bool = true
 
+    /// How the iPhone reaches this Mac away from home (the setup asks; Settings > Connection); nil until chosen.
+    public var reachWay: ReachWay?
+
     public enum SignOutWebsites: String, Codable, Sendable, CaseIterable {
         /// Every website forgets its sign-in.
         case all
@@ -72,6 +75,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case keepReachable, keepAutomatic, keepHours, keepTerminal, keepMax, keptConversations, skippedConversations
         case newChats, newChatsFolder, signOutWebsites, shareApplications
         case bitwardenLockHours
+        case reachWay
     }
 
     /// Keys of earlier versions, read once and written in their new form.
@@ -109,6 +113,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
             ?? (expireSignIns ? .allExcept : .none)
         shareApplications = try c.decodeIfPresent(Bool.self, forKey: .shareApplications) ?? d.shareApplications
         bitwardenLockHours = min(max(try c.decodeIfPresent(Int.self, forKey: .bitwardenLockHours) ?? d.bitwardenLockHours, 0), 24)
+        reachWay = try? c.decodeIfPresent(ReachWay.self, forKey: .reachWay)
     }
 
     /// The folder new chats from the Claude app start in.

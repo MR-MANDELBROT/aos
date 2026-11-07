@@ -258,6 +258,8 @@ final class AppModel: ObservableObject {
         startBitwarden()
         updateSessionAgent()
         power.start()
+        // Reaching this Mac on the go: the Tailscale app's state and aOS's own node (TailnetController).
+        TailnetController.shared.start()
         if settings.stayAwake == .lidClosed { power.ensureHelperRegistered() }
         // Cheap state every 2 s; the login item status means two XPC calls to macOS, so only every 30 s
         // (and whenever a view asks with refresh()).

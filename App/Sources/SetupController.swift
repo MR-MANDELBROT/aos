@@ -11,7 +11,7 @@ import Virtualization
 @MainActor
 final class SetupController: ObservableObject {
     enum Step: Int, CaseIterable, Identifiable {
-        case requirements, agents, options, download, install, prepare, screenSharing, connect, session, pair, bitwarden, done
+        case requirements, agents, options, download, install, prepare, screenSharing, connect, session, reach, pair, bitwarden, done
         var id: Int { rawValue }
         var title: String {
             switch self {
@@ -24,6 +24,7 @@ final class SetupController: ObservableObject {
             case .screenSharing: return String(localized: "Turn on screen sharing")
             case .connect: return String(localized: "Connect your agent")
             case .session: return String(localized: "Reach it from your phone")
+            case .reach: return String(localized: "On the go")
             case .pair: return String(localized: "Pair your iPhone")
             case .bitwarden: return String(localized: "Sign in to Bitwarden")
             case .done: return String(localized: "Ready")
@@ -561,12 +562,31 @@ final class SetupController: ObservableObject {
         }
     }
 
+    /// First how the iPhone reaches this Mac on the go (it goes into the pairing code), then the pairing.
     private func toPairing() {
+        step = .reach
+        TailnetController.shared.refresh()
+    }
+
+    // MARK: 9. On the go
+
+    /// A way is chosen and ready: the Tailscale app connected, aOS's node signed in, or only the same network.
+    var reachReady: Bool {
+        let tailnet = TailnetController.shared
+        switch workspace.settings.reachWay {
+        case .tailscaleApp?: return tailnet.app?.status != nil
+        case .aosTailscale?: return tailnet.nodeRunning
+        case .localNetwork?: return true
+        case nil: return false
+        }
+    }
+
+    func continueAfterReach() {
         step = .pair
         AppModel.shared.refreshPhone()
     }
 
-    // MARK: 9. The iPhone
+    // MARK: 10. The iPhone
 
     /// Paired, or skipped (not recommended: without the phone, approvals only happen at the Mac).
     func continueAfterPair() {
@@ -601,7 +621,7 @@ final class SetupController: ObservableObject {
         toPairing()
     }
 
-    // MARK: 10. Bitwarden
+    // MARK: 11. Bitwarden
 
     /// Signed in, or later (the agent's sign-ins then have no logins to offer until the user signs in in the
     /// settings).
