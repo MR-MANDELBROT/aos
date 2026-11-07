@@ -2705,16 +2705,6 @@
         }
       }
     },
-    "Key" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlüssel"
-          }
-        }
-      }
-    },
     "key doesn't expire" : {
       "localizations" : {
         "de" : {
@@ -5191,6 +5181,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tailscale ist nicht auf diesem Mac."
+          }
+        }
+      }
+    },
+    "Tailscale key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale-Schlüssel"
           }
         }
       }

@@ -122,7 +122,7 @@ struct ConnectionView: View {
                 LabeledContent("Name", value: device.dnsName.isEmpty ? device.hostName : device.dnsName)
                 LabeledContent("Address", value: device.addresses.first ?? "")
                 if let name = status.tailnet { LabeledContent("Tailnet", value: name) }
-                LabeledContent("Key", value: DeviceRow.keyLine(device))
+                LabeledContent("Tailscale key", value: DeviceRow.keyLine(device))
                 if let expected = mac.tailnetName, let name = status.tailnet, expected != name {
                     Label("Your Mac is in the tailnet \(expected). Sign out here and sign in with that account.",
                           systemImage: "exclamationmark.triangle.fill")

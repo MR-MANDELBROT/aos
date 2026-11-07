@@ -285,6 +285,16 @@
         }
       }
     },
+    "%@ on the go" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ unterwegs"
+          }
+        }
+      }
+    },
     "%@ to open aOS" : {
       "localizations" : {
         "de" : {
@@ -717,12 +727,32 @@
         }
       }
     },
+    "aOS can bring Tailscale along on this iPhone too: no VPN, no extra app. You sign in once with your Tailscale account, the same as on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS kann Tailscale auch auf diesem iPhone mitbringen: kein VPN, keine zusätzliche App. Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac."
+          }
+        }
+      }
+    },
     "aOS couldn't fill it in. The agent can ask again." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS konnte sie nicht eintragen. Der Agent kann noch einmal fragen."
+          }
+        }
+      }
+    },
+    "aOS devices" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geräte von aOS"
           }
         }
       }
@@ -993,6 +1023,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Hintergrunddienst von aOS ist auf dem Mac noch nicht eingerichtet."
+          }
+        }
+      }
+    },
+    "aOS's Tailscale (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale von aOS (%@)"
+          }
+        }
+      }
+    },
+    "aOS's Tailscale isn't connected on this iPhone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Tailscale von aOS ist auf diesem iPhone nicht verbunden."
+          }
+        }
+      }
+    },
+    "aOS's Tailscale on this iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Tailscale von aOS auf diesem iPhone"
           }
         }
       }
@@ -1703,6 +1763,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbinden …"
+          }
+        }
+      }
+    },
+    "Connection" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung"
           }
         }
       }
@@ -2856,6 +2926,16 @@
         }
       }
     },
+    "Get the Tailscale App" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale-App laden"
+          }
+        }
+      }
+    },
     "GNU General Public License" : {
       "localizations" : {
         "de" : {
@@ -3000,6 +3080,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "So erreicht ihn das iPhone"
+          }
+        }
+      }
+    },
+    "If you install the Tailscale app later and sign in with the same account, aOS's devices appear in the same tailnet, and you manage them there like any other device. The Tailscale app can't take over aOS's connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installierst du später die Tailscale-App und meldest dich mit demselben Konto an, erscheinen die Geräte von aOS im selben Tailnet, und du verwaltest sie dort wie jedes andere Gerät. Die Verbindung von aOS übernehmen kann die Tailscale-App nicht."
           }
         }
       }
@@ -3244,6 +3334,36 @@
         }
       }
     },
+    "key doesn't expire" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel läuft nicht ab"
+          }
+        }
+      }
+    },
+    "key expired" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel abgelaufen"
+          }
+        }
+      }
+    },
+    "key expires %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel läuft ab am %@"
+          }
+        }
+      }
+    },
     "Keyboard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3337,6 +3457,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tasten"
+          }
+        }
+      }
+    },
+    "last seen %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zuletzt gesehen %@"
           }
         }
       }
@@ -3847,6 +3977,16 @@
         }
       }
     },
+    "No VPN and no Tailscale app needed. aOS only reaches your Mac through it, and nothing on this iPhone is reachable in your tailnet. Its keys stay on this iPhone, out of backups." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein VPN und keine Tailscale-App nötig. aOS erreicht darüber nur deinen Mac, und auf diesem iPhone ist in deinem Tailnet nichts erreichbar. Die Schlüssel bleiben auf diesem iPhone, nicht in Backups."
+          }
+        }
+      }
+    },
     "None" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3886,6 +4026,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beim Beobachten nicht verfügbar"
+          }
+        }
+      }
+    },
+    "not chosen (pair again to choose)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht gewählt (zum Wählen neu koppeln)"
+          }
+        }
+      }
+    },
+    "not connected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nicht verbunden"
           }
         }
       }
@@ -4000,6 +4160,16 @@
         }
       }
     },
+    "Now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt"
+          }
+        }
+      }
+    },
     "Observe Mode" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4027,6 +4197,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In den Einstellungen von aOS aus"
+          }
+        }
+      }
+    },
+    "offline" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "offline"
           }
         }
       }
@@ -4079,6 +4259,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "An für die nächste Taste"
+          }
+        }
+      }
+    },
+    "On the go through aOS's own Tailscale. After pairing, set it up on this iPhone too, with the same Tailscale account." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterwegs über das eigene Tailscale von aOS. Richte es nach dem Koppeln auch auf diesem iPhone ein, mit demselben Tailscale-Konto."
+          }
+        }
+      }
+    },
+    "On the go through the Tailscale app. On this iPhone you need it too, signed in with the same account (or aOS's own Tailscale, in Settings > Connection)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterwegs über die Tailscale-App. Auf diesem iPhone brauchst du sie auch, mit demselben Konto angemeldet (oder das eigene Tailscale von aOS, unter Einstellungen > Verbindung)."
           }
         }
       }
@@ -4140,6 +4340,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einmalcode"
+          }
+        }
+      }
+    },
+    "online" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "online"
+          }
+        }
+      }
+    },
+    "only on the same network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nur im selben Netzwerk"
+          }
+        }
+      }
+    },
+    "Only on the same network: on the go the iPhone doesn't reach this Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur im selben Netzwerk: Unterwegs erreicht das iPhone diesen Mac nicht."
           }
         }
       }
@@ -4242,6 +4472,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einstellungen öffnen"
+          }
+        }
+      }
+    },
+    "Open the Tailscale Admin Console" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale-Verwaltung öffnen"
           }
         }
       }
@@ -4796,6 +5036,16 @@
         }
       }
     },
+    "Reconnect" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu verbinden"
+          }
+        }
+      }
+    },
     "Reconnecting … The session keeps running on the Mac." : {
       "localizations" : {
         "de" : {
@@ -5067,6 +5317,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Läuft, ohne Agent darin"
+          }
+        }
+      }
+    },
+    "same network (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dasselbe Netzwerk (%@)"
+          }
+        }
+      }
+    },
+    "same network, found by name" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dasselbe Netzwerk, über den Namen gefunden"
           }
         }
       }
@@ -5372,6 +5642,26 @@
         }
       }
     },
+    "Set Up Tailscale" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale einrichten"
+          }
+        }
+      }
+    },
+    "Set Up Tailscale for on the Go" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale für unterwegs einrichten"
+          }
+        }
+      }
+    },
     "Settings" : {
       "localizations" : {
         "de" : {
@@ -5563,6 +5853,56 @@
         }
       }
     },
+    "Sign In to Tailscale" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Tailscale anmelden"
+          }
+        }
+      }
+    },
+    "Sign in to Tailscale on the page that opened." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich auf der geöffneten Seite bei Tailscale an."
+          }
+        }
+      }
+    },
+    "Sign Out" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abmelden"
+          }
+        }
+      }
+    },
+    "Sign out of Tailscale on this iPhone?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf diesem iPhone von Tailscale abmelden?"
+          }
+        }
+      }
+    },
+    "Sign Out removes this iPhone from the tailnet and deletes its Tailscale keys here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Abmelden“ nimmt dieses iPhone aus dem Tailnet und löscht hier seine Tailscale-Schlüssel."
+          }
+        }
+      }
+    },
     "Sign-in request" : {
       "localizations" : {
         "de" : {
@@ -5599,6 +5939,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Angemeldet. aOS hat sie im Arbeitsplatz eingetragen."
+          }
+        }
+      }
+    },
+    "Signed in. The tailnet's admin still has to approve this iPhone in the Tailscale admin console." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angemeldet. Die Verwaltung des Tailnets muss dieses iPhone noch in der Tailscale-Verwaltung freigeben."
           }
         }
       }
@@ -5936,12 +6286,72 @@
         }
       }
     },
+    "Tailnet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailnet"
+          }
+        }
+      }
+    },
+    "Tailnet of the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailnet des Macs"
+          }
+        }
+      }
+    },
     "Tailscale (%@)" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tailscale (%@)"
+          }
+        }
+      }
+    },
+    "Tailscale app (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale-App (%@)"
+          }
+        }
+      }
+    },
+    "Tailscale app on this iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale-App auf diesem iPhone"
+          }
+        }
+      }
+    },
+    "Tailscale didn't send a sign-in page. Try again in a moment." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale hat keine Anmeldeseite geschickt. Versuch es gleich noch einmal."
+          }
+        }
+      }
+    },
+    "Tailscale key" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale-Schlüssel"
           }
         }
       }
@@ -6181,6 +6591,16 @@
         }
       }
     },
+    "The iPhone tries the same network first, then the tailnet, then the Mac's name on the network." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das iPhone versucht zuerst dasselbe Netzwerk, dann das Tailnet, dann den Namen des Macs im Netzwerk."
+          }
+        }
+      }
+    },
     "The item isn’t available on the Mac" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6366,12 +6786,62 @@
         }
       }
     },
+    "The Mac isn't reachable, also not through Tailscale. Is it awake, and is Tailscale on there?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist nicht erreichbar, auch nicht über Tailscale. Ist er wach, und ist Tailscale dort an?"
+          }
+        }
+      }
+    },
+    "The Mac isn't reachable, and aOS's Tailscale on this iPhone isn't connected (Settings > Connection)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist nicht erreichbar, und das Tailscale von aOS ist auf diesem iPhone nicht verbunden (Einstellungen > Verbindung)."
+          }
+        }
+      }
+    },
+    "The Mac isn't reachable. On the go, set up aOS's Tailscale on this iPhone: Settings > Connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist nicht erreichbar. Für unterwegs richte das Tailscale von aOS auf diesem iPhone ein: Einstellungen > Verbindung."
+          }
+        }
+      }
+    },
+    "The Mac isn't reachable. On the go, switch on Tailscale on this iPhone (the Tailscale app, or aOS's Tailscale in Settings > Connection)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist nicht erreichbar. Schalte unterwegs Tailscale auf diesem iPhone ein (die Tailscale-App oder das Tailscale von aOS unter Einstellungen > Verbindung)."
+          }
+        }
+      }
+    },
     "The Mac isn't reachable. Outside your home network you need Tailscale or another VPN to reach it." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac ist nicht erreichbar. Außerhalb deines Heimnetzes brauchst du Tailscale oder ein anderes VPN, um ihn zu erreichen."
+          }
+        }
+      }
+    },
+    "The Mac isn't reachable. Your Mac is set up for the same network only; to reach it on the go, choose a way with Tailscale in aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist nicht erreichbar. Dein Mac ist nur für dasselbe Netzwerk eingerichtet; um ihn unterwegs zu erreichen, wähle in aOS auf dem Mac einen Weg mit Tailscale."
           }
         }
       }
@@ -6837,6 +7307,16 @@
         }
       }
     },
+    "this iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dieses iPhone"
+          }
+        }
+      }
+    },
     "This iPhone" : {
       "localizations" : {
         "de" : {
@@ -6853,6 +7333,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieses iPhone vergisst den Mac. Um den Schlüssel des iPhones auch vom Mac zu entfernen, öffne aOS auf dem Mac und entferne es aus den gekoppelten Geräten."
+          }
+        }
+      }
+    },
+    "This iPhone leaves your tailnet. On the go it then reaches the Mac only through the Tailscale app, if it has it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses iPhone verlässt dein Tailnet. Unterwegs erreicht es den Mac dann nur noch über die Tailscale-App, falls es sie hat."
           }
         }
       }
@@ -6945,6 +7435,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Sitzung ist jetzt auf einem anderen Gerät offen. Sie läuft auf dem Mac weiter."
+          }
+        }
+      }
+    },
+    "through aOS's Tailscale" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "über das Tailscale von aOS"
+          }
+        }
+      }
+    },
+    "through Tailscale" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "über Tailscale"
+          }
+        }
+      }
+    },
+    "through the Tailscale app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "über die Tailscale-App"
           }
         }
       }
@@ -7387,6 +7907,16 @@
         }
       }
     },
+    "Users, access rules and your other devices are in Tailscale's admin console." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer, Zugriffsregeln und deine anderen Geräte findest du in der Verwaltung von Tailscale."
+          }
+        }
+      }
+    },
     "Version" : {
       "localizations" : {
         "de" : {
@@ -7426,6 +7956,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Virtuelles Display"
+          }
+        }
+      }
+    },
+    "VPN off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VPN aus"
+          }
+        }
+      }
+    },
+    "VPN on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VPN an"
           }
         }
       }
@@ -7685,6 +8235,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Mac und der Arbeitsplatz, live, mit Touch und Tastatur."
+          }
+        }
+      }
+    },
+    "Your Mac is in the tailnet %@. Sign out here and sign in with that account." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac ist im Tailnet %@. Melde dich hier ab und mit diesem Konto wieder an."
+          }
+        }
+      }
+    },
+    "Your Mac isn't in this tailnet. Sign in with the account you used on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac ist nicht in diesem Tailnet. Melde dich mit dem Konto an, das du auf dem Mac benutzt hast."
+          }
+        }
+      }
+    },
+    "Your Mac uses aOS's own Tailscale. Set it up here too: you sign in once with your Tailscale account, the same as on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac nutzt das eigene Tailscale von aOS. Richte es hier auch ein: Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac."
+          }
+        }
+      }
+    },
+    "Your Mac uses the Tailscale app. On this iPhone the Tailscale app, signed in with the same account, reaches it too; so does aOS's own Tailscale below." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac nutzt die Tailscale-App. Auf diesem iPhone erreicht ihn die Tailscale-App, mit demselben Konto angemeldet, ebenfalls; genauso das eigene Tailscale von aOS weiter unten."
           }
         }
       }
