@@ -29,7 +29,9 @@ struct ScreenTab: View {
                         if let client { session.closed(client) }
                     }
                     .ignoresSafeArea()
-                    .overlay(alignment: .top) { helpBanner(over: session.target) }
+                    .overlay(alignment: .top) {
+                        helpBanner(over: session.target, toolbarOpen: client.isToolbarVisible, barBottom: client.toolbarBarBottom)
+                    }
                     .id(client.id)
                 } else {
                     selection.aosBackground()
@@ -431,15 +433,16 @@ struct ScreenTab: View {
 
     // MARK: Help requests
 
-    /// Over a running screen only a small pill: the screen stays visible (tap it for the whole text).
-    @ViewBuilder private func helpBanner(over target: ScreenTarget) -> some View {
+    /// Over a running screen the request shows for 3 seconds, then only "Done" stays in the corner (the screen stays
+    /// free); it shows in full again while the session's toolbar is open.
+    @ViewBuilder private func helpBanner(over target: ScreenTarget, toolbarOpen: Bool, barBottom: CGFloat?) -> some View {
         if let help = model.activeHelp {
-            HelpPill(request: help, show: target == .workspace ? nil : { tapWorkspace() }) {
+            HelpPill(request: help, show: target == .workspace ? nil : { tapWorkspace() }, toolbarOpen: toolbarOpen,
+                     barBottom: barBottom) {
                 Task { await model.finishHelp(help) }
             }
-            .padding(.horizontal)
-            // Below the session's toolbar handle
-            .padding(.top, 52)
+            // A new request shows in full again
+            .id(help.id)
         }
     }
 
@@ -496,38 +499,67 @@ struct HelpBanner: View {
     }
 }
 
-/// The help request over a running screen: one line with the button that matters; a tap shows the whole request.
+/// The help request over a running screen: in full for its first 3 seconds and while the session's toolbar is open
+/// (below its bar), otherwise only its "Done" button in the corner, so the screen stays free.
 struct HelpPill: View {
     let request: HelpRequest
     var show: (() -> Void)?
+    var toolbarOpen: Bool
+    /// Where the open toolbar's bar ends, in global coordinates
+    var barBottom: CGFloat?
     let done: () -> Void
-    @State private var expanded = false
+    @State private var fresh = true
+    @State private var top: CGFloat = 0
+
+    private var full: Bool { fresh || toolbarOpen }
+
+    /// Below the toolbar's handle, or below its bar while it is open
+    private var fullTop: CGFloat {
+        guard toolbarOpen, let barBottom else { return 52 }
+        return max(52, barBottom - top + 8)
+    }
+
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: 18, style: .continuous) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
             HStack(spacing: 8) {
-                Image(systemName: "hand.raised.fill").foregroundStyle(BrandColor.attention)
-                Text(request.purpose.isEmpty ? String(localized: "Your agent asks for help") : request.purpose)
-                    .font(.footnote.weight(.medium))
-                    .lineLimit(expanded ? nil : 1)
-                    .fixedSize(horizontal: false, vertical: expanded)
-                    .contentShape(Rectangle())
-                    .onTapGesture { withAnimation(.snappy) { expanded.toggle() } }
-                if let show {
-                    Button("Show", action: show)
-                        .font(.footnote.weight(.semibold))
-                        .buttonStyle(.glassProminent).tint(BrandColor.attention)
-                } else {
-                    Button("Done", action: done)
-                        .font(.footnote.weight(.semibold))
-                        .buttonStyle(.glassProminent).tint(BrandColor.attention)
+                if full {
+                    Image(systemName: "hand.raised.fill").foregroundStyle(BrandColor.attention)
+                    Text(request.purpose.isEmpty ? String(localized: "Your agent asks for help") : request.purpose)
+                        .font(.footnote.weight(.medium))
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if let show {
+                        Button("Show", action: show)
+                            .font(.footnote.weight(.semibold))
+                            .buttonStyle(.glass)
+                    }
                 }
+                Button("Done", action: done)
+                    .font(.footnote.weight(.semibold))
+                    .buttonStyle(.glassProminent).tint(BrandColor.attention)
             }
+            .padding(.horizontal, full ? 12 : 0)
+            .padding(.vertical, full ? 6 : 0)
+            .background {
+                if full { Color.clear.glassEffect(.regular.tint(BrandColor.attention.opacity(0.15)), in: shape) }
+            }
+            .frame(maxWidth: full ? 460 : nil)
+            if full { Spacer(minLength: 0) }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .frame(maxWidth: 420)
-        .glassEffect(.regular.tint(BrandColor.attention.opacity(0.15)), in: Capsule())
+        .padding(.horizontal, full ? 16 : 12)
+        // Collapsed: in the corner, level with the toolbar's handle
+        .padding(.top, full ? fullTop : 4)
+        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { top = $0 }
+        .animation(.snappy, value: full)
+        .animation(.snappy, value: fullTop)
+        .task {
+            try? await Task.sleep(for: .seconds(3))
+            fresh = false
+        }
     }
 }
 

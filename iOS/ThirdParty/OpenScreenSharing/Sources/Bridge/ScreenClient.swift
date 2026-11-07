@@ -230,6 +230,10 @@ public final class ScreenClientSession: Identifiable {
 
     /// A picture is on the screen.
     public var hasPicture: Bool { controller.hasPicture }
+    // aOS: whether the session's toolbar is open (aOS shows a help request in full only then) and where its bar ends
+    // (global coordinates), so aOS's note sits below it.
+    public var isToolbarVisible: Bool { controller.isToolbarVisible }
+    public var toolbarBarBottom: CGFloat? { controller.isToolbarVisible ? controller.toolbarBarFrame?.maxY : nil }
     /// The session waits for the person or the Mac to decide (which session to share, a permission).
     public var waitsForPerson: Bool {
         switch controller.phase {
