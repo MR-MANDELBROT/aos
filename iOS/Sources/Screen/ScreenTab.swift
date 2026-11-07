@@ -258,6 +258,8 @@ struct ScreenTab: View {
         switch reason {
         case .noAddress, .unreachable:
             return String(localized: "Your Mac came through SSH, in its own size: the iPhone's size needs the direct way to the Mac (the same Wi-Fi, or Tailscale with the VPN on).")
+        case .tailnetWithoutVPN:
+            return String(localized: "Your Mac came through aOS's Tailscale, in its own size: the iPhone's size needs the Tailscale app with its VPN on, or the same Wi-Fi.")
         case .noHighPerformance:
             return String(localized: "Your Mac came in its own size: its screen sharing offers no high performance (macOS 14 or later), which the iPhone's size needs.")
         case .failed:
