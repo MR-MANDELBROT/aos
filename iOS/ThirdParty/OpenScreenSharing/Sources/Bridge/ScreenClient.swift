@@ -64,7 +64,8 @@ public enum ScreenClient {
         switch await ServerProber.checkLogin(server, credentials: login.credentials) {
         case .success(let check):
             if !check.fingerprint.isEmpty { try? ComputerStore.shared.setTrustedFingerprint(check.fingerprint, for: screen) }
-            return .ok(highPerformance: check.supportsHighPerformance, knowsServerKey: !check.fingerprint.isEmpty)
+            return .ok(highPerformance: check.supportsHighPerformance, knowsServerKey: !check.fingerprint.isEmpty,
+                       security: check.security)
         case .failure(let failure):
             return failure.kind == .authenticationFailed ? .loginRefused : .failed(failure.message)
         }
@@ -114,7 +115,9 @@ nonisolated public struct ScreenDisplaySize: Sendable, Equatable {
 
 /// What `ScreenClient.checkServer` found.
 nonisolated public enum ScreenServerCheck: Sendable, Equatable {
-    case ok(highPerformance: Bool, knowsServerKey: Bool)
+    /// `security`: the security types the server offered and the one used ("offered apple-rsa-srp(33) apple-srp(36),
+    /// used apple-rsa-srp(33)").
+    case ok(highPerformance: Bool, knowsServerKey: Bool, security: String)
     case loginRefused
     case failed(String)
 }
@@ -197,10 +200,12 @@ public final class ScreenClientSession: Identifiable {
             $0.networkQuality = highPerformance?.quality ?? .localNetwork
             $0.resolutionScale = resolutionScale
         }
+        // The direct path isn't authenticated by SSH: only Apple's RSA login with the key learned through SSH.
         controller = SessionController(route: SessionRoute(computerID: screen, name: name, host: host, port: port,
                                                            credentials: login.credentials,
                                                            followsWindowShape: followsWindowShape,
-                                                           usesHighPerformance: highPerformance != nil))
+                                                           usesHighPerformance: highPerformance != nil,
+                                                           requiresTrustedKey: highPerformance != nil))
     }
 
     /// The screen's record in the store (what a session remembers per screen goes there), made once.
