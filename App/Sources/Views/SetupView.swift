@@ -37,6 +37,7 @@ extension SetupController.Step {
         case .screenSharing: return "rectangle.on.rectangle"
         case .connect: return "link"
         case .pair: return "qrcode"
+        case .reach: return "point.3.connected.trianglepath.dotted"
         case .session: return "iphone.radiowaves.left.and.right"
         case .bitwarden: return "key.horizontal"
         case .done: return "checkmark.seal"
@@ -165,6 +166,7 @@ private struct StepPage: View {
         case .prepare: prepare
         case .screenSharing: screenSharing
         case .connect: connect
+        case .reach: reach
         case .pair: pair
         case .session: session
         case .bitwarden: bitwardenStep
@@ -511,6 +513,15 @@ private struct StepPage: View {
 
     // MARK: iPhone and Bitwarden
 
+    /// How the iPhone reaches this Mac on the go: the three ways, before the pairing code is made.
+    var reach: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("At home your iPhone reaches this Mac by itself. On the go it needs a private network between your devices: \(Brand.name) uses Tailscale for that. Choose how; you can change it later in the settings.")
+                .font(.title3).foregroundStyle(.secondary)
+            ReachWayChoices()
+        }
+    }
+
     var pair: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("With \(Brand.name) on your iPhone you approve your agent's sign-ins with Face ID, get a notice when it needs you, and look at the workspace on the go. Without it, you approve everything here on the Mac.")
@@ -677,16 +688,14 @@ private struct StepPage: View {
         case .download:
             if setup.restoreInfo == nil { Button("Look up the newest macOS") { setup.lookUpRestoreImage() }.buttonStyle(.glass).disabled(busy) }
         case .screenSharing:
-            switch setup.sharingPhase {
-            case .verified:
-                Button("Later") { setup.skipHelper() }.buttonStyle(.glass).disabled(busy)
-            default:
-                EmptyView()
-            }
+            // The helper is required: no "Later".
+            EmptyView()
         case .connect:
             Button("Connect again") { setup.connectAgents() }.buttonStyle(.glass).disabled(busy)
         case .session:
             Button("Skip") { setup.skipSession() }.buttonStyle(.glass)
+        case .reach:
+            Button("Check Again") { TailnetController.shared.refresh() }.buttonStyle(.glass)
         case .pair:
             if model.pairedDevices.isEmpty {
                 Button("Skip (not recommended)") { setup.continueAfterPair() }.buttonStyle(.glass)
@@ -738,6 +747,8 @@ private struct StepPage: View {
         case .session:
             Button("Run in the background") { setup.enableSession() }
                 .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(busy || !setup.claudeSignedIn)
+        case .reach:
+            ReachContinueButton()
         case .pair:
             Button("Continue") { setup.continueAfterPair() }
                 .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(model.pairedDevices.isEmpty)
@@ -813,5 +824,18 @@ private struct ActivityView: View {
                 .font(.caption)
             }
         }
+    }
+}
+
+/// "Continue" on the step about the way: once the chosen way is ready (it redraws with the tailnet's state).
+private struct ReachContinueButton: View {
+    @EnvironmentObject var model: AppModel
+    @EnvironmentObject var setup: SetupController
+    @ObservedObject var tailnet = TailnetController.shared
+
+    var body: some View {
+        let _ = model.settings.reachWay
+        Button("Continue") { setup.continueAfterReach() }
+            .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(!setup.reachReady)
     }
 }

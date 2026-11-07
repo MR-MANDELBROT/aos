@@ -72,7 +72,7 @@ struct PhoneSettings: View {
             }
 
             Section {
-                Text("Away from your Wi-Fi, the iPhone reaches this Mac through a VPN such as Tailscale. With it on both devices, the app finds the Mac by itself.")
+                Text("Away from your Wi-Fi, the iPhone reaches this Mac through Tailscale: your own Tailscale app, or the one \(Brand.name) sets up. Choose the way under Connection.")
                     .font(.caption).foregroundStyle(.secondary)
             } header: {
                 Text("On the go")

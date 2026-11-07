@@ -92,7 +92,11 @@ struct WorkspaceWindow: View {
                 detail: setup.isComplete
                     ? String(localized: "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password.")
                     : String(localized: "If macOS asks, click Open System Settings, then switch on aOS Helper. When macOS asks for the password, click Enter Password. Then the setup continues by itself.")) {
-                Button("Not Now") { Task { await model.cancelHelperPermission() } }
+                // In the setup the helper is required: no way around it here. Later (from the settings) the person
+                // started it themselves and may stop.
+                if setup.isComplete {
+                    Button("Not Now") { Task { await model.cancelHelperPermission() } }
+                }
                 Button("Enter Password") { setup.typeGuestPassword(into: coordinator) }
                     .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
             }
@@ -135,9 +139,12 @@ struct WorkspaceWindow: View {
                         }
                     }
                 }
+                // The next step is the filled button: first the password, then the check.
                 Button("Enter Password") { setup.typeGuestPassword(into: coordinator) }
-                    .buttonStyle(.borderedProminent)
-                Button("Check") { setup.checkScreenSharing() }.disabled(setup.isBusy)
+                    .nextStep(!setup.passwordTyped)
+                Button("Check") { setup.checkScreenSharing() }
+                    .nextStep(setup.passwordTyped)
+                    .disabled(setup.isBusy)
             }
         case .checking:
             bar(symbol: "rectangle.on.rectangle", tint: BrandColor.indigo, context: "Setup · Screen sharing", title: "Checking screen sharing",
@@ -298,5 +305,16 @@ struct WindowAccessor: NSViewRepresentable {
 
     func updateNSView(_ view: NSView, context: Context) {
         DispatchQueue.main.async { [weak view] in if let w = view?.window { found(w) } }
+    }
+}
+
+private extension View {
+    /// The one filled button in the bar: the step the person takes next (Return presses it).
+    @ViewBuilder func nextStep(_ next: Bool) -> some View {
+        if next {
+            self.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+        } else {
+            self.buttonStyle(.bordered)
+        }
     }
 }
