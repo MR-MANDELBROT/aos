@@ -3,9 +3,10 @@ import Foundation
 
 /// The Mac's terminal sessions as the test SSH server plays them (`aos-companion term attach|list|end`, AOSKit
 /// TermHolder): each session keeps all its output with offsets, one channel at a time is attached, a channel that
-/// attaches with `--have N` gets what came after N, one without gets everything afresh. Typed input comes back as
-/// output (an echo); "exit\r" ends the shell, "drop\r" drops the connection (the channel closes without a word, as when
-/// the network goes) and the session writes "while away" meanwhile.
+/// attaches with `--have N` gets what came after N, one without gets everything afresh. A new attach takes the
+/// session over: the one before hears "replaced" when both named the same device (`--client`), "taken" otherwise.
+/// Typed input comes back as output (an echo); "exit\r" ends the shell, "drop\r" drops the connection (the channel
+/// closes without a word, as when the network goes) and the session writes "while away" meanwhile.
 final class FakeTermSessions: @unchecked Sendable {
     struct Attached {
         let id = UUID()
@@ -17,6 +18,8 @@ final class FakeTermSessions: @unchecked Sendable {
         let id: String
         var output: [UInt8] = []
         var attached: Attached?
+        /// The device the attached channel named.
+        var client: String?
         init(id: String) { self.id = id }
     }
 
@@ -25,8 +28,11 @@ final class FakeTermSessions: @unchecked Sendable {
     private var counter = 0
     /// What the phone asked for, in order ("attach new", "attach 0000aa01 have 12", "list", "end 0000aa01").
     private(set) var requests: [String] = []
+    /// The device each attach named, in order (nil: none).
+    private var attachClients: [String?] = []
 
     var log: [String] { lock.withLock { requests } }
+    var clients: [String?] { lock.withLock { attachClients } }
 
     /// Handles an exec command of the companion's `term`; false if it isn't one.
     func handle(command: String, companion: String, attached: Attached) -> Bool {
@@ -39,11 +45,16 @@ final class FakeTermSessions: @unchecked Sendable {
                 guard let k = words.firstIndex(of: name), k + 1 < words.count else { return nil }
                 return words[k + 1]
             }
-            attach(id: value("--id"), have: value("--have").flatMap { UInt64($0) }, to: attached)
+            attach(id: value("--id"), have: value("--have").flatMap { UInt64($0) }, client: value("--client"), to: attached)
         case "list":
             lock.withLock { requests.append("list") }
-            let list = lock.withLock { sessions.values.map { ["id": $0.id, "attached": $0.attached != nil, "command": "zsh",
-                                                               "cwd": "/Users/max"] as [String: Any] } }
+            let list = lock.withLock {
+                sessions.values.map { s in
+                    var o: [String: Any] = ["id": s.id, "attached": s.attached != nil, "command": "zsh", "cwd": "/Users/max"]
+                    if s.attached != nil, let client = s.client { o["client"] = client }
+                    return o
+                }
+            }
             let data = (try? JSONSerialization.data(withJSONObject: ["sessions": list])) ?? Data()
             attached.write(data + Data([0x0a]))
             attached.close(0)
@@ -63,25 +74,29 @@ final class FakeTermSessions: @unchecked Sendable {
         return true
     }
 
-    private func attach(id: String?, have: UInt64?, to channel: Attached) {
-        let (session, isNew, gone, previous): (Session, Bool, String?, Attached?) = lock.withLock {
+    private func attach(id: String?, have: UInt64?, client: String?, to channel: Attached) {
+        let (session, isNew, gone, previous, same): (Session, Bool, String?, Attached?, Bool) = lock.withLock {
+            attachClients.append(client)
             if let id, let existing = sessions[id] {
                 requests.append("attach \(id)\(have.map { " have \($0)" } ?? "")")
                 let previous = existing.attached
+                let same = client != nil && existing.client == client
                 existing.attached = channel
-                return (existing, false, nil, previous)
+                existing.client = client
+                return (existing, false, nil, previous, same)
             }
             counter += 1
             let session = Session(id: String(format: "0000aa%02x", counter))
             session.output = Array("Welcome to the held shell\r\n$ ".utf8)
             session.attached = channel
+            session.client = client
             sessions[session.id] = session
             requests.append("attach new")
-            return (session, true, id, nil)
+            return (session, true, id, nil, false)
         }
         if let previous {
-            previous.write(Data(TermMarkerForTests.end("taken")))
-            previous.close(0)
+            previous.write(Data(TermMarkerForTests.end(same ? "replaced" : "taken")))
+            previous.close(same ? 5 : 3)
         }
         let (from, rest): (UInt64, [UInt8]) = lock.withLock {
             let from = (!isNew && have != nil && have! <= UInt64(session.output.count)) ? have! : 0

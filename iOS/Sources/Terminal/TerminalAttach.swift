@@ -13,7 +13,8 @@ enum TermNote: Equatable, Sendable {
     /// one asked for had ended, this is a new one.
     case start(id: String, from: UInt64, reset: Bool, prefix: Data, new: Bool, gone: String?)
     /// The session is over for this terminal: `exited` (the shell ended), `ended` (someone ended it), `taken`
-    /// (another device attached), `lost` (the session's process went away).
+    /// (another device attached), `replaced` (this iPhone attached again: this was its old connection), `lost` (the
+    /// session's process went away).
     case end(why: String, status: Int?)
 
     init?(json: Data) {
@@ -97,14 +98,22 @@ enum TermAttach {
         text.count == 8 && text.allSatisfy { $0.isHexDigit && !$0.isUppercase }
     }
 
-    /// In a pseudo terminal: attach to `id` (only what came after `have`), or start a new session.
-    static func attach(companion: String, id: String?, have: UInt64?) -> String {
+    /// In a pseudo terminal: attach to `id` (only what came after `have`), or start a new session. `client`: this
+    /// iPhone (its phone id): attaching again replaces its own old connection without a word (an older aOS on the Mac
+    /// ignores it).
+    static func attach(companion: String, id: String?, have: UInt64?, client: String? = nil) -> String {
         var command = CompanionCommand.shellQuoted(companion) + " term attach"
         if let id, isID(id) {
             command += " --id \(id)"
             if let have { command += " --have \(have)" }
         }
+        if let client, isClientID(client) { command += " --client \(client)" }
         return command
+    }
+
+    /// What the Mac takes as a device id (AOSKit `TermHello.isClientID`): nothing the shell would read differently.
+    static func isClientID(_ text: String) -> Bool {
+        (1...64).contains(text.count) && text.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || ".-_".contains($0)) }
     }
 
     static func list(companion: String) -> String { CompanionCommand.shellQuoted(companion) + " term list --json" }
@@ -120,6 +129,11 @@ enum TermAttach {
               let list = o["sessions"] as? [[String: Any]] else { return nil }
         return list.compactMap(MacTermSession.init)
     }
+
+    /// The order of the list: the oldest first, a new session at the end (rows don't move when they change).
+    static func ordered(_ sessions: [MacTermSession]) -> [MacTermSession] {
+        sessions.sorted { ($0.created ?? .distantFuture, $0.id) < ($1.created ?? .distantFuture, $1.id) }
+    }
 }
 
 /// A terminal session on the Mac, as `term list` shows it.
@@ -132,19 +146,22 @@ struct MacTermSession: Identifiable, Equatable, Sendable {
     var lastOutput: Date?
     /// Who is attached ("ssh 192.168.178.31").
     var from: String?
+    /// The attached device's id (this iPhone's phone id when it is this iPhone; nil from an older aOS).
+    var client: String?
     /// The program in the foreground and its folder.
     var command: String?
     var cwd: String?
     var title: String?
 
     init(id: String, attached: Bool, since: Date? = nil, created: Date? = nil, lastOutput: Date? = nil,
-         from: String? = nil, command: String? = nil, cwd: String? = nil, title: String? = nil) {
+         from: String? = nil, client: String? = nil, command: String? = nil, cwd: String? = nil, title: String? = nil) {
         self.id = id
         self.attached = attached
         self.since = since
         self.created = created
         self.lastOutput = lastOutput
         self.from = from
+        self.client = client
         self.command = command
         self.cwd = cwd
         self.title = title
@@ -154,8 +171,29 @@ struct MacTermSession: Identifiable, Equatable, Sendable {
         guard let id = o["id"] as? String, TermAttach.isID(id) else { return nil }
         func date(_ key: String) -> Date? { (o[key] as? String).flatMap(ISO8601.parse) }
         self.init(id: id, attached: o["attached"] as? Bool ?? false, since: date("since"), created: date("created"),
-                  lastOutput: date("lastOutput"), from: o["from"] as? String, command: o["command"] as? String,
+                  lastOutput: date("lastOutput"), from: o["from"] as? String, client: o["client"] as? String,
+                  command: o["command"] as? String,
                   cwd: o["cwd"] as? String, title: o["title"] as? String)
+    }
+
+    /// Who has a session open, as this iPhone sees it.
+    enum Holder: Equatable, Sendable {
+        /// This iPhone (its terminal shows it, or an older connection of this iPhone is still attached).
+        case here
+        /// Another device, or a terminal on the Mac ("ssh 192.168.178.31").
+        case elsewhere(String?)
+        case nobody
+    }
+
+    /// `shown`: the session this iPhone's terminal shows while it is open. `phoneID`: this iPhone's id, which it
+    /// names when it attaches. `last`: the session the terminal showed last; an older aOS on the Mac doesn't say
+    /// which device is attached, and then that one is taken to be this iPhone's. Never "another device" for this
+    /// iPhone's own connection, also not after the app was closed while the Mac still holds the old one.
+    func holder(shown: String?, phoneID: String?, last: String?) -> Holder {
+        if id == shown { return .here }
+        guard attached else { return .nobody }
+        if let client { return client == phoneID ? .here : .elsewhere(from) }
+        return id == last ? .here : .elsewhere(from)
     }
 
     /// "zsh in ~/Developer/aos", from the Mac user's home folder.

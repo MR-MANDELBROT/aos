@@ -1,12 +1,10 @@
 import SwiftTerm
 import SwiftUI
 
+/// The Terminal tab: the terminal sessions on the Mac, a new one, and the terminal that shows one of them.
 struct TerminalTab: View {
     @Environment(AppModel.self) private var model
-    @State private var editing: SSHHost?
-    @State private var adding = false
     @State private var path: [TerminalSession.Target] = []
-    @State private var macSessions = MacSessionList()
     @State private var ending: MacTermSession?
 
     var body: some View {
@@ -14,75 +12,60 @@ struct TerminalTab: View {
             List {
                 if let mac = model.activeMac {
                     Section {
-                        NavigationLink(value: TerminalSession.Target.mac(mac.id)) {
-                            HostRow(symbol: "laptopcomputer", title: mac.name, detail: "\(mac.user)@\(mac.lastHost ?? mac.hosts.first ?? "")",
-                                    active: model.terminals[.mac(mac.id)]?.isActive == true)
+                        Button {
+                            newSession(on: mac)
+                        } label: {
+                            Label("New Session", systemImage: "plus.circle.fill")
+                                .font(.body.weight(.semibold))
+                        }
+                    } footer: {
+                        Text("Starts another shell on \(mac.name). The others keep running.")
+                    }
+                    Section {
+                        if let note = connectionNote {
+                            Label(note.text, systemImage: note.symbol)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        if model.macSessions.loaded, model.macSessions.sessions.isEmpty, connectionNote == nil {
+                            Text("No sessions on the Mac. New Session starts one.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        ForEach(model.macSessions.sessions) { session in
+                            Button {
+                                open(session, on: mac)
+                            } label: {
+                                MacSessionRow(session: session, home: "/Users/\(mac.user)", holder: holder(of: session, on: mac))
+                            }
+                            .buttonStyle(.plain)
+                            .swipeActions {
+                                Button("End", systemImage: "xmark.circle", role: .destructive) { ending = session }
+                            }
+                            .contextMenu {
+                                Button("Open Session", systemImage: "apple.terminal") { open(session, on: mac) }
+                                Button("End Session", systemImage: "xmark.circle", role: .destructive) { ending = session }
+                            }
                         }
                     } header: {
-                        Text("Your Mac")
+                        Text("Sessions on the Mac")
+                    } footer: {
+                        Text("They keep running when the connection drops, also with the app closed, and this iPhone picks up where it left off. End the ones you no longer need.")
                     }
-                    if !macSessions.sessions.isEmpty {
-                        Section {
-                            ForEach(macSessions.sessions) { session in
-                                Button {
-                                    open(session, on: mac)
-                                } label: {
-                                    MacSessionRow(session: session, home: "/Users/\(mac.user)",
-                                                  isThisPhone: session.id == model.terminals[.mac(mac.id)]?.holderID)
-                                }
-                                .buttonStyle(.plain)
-                                .swipeActions {
-                                    Button("End", systemImage: "xmark.circle", role: .destructive) { ending = session }
-                                }
-                                .contextMenu {
-                                    Button("Open Here", systemImage: "apple.terminal") { open(session, on: mac) }
-                                    Button("End Session", systemImage: "xmark.circle", role: .destructive) { ending = session }
-                                }
-                            }
-                        } header: {
-                            Text("Sessions on the Mac")
-                        } footer: {
-                            Text("They keep running when the connection drops, also with the app closed, and this iPhone picks up where it left off. End the ones you no longer need.")
-                        }
-                    }
-                }
-                Section {
-                    ForEach(model.hosts) { host in
-                        NavigationLink(value: TerminalSession.Target.host(host.id)) {
-                            HostRow(symbol: "server.rack", title: host.displayName,
-                                    detail: host.label.isEmpty ? (host.port == 22 ? "" : ":\(host.port)") : "\(host.user)@\(host.host)",
-                                    active: model.terminals[.host(host.id)]?.isActive == true)
-                        }
-                        .swipeActions {
-                            Button("Delete", systemImage: "trash", role: .destructive) { model.remove(host) }
-                            Button("Edit", systemImage: "pencil") { editing = host }
-                        }
-                        .contextMenu {
-                            Button("Edit", systemImage: "pencil") { editing = host }
-                            Button("Delete", systemImage: "trash", role: .destructive) { model.remove(host) }
-                        }
-                    }
-                    Button("Add a computer", systemImage: "plus") { adding = true }
-                } header: {
-                    Text("Other computers")
-                } footer: {
-                    Text("SSH with this iPhone's key (Settings > SSH key of this iPhone) or a password kept behind Face ID.")
                 }
             }
             .navigationTitle("Terminal")
             .navigationDestination(for: TerminalSession.Target.self) { target in
                 TerminalScreen(session: model.terminal(for: target))
             }
-            .sheet(isPresented: $adding) { HostEditor(host: nil) }
-            .sheet(item: $editing) { host in HostEditor(host: host) }
             .overlay {
-                if model.activeMac == nil && model.hosts.isEmpty {
+                if model.activeMac == nil {
                     ContentUnavailableView {
-                        Label("No computers yet", systemImage: "apple.terminal")
+                        Label("No Mac yet", systemImage: "apple.terminal")
                     } description: {
-                        Text("Pair your Mac or add a computer to open a terminal on it.")
+                        Text("Pair your Mac to open a terminal on it.")
                     } actions: {
-                        Button("Add a computer") { adding = true }.buttonStyle(.glass)
+                        Button("Pair with your Mac") { model.isPairingPresented = true }.buttonStyle(.glass)
                     }
                 }
             }
@@ -93,10 +76,18 @@ struct TerminalTab: View {
                 }
                 #endif
             }
-            .task(id: model.connection?.isConnected == true) { await refreshSessions() }
-            .refreshable { await refreshSessions() }
-            .onChange(of: path) { _, now in if now.isEmpty { Task { await refreshSessions() } } }
-            .onChange(of: model.openTerminal) { _, target in
+            .task(id: model.connection?.isConnected == true) {
+                // While the list is on screen: now and every 10 s (what runs in the sessions changes).
+                while !Task.isCancelled {
+                    await refreshSessions()
+                    try? await Task.sleep(for: .seconds(10))
+                }
+            }
+            .refreshable {
+                model.connection?.retryNow()
+                await refreshSessions()
+            }
+            .onChange(of: model.openTerminal, initial: true) { _, target in
                 guard let target else { return }
                 model.openTerminal = nil
                 path = [target]
@@ -105,7 +96,7 @@ struct TerminalTab: View {
                                 titleVisibility: .visible, presenting: ending) { session in
                 Button("End Session", role: .destructive) {
                     Task {
-                        await macSessions.end(session, model: model)
+                        await model.macSessions.end(session, model: model)
                         ending = nil
                     }
                 }
@@ -117,18 +108,50 @@ struct TerminalTab: View {
 
     private func refreshSessions() async {
         #if DEBUG
-        if model.isDemo { macSessions.showDemo(); return }
+        if model.isDemo { model.macSessions.showDemo(); return }
         #endif
-        await macSessions.load(model: model)
+        await model.macSessions.load(model: model)
     }
 
-    /// The Mac's terminal on this iPhone shows that session (the one it showed keeps running).
+    /// Why the list may be old or empty: the Mac sleeps, isn't reachable, or can't hold sessions.
+    private var connectionNote: (text: String, symbol: String)? {
+        guard !model.isDemo, let connection = model.connection else { return nil }
+        if let since = connection.sleepingSince {
+            return (String(localized: "The Mac is sleeping since \(since.formatted(date: .omitted, time: .shortened)). The sessions continue when it wakes."),
+                    "moon.zzz")
+        }
+        switch connection.state {
+        case .connected:
+            if let hello = connection.hello, connection.companionState == .ready, !hello.features.contains("term") {
+                return (String(localized: "Update aOS on the Mac to keep terminals when the connection drops."), "arrow.down.circle")
+            }
+            return nil
+        case .idle, .connecting:
+            return (String(localized: "Connecting to the Mac …"), "arrow.triangle.2.circlepath")
+        case .unreachable, .needsAttention:
+            return (String(localized: "The Mac isn't reachable right now. The sessions keep running there."), "wifi.slash")
+        }
+    }
+
+    private func holder(of session: MacTermSession, on mac: PairedMac) -> MacTermSession.Holder {
+        let target = TerminalSession.Target.mac(mac.id)
+        let terminal = model.terminals[target]
+        return session.holder(shown: terminal?.isActive == true ? terminal?.holderID : nil,
+                              phoneID: model.deviceKey?.phoneID,
+                              last: terminal?.holderID ?? TerminalSession.storedHolderID(for: target))
+    }
+
+    /// The terminal shows that session (the one it showed keeps running).
     private func open(_ session: MacTermSession, on mac: PairedMac) {
         let terminal = model.terminal(for: .mac(mac.id))
         path = [.mac(mac.id)]
-        if terminal.holderID != session.id || !terminal.isActive {
-            Task { await terminal.switchTo(session: session.id) }
-        }
+        if !model.isDemo { terminal.switchTo(session: session.id) }
+    }
+
+    private func newSession(on mac: PairedMac) {
+        let terminal = model.terminal(for: .mac(mac.id))
+        if !model.isDemo { terminal.startNewSession() }
+        path = [.mac(mac.id)]
     }
 }
 
@@ -136,12 +159,15 @@ struct TerminalTab: View {
 @MainActor @Observable
 final class MacSessionList {
     private(set) var sessions: [MacTermSession] = []
+    /// The Mac sent its list at least once (an empty list then means: none).
+    private(set) var loaded = false
 
     func load(model: AppModel) async {
         guard let mac = model.activeMac, let ssh = model.connection?.ssh, ssh.isActive,
               let data = try? await ssh.run(TermAttach.list(companion: mac.companionPath)),
               let list = TermAttach.sessions(fromList: data) else { return }
-        sessions = list
+        sessions = TermAttach.ordered(list)
+        loaded = true
     }
 
     func end(_ session: MacTermSession, model: AppModel) async {
@@ -157,6 +183,12 @@ final class MacSessionList {
         await load(model: model)
     }
 
+    /// The name of a session in menus and titles: its title, or the program and the folder.
+    func name(of id: String?, home: String) -> String? {
+        guard let id, let session = sessions.first(where: { $0.id == id }) else { return nil }
+        return session.title ?? session.place(home: home)
+    }
+
     #if DEBUG
     func showDemo() {
         sessions = [
@@ -165,6 +197,7 @@ final class MacSessionList {
             MacTermSession(id: "7b2e90aa", attached: false, since: Date().addingTimeInterval(-3 * 3600), command: "zsh",
                            cwd: "/Users/max"),
         ]
+        loaded = true
     }
     #endif
 }
@@ -172,49 +205,32 @@ final class MacSessionList {
 private struct MacSessionRow: View {
     let session: MacTermSession
     let home: String
-    let isThisPhone: Bool
+    let holder: MacTermSession.Holder
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: session.attached ? "apple.terminal.fill" : "apple.terminal")
+            Image(systemName: holder == .nobody ? "apple.terminal" : "apple.terminal.fill")
                 .foregroundStyle(BrandColor.indigo).frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.title ?? session.place(home: home)).lineLimit(1)
                 Text(detail).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 0)
-            if isThisPhone {
-                Text("This iPhone").font(.footnote).foregroundStyle(.secondary)
-            }
         }
         .contentShape(Rectangle())
     }
 
     private var detail: String {
-        let time = session.since.map { $0.formatted(date: Calendar.current.isDateInToday($0) ? .omitted : .abbreviated, time: .shortened) } ?? ""
-        if session.attached {
-            if isThisPhone { return String(localized: "Open here") }
-            return session.from.map { String(localized: "Open on another device (\($0))") } ?? String(localized: "Open on another device")
-        }
-        return time.isEmpty ? String(localized: "Not open anywhere") : String(localized: "Not open anywhere since \(time)")
-    }
-}
-
-private struct HostRow: View {
-    let symbol: String
-    let title: String
-    let detail: String
-    let active: Bool
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: symbol).foregroundStyle(BrandColor.indigo).frame(width: 28)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                if !detail.isEmpty { Text(detail).font(.footnote).foregroundStyle(.secondary) }
-            }
-            Spacer()
-            if active { StatusDot(color: .green) }
+        switch holder {
+        case .here:
+            return String(localized: "Open on this iPhone")
+        case .elsewhere(let from):
+            return from.map { String(localized: "Open on another device (\($0))") } ?? String(localized: "Open on another device")
+        case .nobody:
+            let time = session.since.map {
+                $0.formatted(date: Calendar.current.isDateInToday($0) ? .omitted : .abbreviated, time: .shortened)
+            } ?? ""
+            return time.isEmpty ? String(localized: "Not open anywhere") : String(localized: "Not open anywhere since \(time)")
         }
     }
 }
@@ -236,9 +252,6 @@ struct TerminalScreen: View {
                 ProgressView("Connecting …").padding(20).glassEffect(in: RoundedRectangle(cornerRadius: 20))
             case .failed(let message):
                 StateOverlay(symbol: "exclamationmark.triangle", text: message, action: "Try again") { connect() }
-            case .detached:
-                StateOverlay(symbol: "pause.circle", text: String(localized: "Detached. The session keeps running on the Mac."),
-                             action: "Attach Again") { connect() }
             case .ended:
                 switch session.endReason {
                 case .taken:
@@ -246,14 +259,10 @@ struct TerminalScreen: View {
                                  text: String(localized: "This session is open on another device now. It keeps running on the Mac."),
                                  action: "Open It Here") { connect() }
                 case .exited:
-                    StateOverlay(symbol: "power", text: String(localized: "The shell ended."), action: "New Session") {
-                        session.forgetSession()
-                        connect()
-                    }
+                    StateOverlay(symbol: "power", text: String(localized: "The shell ended."), action: "New Session") { newSession() }
                 case .ended:
                     StateOverlay(symbol: "power", text: String(localized: "The session was ended."), action: "New Session") {
-                        session.forgetSession()
-                        connect()
+                        newSession()
                     }
                 case .closed:
                     StateOverlay(symbol: "power", text: String(localized: "The session ended."), action: "Connect again") { connect() }
@@ -264,7 +273,9 @@ struct TerminalScreen: View {
         }
         .overlay(alignment: .top) {
             if session.phase == .reconnecting {
-                Label("Reconnecting … The session keeps running on the Mac.", systemImage: "arrow.triangle.2.circlepath")
+                Label(macSleeps ? "The Mac is sleeping. The session continues when it wakes."
+                                : "Reconnecting … The session keeps running on the Mac.",
+                      systemImage: macSleeps ? "moon.zzz" : "arrow.triangle.2.circlepath")
                     .font(.footnote.weight(.medium))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
@@ -287,6 +298,7 @@ struct TerminalScreen: View {
         .animation(.snappy(duration: 0.2), value: session.notice)
         .animation(.snappy(duration: 0.2), value: session.phase)
         .navigationTitle(session.title)
+        .navigationSubtitle(model.macSessions.name(of: session.holderID, home: home) ?? "")
         .navigationBarTitleDisplayMode(.inline)
         // The terminal gets the rows the tab bar would take.
         .toolbar(.hidden, for: .tabBar)
@@ -296,7 +308,7 @@ struct TerminalScreen: View {
                        systemImage: session.keyboardShown ? "keyboard.chevron.compact.down" : "keyboard") {
                     session.toggleKeyboard()
                 }
-                TerminalMenu(session: session)
+                TerminalMenu(session: session, home: home) { newSession() }
             }
         }
         .alert(pasteTitle, isPresented: Binding(get: { session.pendingPaste != nil }, set: { if !$0 { session.pendingPaste = nil } }),
@@ -317,34 +329,19 @@ struct TerminalScreen: View {
         .onChange(of: model.settings.terminalArrowKeys) { _, arrows in session.view.keyBar.arrows = arrows }
         .onChange(of: model.settings.terminalSwipeArrows) { _, on in session.view.swipeArrows = on }
         .onChange(of: keepsScreenOn, initial: true) { _, on in UIApplication.shared.isIdleTimerDisabled = on }
+        // A new session shows up in the menu's list once it runs.
+        .onChange(of: session.phase) { _, phase in
+            if phase == .connected, !model.isDemo { Task { await model.macSessions.load(model: model) } }
+        }
         .task {
             if session.phase == .idle { connect() }
-        }
-        .sheet(isPresented: Binding(get: { if case .confirmHostKey = session.phase { true } else { false } },
-                                    set: { if !$0, case .confirmHostKey = session.phase { session.disconnect() } })) {
-            if case .confirmHostKey(let host, let key, let fingerprint) = session.phase, case .host(let id) = session.id,
-               let entry = model.hosts.first(where: { $0.id == id }) {
-                HostKeyPrompt(host: host, fingerprint: fingerprint) {
-                    model.trust(key: key, for: entry)
-                    connect()
-                }
-            }
-        }
-        .alert("The key of this computer changed", isPresented: Binding(
-            get: { if case .hostKeyChanged = session.phase { true } else { false } }, set: { _ in })) {
-            Button("Cancel", role: .cancel) { session.disconnect() }
-            Button("Forget the old key", role: .destructive) {
-                if case .host(let id) = session.id, let entry = model.hosts.first(where: { $0.id == id }) {
-                    model.forgetKey(of: entry)
-                    connect()
-                }
-            }
-        } message: {
-            if case .hostKeyChanged(let host, let fingerprint) = session.phase {
-                Text("\(host) now presents \(fingerprint). That happens when the computer was set up again, but it can also mean that someone is in between. Only continue if you know why it changed.")
-            }
+            if !model.isDemo { await model.macSessions.load(model: model) }
         }
     }
+
+    private var home: String { model.activeMac.map { "/Users/\($0.user)" } ?? "" }
+
+    private var macSleeps: Bool { model.connection?.sleepingSince != nil }
 
     /// While the terminal is on screen and connected, if the person wants that.
     private var keepsScreenOn: Bool {
@@ -357,39 +354,39 @@ struct TerminalScreen: View {
     }
 
     private func connect() {
-        // The person opens the terminal: the moment iOS allows asking for time in the background.
-        model.keepAlive.terminalOpened()
         Task {
             #if DEBUG
             if model.isDemo {
-                session.showDemo(Demo.terminalText)
-                // -AOSDemoTerminal selection|keys|menu: states of the terminal for screenshots
-                if let state = UserDefaults.standard.string(forKey: "AOSDemoTerminal") {
-                    try? await Task.sleep(for: .seconds(1.5))
-                    session.view.showDemoState(state)
-                }
+                showDemo()
                 return
             }
             #endif
-            switch session.id {
-            case .mac:
-                if let connection = model.connection { await session.connect(mac: connection) }
-            case .host(let id):
-                guard let host = model.hosts.first(where: { $0.id == id }) else { return }
-                var password: String?
-                if host.auth == .password {
-                    do {
-                        let context = try await Biometrics.authenticate(reason: String(localized: "Use the password for \(host.displayName)"))
-                        password = try SecretStore.password(for: host, context: context)
-                        context.invalidate()
-                    } catch {
-                        return
-                    }
-                }
-                await session.connect(host: host, key: model.deviceKey, password: password)
+            if let connection = model.connection { await session.connect(mac: connection) }
+        }
+    }
+
+    private func newSession() {
+        #if DEBUG
+        if model.isDemo {
+            showDemo()
+            return
+        }
+        #endif
+        session.startNewSession()
+    }
+
+    #if DEBUG
+    private func showDemo() {
+        session.showDemo(Demo.terminalText)
+        // -AOSDemoTerminal selection|keys|menu: states of the terminal for screenshots
+        if let state = UserDefaults.standard.string(forKey: "AOSDemoTerminal") {
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                session.view.showDemoState(state)
             }
         }
     }
+    #endif
 }
 
 private struct StateOverlay: View {
@@ -411,16 +408,19 @@ private struct StateOverlay: View {
     }
 }
 
-/// The terminal's menu: copying, text size, keeping the screen on, detaching or ending the session.
+/// The terminal's menu: copying, text size, keeping the screen on, and the Mac's sessions (a new one, another one,
+/// ending this one).
 private struct TerminalMenu: View {
     @Environment(AppModel.self) private var model
     let session: TerminalSession
+    let home: String
+    let newSession: () -> Void
     @State private var confirmEnd = false
 
-    private var isHeldOnTheMac: Bool {
-        if case .mac = session.id { return session.holdsSession && session.holderID != nil }
-        return false
-    }
+    /// Something to end: the session on the Mac, or a plain shell (an older aOS on the Mac).
+    private var canEnd: Bool { session.holdsSession ? session.holderID != nil : session.isActive }
+
+    private var others: [MacTermSession] { model.macSessions.sessions.filter { $0.id != session.holderID } }
 
     var body: some View {
         menu
@@ -449,17 +449,20 @@ private struct TerminalMenu: View {
                 Toggle("Keep Screen On", systemImage: "sun.max", isOn: Binding(
                     get: { model.settings.terminalKeepsScreenOn }, set: { model.settings.terminalKeepsScreenOn = $0 }))
             }
-            if isHeldOnTheMac, session.isActive {
-                Section {
-                    Button("Detach", systemImage: "pause.circle") { session.disconnect() }
+            Section {
+                Button("New Session", systemImage: "plus") { newSession() }
+                if !others.isEmpty {
+                    Menu("Switch Session", systemImage: "rectangle.stack") {
+                        ForEach(others) { other in
+                            Button(other.title ?? other.place(home: home)) { session.switchTo(session: other.id) }
+                        }
+                    }
+                }
+                if canEnd {
                     Button("End Session", systemImage: "xmark.circle", role: .destructive) { confirmEnd = true }
-                } footer: {
-                    Text("Detached, the session keeps running on the Mac.")
                 }
-            } else if session.isActive {
-                Section {
-                    Button("Disconnect", systemImage: "xmark.circle", role: .destructive) { session.disconnect() }
-                }
+            } footer: {
+                Text("Sessions keep running on the Mac until you end them.")
             }
         } label: {
             Label("Terminal", systemImage: "ellipsis")
@@ -477,134 +480,4 @@ struct TerminalViewRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: TerminalView, context: Context) {}
-}
-
-struct HostKeyPrompt: View {
-    @Environment(\.dismiss) private var dismiss
-    let host: String
-    let fingerprint: String
-    let trust: () -> Void
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    HeroSymbol(systemName: "questionmark.key.filled", tint: .orange, size: 60)
-                    Text("First connection to \(host)").font(.title2.weight(.semibold))
-                    Text("Check that this is the key of your computer. On it, run:")
-                    Text("ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub")
-                        .font(.footnote.monospaced()).padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
-                        .textSelection(.enabled)
-                    Text("It must show:")
-                    KeyText(text: fingerprint, font: .callout.monospaced().weight(.semibold))
-                    Text("aOS remembers the key and warns you if it ever changes.")
-                        .font(.footnote).foregroundStyle(.secondary)
-                    Button {
-                        trust()
-                        dismiss()
-                    } label: {
-                        Text("Trust and connect").frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.glassProminent)
-                    .controlSize(.large)
-                }
-                .padding()
-            }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-            }
-        }
-        .presentationDetents([.medium, .large])
-    }
-}
-
-// MARK: - Adding a computer
-
-struct HostEditor: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.dismiss) private var dismiss
-    let host: SSHHost?
-
-    @State private var label: String
-    @State private var address: String
-    @State private var port: String
-    @State private var user: String
-    @State private var auth: SSHHost.Auth
-    @State private var password = ""
-    @State private var error: String?
-
-    init(host: SSHHost?) {
-        self.host = host
-        _label = State(initialValue: host?.label ?? "")
-        _address = State(initialValue: host?.host ?? "")
-        _port = State(initialValue: String(host?.port ?? 22))
-        _user = State(initialValue: host?.user ?? "")
-        _auth = State(initialValue: host?.auth ?? .deviceKey)
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("Name (optional)", text: $label)
-                    TextField("Address", text: $address)
-                        .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    TextField("Port", text: $port).keyboardType(.numberPad)
-                    TextField("User", text: $user)
-                        .textContentType(.username).textInputAutocapitalization(.never).autocorrectionDisabled()
-                }
-                Section {
-                    Picker("Log in with", selection: $auth) {
-                        Text("This iPhone's key").tag(SSHHost.Auth.deviceKey)
-                        Text("Password").tag(SSHHost.Auth.password)
-                    }
-                    .pickerStyle(.segmented)
-                    if auth == .password {
-                        SecureField(host == nil ? "Password" : "New password (empty keeps the old one)", text: $password)
-                            .textContentType(.password)
-                    }
-                } footer: {
-                    Text(auth == .deviceKey
-                         ? "Add this iPhone's public key (Settings > SSH key of this iPhone) to ~/.ssh/authorized_keys on that computer."
-                         : "The password stays on this iPhone, behind Face ID.")
-                }
-                if let error {
-                    Section { Text(error).foregroundStyle(.red) }
-                }
-            }
-            .navigationTitle(host == nil ? "Add a computer" : "Edit")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
-                        .disabled(address.trimmingCharacters(in: .whitespaces).isEmpty || user.trimmingCharacters(in: .whitespaces).isEmpty
-                                  || UInt16(port) == nil || (auth == .password && host == nil && password.isEmpty))
-                }
-            }
-        }
-    }
-
-    private func save() {
-        let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
-        var updated = host ?? SSHHost(label: "", host: "", user: "")
-        // A new address is another computer: its key has to be trusted again.
-        if updated.host != trimmedAddress || updated.port != UInt16(port) { updated.hostKey = nil }
-        updated.label = label.trimmingCharacters(in: .whitespaces)
-        updated.host = trimmedAddress
-        updated.port = UInt16(port) ?? 22
-        updated.user = user.trimmingCharacters(in: .whitespaces)
-        updated.auth = auth
-        do {
-            try model.save(updated, password: auth == .password && !password.isEmpty ? password : nil)
-            password = ""
-            dismiss()
-        } catch Keychain.Failure.noPasscode {
-            error = String(localized: "Set a passcode for this iPhone first (Settings > Face ID & Passcode).")
-        } catch {
-            self.error = error.localizedDescription
-        }
-    }
 }

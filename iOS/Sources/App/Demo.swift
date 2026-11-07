@@ -31,7 +31,6 @@ enum Demo {
 
     struct Content {
         var mac: PairedMac
-        var hosts: [SSHHost]
     }
 
     static func content() -> Content {
@@ -40,12 +39,7 @@ enum Demo {
                             sshPort: 22, user: "max", hostKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN8Rl2qwv75VjkzLHaW5OyZu4CaxGsZU2+cYoDrSFSrY",
                             hostKeyFingerprint: "SHA256:IKIpT5qrBHciGB6LMk+7fuTQHDnNluSkoLBSGY4SWMQ",
                             companionPath: CompanionCommand.defaultPath, lastHost: "Maxs-MacBook-Pro.local")
-        let hosts = [
-            SSHHost(label: "Raspberry Pi", host: "pi.local", user: "pi", auth: .deviceKey,
-                    hostKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN8Rl2qwv75VjkzLHaW5OyZu4CaxGsZU2+cYoDrSFSrY"),
-            SSHHost(label: "", host: "lxhalle.in.tum.de", user: "ge12abc", auth: .password),
-        ]
-        return Content(mac: mac, hosts: hosts)
+        return Content(mac: mac)
     }
 
     /// Bitwarden logins as the Mac offers them with a request (sample data).
