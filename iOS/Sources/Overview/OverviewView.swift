@@ -543,7 +543,7 @@ struct WorkspaceCard: View {
         GlassCard {
             VStack(alignment: .leading, spacing: 12) {
                 OverviewRow(symbol: symbol, title: String(localized: "Workspace"), detail: stateText)
-                if let workspace = connection.workspace, workspace.state == .open || workspace.state == .starting {
+                if live, let workspace = connection.workspace, workspace.state == .open || workspace.state == .starting {
                     if !workspace.purpose.isEmpty {
                         Text("\u{201E}\(workspace.purpose)\u{201C}").font(.callout).italic()
                             .padding(.leading, OverviewRow<EmptyView>.iconWidth + 12)
@@ -554,11 +554,11 @@ struct WorkspaceCard: View {
                             .padding(.leading, OverviewRow<EmptyView>.iconWidth + 12)
                     }
                 }
-                if let error = connection.macStatus?.workspace?.error, state == "failed" {
+                if live, let error = connection.macStatus?.workspace?.error, state == "failed" {
                     Text(error).font(.footnote).foregroundStyle(.orange)
                         .padding(.leading, OverviewRow<EmptyView>.iconWidth + 12)
                 }
-                if let sessions = connection.workspace?.sessions, !sessions.isEmpty {
+                if live, let sessions = connection.workspace?.sessions, !sessions.isEmpty {
                     ForEach(sessions) { session in
                         HStack(spacing: 12) {
                             StatusDot(color: session.state == "running" ? .green : .gray)
@@ -569,7 +569,7 @@ struct WorkspaceCard: View {
                         }
                     }
                 }
-                buttons
+                if live { buttons }
                 ProblemLine(text: actions.problem)
             }
         }
@@ -597,6 +597,10 @@ struct WorkspaceCard: View {
         case .other(let raw): return raw
         }
     }
+
+    /// aOS on the Mac answers now (not while the Mac sleeps or the connection is gone): only then the workspace's
+    /// state counts, and its buttons.
+    private var live: Bool { connection.companionState == .ready && connection.sleepingSince == nil }
 
     @ViewBuilder private var buttons: some View {
         let ready = connection.companionState == .ready
@@ -644,7 +648,8 @@ struct WorkspaceCard: View {
     }
 
     private var symbol: String {
-        switch state {
+        guard live else { return "macwindow" }
+        return switch state {
         case "open", "running": "macwindow.on.rectangle"
         case "starting": "hourglass"
         case "closing": "arrow.down.right.and.arrow.up.left"
@@ -654,7 +659,7 @@ struct WorkspaceCard: View {
     }
 
     private var stateText: String {
-        guard connection.companionState == .ready, connection.workspace != nil || connection.macStatus != nil else {
+        guard live, connection.workspace != nil || connection.macStatus != nil else {
             return String(localized: "No news from the Mac")
         }
         if connection.macStatus?.workspace?.setupComplete == false {
