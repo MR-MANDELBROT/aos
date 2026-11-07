@@ -95,7 +95,9 @@ nonisolated struct Computer: Codable, Identifiable, Hashable, FetchableRecord, P
         name.isEmpty ? addressDescription : name
     }
 
-    // aOS: no `device` (the look of the computer in Open Screen Sharing's list, which aOS doesn't have).
+    var device: DeviceAppearance {
+        DeviceAppearance(model: model, enclosureColor: enclosureColor)
+    }
 
     var memory: SessionMemory {
         SessionMemory(
