@@ -510,3 +510,9 @@ DE.update({
     'A mouse or trackpad on the iPhone points, clicks and scrolls directly':
         'Eine Maus oder ein Trackpad am iPhone zeigt, klickt und scrollt direkt',
 })
+
+# The workspace's sealed screen login
+DE.update({
+    'Update aOS on the Mac to see the workspace from this iPhone.':
+        'Aktualisiere aOS auf dem Mac, um den Arbeitsplatz auf diesem iPhone zu sehen.',
+})
