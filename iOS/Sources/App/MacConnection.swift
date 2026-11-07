@@ -1,3 +1,4 @@
+import AOSTailnet
 import Foundation
 import Network
 import Observation
@@ -37,6 +38,8 @@ final class MacConnection {
     /// Set while `aos-companion` can't reach the aOS app on the Mac (it keeps trying): what it said.
     private(set) var macAppProblem: String?
     private(set) var ssh: SSHConnection?
+    /// How the Mac was reached (same network, tailnet, Bonjour), while connected.
+    var route: SSHRoute? { ssh?.route }
     private(set) var companion: CompanionClient?
     /// When the next attempt runs, while unreachable.
     private(set) var nextAttempt: Date?
@@ -53,6 +56,7 @@ final class MacConnection {
     private var loop: Task<Void, Never>?
     private var wake: AsyncStream<Void>.Continuation?
     private var pathMonitor: NWPathMonitor?
+    private var tailnetObserver: NSObjectProtocol?
 
     init(mac: PairedMac, key: DeviceKey, signer: CompanionSigner?, deviceName: String) {
         self.mac = mac
@@ -71,6 +75,11 @@ final class MacConnection {
         wake = continuation
         loop = Task { [weak self] in await self?.run(wakes: stream) }
         watchNetwork()
+        // aOS's Tailscale on this iPhone came up: a new way to the Mac.
+        tailnetObserver = NotificationCenter.default.addObserver(forName: .aosTailnetReady, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in if self?.isConnected == false { self?.retryNow() } }
+        }
+        EmbeddedTailnet.shared.startIfSetUp()
     }
 
     func stop() {
@@ -80,6 +89,8 @@ final class MacConnection {
         wake = nil
         pathMonitor?.cancel()
         pathMonitor = nil
+        if let tailnetObserver { NotificationCenter.default.removeObserver(tailnetObserver) }
+        tailnetObserver = nil
         let ssh = self.ssh, companion = self.companion
         self.ssh = nil
         self.companion = nil
@@ -165,9 +176,13 @@ final class MacConnection {
             state = .connecting
             nextAttempt = nil
             do {
+                // The same network first, then the tailnet (aOS's Tailscale here, the Tailscale app's VPN), then
+                // Bonjour (ConnectionPlan). The host key stays pinned whichever way answers.
+                let tailnet = EmbeddedTailnet.shared
+                let routes = ConnectionPlan.routes(for: mac, embeddedNode: tailnet.isRunning, systemVPN: TailnetVPN.isActive)
                 let connection = try await SSHConnection.connect(
-                    hosts: mac.hostsToTry, port: Int(mac.sshPort), login: SSHLogin(username: mac.user, key: key),
-                    hostKey: .pinned(mac.hostKey))
+                    routes: routes, port: Int(mac.sshPort), login: SSHLogin(username: mac.user, key: key),
+                    hostKey: .pinned(mac.hostKey), tailnet: tailnet.dialer)
                 if Task.isCancelled { await connection.close(); return }
                 ssh = connection
                 state = .connected(host: connection.host)
@@ -195,6 +210,8 @@ final class MacConnection {
                     state = .needsAttention(Self.message(for: error))
                     loop = nil
                     return
+                case .unreachable:
+                    state = .unreachable(unreachableMessage())
                 default:
                     state = .unreachable(Self.message(for: error))
                 }
@@ -369,6 +386,27 @@ final class MacConnection {
             String(localized: "The Mac isn't reachable. Outside your home network you need Tailscale or another VPN to reach it.")
         case .unknownHostKey:
             String(localized: "The Mac's key is unknown.")
+        }
+    }
+
+    /// Not reachable: what would help, by the Mac's way on the go.
+    func unreachableMessage() -> String {
+        let tailnet = EmbeddedTailnet.shared
+        let notThroughTailscale = String(localized: "The Mac isn't reachable, also not through Tailscale. Is it awake, and is Tailscale on there?")
+        switch mac.way {
+        case .aosTailscale?:
+            if !tailnet.isSetUp {
+                return String(localized: "The Mac isn't reachable. On the go, set up aOS's Tailscale on this iPhone: Settings > Connection.")
+            }
+            return tailnet.isRunning ? notThroughTailscale
+                : String(localized: "The Mac isn't reachable, and aOS's Tailscale on this iPhone isn't connected (Settings > Connection).")
+        case .tailscaleApp?:
+            return tailnet.isRunning || TailnetVPN.isActive ? notThroughTailscale
+                : String(localized: "The Mac isn't reachable. On the go, switch on Tailscale on this iPhone (the Tailscale app, or aOS's Tailscale in Settings > Connection).")
+        case .localNetwork?:
+            return String(localized: "The Mac isn't reachable. Your Mac is set up for the same network only; to reach it on the go, choose a way with Tailscale in aOS on the Mac.")
+        case nil:
+            return Self.message(for: .unreachable([]))
         }
     }
 

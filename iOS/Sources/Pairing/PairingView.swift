@@ -1,3 +1,4 @@
+import AOSTailnet
 import SwiftUI
 import VisionKit
 
@@ -145,10 +146,25 @@ struct PairingView: View {
             } footer: {
                 Text("Pair only with your own Mac. aOS on the Mac adds this iPhone's key to your user's SSH keys there.")
             }
-            Section("How the iPhone reaches it") {
+            Section {
                 ForEach(link.hosts, id: \.self) { host in
-                    Label(host, systemImage: host.hasSuffix(".ts.net") ? "point.3.connected.trianglepath.dotted" : "network")
+                    Label(host, systemImage: host.hasSuffix(".ts.net") || link.tailnetHosts.contains(host)
+                          ? "point.3.connected.trianglepath.dotted" : "network")
                         .font(.callout)
+                }
+            } header: {
+                Text("How the iPhone reaches it")
+            } footer: {
+                // On the go (the Mac's step "On the go"); Settings > Connection shows it later.
+                switch link.way {
+                case .aosTailscale?:
+                    Text("On the go through aOS's own Tailscale. After pairing, set it up on this iPhone too, with the same Tailscale account.")
+                case .tailscaleApp?:
+                    Text("On the go through the Tailscale app. On this iPhone you need it too, signed in with the same account (or aOS's own Tailscale, in Settings > Connection).")
+                case .localNetwork?:
+                    Text("Only on the same network: on the go the iPhone doesn't reach this Mac.")
+                case nil:
+                    EmptyView()
                 }
             }
             Section {
@@ -215,6 +231,17 @@ struct PairingView: View {
             Text("Paired with \(mac.name)").font(.title2.weight(.semibold)).multilineTextAlignment(.center)
             Text("The iPhone now reaches your Mac by itself whenever the app is open.")
                 .foregroundStyle(.secondary).multilineTextAlignment(.center)
+            if mac.way == .aosTailscale && !EmbeddedTailnet.shared.isSetUp {
+                // On the go: aOS's own Tailscale here too (the sign-in page opens; Settings > Connection later).
+                Button {
+                    EmbeddedTailnet.shared.setUp(deviceName: model.deviceName)
+                } label: {
+                    Label("Set Up Tailscale for on the Go", systemImage: "point.3.connected.trianglepath.dotted")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glass)
+                .controlSize(.large)
+            }
             Spacer()
             Button {
                 dismiss()
