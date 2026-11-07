@@ -7,3 +7,5 @@ DerivedData/
 aOS.xcodeproj/
 .DS_Store
 .claude/
+# Built by iOS/generate.sh (Tailnet/build.sh ios)
+iOS/Frameworks/

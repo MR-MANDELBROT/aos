@@ -516,3 +516,88 @@ DE.update({
     'Update aOS on the Mac to see the workspace from this iPhone.':
         'Aktualisiere aOS auf dem Mac, um den Arbeitsplatz auf diesem iPhone zu sehen.',
 })
+
+# On the go: aOS's Tailscale on this iPhone, Settings > Connection, the way while pairing
+DE.update({
+    'Connection': 'Verbindung',
+    'Now': 'Jetzt',
+    '%@ on the go': '%@ unterwegs',
+    'The connection': 'Die Verbindung',
+    "The iPhone tries the same network first, then the tailnet, then the Mac's name on the network.":
+        'Das iPhone versucht zuerst dasselbe Netzwerk, dann das Tailnet, dann den Namen des Macs im Netzwerk.',
+    'Tailscale app on this iPhone': 'Tailscale-App auf diesem iPhone',
+    'VPN on': 'VPN an',
+    'VPN off': 'VPN aus',
+    'Get the Tailscale App': 'Tailscale-App laden',
+    "Your Mac uses the Tailscale app. On this iPhone the Tailscale app, signed in with the same account, reaches it too; so does aOS's own Tailscale below.":
+        'Dein Mac nutzt die Tailscale-App. Auf diesem iPhone erreicht ihn die Tailscale-App, mit demselben Konto angemeldet, ebenfalls; genauso das eigene Tailscale von aOS weiter unten.',
+    'aOS devices': 'Geräte von aOS',
+    "Users, access rules and your other devices are in Tailscale's admin console.":
+        'Benutzer, Zugriffsregeln und deine anderen Geräte findest du in der Verwaltung von Tailscale.',
+    'Reconnect': 'Neu verbinden',
+    'Sign Out': 'Abmelden',
+    'Sign Out removes this iPhone from the tailnet and deletes its Tailscale keys here.':
+        '„Abmelden“ nimmt dieses iPhone aus dem Tailnet und löscht hier seine Tailscale-Schlüssel.',
+    'Open the Tailscale Admin Console': 'Tailscale-Verwaltung öffnen',
+    "If you install the Tailscale app later and sign in with the same account, aOS's devices appear in the same tailnet, and you manage them there like any other device. The Tailscale app can't take over aOS's connection.":
+        'Installierst du später die Tailscale-App und meldest dich mit demselben Konto an, erscheinen die Geräte von aOS im selben Tailnet, und du verwaltest sie dort wie jedes andere Gerät. Die Verbindung von aOS übernehmen kann die Tailscale-App nicht.',
+    'Sign out of Tailscale on this iPhone?': 'Auf diesem iPhone von Tailscale abmelden?',
+    'This iPhone leaves your tailnet. On the go it then reaches the Mac only through the Tailscale app, if it has it.':
+        'Dieses iPhone verlässt dein Tailnet. Unterwegs erreicht es den Mac dann nur noch über die Tailscale-App, falls es sie hat.',
+    "Your Mac uses aOS's own Tailscale. Set it up here too: you sign in once with your Tailscale account, the same as on the Mac.":
+        'Dein Mac nutzt das eigene Tailscale von aOS. Richte es hier auch ein: Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac.',
+    'aOS can bring Tailscale along on this iPhone too: no VPN, no extra app. You sign in once with your Tailscale account, the same as on the Mac.':
+        'aOS kann Tailscale auch auf diesem iPhone mitbringen: kein VPN, keine zusätzliche App. Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac.',
+    'Tailnet of the Mac': 'Tailnet des Macs',
+    'Set Up Tailscale': 'Tailscale einrichten',
+    'Tailnet': 'Tailnet',
+    'Key': 'Schlüssel',
+    'Your Mac is in the tailnet %@. Sign out here and sign in with that account.':
+        'Dein Mac ist im Tailnet %@. Melde dich hier ab und mit diesem Konto wieder an.',
+    "Your Mac isn't in this tailnet. Sign in with the account you used on the Mac.":
+        'Dein Mac ist nicht in diesem Tailnet. Melde dich mit dem Konto an, das du auf dem Mac benutzt hast.',
+    'Sign in to Tailscale on the page that opened.': 'Melde dich auf der geöffneten Seite bei Tailscale an.',
+    "Signed in. The tailnet's admin still has to approve this iPhone in the Tailscale admin console.":
+        'Angemeldet. Die Verwaltung des Tailnets muss dieses iPhone noch in der Tailscale-Verwaltung freigeben.',
+    'Sign In to Tailscale': 'Bei Tailscale anmelden',
+    "aOS's Tailscale on this iPhone": 'Das Tailscale von aOS auf diesem iPhone',
+    'No VPN and no Tailscale app needed. aOS only reaches your Mac through it, and nothing on this iPhone is reachable in your tailnet. Its keys stay on this iPhone, out of backups.':
+        'Kein VPN und keine Tailscale-App nötig. aOS erreicht darüber nur deinen Mac, und auf diesem iPhone ist in deinem Tailnet nichts erreichbar. Die Schlüssel bleiben auf diesem iPhone, nicht in Backups.',
+    'through the Tailscale app': 'über die Tailscale-App',
+    "through aOS's Tailscale": 'über das Tailscale von aOS',
+    'only on the same network': 'nur im selben Netzwerk',
+    'not chosen (pair again to choose)': 'nicht gewählt (zum Wählen neu koppeln)',
+    'through Tailscale': 'über Tailscale',
+    'not connected': 'nicht verbunden',
+    "aOS's Tailscale (%@)": 'Tailscale von aOS (%@)',
+    'Tailscale app (%@)': 'Tailscale-App (%@)',
+    'same network (%@)': 'dasselbe Netzwerk (%@)',
+    'same network, found by name': 'dasselbe Netzwerk, über den Namen gefunden',
+    'this iPhone': 'dieses iPhone',
+    'online': 'online',
+    'offline': 'offline',
+    'last seen %@': 'zuletzt gesehen %@',
+    'key expired': 'Schlüssel abgelaufen',
+    "key doesn't expire": 'Schlüssel läuft nicht ab',
+    'key expires %@': 'Schlüssel läuft ab am %@',
+    "Tailscale didn't send a sign-in page. Try again in a moment.":
+        'Tailscale hat keine Anmeldeseite geschickt. Versuch es gleich noch einmal.',
+    "aOS's Tailscale isn't connected on this iPhone.": 'Das Tailscale von aOS ist auf diesem iPhone nicht verbunden.',
+    "The Mac isn't reachable, also not through Tailscale. Is it awake, and is Tailscale on there?":
+        'Der Mac ist nicht erreichbar, auch nicht über Tailscale. Ist er wach, und ist Tailscale dort an?',
+    "The Mac isn't reachable. On the go, set up aOS's Tailscale on this iPhone: Settings > Connection.":
+        'Der Mac ist nicht erreichbar. Für unterwegs richte das Tailscale von aOS auf diesem iPhone ein: Einstellungen > Verbindung.',
+    "The Mac isn't reachable, and aOS's Tailscale on this iPhone isn't connected (Settings > Connection).":
+        'Der Mac ist nicht erreichbar, und das Tailscale von aOS ist auf diesem iPhone nicht verbunden (Einstellungen > Verbindung).',
+    "The Mac isn't reachable. On the go, switch on Tailscale on this iPhone (the Tailscale app, or aOS's Tailscale in Settings > Connection).":
+        'Der Mac ist nicht erreichbar. Schalte unterwegs Tailscale auf diesem iPhone ein (die Tailscale-App oder das Tailscale von aOS unter Einstellungen > Verbindung).',
+    "The Mac isn't reachable. Your Mac is set up for the same network only; to reach it on the go, choose a way with Tailscale in aOS on the Mac.":
+        'Der Mac ist nicht erreichbar. Dein Mac ist nur für dasselbe Netzwerk eingerichtet; um ihn unterwegs zu erreichen, wähle in aOS auf dem Mac einen Weg mit Tailscale.',
+    "On the go through aOS's own Tailscale. After pairing, set it up on this iPhone too, with the same Tailscale account.":
+        'Unterwegs über das eigene Tailscale von aOS. Richte es nach dem Koppeln auch auf diesem iPhone ein, mit demselben Tailscale-Konto.',
+    "On the go through the Tailscale app. On this iPhone you need it too, signed in with the same account (or aOS's own Tailscale, in Settings > Connection).":
+        'Unterwegs über die Tailscale-App. Auf diesem iPhone brauchst du sie auch, mit demselben Konto angemeldet (oder das eigene Tailscale von aOS, unter Einstellungen > Verbindung).',
+    "Only on the same network: on the go the iPhone doesn't reach this Mac.":
+        'Nur im selben Netzwerk: Unterwegs erreicht das iPhone diesen Mac nicht.',
+    'Set Up Tailscale for on the Go': 'Tailscale für unterwegs einrichten',
+})
