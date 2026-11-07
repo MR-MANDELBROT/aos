@@ -28,6 +28,8 @@ struct SettingsView: View {
 
 struct GeneralSettings: View {
     @EnvironmentObject var model: AppModel
+    @State private var confirmReset = false
+    @State private var resetting = false
 
     var body: some View {
         Form {
@@ -104,8 +106,30 @@ struct GeneralSettings: View {
                     Button("Show in Finder") { NSWorkspace.shared.open(model.paths.root) }
                 }
             }
+            Section {
+                LabeledContent {
+                    Button("Delete and Set Up Again …", role: .destructive) { confirmReset = true }
+                        .buttonStyle(.glass)
+                        .disabled(resetting)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Start the workspace over")
+                        Text("Deletes the workspace with everything in it and sets it up again from the start (macOS is downloaded again).")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
         }
         .formStyle(.grouped)
+        .alert("Delete the workspace?", isPresented: $confirmReset) {
+            Button("Delete and Set Up Again", role: .destructive) {
+                resetting = true
+                Task { await model.resetWorkspace(); resetting = false }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Everything in the workspace is deleted: files, programs and sign-ins. Your Mac and your Exchange folder stay as they are.")
+        }
         .onAppear { Task { await model.checkHelper() } }
     }
 

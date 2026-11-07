@@ -1712,6 +1712,46 @@
         }
       }
     },
+    "Delete and Set Up Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen und neu einrichten"
+          }
+        }
+      }
+    },
+    "Delete and Set Up Again …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen und neu einrichten …"
+          }
+        }
+      }
+    },
+    "Delete the workspace?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz löschen?"
+          }
+        }
+      }
+    },
+    "Deletes the workspace with everything in it and sets it up again from the start (macOS is downloaded again)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löscht den Arbeitsplatz mit allem, was darin ist, und richtet ihn von vorn neu ein (macOS wird neu geladen)."
+          }
+        }
+      }
+    },
     "Details" : {
       "localizations" : {
         "de" : {
@@ -1930,6 +1970,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jede Website vergisst ihre Anmeldung, wenn der Arbeitsplatz schließt. Rechne mit mehr Captchas, etwa bei Google."
+          }
+        }
+      }
+    },
+    "Everything in the workspace is deleted: files, programs and sign-ins. Your Mac and your Exchange folder stay as they are." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles im Arbeitsplatz wird gelöscht: Dateien, Programme und Anmeldungen. Dein Mac und dein Austauschordner bleiben, wie sie sind."
           }
         }
       }
@@ -4487,6 +4537,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arbeitsplatz starten"
+          }
+        }
+      }
+    },
+    "Start the workspace over" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz neu aufsetzen"
           }
         }
       }
