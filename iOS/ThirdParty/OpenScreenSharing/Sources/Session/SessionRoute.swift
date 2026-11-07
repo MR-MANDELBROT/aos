@@ -21,8 +21,8 @@ nonisolated struct SessionRoute: Codable, Hashable, Identifiable, Sendable {
     /// session never asks for one and keeps none: no sign-in sheet, no saved password or user name, and a refused
     /// login ends the session for aOS to handle.
     var managesLogin = true
-    /// aOS: the picture follows the window (the workspace takes the iPhone's shape through aOS's own display
-    /// request), so the session doesn't turn the iPhone to the picture's orientation.
+    /// aOS: aOS gives the screen the window's shape itself (the workspace's display request); the session sends no
+    /// virtual display of its own for it. Like a virtual display, the picture follows the iPhone in every orientation.
     var followsWindowShape = false
 
     var address: ComputerAddress {
@@ -46,9 +46,11 @@ nonisolated struct SessionRoute: Codable, Hashable, Identifiable, Sendable {
         deviceType = computer.usesHighPerformance ? computer.deviceType : nil
     }
 
-    /// aOS: a screen aOS reaches through its SSH tunnel (127.0.0.1 and the forwarded port), with its login. High
-    /// performance stays off: it needs a direct UDP path, and only TCP goes through SSH.
-    init(computerID: UUID, name: String, host: String, port: Int, credentials: SessionCredentials, followsWindowShape: Bool) {
+    /// aOS: a screen aOS reaches through its SSH tunnel (127.0.0.1 and the forwarded port), with its login, in
+    /// standard mode: high performance needs a direct UDP path, and only TCP goes through SSH. Or the Mac on aOS's
+    /// direct path (its address on the network), with high performance and the virtual display.
+    init(computerID: UUID, name: String, host: String, port: Int, credentials: SessionCredentials, followsWindowShape: Bool,
+         usesHighPerformance: Bool = false) {
         self.computerID = computerID
         self.name = name
         self.host = host
@@ -57,7 +59,7 @@ nonisolated struct SessionRoute: Codable, Hashable, Identifiable, Sendable {
         self.credentials = credentials
         model = nil
         remoteProtocol = .vnc
-        usesHighPerformance = false
+        self.usesHighPerformance = usesHighPerformance
         deviceType = .mac
         managesLogin = false
         self.followsWindowShape = followsWindowShape

@@ -203,11 +203,20 @@ final class SessionController: Identifiable {
     private var pointerLockHasLocked = false
     private let store = ComputerStore.shared
     @PerceptionIgnored var onClose: () -> Void = {}
-    /// aOS: the area the picture is shown in (points) and the screen's scale, whenever it changes: the workspace
-    /// takes that shape.
-    @PerceptionIgnored var onDisplayArea: ((CGSize, CGFloat) -> Void)?
+    /// aOS: the area the picture is shown in (points), the screen's scale and the resolution scale, whenever one of
+    /// them changes: the workspace takes that shape (aOS's display request).
+    @PerceptionIgnored var onDisplayArea: ((CGSize, CGFloat, Double) -> Void)?
     /// aOS: the screen refused a login aOS gave (`route.managesLogin` false); aOS ends the session and asks again.
     @PerceptionIgnored var onLoginRefused: ((SessionFailure) -> Void)?
+    /// aOS: the last picture when the session lets go of it (Open Screen Sharing's thumbnail, JPEG): aOS keeps it
+    /// for its selection view, protected, instead of in this module's database.
+    @PerceptionIgnored var onThumbnail: ((Data) -> Void)?
+    /// aOS: the person chose another resolution in the session; aOS keeps one setting for all screens.
+    @PerceptionIgnored var onResolutionScale: ((Double) -> Void)?
+    /// aOS: set on aOS's direct path to the Mac (high performance with the virtual display). When that path doesn't
+    /// work (not reachable, the connection breaks, high performance fails or isn't offered), the session ends
+    /// without showing a failure and aOS goes back to the SSH tunnel (standard mode).
+    @PerceptionIgnored var onDirectPathFailed: ((SessionFailure) -> Void)?
 
     @PerceptionIgnored private var session: LibsharingRemoteSession?
     @PerceptionIgnored private var sink: SessionEventSink?
@@ -443,8 +452,9 @@ final class SessionController: Identifiable {
     }
 
     private func captureThumbnail() {
-        // aOS: no thumbnails. aOS keeps no pictures of the screens (they only pass through), and has no list to show
-        // them in.
+        // aOS: the thumbnail goes to aOS (`onThumbnail`), which keeps it protected for its cards, not to the database.
+        guard phase == .connected, let onThumbnail, let thumbnail = pipeline.makeThumbnail() else { return }
+        onThumbnail(thumbnail)
     }
 
     private func recordConnection() {
@@ -775,6 +785,10 @@ final class SessionController: Identifiable {
             onLoginRefused(failure)
             return
         }
+        // aOS: on the direct path a failure sends aOS back to the SSH tunnel (not when the Mac ended the session).
+        if case .failed(let failure) = newPhase, Self.leavesDirectPath(failure) {
+            if leaveDirectPath(failure) { return }
+        }
         if case .failed(let failure) = newPhase {
             let unreachable = failure.kind == .unreachable || failure.kind == .hostNotFound
             let retryable = failure.kind == .connectionLost || (reconnecting && unreachable)
@@ -834,6 +848,8 @@ final class SessionController: Identifiable {
             if !offersVirtualDisplay {
                 awaitsVirtualDisplay = false
             }
+            // aOS: a Mac without high performance on aOS's direct path: back to the SSH tunnel.
+            if leaveDirectPathWithoutHighPerformance() { return }
             requestVirtualDisplay()
             startHighPerformanceIfDisplayReady()
             closeIfSuspending()
@@ -963,6 +979,7 @@ final class SessionController: Identifiable {
         if gained.contains(.virtualDisplay), phase == .connected {
             requestVirtualDisplay()
         }
+        if phase == .connected { _ = leaveDirectPathWithoutHighPerformance() }
     }
 
     fileprivate func handleVideoFailure(_ failure: MediaFailure) {
@@ -975,9 +992,40 @@ final class SessionController: Identifiable {
     }
 
     private func failHighPerformance(_ failure: MediaFailure) {
+        // aOS: on the direct path aOS goes back to the SSH tunnel instead.
+        if leaveDirectPath(SessionFailure(.highPerformance(failure.kind), message: failure.message)) { return }
         releaseAllKeys()
         teardown()
         phase = .failed(SessionFailure(.highPerformance(failure.kind), message: failure.message))
+    }
+
+    /// aOS: the failures after which aOS's direct path is given up for the SSH tunnel: all but a refused login (aOS
+    /// asks for another), the Mac ending the session and this device's own screen.
+    private static func leavesDirectPath(_ failure: SessionFailure) -> Bool {
+        switch failure.kind {
+        case .authenticationFailed, .closedByServer, .ended, .ownScreen, .permissionDenied, .drawingFailed: false
+        default: true
+        }
+    }
+
+    /// aOS: ends the session for `onDirectPathFailed` (once); false when this isn't aOS's direct path.
+    private func leaveDirectPath(_ failure: SessionFailure) -> Bool {
+        guard let onDirectPathFailed else { return false }
+        self.onDirectPathFailed = nil
+        releaseAllKeys()
+        teardown()
+        phase = .disconnected
+        onDirectPathFailed(failure)
+        return true
+    }
+
+    /// aOS: the direct path is for high performance and the virtual display; a Mac that offers neither goes through
+    /// the SSH tunnel.
+    private func leaveDirectPathWithoutHighPerformance() -> Bool {
+        guard onDirectPathFailed != nil, usesHighPerformance, !capabilities.isEmpty,
+            !capabilities.contains(.highPerformance) || !capabilities.contains(.virtualDisplay)
+        else { return false }
+        return leaveDirectPath(SessionFailure(.highPerformance(.unsupported), message: "the Mac offers no high performance"))
     }
 
     func drawingFailed(_ error: any Error) {
@@ -1499,6 +1547,11 @@ final class SessionController: Identifiable {
         resolutionScale = scale
         rememberState()
         requestVirtualDisplay(holdingPicture: true)
+        // aOS: one resolution for all screens; the workspace asks aOS for its display in the new size.
+        onResolutionScale?(scale)
+        if route.followsWindowShape, displayArea.width > 0, displayArea.height > 0 {
+            onDisplayArea?(displayArea, displayScale, resolutionScale)
+        }
     }
 
     var wantsVirtualDisplay: Bool {
@@ -1506,15 +1559,22 @@ final class SessionController: Identifiable {
     }
 
     var pictureMatchesWindow: Bool {
-        wantsVirtualDisplay && capabilities.contains(.virtualDisplay)
+        // aOS: also the workspace, whose display aOS gives the window's shape.
+        wantsVirtualDisplay && capabilities.contains(.virtualDisplay) || route.followsWindowShape
+    }
+
+    /// aOS: the picture takes the window's shape, through the virtual display or aOS's display request.
+    var picturesFollowWindow: Bool {
+        route.followsWindowShape || wantsVirtualDisplay && (capabilities.isEmpty || capabilities.contains(.virtualDisplay))
     }
 
     #if os(iOS)
     var preferredOrientation: UIInterfaceOrientationMask? {
         guard credentials != nil, credentialPrompt == nil else { return nil }
-        // aOS: the workspace takes the iPhone's shape (aOS's display request), so the iPhone turns as it likes and
-        // the picture follows.
-        if route.followsWindowShape { return nil }
+        // aOS: a picture in the window's shape (the Mac's virtual display, the workspace's display from aOS) follows
+        // the iPhone in every orientation, the same for both screens. Open Screen Sharing turns the iPhone to
+        // landscape for a Mac's virtual display.
+        if picturesFollowWindow { return .allButUpsideDown }
         let followsWindow = wantsVirtualDisplay && (capabilities.isEmpty || capabilities.contains(.virtualDisplay))
         if !followsWindow, imageSize.width > 0, imageSize.height > 0 {
             return imageSize.width < imageSize.height ? .portrait : .landscape
@@ -1529,7 +1589,7 @@ final class SessionController: Identifiable {
         displayScale = scale
         screenSize = screen
         requestVirtualDisplay(holdingPicture: true)
-        onDisplayArea?(area, scale)
+        onDisplayArea?(area, scale, resolutionScale)
     }
 
     func windowSizeDidChange(_ size: CGSize) {
