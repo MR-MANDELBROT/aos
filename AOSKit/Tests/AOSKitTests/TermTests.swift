@@ -279,9 +279,11 @@ final class TermHolderTests: XCTestCase {
         return (holder, id, done)
     }
 
-    private func attach(_ id: String, have: UInt64? = nil, cols: UInt16 = 80, rows: UInt16 = 24) throws -> FrameClient {
+    private func attach(_ id: String, have: UInt64? = nil, cols: UInt16 = 80, rows: UInt16 = 24,
+                        client: String? = nil) throws -> FrameClient {
         let c = try FrameClient(dir: dir, id: id)
-        c.send(.hello(TermJSON.encode(TermHello(op: .attach, have: have, cols: cols, rows: rows, from: "test"))))
+        c.send(.hello(TermJSON.encode(TermHello(op: .attach, have: have, cols: cols, rows: rows, from: "test",
+                                                client: client))))
         XCTAssertTrue(c.read(until: { !$0.starts.isEmpty }))
         return c
     }
@@ -329,6 +331,42 @@ final class TermHolderTests: XCTestCase {
         XCTAssertTrue(second.read(until: { !$0.ends.isEmpty }))
         XCTAssertEqual(second.ends.first, TermEnd(reason: .exited, status: 7))
         wait(for: [done], timeout: 10)
+    }
+
+    func testTheSameDeviceReplacesItsOldConnectionAndAnotherTakesItOver() throws {
+        let (holder, id, done) = startHolder()
+        let phone = try attach(id, client: "phone-1")
+        XCTAssertEqual(TermClient.list(dir: dir).first?.client, "phone-1")
+        // The same phone again (its old connection lingers after a network change): replaced, not taken.
+        let again = try attach(id, client: "phone-1")
+        XCTAssertTrue(phone.read(until: { !$0.ends.isEmpty }))
+        XCTAssertEqual(phone.ends.first?.reason, .replaced)
+        // Another device takes it over, and so does a client that doesn't say which device it is.
+        let other = try attach(id, client: "ipad-2")
+        XCTAssertTrue(again.read(until: { !$0.ends.isEmpty }))
+        XCTAssertEqual(again.ends.first?.reason, .taken)
+        XCTAssertEqual(TermClient.list(dir: dir).first?.client, "ipad-2")
+        let anonymous = try attach(id)
+        XCTAssertTrue(other.read(until: { !$0.ends.isEmpty }))
+        XCTAssertEqual(other.ends.first?.reason, .taken)
+        XCTAssertNil(TermClient.list(dir: dir).first?.client)
+        // Two clients without an id are never the same device.
+        let second = try attach(id)
+        XCTAssertTrue(anonymous.read(until: { !$0.ends.isEmpty }))
+        XCTAssertEqual(anonymous.ends.first?.reason, .taken)
+        withExtendedLifetime(second) {}
+        holder.requestEnd()
+        wait(for: [done], timeout: 10)
+    }
+
+    func testDeviceIDs() {
+        XCTAssertTrue(TermHello.isClientID("6F9619FF-8B86-D011-B42D-00C04FC964FF"))
+        XCTAssertTrue(TermHello.isClientID("phone_1.a"))
+        XCTAssertFalse(TermHello.isClientID(""))
+        XCTAssertFalse(TermHello.isClientID("two words"))
+        XCTAssertFalse(TermHello.isClientID("a;rm"))
+        XCTAssertFalse(TermHello.isClientID(String(repeating: "a", count: 65)))
+        XCTAssertFalse(TermHello.isClientID("ä"))
     }
 
     func testTheShellSeesTheClientsSize() throws {
@@ -516,6 +554,24 @@ final class TermEndToEndTests: XCTestCase {
         XCTAssertEqual(second.waitForExit(), 0)
         for _ in 0..<50 where !TermClient.list(dir: dir).isEmpty { usleep(50_000) }
         XCTAssertTrue(TermClient.list(dir: dir).isEmpty)
+    }
+
+    func testTheSamePhoneAttachingAgainReplacesItsOldConnection() throws {
+        let first = try Terminal([companion, "term", "attach", "--dir", dir.path, "--client", "phone-1"], env: env)
+        XCTAssertTrue(first.read(until: { $0.contains("$ ") }), first.text)
+        let id = try XCTUnwrap(first.markers.first?["id"] as? String)
+        let list = try Subprocess.runBlocking(companion, ["term", "list", "--json", "--dir", dir.path], timeout: 10)
+        XCTAssertTrue(String(decoding: list.stdout, as: UTF8.self).contains("\"client\":\"phone-1\""))
+
+        let second = try Terminal([companion, "term", "attach", "--dir", dir.path, "--id", id, "--client", "phone-1"],
+                                  env: env)
+        XCTAssertTrue(second.read(until: { $0.contains("\"t\":\"start\"") }), second.text)
+        XCTAssertTrue(first.read(until: { $0.contains("\"t\":\"end\"") }), first.text)
+        XCTAssertEqual(first.markers.last?["why"] as? String, "replaced")
+        XCTAssertEqual(first.waitForExit(), TermClient.Exit.replaced.rawValue)
+        second.type("exit\r")
+        XCTAssertTrue(second.read(until: { $0.contains("\"why\":\"exited\"") }), second.text)
+        XCTAssertEqual(second.waitForExit(), 0)
     }
 
     func testAGoneSessionIsReplacedAndTheTerminalIsTold() throws {

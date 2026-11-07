@@ -4,7 +4,9 @@ import Foundation
 /// `aos-companion term ...`: the terminal sessions on the command line (the iPhone runs `term attach` in its SSH
 /// channel with a pseudo terminal, `term list --json` and `term end <id>` in exec channels).
 ///
-///     term attach [--id ID] [--have OFFSET]   attach to a session (a new one without --id, or if ID is gone)
+///     term attach [--id ID] [--have OFFSET] [--client DEVICE]
+///                                             attach to a session (a new one without --id, or if ID is gone);
+///                                             DEVICE's own older connection is replaced quietly
 ///     term list [--json]                      the sessions on this Mac
 ///     term end ID                             end a session (its shell gets SIGHUP)
 ///     term hold --id ID --cols C --rows R     (internal) hold a session; `attach` starts it
@@ -12,7 +14,7 @@ import Foundation
 /// `--dir DIR` (or AOS_TERM_DIR) puts the sessions elsewhere (tests); AOS_TERM_SHELL picks another shell.
 public enum TermCommand {
     public static let usage = """
-        usage: aos-companion term attach [--id ID] [--have OFFSET]
+        usage: aos-companion term attach [--id ID] [--have OFFSET] [--client DEVICE]
                aos-companion term list [--json]
                aos-companion term end ID
         """
@@ -27,7 +29,7 @@ public enum TermCommand {
         var k = 0
         while k < args.count {
             let a = args[k]
-            if ["--dir", "--id", "--have", "--cols", "--rows"].contains(a), k + 1 < args.count {
+            if ["--dir", "--id", "--have", "--cols", "--rows", "--client"].contains(a), k + 1 < args.count {
                 options[String(a.dropFirst(2))] = args[k + 1]
                 k += 2
             } else if a.hasPrefix("--") {
@@ -42,7 +44,7 @@ public enum TermCommand {
         switch verb {
         case "attach":
             let have = options["have"].flatMap { UInt64($0) }
-            return TermClient.attach(dir: dir, id: options["id"], have: have, holder: executable)
+            return TermClient.attach(dir: dir, id: options["id"], have: have, client: options["client"], holder: executable)
         case "list":
             let sessions = TermClient.list(dir: dir)
             if flags.contains("json") {
