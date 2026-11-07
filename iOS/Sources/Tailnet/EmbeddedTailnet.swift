@@ -13,7 +13,7 @@ extension Notification.Name {
     static let aosTailnetReady = Notification.Name("dev.marquart.aos.tailnet.ready")
 }
 
-/// aOS's own Tailscale node in this app (Tailnetkit, built from Tailnet/tailnetkit with gomobile): no VPN profile,
+/// aOS's own Tailscale node in this app (Tailnetkit, Tailnet/tailnetkit as a C library): no VPN profile,
 /// no Tailscale app. The person signs it in once with their Tailscale account (the one of the Mac's tailnet) in a
 /// web authentication session; from then on the app dials the Mac's tailnet address through it
 /// (`SSHRoute.tailnet`). Its state, with its keys, is in the app's container: file protection until the first
@@ -236,40 +236,77 @@ final class EmbeddedTailnet {
 
 enum TailnetError: LocalizedError {
     case notRunning
-    var errorDescription: String? { String(localized: "aOS's Tailscale isn't connected on this iPhone.") }
+    /// What the node said.
+    case node(String)
+    var errorDescription: String? {
+        switch self {
+        case .notRunning: String(localized: "aOS's Tailscale isn't connected on this iPhone.")
+        case .node(let message): message
+        }
+    }
 }
 
-/// The gomobile node, called off the main thread (its calls block).
+/// The node in Tailnetkit (a C library), called off the main thread (its calls block).
 final class TailnetNodeBox: @unchecked Sendable {
-    private let node: TailnetkitNode
+    private let handle: Int32
+    private let lock = NSLock()
+    private var closed = false
 
     /// `controlURL` is empty for Tailscale's coordination server (the end-to-end test passes its own).
     init(directory: String, hostname: String, controlURL: String = "") throws {
-        var error: NSError?
-        guard let node = TailnetkitNewNode(directory, hostname, controlURL, &error) else {
-            throw error ?? TailnetError.notRunning
+        var error: UnsafeMutablePointer<CChar>?
+        let handle = directory.withCString { dir in
+            hostname.withCString { name in
+                controlURL.withCString { url in
+                    tailnetkit_new(UnsafeMutablePointer(mutating: dir), UnsafeMutablePointer(mutating: name),
+                                   UnsafeMutablePointer(mutating: url), &error)
+                }
+            }
         }
-        self.node = node
+        guard handle > 0 else { throw Self.failure(error) }
+        self.handle = handle
     }
 
-    func start() throws { try node.start() }
+    deinit { close() }
+
+    /// The library's message (freed here) as an error.
+    private static func failure(_ message: UnsafeMutablePointer<CChar>?) -> Error {
+        guard let message else { return TailnetError.notRunning }
+        defer { tailnetkit_free(message) }
+        return TailnetError.node(String(cString: message))
+    }
+
+    private func check(_ body: (UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>) -> Int32) throws -> Int32 {
+        var error: UnsafeMutablePointer<CChar>?
+        let result = body(&error)
+        guard result >= 0 else { throw Self.failure(error) }
+        if let error { tailnetkit_free(error) }
+        return result
+    }
+
+    func start() throws { _ = try check { tailnetkit_start(handle, $0) } }
+    func login() throws { _ = try check { tailnetkit_login(handle, $0) } }
+    func logout() throws { _ = try check { tailnetkit_logout(handle, $0) } }
 
     func statusJSON() throws -> String {
-        var error: NSError?
-        let json = node.statusJSON(&error)
-        if let error { throw error }
-        return json
+        var error: UnsafeMutablePointer<CChar>?
+        guard let json = tailnetkit_status_json(handle, &error) else { throw Self.failure(error) }
+        defer { tailnetkit_free(json) }
+        return String(cString: json)
     }
 
-    func login() throws { try node.login() }
-    func logout() throws { try node.logout() }
-    func close() { try? node.close() }
+    func close() {
+        let first: Bool = lock.withLock {
+            defer { closed = true }
+            return !closed
+        }
+        if first { tailnetkit_close(handle) }
+    }
 
     func dial(host: String, port: Int, timeout: TimeInterval) throws -> Int32 {
-        var descriptor = -1
-        try node.dialFD(host, port: port, timeoutMillis: Int(timeout * 1000), ret0_: &descriptor)
-        guard descriptor >= 0 else { throw TailnetError.notRunning }
-        return Int32(descriptor)
+        try host.withCString { name in
+            try check { tailnetkit_dial(handle, UnsafeMutablePointer(mutating: name), Int32(port), Int32(timeout * 1000), $0) }
+        }
     }
 }
 

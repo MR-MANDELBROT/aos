@@ -3,7 +3,8 @@
 #
 #   Tailnet/build.sh mac <output file>        aos-tailnet for the Mac app, for the architectures in $ARCHS (default
 #                                             arm64); unsigned (the Xcode step "aos-tailnet" signs it)
-#   Tailnet/build.sh ios <output .xcframework>  Tailnetkit for the iPhone app (gomobile bind; device and simulator)
+#   Tailnet/build.sh ios <output .xcframework>  Tailnetkit for the iPhone app: a C library (c-archive) in a static
+#                                             framework, for the iPhone and the simulator (arm64, x86_64)
 #   Tailnet/build.sh test [go test flags]     the tests (Tailscale's test coordination server, no account)
 #   Tailnet/build.sh testnet                  a whole tailnet on 127.0.0.1 for the iPhone's end-to-end test
 #                                             (iOS/Tools/test-tailnet.sh); prints its admin URL, runs until stdin ends
@@ -51,11 +52,45 @@ case "${1:-}" in
     ;;
   ios)
     : "${OUT:?output .xcframework}"
-    command -v gomobile >/dev/null || { echo "gomobile is missing: go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.13 github.com/sagernet/gomobile/cmd/gobind@v0.1.13" >&2; exit 1; }
+    IOS_MIN=27.0
+    WORK="$(mktemp -d)"
+    trap 'rm -rf "$WORK"' EXIT
+    # One slice: GOOS=ios with Apple's clang for the SDK (the simulator is told by its SDK and version flag, the way
+    # gomobile does it).
+    slice() { # <sdk> <GOARCH> <clang arch> <version flag> <extra tags>
+      local sysroot flags
+      sysroot="$(xcrun --sdk "$1" --show-sdk-path)"
+      flags="-isysroot $sysroot $4 -arch $3"
+      GOOS=ios GOARCH="$2" CGO_ENABLED=1 CC="$(xcrun --sdk "$1" --find clang)" CGO_CFLAGS="$flags" CGO_LDFLAGS="$flags" \
+        go build -buildmode=c-archive -tags "$TAGS,$5" -trimpath -buildvcs=false -ldflags "-s -w -buildid=" \
+        -o "$WORK/$1-$3.a" ./tailnetkit
+    }
+    slice iphoneos arm64 arm64 "-miphoneos-version-min=$IOS_MIN" ios
+    slice iphonesimulator arm64 arm64 "-mios-simulator-version-min=$IOS_MIN" ios,iossimulator
+    slice iphonesimulator amd64 x86_64 "-mios-simulator-version-min=$IOS_MIN" ios,iossimulator
+    lipo -create "$WORK/iphonesimulator-arm64.a" "$WORK/iphonesimulator-x86_64.a" -output "$WORK/iphonesimulator.a"
+    # A static framework around each archive: the header and a module map, so Swift says `import Tailnetkit`.
+    framework() { # <folder> <archive>
+      local fw="$WORK/$1/Tailnetkit.framework"
+      mkdir -p "$fw/Headers" "$fw/Modules"
+      cp "$2" "$fw/Tailnetkit"
+      cp tailnetkit/include/tailnetkit.h "$fw/Headers/"
+      printf 'framework module Tailnetkit {\n  umbrella header "tailnetkit.h"\n  export *\n}\n' > "$fw/Modules/module.modulemap"
+      plutil -create xml1 "$fw/Info.plist"
+      plutil -insert CFBundleExecutable -string Tailnetkit "$fw/Info.plist"
+      plutil -insert CFBundleIdentifier -string dev.marquart.aos.tailnetkit "$fw/Info.plist"
+      plutil -insert CFBundleName -string Tailnetkit "$fw/Info.plist"
+      plutil -insert CFBundlePackageType -string FMWK "$fw/Info.plist"
+      plutil -insert CFBundleShortVersionString -string 1.0 "$fw/Info.plist"
+      plutil -insert CFBundleVersion -string 1 "$fw/Info.plist"
+      plutil -insert MinimumOSVersion -string "$IOS_MIN" "$fw/Info.plist"
+    }
+    framework device "$WORK/iphoneos-arm64.a"
+    framework simulator "$WORK/iphonesimulator.a"
     rm -rf "$OUT"
     mkdir -p "$(dirname "$OUT")"
-    gomobile bind -target ios,iossimulator -iosversion 27.0 -tags "$TAGS" -trimpath -buildvcs=false \
-      -ldflags "-s -w -buildid=" -o "$OUT" ./tailnetkit
+    xcodebuild -create-xcframework -framework "$WORK/device/Tailnetkit.framework" \
+      -framework "$WORK/simulator/Tailnetkit.framework" -output "$OUT" >/dev/null
     ;;
   test)
     shift
@@ -66,7 +101,7 @@ case "${1:-}" in
     exec "${TMPDIR:-/tmp}/aos-tailnet-testnet"
     ;;
   *)
-    sed -n '2,10p' "$0" >&2
+    sed -n '2,11p' "$0" >&2
     exit 2
     ;;
 esac
