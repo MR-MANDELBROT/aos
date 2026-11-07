@@ -207,9 +207,13 @@ final class AppModel {
             login: SSHLogin(username: user, key: key), hostKey: .fingerprint(link.hostKeyFingerprint))
         await ssh.close()
 
-        let mac = PairedMac(name: link.macName, hosts: link.hosts, sshPort: link.sshPort, user: user,
+        var mac = PairedMac(name: link.macName, hosts: link.hosts, sshPort: link.sshPort, user: user,
                             hostKey: ssh.hostKey, hostKeyFingerprint: ssh.hostKeyFingerprint,
                             companionPath: response.companion ?? CompanionCommand.defaultPath, lastHost: ssh.host)
+        // On the go: the way and the Mac's tailnet hosts (Settings > Connection).
+        mac.way = link.way
+        mac.tailnetHosts = link.tailnetHosts
+        mac.tailnetName = link.tailnetName
         // The same Mac paired again replaces its old entry.
         var updated = macs.filter { $0.hostKeyFingerprint != mac.hostKeyFingerprint }
         updated.insert(mac, at: 0)

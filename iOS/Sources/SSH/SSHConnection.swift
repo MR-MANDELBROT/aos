@@ -2,6 +2,7 @@
 import Foundation
 import Network
 import NIOCore
+import NIOPosix
 @preconcurrency import NIOSSH
 import NIOTransportServices
 import os
@@ -58,21 +59,29 @@ enum SSHConnectError: LocalizedError, Equatable {
     }
 }
 
-/// One open SSH connection: Citadel and SwiftNIO SSH on a Network.framework TCP connection.
+/// Opens a TCP connection through aOS's own Tailscale node in this app (EmbeddedTailnet) and returns the connected
+/// socket's descriptor; the SSH channel takes it over.
+typealias TailnetDial = @Sendable (_ host: String, _ port: Int, _ timeout: TimeInterval) async throws -> Int32
+
+/// One open SSH connection: Citadel and SwiftNIO SSH on a Network.framework TCP connection (or on a socket from aOS's
+/// tailnet node).
 final class SSHConnection: @unchecked Sendable {
     let client: SSHClient
     /// The TCP channel that carries the SSH connection.
     let channel: Channel
     /// The address that answered.
     let host: String
+    /// How it was reached.
+    let route: SSHRoute
     /// The host key the server presented (OpenSSH line) and its fingerprint.
     let hostKey: String
     let hostKeyFingerprint: String
 
-    private init(client: SSHClient, channel: Channel, host: String, hostKey: String) {
+    private init(client: SSHClient, channel: Channel, route: SSHRoute, hostKey: String) {
         self.client = client
         self.channel = channel
-        self.host = host
+        self.host = route.host
+        self.route = route
         self.hostKey = hostKey
         hostKeyFingerprint = SSHKeyFormat.fingerprint(openSSHKey: hostKey) ?? ""
     }
@@ -94,18 +103,27 @@ final class SSHConnection: @unchecked Sendable {
     /// and run in parallel after that; the first complete login wins and the others are closed.
     static func connect(hosts: [String], port: Int, login: SSHLogin, hostKey policy: HostKeyPolicy,
                         perHostTimeout: TimeInterval = 8, stagger: TimeInterval = 0.4) async throws -> SSHConnection {
-        guard !hosts.isEmpty else { throw SSHConnectError.unreachable([]) }
-        let race = Race(count: hosts.count)
-        let tasks = hosts.enumerated().map { index, host in
+        try await connect(routes: hosts.map(SSHRoute.host), port: port, login: login, hostKey: policy,
+                          perHostTimeout: perHostTimeout, stagger: stagger)
+    }
+
+    /// The same for routes in their order (ConnectionPlan): names and addresses, aOS's tailnet node (`tailnet`
+    /// dials there) and Bonjour.
+    static func connect(routes: [SSHRoute], port: Int, login: SSHLogin, hostKey policy: HostKeyPolicy,
+                        tailnet: TailnetDial? = nil, perHostTimeout: TimeInterval = 8,
+                        stagger: TimeInterval = 0.4) async throws -> SSHConnection {
+        guard !routes.isEmpty else { throw SSHConnectError.unreachable([]) }
+        let race = Race(count: routes.count)
+        let tasks = routes.enumerated().map { index, route in
             Task {
                 if index > 0 { try? await Task.sleep(for: .seconds(stagger * Double(index))) }
-                if race.isDecided || Task.isCancelled { race.report(.failure(host, CancellationError())); return }
+                if race.isDecided || Task.isCancelled { race.report(.failure(route.host, CancellationError())); return }
                 do {
-                    let connection = try await connectOne(host: host, port: port, login: login, policy: policy,
-                                                          timeout: perHostTimeout)
+                    let connection = try await connectOne(route: route, port: port, login: login, policy: policy,
+                                                          timeout: perHostTimeout, tailnet: tailnet)
                     if !race.report(.success(connection)) { await connection.close() }
                 } catch {
-                    race.report(.failure(host, error))
+                    race.report(.failure(route.host, error))
                 }
             }
         }
@@ -117,18 +135,38 @@ final class SSHConnection: @unchecked Sendable {
         }
     }
 
-    private static func connectOne(host: String, port: Int, login: SSHLogin, policy: HostKeyPolicy,
-                                   timeout: TimeInterval) async throws -> SSHConnection {
+    /// The TCP channel for a route: Network.framework for names, addresses and Bonjour; a socket from aOS's tailnet
+    /// node in a SwiftNIO channel for the tailnet.
+    private static func openChannel(_ route: SSHRoute, port: Int, timeout: TimeInterval,
+                                    tailnet: TailnetDial?) async throws -> Channel {
+        if case .tailnet(let host) = route {
+            guard let tailnet else { throw SSHConnectError.unreachable([.init(host: host, reason: "no tailnet")]) }
+            let descriptor = try await tailnet(host, port, timeout)
+            // The channel owns the descriptor from here on (it closes it).
+            return try await ClientBootstrap(group: MultiThreadedEventLoopGroup.singleton)
+                .channelInitializer { channel in channel.pipeline.addHandler(HoldUntilSSHStarts()) }
+                .withConnectedSocket(descriptor).get()
+        }
         let tcp = NWProtocolTCP.Options()
         tcp.noDelay = true
         tcp.enableKeepalive = true
         tcp.keepaliveIdle = 30
-        let channel = try await NIOTSConnectionBootstrap(group: NIOTSEventLoopGroup.singleton)
+        let bootstrap = NIOTSConnectionBootstrap(group: NIOTSEventLoopGroup.singleton)
             .connectTimeout(.milliseconds(Int64(timeout * 1000)))
             .channelOption(NIOTSChannelOptions.waitForActivity, value: false)
             .tcpOptions(tcp)
             .channelInitializer { channel in channel.pipeline.addHandler(HoldUntilSSHStarts()) }
-            .connect(host: host, port: port).get()
+        if case .bonjour(let name) = route {
+            return try await bootstrap.connect(endpoint: .service(name: name, type: "_ssh._tcp", domain: "local.",
+                                                                   interface: nil)).get()
+        }
+        return try await bootstrap.connect(host: route.host, port: port).get()
+    }
+
+    private static func connectOne(route: SSHRoute, port: Int, login: SSHLogin, policy: HostKeyPolicy,
+                                   timeout: TimeInterval, tailnet: TailnetDial?) async throws -> SSHConnection {
+        let host = route.host
+        let channel = try await openChannel(route, port: port, timeout: timeout, tailnet: tailnet)
 
         let check = HostKeyCheck(host: host, policy: policy)
         let auth = LoginDelegate(username: login.username, key: try login.key?.sshPrivateKey(),
@@ -143,7 +181,7 @@ final class SSHConnection: @unchecked Sendable {
             }
             guard let presented = check.presentedKey else { throw SSHConnectError.hostKeyMismatch(host: host, presented: "?") }
             log.info("SSH connected to \(host, privacy: .public)")
-            return SSHConnection(client: client, channel: channel, host: host, hostKey: presented)
+            return SSHConnection(client: client, channel: channel, route: route, hostKey: presented)
         } catch {
             try? await channel.close().get()
             // The host key check and the login know best what went wrong; NIO's error may wrap theirs.

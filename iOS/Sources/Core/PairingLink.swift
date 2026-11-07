@@ -1,11 +1,14 @@
+import AOSTailnet
 import CryptoKit
 import Foundation
 
 /// The pairing code that aOS on the Mac shows as a QR code (Docs/COMPANION.md, "Pairing"):
 ///
 ///     aos-pair://v1?n=<Mac name>&h=<host1>,<host2>&p=<pairing port>&s=22&u=<user>&k=<host key fingerprint>&c=<code>
+///         [&w=<way>&t=<tailnet host1>,<tailnet host2>&tn=<tailnet name>]
 ///
-/// All values are percent-encoded. `c` is a secret: it only lives in the QR code and proves to the Mac that this iPhone
+/// All values are percent-encoded. `w`, `t` and `tn` say how the iPhone reaches the Mac on the go (since the Mac's
+/// step "On the go"): the way (`app`, `aos`, `lan`), the Mac's tailnet addresses and names, the tailnet's name. `c` is a secret: it only lives in the QR code and proves to the Mac that this iPhone
 /// saw the code; it is never sent.
 struct PairingLink: Equatable, Sendable {
     var macName: String
@@ -18,6 +21,12 @@ struct PairingLink: Equatable, Sendable {
     var hostKeyFingerprint: String
     /// The 16 random bytes of `c`.
     var code: Data
+    /// How the iPhone reaches the Mac on the go (`w`); nil from a Mac before that choice existed.
+    var way: ReachWay?
+    /// The Mac's tailnet addresses and MagicDNS names (`t`), IPv4 first.
+    var tailnetHosts: [String] = []
+    /// The tailnet's name (`tn`): sign in to the same one on the iPhone.
+    var tailnetName: String?
 
     static let scheme = "aos-pair"
 
@@ -94,6 +103,15 @@ struct PairingLink: Equatable, Sendable {
 
         let name = (values["n"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         macName = name.isEmpty ? self.hosts[0] : String(name.prefix(80))
+
+        // On the go (optional; an unknown way counts as none).
+        way = values["w"].flatMap { ReachWay(rawValue: $0.trimmingCharacters(in: .whitespaces).lowercased()) }
+        var seenTailnet = Set<String>()
+        tailnetHosts = (values["t"] ?? "").split(separator: ",").map(Self.normalizedHost)
+            .filter { !$0.isEmpty && Self.isPlausibleHost($0) && seenTailnet.insert($0.lowercased()).inserted }
+        let tailnet = (values["tn"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        tailnetName = tailnet.isEmpty || tailnet.count > 128
+            || tailnet.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0) }) ? nil : tailnet
     }
 
     /// The link as aOS on the Mac writes it (used by the tests and the demo).
@@ -104,7 +122,7 @@ struct PairingLink: Equatable, Sendable {
         // Percent-encode everything that isn't unreserved, so "+" and "/" in base64 values survive any decoder.
         let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")
         func enc(_ s: String) -> String { s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s }
-        c.percentEncodedQuery = [
+        var items = [
             "n=" + enc(macName),
             "h=" + hosts.map(enc).joined(separator: ","),
             "p=\(pairingPort)",
@@ -112,7 +130,11 @@ struct PairingLink: Equatable, Sendable {
             "u=" + enc(user),
             "k=" + enc(hostKeyFingerprint),
             "c=" + enc(SSHKeyFormat.base64URLEncode(code)),
-        ].joined(separator: "&")
+        ]
+        if let way { items.append("w=" + way.rawValue) }
+        if !tailnetHosts.isEmpty { items.append("t=" + tailnetHosts.map(enc).joined(separator: ",")) }
+        if let tailnetName { items.append("tn=" + enc(tailnetName)) }
+        c.percentEncodedQuery = items.joined(separator: "&")
         return c.url!
     }
 
