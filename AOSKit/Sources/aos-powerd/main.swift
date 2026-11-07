@@ -12,7 +12,9 @@ import SystemConfiguration
 //     next (this daemon at boot, RunAtLoad) sets it back to 0 if the marker is there.
 //   - the iPhone hotspot's join settings (auto-join and "Ask to join hotspots"), applied and read back;
 //   - joining a network macOS already knows, restarting airportd, Wi-Fi off and on (network care with the lid closed);
-//   - Bitwarden's `bw` as a hidden user (BitwardenVaultHost), and the workspace's keys and disk (WorkspaceCustodyHost).
+//   - Bitwarden's `bw` as a hidden user (BitwardenVaultHost), and the workspace's keys and disk (WorkspaceCustodyHost);
+//   - aOS's own Tailscale node, aos-tailnet as the hidden user `_aostailnet` (TailnetHost). While it is on, the helper
+//     doesn't exit when idle, and it starts the node again whenever it starts itself (at boot, after an update).
 // When Cloupi's wake daemon is on this Mac it owns sleep and Wi-Fi: then this helper refuses everything and never
 // touches pmset (Docs/DESIGN.md, "Staying awake, freezing and the hotspot").
 
@@ -25,7 +27,30 @@ let diskGuard = DiskGuard()
 let custody = WorkspaceCustodyHost(layout: .init(base: supportFolder),
                                    account: { try VaultAccount.ensure(name: WorkspaceCustodyHost.userName, realName: "aOS Workspace") },
                                    attacher: HdiutilAttacher(), diskGuard: diskGuard, log: { log($0) })
+/// aOS's own Tailscale node (TailnetHost): aos-tailnet from next to this program, run as `_aostailnet`.
+let tailnetNode = TailnetHost(layout: .init(base: supportFolder),
+                          account: { try VaultAccount.ensure(name: TailnetHost.userName, realName: "aOS Tailscale") },
+                          source: { ownExecutable().map { $0.deletingLastPathComponent().appendingPathComponent("aos-tailnet") } },
+                          log: { log($0) })
 let holdMarker = supportFolder.appendingPathComponent("powerd-holding")
+
+/// This program's file (absolute; launchd passes a relative path for a BundleProgram).
+func ownExecutable() -> URL? {
+    var buffer = [CChar](repeating: 0, count: 4 * Int(MAXPATHLEN))
+    guard proc_pidpath(getpid(), &buffer, UInt32(buffer.count)) > 0 else { return nil }
+    return URL(fileURLWithPath: String(cString: buffer))
+}
+
+/// Stops the tailnet node before this process ends (its next helper starts it again), waiting at most 8 s.
+func stopTailnetForExit() {
+    guard tailnetNode.isOn else { return }
+    let done = DispatchSemaphore(value: 0)
+    Task {
+        await tailnetNode.shutdown()
+        done.signal()
+    }
+    _ = done.wait(timeout: .now() + 8)
+}
 let wifiMarker = supportFolder.appendingPathComponent("powerd-wifi-off")
 let logURL = URL(fileURLWithPath: "/Library/Logs/\(Brand.name)/powerd.log")
 
@@ -96,6 +121,7 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         diskGuard?.log = { log($0) }
         if diskGuard == nil { log("workspace disk: Disk Arbitration isn't available, the disk won't be attached") }
         custody.recover()
+        Task { await tailnetNode.resume() }
         listener.setConnectionCodeSigningRequirement(PowerHelperService.appRequirement)
         listener.delegate = self
         listener.resume()
@@ -177,11 +203,14 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         if ticks % 6 == 0 && replaced && !busy && !vaultHost.hasRunningLogin && !custody.isAttached {
             if holding { endHold(reason: "updated helper takes over", touchPmset: !CloupiPresence.detect()) }
             log("the app was updated, making way for the new helper")
+            // The tailnet node is handed over: the new helper starts it again (from tailnet.json) at its first call.
+            stopTailnetForExit()
             exit(0)
         }
         enforce()
         let leaseOver = leaseUntil.map { $0 <= Date() } ?? true
-        if !holding && leaseOver && !busy && !vaultHost.hasRunningLogin && !custody.isAttached
+        // Never while the tailnet node is on: it has to keep running for the iPhone.
+        if !holding && leaseOver && !busy && !vaultHost.hasRunningLogin && !custody.isAttached && !tailnetNode.isOn
             && Date().timeIntervalSince(lastActivity) > Self.idleExitSeconds {
             log("idle, exiting")
             exit(0)
@@ -267,6 +296,7 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
 
     private func shutdown(signal sig: Int32) {
         if holding { endHold(reason: "helper stopping (signal \(sig))", touchPmset: !CloupiPresence.detect()) }
+        stopTailnetForExit()
         if FileManager.default.fileExists(atPath: wifiMarker.path) {
             _ = run("/usr/sbin/networksetup", ["-setairportpower", WiFiRadio.interfaceName, "on"])
             try? FileManager.default.removeItem(at: wifiMarker)
@@ -343,6 +373,19 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
             let (answer, handle) = await custody.handle(parsed, caller: uid, pid: pid)
             self.queue.async { self.lastActivity = Date() }
             reply(answer.data, handle)
+        }
+    }
+
+    func tailnet(_ request: Data, reply: @escaping (Data) -> Void) {
+        queue.async { self.lastActivity = Date() }
+        guard let parsed = TailnetRequest.decode(request) else {
+            reply(TailnetReply.failure("unreadable request").data)
+            return
+        }
+        Task {
+            let answer = await tailnetNode.handle(parsed)
+            self.queue.async { self.lastActivity = Date() }
+            reply(answer.data)
         }
     }
 

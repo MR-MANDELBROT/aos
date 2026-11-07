@@ -23,6 +23,9 @@ import Foundation
     /// The workspace's keys and disk (a `CustodyRequest`, answered with a `CustodyReply` and, for attachDisk, the
     /// open disk device; see WorkspaceCustody.swift).
     func workspace(_ request: Data, reply: @escaping (Data, FileHandle?) -> Void)
+    /// aOS's own Tailscale node, aos-tailnet as the hidden user `_aostailnet` (a `TailnetRequest`, answered with a
+    /// `TailnetReply`; see TailnetHelper.swift). Since version 4.
+    func tailnet(_ request: Data, reply: @escaping (Data) -> Void)
 }
 
 public enum PowerHelperService {
@@ -32,8 +35,8 @@ public enum PowerHelperService {
     public static let teamID = "S3725YB7V6"
     /// Xcode signs a command line tool with its file name as identifier.
     public static let helperIdentifier = "aos-powerd"
-    /// Bumped when the interface changes.
-    public static let version = 3
+    /// Bumped when the interface changes (4: the tailnet node).
+    public static let version = 4
 
     /// Only aOS may talk to the helper.
     public static var appRequirement: String {
@@ -187,6 +190,23 @@ public final class PowerHelperClient: @unchecked Sendable {
                 finish(.failure("the helper didn't answer"), nil)
             }
             p.workspace(request.data) { data, handle in finish(CustodyReply.decode(data), handle) }
+        }
+    }
+
+    /// aOS's own Tailscale node (needs a helper of version 4 or later; ask `status()` first).
+    public func tailnet(_ request: TailnetRequest) async -> TailnetReply {
+        let timeout: TimeInterval = request.op == .status ? 20 : 90
+        return await withCheckedContinuation { (continuation: CheckedContinuation<TailnetReply, Never>) in
+            let once = Once()
+            let finish: (TailnetReply) -> Void = { r in if once.claim() { continuation.resume(returning: r) } }
+            guard let p = proxy({ error in finish(.failure(error.localizedDescription)) }) else {
+                finish(.failure("no connection to the helper"))
+                return
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
+                finish(.failure("the helper didn't answer"))
+            }
+            p.tailnet(request.data) { data in finish(TailnetReply.decode(data)) }
         }
     }
 
