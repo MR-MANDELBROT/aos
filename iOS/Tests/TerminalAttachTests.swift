@@ -137,9 +137,12 @@ struct KeyBarViewTests {
                 lay(bar, width: width)
                 let all = controls(in: bar)
                 let ids = Set(all.compactMap(\.accessibilityIdentifier))
-                for name in ["escape", "ctrl", "alt", "tab", "tab+1", "paste", "function(12)", "text(\"|\")", "text(\"~\")"] {
+                for name in ["escape", "ctrl", "alt", "tab", "tab+1", "paste", "home", "end", "pageUp", "pageDown",
+                             "function(1)", "function(12)"] {
                     #expect(ids.contains(name), "\(name) at \(width) pt, \(arrows)")
                 }
+                // The keyboard has the symbols: none of them here.
+                #expect(!ids.contains { $0.hasPrefix("text(") }, "\(ids.sorted())")
                 let center: CGFloat
                 switch arrows {
                 case .pad:
@@ -237,7 +240,7 @@ struct HeldTerminalTests {
         try await waitUntil { first.view.screenText().contains("remember me") }
         let id = try #require(first.holderID)
         first.disconnect()
-        #expect(first.phase == .detached)
+        #expect(first.phase == .idle, "let go: the session keeps running on the Mac")
 
         // The app was closed: a new terminal knows the session and gets its screen back.
         let second = TerminalSession(id: target, title: "Test Mac")
@@ -252,5 +255,162 @@ struct HeldTerminalTests {
         try await waitUntil { second.phase == .ended }
         #expect(second.endReason == .exited)
         #expect(second.holderID == nil)
+    }
+
+    /// A terminal of the Mac with this iPhone's id, attached.
+    private func attachedTerminal(_ connection: MacConnection, phoneID: String = "phone-1") async throws -> TerminalSession {
+        let target = TerminalSession.Target.mac(UUID())
+        UserDefaults.standard.removeObject(forKey: "terminal.session.\(target.key)")
+        let session = TerminalSession(id: target, title: "Test Mac")
+        session.macConnection = { connection }
+        session.phoneID = { phoneID }
+        await session.connect(mac: connection)
+        try await waitUntil { session.phase == .connected }
+        return session
+    }
+
+    /// What an attach channel opened by hand gets (as the connection of an earlier launch of the app, or of another
+    /// device).
+    private final class Received: @unchecked Sendable {
+        private let lock = NSLock()
+        private var bytes = Data()
+        func add(_ data: Data) { lock.withLock { bytes += data } }
+        var text: String { lock.withLock { String(decoding: bytes, as: UTF8.self) } }
+    }
+
+    private func attachByHand(_ connection: MacConnection, id: String, client: String?) async throws -> Received {
+        let ssh = try #require(connection.ssh)
+        let channel = try await ssh.terminal(command: TermAttach.attach(companion: TestSSHServer.companionPath, id: id,
+                                                                        have: nil, client: client), columns: 80, rows: 24)
+        let received = Received()
+        Task {
+            do { for try await chunk in channel.output { received.add(chunk) } } catch {}
+        }
+        return received
+    }
+
+    @Test func thisIPhoneAgainIsNoOtherDevice() async throws {
+        let server = try await TestSSHServer.start(allowedKey: key)
+        defer { Task { await server.stop() } }
+        let connection = try await connectedMac(server)
+        defer { connection.stop() }
+        let session = try await attachedTerminal(connection)
+        let id = try #require(session.holderID)
+        #expect(server.terms.clients == ["phone-1"], "the iPhone names itself when it attaches")
+
+        // An older connection of this iPhone attaches (as one that lingered from before): the terminal's own channel
+        // hears "replaced", which is no reason to say "another device"; it attaches again and has the session.
+        let lingering = try await attachByHand(connection, id: id, client: "phone-1")
+        // The lingering one, then the terminal again.
+        try await waitUntil { server.terms.log.filter { $0.hasPrefix("attach \(id)") }.count == 2 }
+        try await waitUntil { session.phase == .connected }
+        #expect(session.endReason != .taken)
+        try await waitUntil { lingering.text.contains("\"why\":\"replaced\"") }
+        #expect(!lingering.text.contains("\"why\":\"taken\""))
+
+        // The list says which device has it: this iPhone.
+        let list = try await connection.ssh!.run(TermAttach.list(companion: TestSSHServer.companionPath))
+        let sessions = try #require(TermAttach.sessions(fromList: list))
+        let entry = try #require(sessions.first { $0.id == id })
+        #expect(entry.client == "phone-1")
+        #expect(entry.holder(shown: nil, phoneID: "phone-1", last: nil) == .here)
+        session.disconnect()
+    }
+
+    @Test func anotherDeviceTakesTheSession() async throws {
+        let server = try await TestSSHServer.start(allowedKey: key)
+        defer { Task { await server.stop() } }
+        let connection = try await connectedMac(server)
+        defer { connection.stop() }
+        let session = try await attachedTerminal(connection)
+        let id = try #require(session.holderID)
+        _ = try await attachByHand(connection, id: id, client: "ipad-2")
+        try await waitUntil { session.phase == .ended }
+        #expect(session.endReason == .taken)
+        #expect(session.holderID == id, "it keeps running on the Mac: Open It Here attaches again")
+        await session.connect(mac: connection)
+        try await waitUntil { session.phase == .connected }
+        #expect(server.terms.clients.last == "phone-1")
+        session.disconnect()
+    }
+
+    @Test func afterSleepTheConnectionGoesAtOnceAndTheTerminalWaits() async throws {
+        let server = try await TestSSHServer.start(allowedKey: key)
+        defer { Task { await server.stop() } }
+        let connection = try await connectedMac(server)
+        defer { connection.stop() }
+        try await waitUntil { connection.companionState == .ready }
+        let session = try await attachedTerminal(connection)
+        _ = try await connection.perform(.sleep)
+        #expect(connection.sleepingSince != nil, "sleeping at once, not connected")
+        // The Mac sleeps 1.5 s later: its connection is closed then (it would die without a word).
+        try await waitUntil(timeout: .seconds(5)) { connection.ssh == nil && !connection.isConnected }
+        try await waitUntil { session.phase == .reconnecting }
+        // No attempt while the Mac falls asleep (one could still reach it, or wake it).
+        try await Task.sleep(for: .seconds(1.5))
+        #expect(connection.ssh == nil)
+        #expect(connection.sleepingSince != nil)
+        session.disconnect()
+    }
+
+    @Test func newSessionsAndSwitchingKeepTheOthersRunning() async throws {
+        let server = try await TestSSHServer.start(allowedKey: key)
+        defer { Task { await server.stop() } }
+        let connection = try await connectedMac(server)
+        defer { connection.stop() }
+        let session = try await attachedTerminal(connection)
+        let first = try #require(session.holderID)
+        session.view.send(Array("in the first".utf8))
+        try await waitUntil { session.view.screenText().contains("in the first") }
+
+        // New Session: another shell on the Mac, the terminal shows it afresh.
+        session.startNewSession()
+        #expect(session.phase == .connecting, "connecting at once: nothing starts a second one")
+        try await waitUntil { session.phase == .connected && session.holderID != first }
+        let second = try #require(session.holderID)
+        #expect(server.terms.log.filter { $0 == "attach new" }.count == 2)
+        try await waitUntil { !session.view.screenText().contains("in the first") }
+
+        // Back to the first: it is still there, with its output.
+        session.switchTo(session: first)
+        try await waitUntil { session.phase == .connected && session.holderID == first }
+        try await waitUntil { session.view.screenText().contains("in the first") }
+        let list = try await connection.ssh!.run(TermAttach.list(companion: TestSSHServer.companionPath))
+        #expect(Set(try #require(TermAttach.sessions(fromList: list)).map(\.id)) == [first, second])
+        session.disconnect()
+    }
+}
+
+/// Who has a session open, as the list on this iPhone says it.
+struct SessionHolderTests {
+    @Test func thisIPhoneIsNeverAnotherDevice() {
+        let mine = MacTermSession(id: "0000aa01", attached: true, from: "ssh 192.168.178.31", client: "phone-1")
+        #expect(mine.holder(shown: nil, phoneID: "phone-1", last: nil) == .here, "after a relaunch, before attaching")
+        #expect(mine.holder(shown: "0000aa01", phoneID: "phone-1", last: "0000aa01") == .here)
+        let theirs = MacTermSession(id: "0000aa02", attached: true, from: "ssh 10.0.0.5", client: "ipad-2")
+        #expect(theirs.holder(shown: nil, phoneID: "phone-1", last: "0000aa02") == .elsewhere("ssh 10.0.0.5"))
+        let free = MacTermSession(id: "0000aa03", attached: false)
+        #expect(free.holder(shown: nil, phoneID: "phone-1", last: "0000aa03") == .nobody)
+        #expect(free.holder(shown: "0000aa03", phoneID: "phone-1", last: nil) == .here, "being attached right now")
+        // An older aOS doesn't say which device: the session this iPhone showed last is its own.
+        let old = MacTermSession(id: "0000aa04", attached: true, from: "ssh 192.168.178.31")
+        #expect(old.holder(shown: nil, phoneID: "phone-1", last: "0000aa04") == .here)
+        #expect(old.holder(shown: nil, phoneID: "phone-1", last: "0000aa01") == .elsewhere("ssh 192.168.178.31"))
+    }
+
+    @Test func theAttachCommandNamesThisIPhone() {
+        #expect(TermAttach.attach(companion: "/usr/local/bin/aos-companion", id: "0000aa01", have: 12, client: "1a2b3c4d5e6f")
+            == "'/usr/local/bin/aos-companion' term attach --id 0000aa01 --have 12 --client 1a2b3c4d5e6f")
+        #expect(TermAttach.attach(companion: "/x", id: nil, have: nil, client: "a b") == "'/x' term attach", "nothing the shell reads")
+        #expect(TermAttach.isClientID("1a2b3c4d5e6f"))
+        #expect(!TermAttach.isClientID(""))
+        #expect(!TermAttach.isClientID("x;rm"))
+    }
+
+    @Test func theListKeepsItsOrder() {
+        let a = MacTermSession(id: "0000aa02", attached: false, created: Date(timeIntervalSince1970: 100))
+        let b = MacTermSession(id: "0000aa01", attached: false, created: Date(timeIntervalSince1970: 200))
+        let c = MacTermSession(id: "0000aa00", attached: false)
+        #expect(TermAttach.ordered([c, b, a]).map(\.id) == ["0000aa02", "0000aa01", "0000aa00"])
     }
 }

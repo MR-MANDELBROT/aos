@@ -8,6 +8,7 @@ enum MacAction: String, Sendable, CaseIterable {
     case status = "mac.status"
     case sleep = "mac.sleep"
     case displayOff = "mac.display-off"
+    case displayOn = "mac.display-on"
     case stayAwake = "mac.stay-awake"
     case workspaceStart = "workspace.start"
     case workspaceStop = "workspace.stop"
@@ -34,6 +35,13 @@ struct MacStatus: Equatable, Sendable {
         var lid: String
         /// nominal, fair, serious, critical
         var thermal: String
+    }
+
+    struct Display: Equatable, Sendable {
+        /// on (a screen is lit), off (all asleep), none (no screen: the lid closed without a monitor)
+        var state: String
+        /// Monitors besides the built-in screen.
+        var external: Int
     }
 
     struct Awake: Equatable, Sendable {
@@ -78,6 +86,8 @@ struct MacStatus: Equatable, Sendable {
     }
 
     var power: Power?
+    /// nil from an older aOS (it doesn't say).
+    var display: Display?
     var awake: Awake?
     var workspace: Workspace?
     var session: Session?
@@ -86,9 +96,10 @@ struct MacStatus: Equatable, Sendable {
     var kept: Int?
     var bitwarden: Vault?
 
-    init(power: Power? = nil, awake: Awake? = nil, workspace: Workspace? = nil, session: Session? = nil,
-         newChats: NewChats? = nil, kept: Int? = nil, bitwarden: Vault? = nil) {
+    init(power: Power? = nil, display: Display? = nil, awake: Awake? = nil, workspace: Workspace? = nil,
+         session: Session? = nil, newChats: NewChats? = nil, kept: Int? = nil, bitwarden: Vault? = nil) {
         self.power = power
+        self.display = display
         self.awake = awake
         self.workspace = workspace
         self.session = session
@@ -102,6 +113,9 @@ struct MacStatus: Equatable, Sendable {
         if let p = o["power"]?.object {
             power = Power(source: p["source"]?.string ?? "unknown", battery: p["battery"]?.int, charging: p["charging"]?.bool,
                           minutes: p["minutes"]?.int, lid: p["lid"]?.string ?? "none", thermal: p["thermal"]?.string ?? "nominal")
+        }
+        if let d = o["display"]?.object, let state = d["state"]?.string {
+            display = Display(state: state, external: d["external"]?.int ?? 0)
         }
         if let a = o["awake"]?.object, let setting = a["setting"]?.string.flatMap(MacStayAwake.init(rawValue:)) {
             awake = Awake(setting: setting, holding: a["holding"]?.bool ?? false, lidClosedMode: a["lidClosedMode"]?.bool ?? false,
@@ -123,6 +137,29 @@ struct MacStatus: Equatable, Sendable {
         if let b = o["bitwarden"]?.object, let state = b["state"]?.string {
             bitwarden = Vault(state: state, until: date(b["until"]))
         }
+    }
+}
+
+/// The Mac's actions that make sense now: the Overview offers only these.
+struct MacOffer: Equatable, Sendable {
+    var sleep = false
+    var displayOff = false
+    var displayOn = false
+
+    /// `features`: what aOS on the Mac knows (hello); `sleeping`: it was put to sleep and hasn't answered since.
+    static func now(_ status: MacStatus, features: Set<String>, sleeping: Bool) -> MacOffer {
+        guard !sleeping else { return MacOffer() }
+        var offer = MacOffer(sleep: true)
+        switch status.display?.state {
+        case "on": offer.displayOff = true
+        // Off: aOS wakes it (as a key press would); an older aOS can't.
+        case "off": offer.displayOn = features.contains(MacAction.displayOn.rawValue)
+        // No screen to turn on or off (the lid is closed, no monitor).
+        case "none": break
+        // An older aOS doesn't say: as before.
+        default: offer.displayOff = true
+        }
+        return offer
     }
 }
 

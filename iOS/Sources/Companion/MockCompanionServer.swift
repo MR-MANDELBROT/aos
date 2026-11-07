@@ -208,6 +208,7 @@ final class MockCompanionServer: @unchecked Sendable {
     static let demoMacStatus: [String: JSONValue] = [
         "power": .object(["source": .string("battery"), "battery": .number(76), "charging": .bool(false),
                           "minutes": .number(312), "lid": .string("open"), "thermal": .string("nominal")]),
+        "display": .object(["state": .string("on"), "external": .number(0)]),
         "awake": .object(["setting": .string("lidClosed"), "holding": .bool(true), "lidClosedMode": .bool(false),
                           "helper": .string("enabled"), "otherService": .bool(false)]),
         "workspace": .object(["state": .string("open"), "setupComplete": .bool(true),
@@ -245,7 +246,11 @@ final class MockCompanionServer: @unchecked Sendable {
                 set("bitwarden", "state", .string("locked"))
             case .sessionRestart:
                 set("session", "state", .string("restarting"))
-            case .status, .sleep, .displayOff:
+            case .displayOff:
+                set("display", "state", .string("off"))
+            case .displayOn:
+                set("display", "state", .string("on"))
+            case .status, .sleep:
                 break
             }
             state.macStatus = status
