@@ -26,6 +26,10 @@ final class CompanionControlTests: XCTestCase {
             stayAwake = mode
             return nil
         }
+
+        /// Never the real display: the tests run on a Mac someone uses.
+        var displays: [Bool] = []
+        func setDisplay(on: Bool) async { displays.append(on) }
     }
 
     final class LogBox: @unchecked Sendable { var lines: [String] = [] }
@@ -87,6 +91,9 @@ final class CompanionControlTests: XCTestCase {
         let power = try XCTUnwrap(status["power"] as? [String: Any])
         XCTAssertNotNil(power["source"] as? String)
         XCTAssertTrue(["open", "closed", "none"].contains(power["lid"] as? String ?? ""))
+        let display = try XCTUnwrap(status["display"] as? [String: Any])
+        XCTAssertTrue(["on", "off", "none"].contains(display["state"] as? String ?? ""), "\(display)")
+        XCTAssertNotNil(display["external"] as? Int)
         let awake = try XCTUnwrap(status["awake"] as? [String: Any])
         XCTAssertEqual(awake["setting"] as? String, "lidClosed")
         XCTAssertEqual(awake["holding"] as? Bool, true)
@@ -112,6 +119,19 @@ final class CompanionControlTests: XCTestCase {
         XCTAssertEqual(refused.code, "sleep-disabled")
         XCTAssertTrue(refused.text.contains("pmset disablesleep"))
         XCTAssertTrue(log.lines.contains { $0.contains("asks the Mac to sleep") })
+    }
+
+    @MainActor
+    func testTheDisplayGoesThroughTheAppAndTheStatusComesBack() async throws {
+        let (c, controls, log, _) = try controller()
+        let off = await c.handle(phone.sign(request(CompanionControl.displayOff)))
+        XCTAssertTrue(off.ok, off.text)
+        XCTAssertNotNil((try object(off)["status"] as? [String: Any])?["display"] as? [String: Any])
+        let on = await c.handle(phone.sign(request(CompanionControl.displayOn)))
+        XCTAssertTrue(on.ok, on.text)
+        XCTAssertEqual(controls.displays, [false, true])
+        XCTAssertTrue(log.lines.contains { $0.contains("turns the display on") })
+        XCTAssertTrue(CompanionControl.features.contains("mac.display-on"))
     }
 
     @MainActor
