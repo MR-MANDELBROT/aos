@@ -319,14 +319,17 @@ public final class WorkspaceCustodyHost: @unchecked Sendable {
             guard fm.fileExists(atPath: layout.key(Self.next(name)).path) else { throw CustodyError.helper("nothing to commit") }
         }
         if keepPassword { try? fm.removeItem(at: layout.key("password.next")) }
+        // Keys of an earlier version whose password couldn't change yet: the next start tries the password again.
+        let passwordStillOld = keepPassword && fm.fileExists(atPath: layout.rotationNeeded.path)
         // The `.pub` files go first: a key without its matching private key would be worse than the other way round.
         for name in ["maintenance.pub", "stop.pub", "maintenance", "stop"] + (keepPassword ? [] : ["password"]) {
             guard rename(layout.key(Self.next(name)).path, layout.key(name).path) == 0 else {
                 throw CustodyError.helper("couldn't put \(name) in place")
             }
         }
-        try? fm.removeItem(at: layout.rotationNeeded)
-        log("workspace: new keys and password in use")
+        if !passwordStillOld { try? fm.removeItem(at: layout.rotationNeeded) }
+        log(keepPassword ? "workspace: new keys in use (the password stays\(passwordStillOld ? ", tried again at the next start" : ""))"
+                         : "workspace: new keys and password in use")
         return status()
     }
 
@@ -360,7 +363,8 @@ public final class WorkspaceCustodyHost: @unchecked Sendable {
             "-o", "StrictHostKeyChecking=\(acceptNew ? "accept-new" : "yes")",
             "-o", "CheckHostIP=no",
             "-o", "UpdateHostKeys=no",
-            "-o", "ConnectTimeout=8",
+            // A busy workspace (after a forced stop, on battery saving) can take longer than 8 s for its banner.
+            "-o", "ConnectTimeout=20",
             "-o", "ServerAliveInterval=15",
             "-o", "ServerAliveCountMax=3",
             "-o", "LogLevel=ERROR",

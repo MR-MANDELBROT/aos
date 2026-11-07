@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 
 /// Brings a freshly provisioned guest into shape (see Resources/Guest/setup.sh) and gives access to it
@@ -214,12 +213,11 @@ public struct Provisioner: Sendable {
         // 3. The account's password, in its session. Only if the automatic login's file is exactly what this version
         //    writes for the old password (else a new one might not log in by itself after the next boot).
         var passwordChanged = false
-        let expected = SHA256.hash(data: Kcpassword.encode(old)).map { String(format: "%02x", $0) }.joined()
-        let present = try await next.run("/usr/bin/shasum -a 256 /etc/kcpassword 2>/dev/null | /usr/bin/cut -d ' ' -f 1",
-                                         timeout: 20, check: false, what: "automatic login check").text
+        let present = try await next.run("/usr/bin/base64 < /etc/kcpassword 2>/dev/null", timeout: 20, check: false,
+                                         what: "automatic login check").text
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard present == expected else {
-            log("the account's password stays (the automatic login file isn't in the expected form)")
+        guard let file = Data(base64Encoded: present), Kcpassword.matches(file, password: old) else {
+            log("the account's password stays (the automatic login file isn't in the expected form, \(Data(base64Encoded: present)?.count ?? 0) bytes)")
             try await custody.rotateCommit(keepPassword: true)
             try await removeOldKeys(host: host)
             return false
