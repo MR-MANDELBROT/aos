@@ -12,6 +12,8 @@ enum Demo {
     static var sheet: String? { UserDefaults.standard.string(forKey: "AOSDemoSheet") }
     /// `-AOSDemoUnpaired YES`: the welcome page.
     static var unpaired: Bool { UserDefaults.standard.bool(forKey: "AOSDemoUnpaired") }
+    /// `-AOSDemoScroll bottom`: the Overview starts scrolled to its end (screenshots of the lower cards).
+    static var scrollToBottom: Bool { UserDefaults.standard.string(forKey: "AOSDemoScroll") == "bottom" }
     /// `-AOSScreenDirect HOST:PORT`: the workspace screen connects straight to a screen sharing server (the
     /// simulator reaches a workspace VM's address), with the login from the environment variables AOS_SCREEN_USER and
     /// AOS_SCREEN_PASSWORD. For testing the viewer against a real screensharingd.

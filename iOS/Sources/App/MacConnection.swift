@@ -156,6 +156,30 @@ final class MacConnection {
         if let status = try? await companion.status() { workspace = status }
     }
 
+    // MARK: The Overview (the Mac and aOS)
+
+    /// The Mac's battery, lid, staying awake, workspace, Claude Code and Bitwarden, as `mac.status` reported it.
+    private(set) var macStatus: MacStatus?
+    /// aOS on the Mac is older and doesn't know these ops.
+    var macStatusUnsupported: Bool {
+        guard let hello, companionState == .ready else { return false }
+        return !hello.features.contains(MacAction.status.rawValue)
+    }
+
+    func refreshMacStatus() async {
+        guard let companion, companionState == .ready, !macStatusUnsupported else { return }
+        if let result = try? await companion.mac(.status), let status = result.status { macStatus = status }
+    }
+
+    /// An action of the Overview (signed like every request). The status that comes back is shown at once.
+    @discardableResult
+    func perform(_ action: MacAction, value: String? = nil) async throws -> MacActionResult {
+        guard let companion, companionState == .ready else { throw CompanionError.closed }
+        let result = try await companion.mac(action, value: value)
+        if let status = result.status { macStatus = status }
+        return result
+    }
+
     // MARK: Running
 
     private func run(wakes: AsyncStream<Void>) async {
@@ -267,7 +291,10 @@ final class MacConnection {
         switch event {
         case .workspace(let state):
             if workspace != nil { workspace?.state = state } else { workspace = WorkspaceStatus(state: state) }
-            Task { await refreshStatus() }
+            Task {
+                await refreshStatus()
+                await refreshMacStatus()
+            }
         case .mac(let state, let detail):
             macAppProblem = state == "unavailable" ? detail : nil
         case .subscriptionEnded:
