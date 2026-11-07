@@ -31,10 +31,15 @@ struct ConnectionView: View {
             if let mac = model.activeMac, Self.usesTailnet(mac) {
                 if mac.way == .tailscaleApp || !ConnectionPlan.tailnetHosts(of: mac).isEmpty {
                     Section {
-                        LabeledContent("Tailscale app on this iPhone") {
-                            Label(vpnActive ? String(localized: "VPN on") : String(localized: "VPN off"),
-                                  systemImage: vpnActive ? "checkmark.circle.fill" : "minus.circle")
+                        // One plain row (a Label as LabeledContent's value made the row much too tall).
+                        HStack(spacing: 6) {
+                            Text("Tailscale app on this iPhone")
+                            Spacer(minLength: 8)
+                            Image(systemName: vpnActive ? "checkmark.circle.fill" : "minus.circle")
                                 .foregroundStyle(vpnActive ? BrandColor.mint : .secondary)
+                            Text(vpnActive ? String(localized: "VPN on") : String(localized: "VPN off"))
+                                .foregroundStyle(.secondary)
+                                .fixedSize()
                         }
                         if mac.way == .tailscaleApp && !vpnActive && !tailnet.isSetUp {
                             Link(destination: URL(string: "https://apps.apple.com/app/tailscale/id1470499037")!) {
