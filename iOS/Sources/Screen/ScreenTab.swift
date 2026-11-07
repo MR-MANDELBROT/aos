@@ -263,7 +263,9 @@ struct ScreenTab: View {
         case .noHighPerformance:
             return String(localized: "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later on Apple silicon).")
         case .failed:
-            return String(localized: "Your Mac came through SSH in its own size: the direct way didn't work this time.")
+            let text = String(localized: "Your Mac came through SSH in its own size: the direct way didn't work this time.")
+            guard let detail = model.macScreen.tunnelDetail, !detail.isEmpty else { return text }
+            return text + " (" + detail + ")"
         }
     }
 

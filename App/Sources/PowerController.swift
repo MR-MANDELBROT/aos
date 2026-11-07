@@ -241,7 +241,7 @@ final class PowerController: ObservableObject {
         let facts = AwakeFacts(setting: settings.stayAwake, needed: needed, lidClosed: lid, onAC: power?.onAC ?? true,
                                batteryPercent: power?.percent, thermalCritical: MacState.thermalCritical,
                                externalDisplay: (displays?.external ?? 1) > 0, cloupiPresent: cloupi,
-                               helperReady: helperStatus == .enabled)
+                               helperReady: helperStatus == .enabled, minBatteryPercent: settings.stayAwakeMinBattery)
         // Asked to sleep from the iPhone: nothing holds the Mac until it woke up again.
         let sleepRequested = sleepPausedSince != nil
         let d = sleepRequested ? AwakeDecision() : AwakePolicy.decide(facts)

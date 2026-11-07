@@ -16,6 +16,8 @@ public protocol MacControls: AnyObject {
     func sleepMac() async -> MacSleepResult
     /// Settings > General > Staying awake.
     func setStayAwake(_ mode: StayAwake) -> MacControlRefusal?
+    /// The battery level down to which the Mac stays awake with the lid closed (0: no limit).
+    func setBatteryLimit(_ percent: Int) -> MacControlRefusal?
     /// Turns the display off or wakes it (`MacDisplayStatus.set(on:)` unless the app does it itself).
     func setDisplay(on: Bool) async
 }
@@ -36,15 +38,20 @@ public struct MacAwakeStatus: Codable, Equatable, Sendable {
     public var helper: String
     /// Another service keeps the Mac awake and owns sleep (aOS leaves it alone).
     public var otherService: Bool
+    /// On battery with the lid closed: awake down to this level (0: no limit), and the levels to choose from.
+    public var batteryLimit: Int?
+    public var batteryLimits: [Int]?
 
     public init(setting: StayAwake, holding: Bool, lidClosedMode: Bool, blocker: String?, helper: String,
-                otherService: Bool) {
+                otherService: Bool, batteryLimit: Int? = nil, batteryLimits: [Int]? = nil) {
         self.setting = setting
         self.holding = holding
         self.lidClosedMode = lidClosedMode
         self.blocker = blocker
         self.helper = helper
         self.otherService = otherService
+        self.batteryLimit = batteryLimit
+        self.batteryLimits = batteryLimits
     }
 }
 
@@ -189,12 +196,13 @@ public enum CompanionControl {
     public static let displayOff = "companion.mac.display-off"
     public static let displayOn = "companion.mac.display-on"
     public static let stayAwake = "companion.mac.stay-awake"
+    public static let batteryLimit = "companion.mac.battery-limit"
     public static let workspaceStart = "companion.workspace.start"
     public static let workspaceStop = "companion.workspace.stop"
     public static let bitwardenLock = "companion.bitwarden.lock"
     public static let sessionRestart = "companion.session.restart"
 
-    public static let ops: Set<String> = [status, sleep, displayOff, displayOn, stayAwake, workspaceStart, workspaceStop,
+    public static let ops: Set<String> = [status, sleep, displayOff, displayOn, stayAwake, batteryLimit, workspaceStart, workspaceStop,
                                           bitwardenLock, sessionRestart]
 
     /// What this Mac offers the phone beyond the first version (`hello` lists it): these ops and the terminal
@@ -309,6 +317,15 @@ extension WorkspaceController {
             guard let controls = macControls else { return .failure(r.id, "\(Brand.name) can't do that right now.") }
             if let refusal = controls.setStayAwake(mode) { return refused(refusal) }
             log("\(from) set staying awake to \(mode.rawValue)")
+            return done()
+
+        case CompanionControl.batteryLimit:
+            guard let percent = Int(r.text ?? ""), AgentSettings.stayAwakeMinBatteryChoices.contains(percent) else {
+                return .failure(r.id, "Not a choice: \(r.text ?? "")")
+            }
+            guard let controls = macControls else { return .failure(r.id, "\(Brand.name) can't do that right now.") }
+            if let refusal = controls.setBatteryLimit(percent) { return refused(refusal) }
+            log("\(from) set the battery limit for staying awake to \(percent == 0 ? "none" : "\(percent) %")")
             return done()
 
         case CompanionControl.workspaceStart:

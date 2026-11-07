@@ -165,6 +165,8 @@ final class ScreenSession {
     private(set) var path: ScreenPath?
     /// Why the Mac's last session went through the tunnel although the iPhone's size was wanted.
     private(set) var tunnelReason: TunnelReason?
+    /// What exactly went wrong on the direct path (shown on the card, for finding the cause).
+    private(set) var tunnelDetail: String?
 
     /// The person changed the resolution in the session (aOS keeps one setting for both screens).
     @ObservationIgnored var onResolutionScale: ((Double) -> Void)?
@@ -319,6 +321,7 @@ final class ScreenSession {
         }
         if let failed = directFailures[host], Date().timeIntervalSince(failed) < 10 * 60 {
             tunnelReason = .failed
+            tunnelDetail = String(localized: "it failed a few minutes ago; tried again after 10 minutes")
             return .tunnel
         }
         guard !withoutHighPerformance.contains(route.screenID) else {
@@ -333,11 +336,17 @@ final class ScreenSession {
                 if !highPerformance { withoutHighPerformance.insert(route.screenID) }
                 guard highPerformance, knowsKey else {
                     tunnelReason = highPerformance ? .failed : .noHighPerformance
+                    tunnelDetail = highPerformance ? String(localized: "the Mac's screen sharing key couldn't be learned") : nil
                     return .tunnel
                 }
-            case .loginRefused, .failed:
+            case .loginRefused:
+                tunnelReason = .failed
+                tunnelDetail = String(localized: "the Mac refused the login")
+                return .tunnel
+            case .failed:
                 // The session through the tunnel says what's wrong (and asks for another login if it was refused).
                 tunnelReason = .failed
+                tunnelDetail = String(localized: "the check through SSH failed")
                 return .tunnel
             }
         }
@@ -346,6 +355,7 @@ final class ScreenSession {
             return .tunnel
         }
         tunnelReason = nil
+        tunnelDetail = nil
         return .direct(host: host, network: DirectPath.network(for: host))
     }
 
@@ -420,6 +430,7 @@ final class ScreenSession {
         directFailures[address] = Date()
         if reason.contains("no high performance") { withoutHighPerformance.insert(route.screenID) }
         tunnelReason = reason.contains("no high performance") ? .noHighPerformance : .failed
+        tunnelDetail = reason
         watchTask?.cancel()
         watchTask = nil
         run(route, path: .tunnel)

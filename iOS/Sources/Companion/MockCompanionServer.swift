@@ -250,6 +250,8 @@ final class MockCompanionServer: @unchecked Sendable {
                 set("display", "state", .string("off"))
             case .displayOn:
                 set("display", "state", .string("on"))
+            case .batteryLimit:
+                if let value, let p = Int(value) { set("awake", "batteryLimit", .number(Double(p))) }
             case .status, .sleep:
                 break
             }

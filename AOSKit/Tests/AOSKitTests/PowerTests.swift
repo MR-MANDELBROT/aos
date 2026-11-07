@@ -100,8 +100,23 @@ final class HoldPolicyTests: XCTestCase {
         let lease = now.addingTimeInterval(60)
         XCTAssertFalse(hold(lease, cloupi: true))
         XCTAssertFalse(hold(lease, hot: true))
-        XCTAssertFalse(hold(lease, percent: 9))
-        XCTAssertTrue(hold(lease, onAC: true, percent: 9))
+        // The helper's floor (the person's own level is the app's: it stops renewing below it).
+        XCTAssertFalse(hold(lease, percent: HoldPolicy.floorPercent - 1))
+        XCTAssertTrue(hold(lease, percent: HoldPolicy.floorPercent))
+        XCTAssertTrue(hold(lease, onAC: true, percent: 1))
+    }
+
+    func testThePersonsBatteryLevel() {
+        func facts(_ percent: Int, level: Int) -> AwakeFacts {
+            AwakeFacts(setting: .lidClosed, needed: true, lidClosed: true, onAC: false, batteryPercent: percent,
+                       helperReady: true, minBatteryPercent: level)
+        }
+        XCTAssertTrue(AwakePolicy.decide(facts(25, level: 20)).holdLidClosed)
+        XCTAssertEqual(AwakePolicy.decide(facts(19, level: 20)).blocker, .lowBattery)
+        XCTAssertTrue(AwakePolicy.decide(facts(6, level: 5)).holdLidClosed)
+        // No limit: down to the helper's emergency floor, never below it.
+        XCTAssertTrue(AwakePolicy.decide(facts(3, level: 0)).holdLidClosed)
+        XCTAssertEqual(AwakePolicy.decide(facts(1, level: 0)).blocker, .lowBattery)
     }
 
     func testLeaseIsBounded() {

@@ -1320,11 +1320,32 @@
       }
     },
     "Battery below 10 percent: the Mac may sleep now." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Akku unter 10 Prozent: Der Mac darf jetzt schlafen."
+          }
+        }
+      }
+    },
+    "Battery below the level set on the Mac: it may sleep now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akku unter dem Stand, der auf dem Mac eingestellt ist: Er darf jetzt schlafen."
+          }
+        }
+      }
+    },
+    "Below that the Mac sleeps as usual." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darunter schläft der Mac wie gewohnt."
           }
         }
       }
@@ -3292,6 +3313,16 @@
         }
       }
     },
+    "it failed a few minutes ago; tried again after 10 minutes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "er ist vor ein paar Minuten gescheitert; nach 10 Minuten wird es wieder versucht"
+          }
+        }
+      }
+    },
     "It must show:" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4099,6 +4130,16 @@
         }
       }
     },
+    "No limit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Limit"
+          }
+        }
+      }
+    },
     "No login for %@ in Bitwarden" : {
       "localizations" : {
         "de" : {
@@ -4492,6 +4533,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Im Akkubetrieb, noch %@"
+          }
+        }
+      }
+    },
+    "On battery, awake down to" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Akkubetrieb wach bis"
           }
         }
       }
@@ -6936,6 +6987,16 @@
         }
       }
     },
+    "the check through SSH failed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die Prüfung über SSH ist gescheitert"
+          }
+        }
+      }
+    },
     "The connection" : {
       "localizations" : {
         "de" : {
@@ -7322,6 +7383,16 @@
         }
       }
     },
+    "the Mac refused the login" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Mac hat die Anmeldung abgelehnt"
+          }
+        }
+      }
+    },
     "The Mac refused the pairing: %@" : {
       "localizations" : {
         "de" : {
@@ -7400,6 +7471,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Bildschirm des Macs ist nicht freigegeben. Schalte auf dem Mac die Bildschirmfreigabe ein: Systemeinstellungen > Allgemein > Teilen."
+          }
+        }
+      }
+    },
+    "the Mac's screen sharing key couldn't be learned" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Schlüssel der Bildschirmfreigabe des Macs ließ sich nicht lernen"
           }
         }
       }
@@ -8327,6 +8408,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ entkoppeln?"
+          }
+        }
+      }
+    },
+    "Until the battery is almost empty (2 percent)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bis der Akku fast leer ist (2 Prozent)."
           }
         }
       }

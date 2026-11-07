@@ -21,6 +21,16 @@ struct StayAwakeSection: View {
             } else {
                 Text(explanation).font(.caption).foregroundStyle(.secondary)
                 if model.settings.stayAwake == .lidClosed {
+                    Picker("On battery, stay awake down to", selection: Binding(
+                        get: { model.settings.stayAwakeMinBattery },
+                        set: { v in model.update { $0.stayAwakeMinBattery = v } })) {
+                        ForEach(AgentSettings.stayAwakeMinBatteryChoices, id: \.self) { p in
+                            if p == 0 { Text("No limit").tag(p) } else { Text(verbatim: "\(p) %").tag(p) }
+                        }
+                        if !AgentSettings.stayAwakeMinBatteryChoices.contains(model.settings.stayAwakeMinBattery) {
+                            Text(verbatim: "\(model.settings.stayAwakeMinBattery) %").tag(model.settings.stayAwakeMinBattery)
+                        }
+                    }
                     HelperRow()
                     if let state = stateText {
                         Label(state.text, systemImage: state.symbol)
@@ -40,13 +50,15 @@ struct StayAwakeSection: View {
         case .lidOpen:
             return String(localized: "While a session, a kept conversation or the workspace runs, the Mac doesn't go to sleep by itself. Closing the lid puts it to sleep.")
         case .lidClosed:
-            return String(localized: "The Mac also stays awake with the lid closed, on battery too. Meanwhile \(Brand.name) freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. Below 10 percent battery, or when it gets too hot, the Mac sleeps.")
+            return String(localized: "The Mac also stays awake with the lid closed, on battery too. Meanwhile \(Brand.name) freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. On battery it stays awake down to the level you choose below; then, or when it gets too hot, the Mac sleeps.")
         }
     }
 
     var stateText: (text: String, symbol: String, warning: Bool)? {
         switch power.decision.blocker {
-        case .lowBattery?: return (String(localized: "Battery below 10 percent: the Mac may sleep now."), "battery.25", true)
+        case .lowBattery?:
+            let level = max(model.settings.stayAwakeMinBattery, HoldPolicy.floorPercent)
+            return (String(localized: "Battery below \(level) percent: the Mac may sleep now."), "battery.25", true)
         case .thermal?: return (String(localized: "The Mac is too hot: it may sleep now."), "thermometer.high", true)
         case .nothingToKeep?: return (String(localized: "Nothing to keep reachable right now: the Mac sleeps as usual."), "moon", false)
         default: break
