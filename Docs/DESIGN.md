@@ -201,10 +201,12 @@ See Docs/COMPANION.md for the protocol. On the Mac:
 - **CompanionHub** collects the events (sign-in, help, approval requests and their end); a phone that connects gets
   the open questions first. The menu shows whether a phone is connected (it asked within 45 s).
 - **The Overview** (`CompanionControl`, Docs/COMPANION.md "The Mac from the iPhone"): a signed `mac.status` and one
-  signed op per action (sleep, display off, staying awake, workspace start and stop, Bitwarden lock, restart of aOS's
-  Claude Code session). What needs the app (staying awake, sleep) goes through `MacControls`, which `AppModel`
-  implements; the rest is AOSKit's own. Starting the workspace from the phone gives no agent a lease: the agent's
-  tools still need `workspace_open` and the person's yes.
+  signed op per action (sleep, display off and on, staying awake, workspace start and stop, Bitwarden lock, restart of
+  aOS's Claude Code session). What needs the app (staying awake, sleep) goes through `MacControls`, which `AppModel`
+  implements; the display too, by default with AOSKit's `MacDisplayStatus.set(on:)` (tests put their own in, they run
+  on a Mac someone uses); the rest is AOSKit's own. The display state is `CGDisplayIsAsleep` of each online screen
+  (screen sharing's virtual display left out), read in the app, which runs in the person's GUI session. Starting the
+  workspace from the phone gives no agent a lease: the agent's tools still need `workspace_open` and the person's yes.
 - **Sleep from the phone with aOS's lid-closed hold**: `pmset disablesleep 1` (the helper's hold) keeps even
   `pmset sleepnow` from working. So the app first stops holding: no idle assertion, the lease released at once
   (`hold(0)`: the helper sets disablesleep back if it set it), then reads `pmset -g` until SleepDisabled is 0 (6 s at
@@ -233,17 +235,19 @@ macOS has no tmux, so aos-companion brings a small holder (Docs/COMPANION.md, "T
   gets a reset, the modes in effect where its replay starts, the last 256 KB from a safe point (a line break if one is
   near), and the program in the foreground gets SIGWINCH to draw itself again (vim, htop, less, Claude Code do; a
   shell redraws its prompt line). A client that falls behind while attached gets the same, in place.
-- **Clients**: one at a time; a new attach takes over (after a network change the old SSH connection can linger on
-  the Mac until its TCP times out). Input is queued for the shell without blocking the loop; a client's output is
-  sent from the ring as its socket takes it (no queue per client).
+- **Clients**: one at a time; a new attach takes over (after a network change, or when the iPhone app was closed in
+  the background, the old SSH connection can linger on the Mac until its TCP times out). A client names its device
+  (`--client`, the iPhone's phone id): the same device again replaces its older connection quietly (`replaced`), only
+  another device takes the session (`taken`); `term list` says which device is attached. Input is queued for the shell
+  without blocking the loop; a client's output is sent from the ring as its socket takes it (no queue per client).
 - **Ending**: the shell exits (the holder sends what it wrote last, the reason and the status, removes its socket and
   exits), or `term end` / SIGTERM: SIGHUP to the foreground process group and the shell (as when a terminal window
   closes), SIGKILL after 3 s. Nothing ends sessions by age (that could kill a running job): the iPhone's Terminal tab
   lists them (`term list`) with the program in the foreground and its folder (libproc), and ends them on request.
   At most 16 at a time.
 - Tested in AOSKit (`TermTests`): the tracker, the ring and its replays, frames, the holder in-process with /bin/sh,
-  and the built binary end to end in a pseudo terminal (detach by hangup, come back with an offset, resize, takeover,
-  end, exit).
+  and the built binary end to end in a pseudo terminal (detach by hangup, come back with an offset, resize, takeover
+  by another device and by the same one, end, exit).
 
 ## Reaching the Mac on the go (Tailscale)
 

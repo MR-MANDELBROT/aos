@@ -13,7 +13,7 @@ iOS/
   Sources/Core                  pure logic: pairing link and proof, OpenSSH key format, companion protocol (JSON
                                 lines), the workspace's sealed screen login (ScreenSeal, the same scheme as
                                 AOSKit's), the Mac's status for the Overview, keysym mapping
-  Sources/Services              keychain, Face ID, device key (Secure Enclave), stores for Macs, hosts, secrets
+  Sources/Services              keychain, Face ID, device key (Secure Enclave), stores for Macs and the screen login
   Sources/SSH                   SSHConnection (Citadel over Network.framework), SessionChannel (exec, PTY),
                                 LocalForwarder (127.0.0.1 listener -> direct-tcpip), PairingClient
   Sources/Companion             CompanionClient (actor), MockCompanionServer (tests and demo), command line
@@ -127,14 +127,15 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
 - Matching logins to the site is the Mac's job (AOSKit `HostMatching`, ported from the iPhone's first version with
   its own vault, which is gone).
 - Exit status 127 of the exec channel is shown as "aOS isn't installed where it was paired; pair again".
-- The Overview's ops (`mac.status`, `mac.sleep`, `mac.display-off`, `mac.stay-awake` with `text`,
+- The Overview's ops (`mac.status`, `mac.sleep`, `mac.display-off`, `mac.display-on`, `mac.stay-awake` with `text`,
   `workspace.start`, `workspace.stop`, `bitwarden.lock`, `session.restart`; Docs/COMPANION.md "The Mac from the
   iPhone") are signed like `type`: op `companion.<op>`, the value only in `text`. A refusal carries `code`
   (`sleep-disabled`, `other-service`, `sleep-held`, `not-set-up`, `no-session`), which the phone words itself
   (`MacRefusal`). `hello`'s `features` tells whether the Mac has them; without, the Mac card says to update aOS.
-- The terminal on the paired Mac: a pty-req plus exec of `'<companion>' term attach [--id ID [--have N]]`, notes
-  `ESC ] 7730 ; <JSON> BEL` in the output (Docs/COMPANION.md, "Terminal sessions"); `term list --json` and
-  `term end ID` in exec channels.
+- The terminal on the paired Mac: a pty-req plus exec of
+  `'<companion>' term attach [--id ID [--have N]] --client <phone id>`, notes `ESC ] 7730 ; <JSON> BEL` in the output
+  (Docs/COMPANION.md, "Terminal sessions"; `replaced` for this iPhone's own older connection, `taken` only for another
+  device); `term list --json` (with `client`) and `term end ID` in exec channels.
 
 ## The terminal (iOS/Sources/Terminal)
 
@@ -142,8 +143,9 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
 exactly in the middle of the screen: the swipe pad (default) or four keys ← ↑ → ↓ (Settings > Terminal > Arrow keys).
 Every key has the same width, at least 46 pt to touch with a 44 pt high plate; the keys left of the arrows fill that
 half exactly (Esc, Control, Tab on an iPhone upright; more in landscape), so at rest no key is cut on the left and the
-arrows are centered. Then Option, Shift-Tab, paste (the system's paste control, no question), the symbols, navigation,
-F1 to F12. The row snaps to whole keys and fades slightly where more keys are. A drag that starts on the pad sends
+arrows are centered. Then Option, Shift-Tab, paste (the system's paste control, no question), Home, End, Page Up,
+Page Down, forward delete, F1 to F12: only what the iPhone's keyboard lacks (Max, 2026-11-07: the symbols are on the
+keyboard, so they left the bar; forward delete stays, the keyboard only deletes backwards). The row snaps to whole keys and fades slightly where more keys are. A drag that starts on the pad sends
 arrows instead of scrolling the bar. Keys give way a little while pressed; modifiers stick (tap), lock (double tap)
 or work while held, as before.
 
@@ -176,12 +178,27 @@ The phone remembers the session's id (UserDefaults, per Mac) and counts the outp
   the connection is closed and built again.
 - App killed and started again: the terminal attaches to the same session without `--have`: reset, the modes in
   effect, the last 256 KB of output (scrollback 2000 lines) and the program redraws itself.
+- This iPhone is never "another device" for itself (Max saw his own session as open elsewhere): it names itself when
+  attaching (`--client`, its phone id), so its own older connection is replaced without a word, and the terminal only
+  listens to its newest channel (a round counter: output and notes of an older channel, one that lingers after a
+  reconnect, are dropped). Only one attach runs at a time, so a quick tap can't start two new sessions. The list shows
+  a session attached with this iPhone's id as "Open on this iPhone", also after the app was closed while the Mac
+  still holds the old connection (with an older aOS that doesn't report `client`: the session this iPhone showed last).
 - Taken over by another device, the shell exited, the session ended: said plainly, with "Open It Here" or "New
-  Session". "Detach" in the menu lets the session run on the Mac; "End Session" (asks first) ends its shell.
-- The Terminal tab lists the sessions on the Mac (`term list`: program and folder, open here or elsewhere or
-  nowhere since when) to open one here or end it (swipe or context menu).
-- aOS on the Mac without `term` (status 2) or not where it was paired (127): a plain shell, with a note.
-- Other computers (not the paired Mac) get a plain login shell as before: it ends with the connection.
+  Session". There is no Detach (Max, 2026-11-07): sessions simply continue on the Mac; "End Session" (asks first)
+  ends a shell.
+- The Terminal tab is the Mac's alone (Max: other computers and Mac accounts aren't needed; what an earlier version
+  kept for them, hosts and their passwords, is deleted from the keychain at launch): "New Session" on top starts
+  another shell on the Mac, the list below (`term list`, every 10 s while it is on screen: program and folder, open on
+  this iPhone or elsewhere or nowhere since when, oldest first) opens one here or ends it (swipe or context menu).
+  The terminal's menu has New Session, Switch Session (the others) and End Session; the session's name is the
+  navigation subtitle. Switching lets go of the session shown (it keeps running) and attaches to the other, afresh;
+  back to one shown before, the terminal continues where its view is.
+- The Mac asleep (after Sleep from the Overview): "The Mac is sleeping. The session continues when it wakes." instead
+  of "Reconnecting".
+- aOS on the Mac without `term` (status 2) or not where it was paired (127): a plain shell, with a note. A Mac that
+  refuses to start a session (status 1 before the start note, at most 16 sessions for example) is shown with what it
+  said, without trying again and again.
 
 ## Terminals in the background: what keeps them alive
 
@@ -191,24 +208,19 @@ What iOS 27 allows (read in Apple's documentation and the iOS 27 release notes, 
   phone off. That is the part that always holds (aos-companion term; tested on this Mac with the real binary).
 - **beginBackgroundTask**: about 30 s after the app leaves the foreground (Termius's documentation says the same for
   current iOS: "usually within 20 to 30 seconds"). aOS keeps the connection for 25 s, then lets it go.
-- **BGContinuedProcessingTask** (iOS 26+): submitted from the foreground as a result of a person's action; it runs
-  on in the background with iOS's own progress UI (Live Activity style), and the person can stop it there. Apple
-  meant it for work with an end (exports, uploads); "the system prioritizes the termination of tasks that reflect
-  minimal or no progress" and cancels all of them when the app is swiped away in the app switcher. aOS asks for one
-  when a terminal is opened (setting "Background time from iOS", on by default), reports progress by time over at most
-  60 minutes and finishes it when no terminal is open. iOS 27 replaces `submit(_:)` with
-  `submitTaskRequest(_:completionHandler:)` (used, not on the main thread). Whether iOS grants it, and for how long
-  an idle SSH connection really stays, has to be seen on the device. App Review might not accept this use.
-- **Live Activity** (setting "Live Activity", on): shows the open terminals (computer, connected, reconnecting,
-  detached, kept on the Mac; never their content, the Lock Screen is for anyone) with an End button and a link back
+- **BGContinuedProcessingTask** (iOS 26+): not used since 2026-11-07. Submitted from the foreground as a result of a
+  person's action, it runs on in the background with iOS's own progress UI, and the person can stop it there; Apple
+  meant it for work with an end (exports, uploads). On Max's iPhone its system UI ("Terminal in the background" with a
+  progress) read as a task that runs, not as a terminal that is kept, and he asked for it to go, with its setting.
+- **Live Activity** (setting "Live Activity", on): shows the open terminal (the Mac, connected or reconnecting, kept
+  on the Mac; never its content, the Lock Screen is for anyone) with an End button and a link back
   into the terminal. It gives the app **no** time in the background: "Each Live Activity runs in its own sandbox,
   and, unlike a widget, a Live Activity can't access the network"; it is updated by the app while it runs or by
   ActivityKit push. `NSSupportsLiveActivitiesFrequentUpdates` raises the budget for push updates only; aOS has no push
   server, so it changes nothing here (set as asked). Without background time the content goes stale a minute later
   and says "Kept on the Mac. Open aOS to continue." Termius tells its users to switch Live Activities on and calls
   its method a "lightweight workaround" without details; no Apple API keeps an app running because of a Live
-  Activity alone, so the Live Activity is the display and the End button, the continued processing task and location
-  are what can keep aOS running.
+  Activity alone, so the Live Activity is the display and the End button, and location is what can keep aOS running.
 - **Location** (setting "Keep alive with location", off by default): `UIBackgroundModes` location, "while using"
   permission, `allowsBackgroundLocationUpdates` and a `CLBackgroundActivitySession`, the coarsest accuracy (3 km, no
   GPS) and no distance updates worth mentioning. An app that receives location updates keeps running, so the
@@ -221,14 +233,31 @@ What iOS 27 allows (read in Apple's documentation and the iOS 27 release notes, 
 
 `mac.status` every 15 s while the Overview is on screen and the app is active, after every workspace event and after
 every action (each answer carries the new status). Mac card: battery and charging (time left or until full), power
-adapter, lid, temperature when it is high, staying awake with what holds it or why not, a menu to change it, Sleep
-(asks first: the phone loses the connection until the Mac wakes) and Display Off. Workspace card: Start (closed),
+adapter, lid, the display (on, off, or none with the lid closed and no monitor; monitors besides the built-in one),
+temperature when it is high, staying awake with what holds it or why not, a menu to change it. Only the actions that
+fit (`MacOffer`): Sleep (asks first: the phone loses the connection until the Mac wakes) while it is awake, Display
+Off while the display is on, Display On (`caffeinate -u` on the Mac) while it is off. After Sleep the card says
+"Sleeping since" with the time at once, and the connection is closed when the Mac falls asleep (it would die without a
+word, and the app would still say "connected"); no new attempt for 20 s, then the usual ones, and the first that
+works ends "sleeping". The aOS card isn't shown while the Mac sleeps or aOS doesn't answer (it would be old).
+Workspace card: Start (closed),
 Close (asks first while an agent has it), Show the screen. aOS card: Claude Code session (Restart, asks first), new
-chats from the Claude app, kept conversations, Bitwarden (Lock). An older Mac without these ops: the card says to
-update aOS. All rows share one 30 pt icon column (`OverviewRow`); `FactRow` centers its symbol in the same column on
+chats from the Claude app, kept conversations, Bitwarden (Lock). When Claude Code on the Mac needs a sign-in (the
+session or new chats say `needsLogin`), the card says what to do: run `claude` once in a terminal on the Mac and sign
+in; "Open Terminal" opens the Terminal tab in a new session on the Mac to do it from here. An older Mac without these
+ops: the card says to update aOS. All rows share one 30 pt icon column (`OverviewRow`); `FactRow` centers its symbol in the same column on
 the first line's baseline (the eye was wider than the others and pushed its text out of line).
 
 Note for the screen tab: a workspace started from the phone reports `running` (no agent lease), not `open`.
+
+**The tab bar** (Max, 2026-11-07: it was gone after a reload). The terminal hides it while it is shown and the Screen
+tab while its screen is in full screen (`.toolbar(.hidden, for: .tabBar)`). The Screen tab, kept alive behind the
+others by the TabView, started its screen by itself when the Mac came back or the workspace opened (its `onChange`
+handlers), and its full screen then hid the tab bar of the tab on screen, with no way back. Reproduced in the
+simulator (`TabBarTests`: the screen starting while the Overview is shown took the Overview's tab bar). RootView now
+builds the Screen tab only while it is selected, so nothing of it runs from behind. An explicit
+`.toolbar(.visible, for: .tabBar)` on a tab's root does not help: on the Terminal list it even kept the pushed terminal
+from hiding the bar (also seen in the test), so there is none.
 
 ## The screen: Open Screen Sharing (iOS/Sources/Screen, iOS/ThirdParty/OpenScreenSharing)
 
@@ -345,7 +374,7 @@ would still need the screen sharing login).
   runs it with the channel's event loop as task executor (`EventLoopTaskExecutor`) and holds bytes that arrive
   before NIOSSH is in the pipeline (`HoldUntilSSHStarts`): the server's version line comes right after TCP connects.
 - Citadel asks a custom `NIOSSHClientUserAuthenticationDelegate` only once, so one login method per connection:
-  the key for the paired Mac, key or password for an added host.
+  the key for the paired Mac (password logins were for added hosts, which are gone).
 - Citadel's server-side exec doesn't deliver stdin for exec channels (its SubsystemHandler only releases reads for
   shell and sftp); the tests' SSH server is written on NIOSSH directly.
 - `NWParameters.acceptLocalOnly` rejects loopback connections; the forwarder binds to 127.0.0.1 instead.
@@ -365,11 +394,11 @@ would still need the screen sharing login).
   against the in-process mock, an NIOSSH server and a fake pairing listener. First real run: pair, then watch
   `log stream --predicate 'subsystem == "dev.marquart.aos.ios"'` on the Mac for the phone's console.
 - Notifications while the app is closed (phase 2, CloudKit) are not built; requests show while the app is open.
-  In the background the connection is kept for 25 s, then dropped and rebuilt on return, unless iOS's background
-  time or the location option keeps the app running (then as long as that lasts).
+  In the background the connection is kept for 25 s, then dropped and rebuilt on return, unless the location option
+  keeps the app running (then as long as that lasts).
 - Not run on a device: the Live Activity (Lock Screen, Dynamic Island, the End button starting the app in the
-  background), the continued processing task (granted? how long?), the location keep-alive and its battery cost,
-  the swipe thresholds (12 pt, 450 pt/s) on real fingers.
+  background), the location keep-alive and its battery cost, the swipe thresholds (12 pt, 450 pt/s) on real fingers,
+  the display state and Display On against a real Mac, the 20 s pause after Sleep.
 - Unpairing on the iPhone doesn't remove the key on the Mac (the design leaves that to aOS on the Mac).
 - iPhone only (no iPad layout). Landscape works but wasn't tuned.
 - The screen client was tested against in-process servers (Apple's account login over the SSH tunnel, a refused
