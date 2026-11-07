@@ -88,6 +88,18 @@ struct ScreenRouteTests {
     }
 }
 
+/// Open Screen Sharing's license travels with the app (Settings > Acknowledgements shows it).
+@MainActor
+struct ScreenLicenseTests {
+    @Test func theLicenseNoticeAndTheGPLAreBundled() {
+        #expect(ScreenClient.licenseNotice.contains("nekohasekai"))
+        #expect(ScreenClient.licenseNotice.contains("GNU General Public License"))
+        #expect(ScreenClient.licenseText.contains("GNU GENERAL PUBLIC LICENSE"))
+        #expect(ScreenClient.licenseText.contains("Version 3, 29 June 2007"))
+        #expect(ScreenClient.sourceCode.absoluteString == "https://github.com/nekohasekai/open-screen-sharing")
+    }
+}
+
 @MainActor
 struct ScreenSettingsTests {
     private func defaults() -> UserDefaults {
