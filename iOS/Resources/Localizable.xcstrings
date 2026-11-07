@@ -239,6 +239,22 @@
         }
       }
     },
+    "%@ failed %lld min ago, tried again after 10 minutes: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist vor %lld Min. gescheitert, nach 10 Minuten wird es wieder versucht: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ failed %2$lld min ago, tried again after 10 minutes: %3$@"
+          }
+        }
+      }
+    },
     "%@ in %@" : {
       "localizations" : {
         "de" : {
@@ -3364,6 +3380,7 @@
       }
     },
     "it failed a few minutes ago; tried again after 10 minutes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4501,6 +4518,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht angemeldet"
+          }
+        }
+      }
+    },
+    "nothing answered at %@, port %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unter %@, Port %lld, hat nichts geantwortet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "nothing answered at %1$@, port %2$lld"
           }
         }
       }
@@ -6623,6 +6656,16 @@
         }
       }
     },
+    "SSH reached the Mac at %@, not at an address in a network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH erreicht den Mac über %@, nicht über eine Adresse im Netzwerk"
+          }
+        }
+      }
+    },
     "SSH to your Mac and to other computers." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7079,11 +7122,22 @@
       }
     },
     "the check through SSH failed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "die Prüfung über SSH ist gescheitert"
+          }
+        }
+      }
+    },
+    "the check through SSH failed: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die Prüfung über SSH ist gescheitert: %@"
           }
         }
       }
@@ -7475,11 +7529,22 @@
       }
     },
     "the Mac refused the login" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "der Mac hat die Anmeldung abgelehnt"
+          }
+        }
+      }
+    },
+    "the Mac refused the login in the check through SSH" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Mac hat die Anmeldung bei der Prüfung über SSH abgelehnt"
           }
         }
       }
@@ -7500,6 +7565,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac hat %@ nicht gestartet."
+          }
+        }
+      }
+    },
+    "the Mac showed no screen sharing key through SSH (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "der Mac hat über SSH keinen Schlüssel der Bildschirmfreigabe gezeigt (%@)"
           }
         }
       }
@@ -7567,6 +7642,7 @@
       }
     },
     "the Mac's screen sharing key couldn't be learned" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

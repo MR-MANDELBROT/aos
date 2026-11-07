@@ -224,6 +224,9 @@ nonisolated struct SessionConfiguration: Sendable {
     var remoteProtocol: RemoteProtocol
     var platform: RemotePlatform?
     var trustedFingerprint: String
+    /// aOS: only Apple's RSA login with a server whose key is `trustedFingerprint` (libsharing's RequireTrustedKey, aOS's
+    /// patch): aOS's direct path to the Mac.
+    var requiresTrustedKey = false
     var allowsUnverifiedLogin = false
     var keyboardLayout: Int
     var clientName: String

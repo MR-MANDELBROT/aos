@@ -255,6 +255,13 @@ struct ScreenTab: View {
     /// Why the Mac kept its own size (the iPhone's size was wanted, the direct path wasn't there).
     private var macNote: String? {
         guard model.settings.screenMatchesPhone, let reason = model.macScreen.tunnelReason else { return nil }
+        let text = macNoteText(reason)
+        // What exactly happened, for telling causes apart
+        guard let detail = model.macScreen.tunnelDetail, !detail.isEmpty else { return text }
+        return text + " (" + detail + ")"
+    }
+
+    private func macNoteText(_ reason: ScreenSession.TunnelReason) -> String {
         switch reason {
         case .noAddress, .unreachable:
             return String(localized: "Through SSH your Mac keeps its own size. In the iPhone's size it comes directly: in the same Wi-Fi, or with the Tailscale app's VPN on.")
@@ -263,9 +270,7 @@ struct ScreenTab: View {
         case .noHighPerformance:
             return String(localized: "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later on Apple silicon).")
         case .failed:
-            let text = String(localized: "Your Mac came through SSH in its own size: the direct way didn't work this time.")
-            guard let detail = model.macScreen.tunnelDetail, !detail.isEmpty else { return text }
-            return text + " (" + detail + ")"
+            return String(localized: "Your Mac came through SSH in its own size: the direct way didn't work this time.")
         }
     }
 

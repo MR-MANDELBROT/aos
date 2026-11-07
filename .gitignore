@@ -10,5 +10,6 @@ aOS.xcodeproj/
 
 # Built from Open Screen Sharing's Go library by iOS/Tools/libsharing.sh
 iOS/ThirdParty/OpenScreenSharing/Libsharing.xcframework/
+iOS/ThirdParty/OpenScreenSharing/Libsharing.source
 # Built by iOS/generate.sh (Tailnet/build.sh ios)
 iOS/Frameworks/
