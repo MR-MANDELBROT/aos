@@ -56,19 +56,7 @@ public struct TailnetRequest: Codable, Sendable, Equatable {
 
     /// "aos-" and the Mac's local host name in lowercase, other characters as hyphens, at most 63 characters
     /// ("Maxs-MacBook-Pro" -> "aos-maxs-macbook-pro").
-    public static func hostname(forMac name: String) -> String {
-        var label = ""
-        for scalar in name.lowercased().unicodeScalars {
-            let ok = ("a"..."z").contains(scalar) || ("0"..."9").contains(scalar)
-            if ok { label.unicodeScalars.append(scalar) } else if !label.hasSuffix("-") && !label.isEmpty { label += "-" }
-        }
-        while label.hasSuffix("-") { label.removeLast() }
-        if label.isEmpty { label = "mac" }
-        var result = "aos-" + label
-        if result.utf8.count > 63 { result = String(result.prefix(63)) }
-        while result.hasSuffix("-") { result.removeLast() }
-        return result
-    }
+    public static func hostname(forMac name: String) -> String { TailnetNames.hostname(device: name, fallback: "mac") }
 }
 
 /// The helper's answer.
