@@ -328,16 +328,28 @@ private struct MacStatusRows: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let power = status.power {
-                OverviewRow(symbol: MacStatusText.batterySymbol(power), tint: MacStatusText.batteryTint(power),
-                            title: MacStatusText.batteryTitle(power), detail: MacStatusText.batteryDetail(power))
-                OverviewRow(symbol: power.lid == "closed" ? "laptopcomputer.slash" : "laptopcomputer",
-                            title: MacStatusText.lidTitle(power), detail: MacStatusText.thermalDetail(power),
-                            detailTint: power.thermal == "serious" || power.thermal == "critical" ? .orange : .secondary)
-            }
-            if let display = status.display {
-                OverviewRow(symbol: "display", tint: display.state == "on" ? BrandColor.indigo : .secondary,
-                            title: MacStatusText.displayTitle(display), detail: MacStatusText.displayDetail(display))
+            // The Mac's state at a glance: battery, lid and display side by side.
+            if status.power != nil || status.display != nil {
+                HStack(spacing: 8) {
+                    if let power = status.power {
+                        StatusTile(symbol: MacStatusText.batterySymbol(power), tint: MacStatusText.batteryTint(power),
+                                   value: power.battery.map { "\($0) %" } ?? String(localized: "Power"),
+                                   caption: MacStatusText.batteryCaption(power))
+                        let hot = power.thermal == "serious" || power.thermal == "critical"
+                        // Grey while closed, blue while open (like the display), orange when it gets hot.
+                        StatusTile(symbol: power.lid == "closed" ? "laptopcomputer.slash" : "laptopcomputer",
+                                   tint: hot ? .orange : (power.lid == "open" ? BrandColor.indigo : .secondary),
+                                   value: MacStatusText.lidTitle(power),
+                                   caption: MacStatusText.thermalShort(power) ?? String(localized: "Cool"),
+                                   captionTint: hot ? .orange : .secondary)
+                    }
+                    if let display = status.display {
+                        StatusTile(symbol: "display", tint: display.state == "on" ? BrandColor.indigo : .secondary,
+                                   value: MacStatusText.displayTitle(display),
+                                   caption: MacStatusText.displayCaption(display))
+                    }
+                }
+                Divider()
             }
             if let awake = status.awake {
                 OverviewRow(symbol: awake.setting == .off ? "moon.zzz" : "sun.max", title: String(localized: "Stay awake"),
@@ -432,6 +444,34 @@ enum MacStatusText {
             return time.map { String(localized: "On battery, \($0) left") } ?? String(localized: "On battery")
         }
         return String(localized: "On the power adapter, not charging")
+    }
+
+    /// Short words for the status tiles.
+    static func batteryCaption(_ p: MacStatus.Power) -> String {
+        if p.battery == nil { return String(localized: "Plugged in") }
+        if p.charging == true { return String(localized: "Charging") }
+        if p.source == "battery" {
+            return p.minutes.map { String(localized: "\(String(format: "%d:%02d", $0 / 60, $0 % 60)) left") }
+                ?? String(localized: "On battery")
+        }
+        return String(localized: "Plugged in")
+    }
+
+    static func thermalShort(_ p: MacStatus.Power) -> String? {
+        switch p.thermal {
+        case "serious": String(localized: "Very warm")
+        case "critical": String(localized: "Too hot")
+        default: nil
+        }
+    }
+
+    static func displayCaption(_ d: MacStatus.Display) -> String {
+        if d.state == "none" { return String(localized: "No monitor") }
+        switch d.external {
+        case 0: return String(localized: "Built-in only")
+        case 1: return String(localized: "+1 monitor")
+        default: return String(localized: "+\(d.external) monitors")
+        }
     }
 
     static func lidTitle(_ p: MacStatus.Power) -> String {
@@ -901,5 +941,37 @@ private struct WelcomePoint: View {
                 Text(text).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+}
+
+/// One of the Mac's states as a small tile: a symbol, a value and a word under it.
+struct StatusTile: View {
+    let symbol: String
+    var tint: Color = BrandColor.indigo
+    let value: String
+    let caption: String
+    var captionTint: Color = .secondary
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: symbol)
+                .font(.title3)
+                .foregroundStyle(tint)
+                .frame(height: 24)
+            Text(value)
+                .font(.headline)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text(caption)
+                .font(.caption)
+                .foregroundStyle(captionTint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 4)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.secondary.opacity(0.1)))
+        .accessibilityElement(children: .combine)
     }
 }

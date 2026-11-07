@@ -287,6 +287,16 @@
         }
       }
     },
+    "%@ left" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "noch %@"
+          }
+        }
+      }
+    },
     "%@ now presents %@. That happens when the computer was set up again, but it can also mean that someone is in between. Only continue if you know why it changed." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -399,6 +409,26 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld:%2$@ left"
+          }
+        }
+      }
+    },
+    "+%lld monitors" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld Monitore"
+          }
+        }
+      }
+    },
+    "+1 monitor" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 Monitor"
           }
         }
       }
@@ -1427,6 +1457,16 @@
         }
       }
     },
+    "Built-in only" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur eingebaut"
+          }
+        }
+      }
+    },
     "Cache" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1927,6 +1967,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steuerung"
+          }
+        }
+      }
+    },
+    "Cool" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kühl"
           }
         }
       }
@@ -4187,6 +4237,16 @@
         }
       }
     },
+    "No monitor" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Monitor"
+          }
+        }
+      }
+    },
     "No news from the Mac" : {
       "localizations" : {
         "de" : {
@@ -4275,6 +4335,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ohne"
+          }
+        }
+      }
+    },
+    "Normal temperature" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur normal"
           }
         }
       }
@@ -5236,6 +5307,16 @@
         }
       }
     },
+    "Plugged in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Netzteil"
+          }
+        }
+      }
+    },
     "Point the camera at the code on your Mac" : {
       "localizations" : {
         "de" : {
@@ -5286,6 +5367,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Port"
+          }
+        }
+      }
+    },
+    "Power" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzteil"
           }
         }
       }
@@ -8159,6 +8250,16 @@
         }
       }
     },
+    "Too hot" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu heiß"
+          }
+        }
+      }
+    },
     "Touch" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8616,6 +8717,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version"
+          }
+        }
+      }
+    },
+    "Very warm" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sehr warm"
           }
         }
       }
