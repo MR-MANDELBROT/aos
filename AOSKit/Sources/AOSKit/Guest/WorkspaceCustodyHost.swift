@@ -118,6 +118,7 @@ public final class WorkspaceCustodyHost: @unchecked Sendable {
                 detachDisk()
                 return (CustodyReply(ok: true), nil)
             case .eraseDisk: return (try eraseDisk(), nil)
+            case .forgetSecrets: return (try forgetSecrets(), nil)
             }
         } catch {
             log("workspace: \(request.op.rawValue) failed: \(error.localizedDescription)")
@@ -518,6 +519,21 @@ public final class WorkspaceCustodyHost: @unchecked Sendable {
         lock.withLock { attachedDisk = (name, 0) }
         diskGuard?.guardDisks([name])
         log("workspace: disk \(name) is still attached, guarded again")
+    }
+
+    /// A new workspace gets new secrets: the keys, the password and the pinned host key go (only without a disk, so
+    /// a workspace can't be locked out).
+    func forgetSecrets() throws -> CustodyReply {
+        let fm = FileManager.default
+        guard !fm.fileExists(atPath: layout.diskImage.path), !isAttached else {
+            throw CustodyError.helper("the workspace's disk still exists")
+        }
+        let names = Self.keyNames + Self.keyNames.map(Self.next) + ["known_hosts"]
+        for name in names { try? fm.removeItem(at: layout.key(name)) }
+        try? fm.removeItem(at: layout.rotationNeeded)
+        fm.createFile(atPath: layout.pinOpen.path, contents: Data(), attributes: [.posixPermissions: 0o600])
+        log("workspace: keys and password removed (the next workspace gets new ones)")
+        return status()
     }
 
     func eraseDisk() throws -> CustodyReply {
