@@ -156,6 +156,12 @@ func (n *Node) Dial(ctx context.Context, network, address string) (net.Conn, err
 // per connection. aOS forwards 22 to 127.0.0.1:22, the Mac's own SSH server. tsnet answers only ports with a
 // listener; every other port is refused.
 func (n *Node) Forward(port uint16, target string) error {
+	return n.ForwardTo(port, func() string { return target })
+}
+
+// ForwardTo is Forward with the target looked up for each connection (the iPhone's end-to-end test points it at
+// its own SSH server; aos-tailnet uses Forward with the fixed target).
+func (n *Node) ForwardTo(port uint16, target func() string) error {
 	ln, err := n.srv.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
@@ -174,7 +180,7 @@ func (n *Node) Forward(port uint16, target string) error {
 			if err != nil {
 				return
 			}
-			go forward(conn, target, n.logf)
+			go forward(conn, target(), n.logf)
 		}
 	}()
 	return nil

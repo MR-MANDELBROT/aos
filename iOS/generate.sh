@@ -9,10 +9,11 @@ rm -rf Resources/AppIcon.icon
 cp -R ../App/Resources/AppIcon.icon Resources/AppIcon.icon
 sed -i '' 's/"macOS"/"iOS"/' Resources/AppIcon.icon/icon.json
 
-# aOS's Tailscale node (Go, gomobile): built when it is missing or older than its sources (about a minute).
+# aOS's Tailscale node (Go, gomobile): built when it is missing or older than its sources (about a minute; the tests
+# and the programs under cmd/ don't count).
 FRAMEWORK=Frameworks/Tailnetkit.xcframework
-if [ ! -d "$FRAMEWORK" ] || [ ../Tailnet/go.sum -nt "$FRAMEWORK" ] \
-   || [ -n "$(find ../Tailnet -name '*.go' -newer "$FRAMEWORK" -print -quit)" ]; then
+if [ ! -d "$FRAMEWORK" ] || [ ../Tailnet/go.sum -nt "$FRAMEWORK" ] || [ -n "$(find ../Tailnet -name '*.go' \
+     -not -name '*_test.go' -not -path '*/cmd/*' -not -path '*/internal/testnet/*' -newer "$FRAMEWORK" -print -quit)" ]; then
   ../Tailnet/build.sh ios "$FRAMEWORK"
 fi
 
