@@ -59,7 +59,7 @@ struct ScreenTab: View {
                         }
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
-                                Button("Cancel") { model.macScreen.stop() }
+                                Button("Cancel") { model.macScreen.cancelLogin() }
                             }
                         }
                     }
@@ -102,7 +102,7 @@ struct ScreenTab: View {
 
     private var loginShown: Binding<Bool> {
         Binding(get: { model.macScreen.phase == .needsLogin && shown == nil },
-                set: { if !$0, model.macScreen.phase == .needsLogin { model.macScreen.stop() } })
+                set: { if !$0 { model.macScreen.cancelLogin() } })
     }
 
     // MARK: The cards
