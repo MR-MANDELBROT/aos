@@ -207,7 +207,7 @@ public final class WorkspaceController {
             log("starting the workspace for \"\(reason)\"")
             try await host.start()
         }
-        let ip = try await host.waitForAddress(timeout: 120)
+        var ip = try await host.waitForAddress(timeout: 120)
         try await checkLocalNetwork(ip: ip)
         do {
             try await provisioner.updateIfNeeded(host: ip) { [weak self] line in Task { @MainActor in self?.log(line) } }
@@ -219,6 +219,7 @@ public final class WorkspaceController {
         // before the agent can start Chrome (once per boot; a resumed workspace keeps its session).
         if preparedBoot != host.bootCount {
             preparedBoot = host.bootCount
+            if let again = await repairAutoLoginIfNeeded(ip: ip) { ip = again }
             log("preparing the workspace session")
             do {
                 try await provisioner.prepareSession(host: ip)
@@ -228,6 +229,36 @@ public final class WorkspaceController {
         }
         return ip
     }
+
+    /// After a cold boot the account logs in by itself. If the workspace waits at the login window instead (its
+    /// automatic login lost the password, e.g. after the password changed), aOS turns it on again with the password
+    /// the helper keeps and restarts the guest once. Returns the address after that restart, nil if nothing was done.
+    public func repairAutoLoginIfNeeded(ip: String) async -> String? {
+        guard settingUpDone, await provisioner.atLoginWindow(host: ip) else { return nil }
+        log("the workspace waits at the login window: turning its automatic login on again")
+        do {
+            let password = try guestPassword()
+            guard try await provisioner.ensureAutoLogin(host: ip, password: password, log: { [weak self] line in
+                Task { @MainActor in self?.log(line) }
+            }) else {
+                log("the automatic login couldn't be repaired")
+                return nil
+            }
+            try await provisioner.restartGuest(host: ip)
+            try await Task.sleep(nanoseconds: 8_000_000_000)
+            if !host.isRunning { try await host.start() }
+            let again = try await host.waitForAddress(timeout: 180)
+            try await provisioner.maintenance(host: again).waitUntilReachable(timeout: 240)
+            log("workspace restarted with its automatic login")
+            return again
+        } catch {
+            log("repairing the automatic login failed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Set up far enough that the account has its password and logs in by itself.
+    private var settingUpDone: Bool { (try? host.bundle.loadState())?.bootstrapped == true }
 
     /// Called after keys of an earlier aOS were replaced in the guest (the app retires the old files then).
     public var onSecretsRotated: (() -> Void)?
