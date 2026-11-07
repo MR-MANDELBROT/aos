@@ -370,6 +370,7 @@ final class MockCompanionServer: @unchecked Sendable {
         switch state {
         case .stopped: "stopped"
         case .starting: "starting"
+        case .running: "running"
         case .open: "open"
         case .closing: "closing"
         case .other(let s): s
