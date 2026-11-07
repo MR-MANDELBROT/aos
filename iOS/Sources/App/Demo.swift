@@ -70,7 +70,11 @@ enum Demo {
         }
         if screen?.hasPrefix("mac") == true { model.screenTarget = .mac }
         Task {
-            try? await Task.sleep(for: .milliseconds(600))
+            // Once the demo's Mac answers (a slow first launch would otherwise send the request before the app listens)
+            for _ in 0..<100 where connection.companionState != .ready {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            try? await Task.sleep(for: .milliseconds(300))
             switch sheet {
             case "signin":
                 server.emit(.signIn(SignInRequest(id: "demo-1", agent: "Claude Code", host: "www.amazon.de",
