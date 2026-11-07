@@ -38,6 +38,15 @@ struct SettingsView: View {
                     Text("Paired Macs")
                 }
 
+                // On the go: the way to the Mac and aOS's Tailscale on this iPhone (Sources/Tailnet).
+                Section {
+                    NavigationLink {
+                        ConnectionView()
+                    } label: {
+                        Label("Connection", systemImage: "point.3.connected.trianglepath.dotted")
+                    }
+                }
+
                 Section {
                     Toggle(isOn: Binding(get: { settings.requireUnlock }, set: { newValue in
                         Task { _ = await model.lock.setRequired(newValue) }

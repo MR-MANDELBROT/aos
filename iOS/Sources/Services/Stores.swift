@@ -1,3 +1,4 @@
+import AOSTailnet
 import Foundation
 import LocalAuthentication
 
@@ -17,6 +18,13 @@ struct PairedMac: Codable, Identifiable, Equatable, Sendable {
     var pairedAt = Date()
     /// The address that worked last time; tried first.
     var lastHost: String?
+    /// How the iPhone reaches the Mac on the go, from the pairing code (nil: paired before the choice existed).
+    var way: ReachWay? = nil
+    /// The Mac's tailnet addresses and names from the pairing code (`t`); older pairings: none (the tailnet
+    /// addresses among `hosts` count, see `ConnectionPlan`).
+    var tailnetHosts: [String]? = nil
+    /// The tailnet the Mac is in.
+    var tailnetName: String? = nil
 
     /// The hosts in the order to try: the one that worked last time first.
     var hostsToTry: [String] {

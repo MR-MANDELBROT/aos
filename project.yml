@@ -84,6 +84,8 @@ targets:
         codeSign: true
         copy:
           destination: executables
+      # aOS's Tailscale node (Go, Tailnet/), built and signed by the aggregate target below, copied in after the build
+      - target: aos-tailnet
       # Runs inside the workspace; the app hands it to the guest (GuestKit.helperArchive)
       - target: AOSHelper
         embed: true
@@ -109,6 +111,15 @@ targets:
         SUFeedURL: https://mr-mandelbrot.github.io/aos/appcast.xml
         SUPublicEDKey: REPLACE_WITH_SPARKLE_PUBLIC_KEY
         SUEnableInstallerLauncherService: false
+    postBuildScripts:
+      # aos-powerd starts it as the hidden user _aostailnet (Docs/DESIGN.md, "Reaching the Mac on the go")
+      - name: Copy aos-tailnet
+        # A new file every time (the script sandbox lets it write only this path; no temporary file beside it)
+        script: rm -f "$SCRIPT_OUTPUT_FILE_0" && cp "$SCRIPT_INPUT_FILE_0" "$SCRIPT_OUTPUT_FILE_0"
+        inputFiles:
+          - $(BUILT_PRODUCTS_DIR)/aos-tailnet
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)/aos-tailnet
     entitlements:
       path: App/aOS.entitlements
       properties:
@@ -205,3 +216,18 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.aos.guest-helper
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SKIP_INSTALL: YES
+
+# aOS's Tailscale node for the Mac (Go, tailscale.com/tsnet): Tools/build-tailnet.sh runs Tailnet/build.sh mac and
+# signs the result with the app's identity and the hardened runtime. Go reads its module cache and toolchain, which a
+# sandboxed script may not, so this step alone runs without the script sandbox.
+aggregateTargets:
+  aos-tailnet:
+    buildScripts:
+      - name: Build aos-tailnet
+        script: exec "$SRCROOT/Tools/build-tailnet.sh"
+        basedOnDependencyAnalysis: false
+    settings:
+      base:
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        # Aggregate targets don't sign by default; the script signs aos-tailnet unless the build turns signing off.
+        CODE_SIGNING_ALLOWED: YES
