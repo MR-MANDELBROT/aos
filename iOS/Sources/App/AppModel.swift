@@ -70,6 +70,12 @@ final class AppModel {
     let macScreen = ScreenSession(target: .mac)
     let workspaceScreen = ScreenSession(target: .workspace)
     private(set) var terminals: [TerminalSession.Target: TerminalSession] = [:]
+    /// A terminal to show (from the Live Activity or a link); the terminal tab opens it.
+    var openTerminal: TerminalSession.Target?
+    /// What keeps open terminals going in the background: the Live Activity, iOS's background time, location.
+    @ObservationIgnored private(set) lazy var keepAlive = TerminalKeepAlive(settings: settings) { [weak self] in
+        self?.terminals.values.filter { $0.isActive || $0.phase == .detached } ?? []
+    }
 
     // Pairing
     var isPairingPresented = false
@@ -105,6 +111,12 @@ final class AppModel {
             loadDeviceKey()
         }
         makeConnection()
+        // The Live Activity's End button (it runs in this process; iOS starts the app for it if needed).
+        TerminalActivityActions.onEnd = { [weak self] key in
+            guard let self, let target = TerminalSession.Target(key: key) else { return }
+            await self.endTerminal(target)
+        }
+        keepAlive.terminalsChanged()
     }
 
     var activeMac: PairedMac? { macs.first }
@@ -158,24 +170,30 @@ final class AppModel {
 
     func scenePhaseChanged(to phase: ScenePhase) {
         lock.scenePhaseChanged(to: phase)
+        keepAlive.scenePhaseChanged(phase)
         switch phase {
         case .active:
             backgroundTask?.cancel()
             backgroundTask = nil
+            // Back in the foreground: connect again; the Mac's terminals attach again by themselves.
             if !isDemo { connection?.start() }
         case .background:
             guard !isDemo, backgroundTask == nil else { return }
             // Keep the connection for a short while (a quick switch to another app), then let it go: iOS suspends
-            // the app anyway, and a fresh connection on return is better than a dead one.
+            // the app anyway, and a fresh connection on return is better than a dead one. While a terminal keeps the
+            // app running (iOS's background time, location), the connection stays as long as that lasts.
             let identifier = UIApplication.shared.beginBackgroundTask(withName: "aOS connection") {}
             backgroundTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(25))
+                UIApplication.shared.endBackgroundTask(identifier)
+                while !Task.isCancelled, self?.keepAlive.holdsInBackground == true {
+                    try? await Task.sleep(for: .seconds(5))
+                }
                 if !Task.isCancelled {
                     self?.connection?.stop()
                     self?.macScreen.stop()
                     self?.workspaceScreen.stop()
                 }
-                UIApplication.shared.endBackgroundTask(identifier)
             }
         default:
             break
@@ -309,8 +327,23 @@ final class AppModel {
         case .host(let id): title = hosts.first { $0.id == id }?.displayName ?? "SSH"
         }
         let session = TerminalSession(id: target, title: title)
+        if case .mac = target { session.macConnection = { [weak self] in self?.connection } }
+        session.onChange = { [weak self] _ in self?.keepAlive.terminalsChanged() }
         terminals[target] = session
         return session
+    }
+
+    /// From the Live Activity's button: ends a terminal (the Mac's session too).
+    func endTerminal(_ target: TerminalSession.Target) async {
+        // After the app was closed the terminal is new here, but it knows its session on the Mac.
+        let session = terminal(for: target)
+        if case .mac = target, session.macConnection()?.ssh?.isActive != true {
+            // Woken in the background: the connection first, briefly.
+            connection?.start()
+            for _ in 0..<40 where connection?.ssh?.isActive != true { try? await Task.sleep(for: .milliseconds(250)) }
+        }
+        await session.endSession()
+        keepAlive.terminalsChanged()
     }
 
     // MARK: Requests from the agent
@@ -421,6 +454,14 @@ final class AppModel {
     // MARK: Links
 
     func open(_ url: URL) {
+        // aos://terminal/<target key>: the Live Activity
+        if url.scheme?.lowercased() == "aos", url.host == "terminal" {
+            tab = .terminal
+            if let key = url.pathComponents.dropFirst().first, let target = TerminalSession.Target(key: key) {
+                openTerminal = target
+            }
+            return
+        }
         guard url.scheme?.lowercased() == PairingLink.scheme else { return }
         incomingPairingLink = url.absoluteString
         isPairingPresented = true

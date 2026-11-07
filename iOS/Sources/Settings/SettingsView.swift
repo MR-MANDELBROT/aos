@@ -59,6 +59,11 @@ struct SettingsView: View {
 
                 Section {
                     NavigationLink {
+                        TerminalSettingsForm()
+                    } label: {
+                        Label("Terminal", systemImage: "apple.terminal")
+                    }
+                    NavigationLink {
                         ScreenSettingsForm()
                     } label: {
                         Label("Screen", systemImage: "display")
