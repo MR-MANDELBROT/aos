@@ -1,8 +1,10 @@
 #if DEBUG
 import AOSRFB
 import Foundation
+import ImageIO
 import ScreenClient
 import UIKit
+import UniformTypeIdentifiers
 
 /// Sample data for screenshots and UI work: start the app with `-AOSDemo YES` (debug builds only).
 /// `-AOSDemoTab overview|terminal|screen` picks the tab, `-AOSDemoSheet signin|signin-code|signin-none|signin-locked|
@@ -15,8 +17,8 @@ enum Demo {
     static var sheet: String? { UserDefaults.standard.string(forKey: "AOSDemoSheet") }
     /// `-AOSDemoUnpaired YES`: the welcome page.
     static var unpaired: Bool { UserDefaults.standard.bool(forKey: "AOSDemoUnpaired") }
-    /// `-AOSDemoScreen mac|mac-login|mac-login-keyboard`: the Screen tab on the Mac's screen, its login form, the form
-    /// with the keyboard up.
+    /// `-AOSDemoScreen workspace|mac|mac-login|mac-login-keyboard`: the Screen tab on the workspace's screen, the
+    /// Mac's, its login form, the form with the keyboard up (without it: the cards).
     static var screen: String? { UserDefaults.standard.string(forKey: "AOSDemoScreen") }
     /// `-AOSDemoScroll bottom`: the Overview starts scrolled to its end (screenshots of the lower cards).
     static var scrollToBottom: Bool { UserDefaults.standard.string(forKey: "AOSDemoScroll") == "bottom" }
@@ -60,17 +62,30 @@ enum Demo {
 
     @MainActor
     static func start(_ connection: MacConnection, model: AppModel) {
-        // The screen's settings and memory stay in memory (the Screen tab shows the demo's pictures with the real
-        // session, from a screen sharing server in the app: ScreenTab.start, DemoScreenServer).
+        // The screen's settings, memory and pictures stay in memory (the Screen tab shows the demo's pictures with the
+        // real session, from a screen sharing server in the app: ScreenTab.connectDemo, DemoScreenServer).
         ScreenClient.useMemoryStore()
+        ScreenPictures.shared = ScreenPictures(directory: nil)
         let server = MockCompanionServer()
         connection.startDemo(server)
+        // The cards' last pictures
+        // (in the shape of an iPhone 17 Pro held upright while there is no window yet)
+        let window = ScreenSession.currentArea(resolutionScale: 1).points
+        let area = window == .zero ? CGSize(width: 402, height: 812) : window
+        if let jpeg = workspacePicture(fitting: area).flatMap(jpeg) {
+            ScreenPictures.shared.save(jpeg, for: ScreenRoute.screenID(.workspace, mac: connection.mac))
+        }
+        if let jpeg = macPicture().flatMap(jpeg) {
+            ScreenPictures.shared.save(jpeg, for: ScreenRoute.screenID(.mac, mac: connection.mac))
+        }
         switch tab {
         case "terminal": model.tab = .terminal
         case "screen": model.tab = .screen
         default: model.tab = .overview
         }
+        // Asked for as with a tap: the Screen tab connects it
         if screen?.hasPrefix("mac") == true { model.screenTarget = .mac }
+        if screen == "workspace" { model.screenTarget = .workspace }
         Task {
             // Once the demo's Mac answers (a slow first launch would otherwise send the request before the app listens)
             for _ in 0..<100 where connection.companionState != .ready {
@@ -105,7 +120,7 @@ enum Demo {
                                                   purpose: "Zählerstand eintragen",
                                                   expires: Date().addingTimeInterval(3 * 60), bitwarden: .unlocked)))
             case "help":
-                let captcha = workspaceLayout(fitting: ScreenTab.pictureArea()).captcha
+                let captcha = workspaceLayout(fitting: ScreenSession.currentArea(resolutionScale: 1).points).captcha
                 server.emit(.help(HelpRequest(id: "help-1", agent: "Claude Code",
                                               purpose: "Bitte das Captcha auf der Anmeldeseite lösen",
                                               region: .init(x: captcha.minX, y: captcha.minY,
@@ -148,7 +163,7 @@ enum Demo {
 
     /// The workspace in the iPhone's shape (as the real one is while the iPhone shows it), or 1280x800 at 1x.
     static func workspaceLayout(fitting area: CGSize) -> WorkspaceLayout {
-        guard let request = DisplayRequest.fitting(points: area, retina: true) else {
+        guard let request = ScreenRoute.display(for: ScreenArea(points: area, screenScale: 3, resolutionScale: 1)) else {
             return WorkspaceLayout(pixels: CGSize(width: 1280, height: 800), scale: 1,
                                    card: CGRect(x: 440, y: 170, width: 400, height: 420))
         }
@@ -205,6 +220,16 @@ enum Demo {
                      weight: .regular, color: UIColor(white: 0.9, alpha: 1), mono: true)
             }
         }
+    }
+
+    /// A card's picture: JPEG as Open Screen Sharing's thumbnails.
+    private static func jpeg(_ image: CGImage) -> Data? {
+        let data = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil) else {
+            return nil
+        }
+        CGImageDestinationAddImage(destination, image, [kCGImageDestinationLossyCompressionQuality: 0.8] as CFDictionary)
+        return CGImageDestinationFinalize(destination) ? data as Data : nil
     }
 
     /// `width` and `height` in points, `scale` pixels per point.
