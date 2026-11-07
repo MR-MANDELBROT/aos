@@ -40,7 +40,6 @@ final class EmbeddedTailnet {
     @ObservationIgnored private let presenter = TailnetSignInPresenter()
     @ObservationIgnored private var activeObserver: NSObjectProtocol?
     @ObservationIgnored private let defaults: UserDefaults
-    @ObservationIgnored private var isDemo = false
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -72,7 +71,7 @@ final class EmbeddedTailnet {
 
     /// Starts the node if the person set it up (at launch, when the app comes back).
     func startIfSetUp() {
-        guard isSetUp, node == nil, !working, !isDemo else { return }
+        guard isSetUp, node == nil, !working else { return }
         Task { await start() }
     }
 
@@ -222,16 +221,6 @@ final class EmbeddedTailnet {
               host == "tailscale.com" || host.hasSuffix(".tailscale.com") else { return nil }
         return url
     }
-
-    #if DEBUG
-    /// The demo: a signed in node with sample devices, nothing runs.
-    func showDemo(_ status: TailnetStatus) {
-        isDemo = true
-        isSetUp = true
-        hostname = status.device?.hostName
-        self.status = status
-    }
-    #endif
 }
 
 enum TailnetError: LocalizedError {
