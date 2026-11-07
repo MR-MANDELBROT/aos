@@ -60,7 +60,8 @@ public struct SSH: Sendable {
 
     private func arguments(command: String) throws -> [String] {
         var args = [
-            "-o", "UserKnownHostsFile=\(secrets.knownHosts.path)",
+            // Quoted: ssh splits this value at spaces ("Application Support") into several files.
+            "-o", "UserKnownHostsFile=\"\(secrets.knownHosts.path)\"",
             "-o", "StrictHostKeyChecking=accept-new",
             "-o", "GlobalKnownHostsFile=/dev/null",
             "-o", "ConnectTimeout=8",

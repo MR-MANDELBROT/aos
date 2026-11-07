@@ -64,6 +64,7 @@ extension AppModel {
                 status = try await client.status()
             }
             GuestSecrets.custody = client
+            if status.pinned != true { await pinFromEarlierVersion(client) }
             let password = try await secrets.load()
             // The user's copies go once the helper holds the same (the guest gets new ones at its next start).
             if secrets.hasLocalKeys, (try? String(contentsOf: secrets.adminPasswordURL, encoding: .utf8)) == password {
@@ -88,7 +89,9 @@ extension AppModel {
                 append("workspace: a disk.img in the user's folder is ignored (the helper has the workspace's disk)")
             }
             changed(custodyMode, .custody)
-            custodySettled = true
+            // Settled, unless an earlier version's host key is still waiting to be taken over (try again then).
+            let pinned = (try? await client.status())?.pinned == true
+            custodySettled = pinned || !hasEarlierHostKeys
         } catch {
             append("workspace: helper custody: \(error.localizedDescription)")
             changed(custodyMode, legacyPossible && GuestSecrets.custody == nil ? .legacy : .unavailable(error.localizedDescription))
@@ -97,6 +100,38 @@ extension AppModel {
 
     private func changed(_ old: CustodyMode, _ new: CustodyMode) {
         if custodyMode != new { custodyMode = new }
+    }
+
+    private var earlierHostKeyFiles: [URL] {
+        [GuestSecrets(paths: paths).knownHosts,
+         FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application")]
+    }
+
+    private var hasEarlierHostKeys: Bool {
+        earlierHostKeyFiles.contains { url in
+            var isDirectory: ObjCBool = false
+            return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && !isDirectory.boolValue
+        }
+    }
+
+    /// The workspace's host key as an earlier aOS recorded it. Its ssh option had a path with a space, so ssh wrote
+    /// to ~/Library/Application instead of Keys/known_hosts (only host keys, nothing secret).
+    private func pinFromEarlierVersion(_ client: WorkspaceCustodyClient) async {
+        let fm = FileManager.default
+        for url in earlierHostKeyFiles {
+            var isDirectory: ObjCBool = false
+            guard fm.fileExists(atPath: url.path, isDirectory: &isDirectory), !isDirectory.boolValue,
+                  let data = fm.contents(atPath: url.path), !data.isEmpty, data.count < 65_536 else { continue }
+            do {
+                try await client.pin(knownHosts: data)
+                append("workspace: host key taken over from the earlier version")
+                // aOS's own stray file from that mistake goes.
+                if url.lastPathComponent == "Application" { try? fm.removeItem(at: url) }
+                return
+            } catch {
+                append("workspace: earlier host key not taken over: \(error.localizedDescription)")
+            }
+        }
     }
 
     /// The files an earlier aOS kept in Keys (whatever of them exists).

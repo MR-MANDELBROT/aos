@@ -33,6 +33,8 @@ public struct CustodyRequest: Codable, Sendable, Equatable {
         /// Keys, password and known hosts of an earlier aOS that kept them in the user's folder (`files`): they become
         /// the helper's, to be replaced at the next start. Only while the helper has none of its own.
         case importLegacy
+        /// The workspace's host key from an earlier aOS's known hosts (`files["known_hosts"]`), while none is pinned.
+        case pin
         /// New keys and a new password beside the current ones (the same ones again while not committed), so the app
         /// can install them in the guest; `rotateCommit` makes them the current ones, `rotateAbort` drops them.
         case rotateBegin, rotateCommit, rotateAbort
@@ -183,6 +185,10 @@ public struct WorkspaceCustodyClient: Sendable {
 
     public func importLegacy(_ files: [String: Data]) async throws {
         try await call(CustodyRequest(op: .importLegacy, files: files))
+    }
+
+    public func pin(knownHosts: Data) async throws {
+        try await call(CustodyRequest(op: .pin, files: ["known_hosts": knownHosts]))
     }
 
     public func rotateBegin() async throws -> CustodyReply { try await call(CustodyRequest(op: .rotateBegin, timeout: 60)) }
