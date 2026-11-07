@@ -231,6 +231,14 @@ final class ScreenSession {
         phase = .needsLogin
     }
 
+    /// The person closed the login form without a login.
+    func cancelLogin() {
+        guard phase == .needsLogin else { return }
+        stop()
+        loginProblem = nil
+        phase = .idle
+    }
+
     // MARK: Connecting
 
     /// A tap on the screen's card: the workspace's sealed login from the Mac; the Mac's from the keychain, behind Face
