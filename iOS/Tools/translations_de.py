@@ -530,24 +530,33 @@ DE.update({
     'While a terminal is open and connected.': 'Solange ein Terminal offen und verbunden ist.',
     'In the background': 'Im Hintergrund',
     'Live Activity': 'Live-Aktivität',
-    'Background time from iOS': 'Hintergrundzeit von iOS',
     'Keep alive with location': 'Mit Ortungsdienst wach halten',
     'aOS may not use the location service yet. Allow it while using the app in Settings > Privacy & Security > Location Services.':
         'aOS darf den Ortungsdienst noch nicht nutzen. Erlaube ihn „Beim Verwenden der App“ unter Einstellungen > Datenschutz & Sicherheit > Ortungsdienste.',
-    "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. iOS gives an app time in the background for up to an hour when you open a terminal, and shows it in the Dynamic Island; it can end it earlier. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow.":
-        'Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Wenn du ein Terminal öffnest, gibt iOS der App bis zu einer Stunde Zeit im Hintergrund und zeigt das in der Dynamic Island; iOS kann sie früher beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil.',
-    'Detach': 'Abkoppeln',
-    'Detached, the session keeps running on the Mac.': 'Abgekoppelt läuft die Sitzung auf dem Mac weiter.',
-    'Detached. The session keeps running on the Mac.': 'Abgekoppelt. Die Sitzung läuft auf dem Mac weiter.',
-    'Attach Again': 'Wieder verbinden',
+    "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow.":
+        'Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil.',
     'End Session': 'Sitzung beenden',
     'End this session?': 'Diese Sitzung beenden?',
     'The shell on the Mac ends, and so do the programs running in it.':
         'Die Shell auf dem Mac endet und mit ihr die Programme, die darin laufen.',
     'New Session': 'Neue Sitzung',
-    'Open Here': 'Hier öffnen',
     'Open It Here': 'Hier öffnen',
-    'Open here': 'Hier offen',
+    'Open Session': 'Sitzung öffnen',
+    'Open on this iPhone': 'Auf diesem iPhone offen',
+    'Starts another shell on %@. The others keep running.': 'Startet eine weitere Shell auf %@. Die anderen laufen weiter.',
+    'No sessions on the Mac. New Session starts one.': 'Keine Sitzungen auf dem Mac. „Neue Sitzung“ startet eine.',
+    'No Mac yet': 'Noch kein Mac',
+    'Pair your Mac to open a terminal on it.': 'Kopple deinen Mac, um dort ein Terminal zu öffnen.',
+    'Connecting to the Mac …': 'Verbinde mit dem Mac …',
+    'The Mac is sleeping since %@. The sessions continue when it wakes.':
+        'Der Mac schläft seit %@. Die Sitzungen gehen weiter, wenn er aufwacht.',
+    "The Mac isn't reachable right now. The sessions keep running there.":
+        'Der Mac ist gerade nicht erreichbar. Die Sitzungen laufen dort weiter.',
+    'Update aOS on the Mac to keep terminals when the connection drops.':
+        'Aktualisiere aOS auf dem Mac, damit Terminals bleiben, wenn die Verbindung abreißt.',
+    'The Mac is sleeping. The session continues when it wakes.': 'Der Mac schläft. Die Sitzung geht weiter, wenn er aufwacht.',
+    'Switch Session': 'Sitzung wechseln',
+    'Sessions keep running on the Mac until you end them.': 'Sitzungen laufen auf dem Mac weiter, bis du sie beendest.',
     'Open on another device': 'Auf einem anderen Gerät offen',
     'Open on another device (%@)': 'Auf einem anderen Gerät offen (%@)',
     'Not open anywhere': 'Nirgends offen',
@@ -567,9 +576,6 @@ DE.update({
         'Aktualisiere aOS auf dem Mac, damit dieses Terminal bleibt, wenn die Verbindung abreißt.',
     "aOS isn't on the Mac where it was paired: this terminal ends with the connection.":
         'aOS ist auf dem Mac nicht mehr dort, wo es gekoppelt wurde: Dieses Terminal endet mit der Verbindung.',
-    'Terminal in the background': 'Terminal im Hintergrund',
-    'aOS keeps your terminal connected.': 'aOS hält dein Terminal verbunden.',
-    'Connected for %lld more min at most.': 'Noch höchstens %lld Min. verbunden.',
     # The Live Activity and its button (app and widget extension)
     'End Terminal Session': 'Terminalsitzung beenden',
     'Ends a terminal session of aOS. On the Mac its shell ends too.':
@@ -578,7 +584,6 @@ DE.update({
     '%lld': '%lld',
     'Connected': 'Verbunden',
     'Connected, kept on the Mac': 'Verbunden, auf dem Mac gehalten',
-    'Detached, keeps running on the Mac': 'Abgekoppelt, läuft auf dem Mac weiter',
     'Kept on the Mac. Open aOS to continue.': 'Auf dem Mac gehalten. Öffne aOS, um weiterzumachen.',
     'Open aOS to continue.': 'Öffne aOS, um weiterzumachen.',
     'Location': 'Ortung',
@@ -624,6 +629,17 @@ DE.update({
     'The Mac stays awake with the lid closed too.': 'Der Mac bleibt auch mit geschlossenem Deckel wach.',
     'Sleep': 'Ruhezustand',
     'Display Off': 'Bildschirm aus',
+    'Display On': 'Bildschirm an',
+    'Display on': 'Bildschirm an',
+    'Display off': 'Bildschirm aus',
+    'No display': 'Kein Bildschirm',
+    'The lid is closed and no monitor is connected.': 'Der Deckel ist zu und kein Monitor ist angeschlossen.',
+    'With a monitor': 'Mit einem Monitor',
+    'With %lld monitors': 'Mit %lld Monitoren',
+    'Sleeping since %@': 'Schläft seit %@',
+    'The Mac is going to sleep.': 'Der Mac geht in den Ruhezustand.',
+    'It wakes when you open the lid or press a key on the Mac. aOS connects again by itself.':
+        'Er wacht auf, wenn du am Mac den Deckel aufklappst oder eine Taste drückst. aOS verbindet sich dann von selbst wieder.',
     'Put %@ to sleep?': '%@ in den Ruhezustand versetzen?',
     'This iPhone loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile.':
         'Dieses iPhone verliert die Verbindung, bis der Mac wieder aufwacht (Deckel aufklappen oder eine Taste drücken). Der Arbeitsplatz und deine Agents pausieren so lange.',
@@ -661,6 +677,9 @@ DE.update({
     'Restarting': 'Startet neu',
     'Waiting for the network': 'Wartet auf das Netzwerk',
     'Needs a sign-in to Claude Code on the Mac': 'Braucht eine Anmeldung bei Claude Code auf dem Mac',
+    'On the Mac, run %@ once in a terminal and sign in. You can do that from here: Open Terminal starts a new session on the Mac.':
+        'Führ auf dem Mac einmal %@ in einem Terminal aus und melde dich an. Das geht auch von hier: „Terminal öffnen“ startet eine neue Sitzung auf dem Mac.',
+    'Open Terminal': 'Terminal öffnen',
     'Claude Code asks something on the Mac': 'Claude Code fragt auf dem Mac etwas',
     "Claude Code isn't installed on the Mac": 'Claude Code ist auf dem Mac nicht installiert',
     'Keeps stopping. Restart it, or look on the Mac.': 'Hört immer wieder auf. Starte sie neu oder sieh auf dem Mac nach.',
