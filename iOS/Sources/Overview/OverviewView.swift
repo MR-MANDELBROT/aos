@@ -15,7 +15,8 @@ struct OverviewView: View {
                             RequestsCard()
                         }
                         WorkspaceCard(connection: connection)
-                        if connection.macStatus != nil {
+                        // What aOS on the Mac does now: not while the Mac sleeps or doesn't answer (it would be old).
+                        if connection.macStatus != nil, connection.companionState == .ready, connection.sleepingSince == nil {
                             AOSCard(connection: connection)
                         }
                         PromiseCard()
@@ -168,7 +169,7 @@ struct MacCard: View {
         GlassCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 14) {
-                    HeroSymbol(systemName: "laptopcomputer", tint: tint, size: 52)
+                    HeroSymbol(systemName: connection.sleepingSince != nil ? "moon.zzz.fill" : "laptopcomputer", tint: tint, size: 52)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(connection.mac.name).font(.title3.weight(.semibold))
                         HStack(spacing: 6) {
@@ -178,19 +179,25 @@ struct MacCard: View {
                     }
                     Spacer(minLength: 0)
                 }
-                switch connection.state {
-                case .unreachable(let message), .needsAttention(let message):
-                    Text(message).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    Button {
-                        connection.retryNow()
-                    } label: {
-                        Label("Try again", systemImage: "arrow.clockwise")
+                if connection.sleepingSince != nil {
+                    // Put to sleep from here: the Mac doesn't answer until it is woken on the Mac.
+                    Text("It wakes when you open the lid or press a key on the Mac. aOS connects again by itself.")
+                        .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                } else {
+                    switch connection.state {
+                    case .unreachable(let message), .needsAttention(let message):
+                        Text(message).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        Button {
+                            connection.retryNow()
+                        } label: {
+                            Label("Try again", systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.glass)
+                    case .connected:
+                        connectedContent
+                    default:
+                        EmptyView()
                     }
-                    .buttonStyle(.glass)
-                case .connected:
-                    connectedContent
-                default:
-                    EmptyView()
                 }
             }
         }
@@ -242,16 +249,29 @@ struct MacCard: View {
         } else if let status = connection.macStatus {
             Divider()
             MacStatusRows(status: status, connection: connection, actions: actions)
+            // Only what makes sense now (Display Off while it's on, On while it's off, Sleep while awake).
+            let offer = MacOffer.now(status, features: connection.hello?.features ?? [], sleeping: connection.sleepingSince != nil)
             HStack(spacing: 10) {
-                Button {
-                    confirmSleep = true
-                } label: {
-                    Label("Sleep", systemImage: "moon.fill")
+                if offer.sleep {
+                    Button {
+                        confirmSleep = true
+                    } label: {
+                        Label("Sleep", systemImage: "moon.fill")
+                    }
                 }
-                Button {
-                    actions.run(.displayOff, on: connection)
-                } label: {
-                    Label("Display Off", systemImage: "display")
+                if offer.displayOff {
+                    Button {
+                        actions.run(.displayOff, on: connection)
+                    } label: {
+                        Label("Display Off", systemImage: "display")
+                    }
+                }
+                if offer.displayOn {
+                    Button {
+                        actions.run(.displayOn, on: connection)
+                    } label: {
+                        Label("Display On", systemImage: "sun.max")
+                    }
                 }
                 if actions.running != nil { ProgressView().controlSize(.small) }
             }
@@ -267,7 +287,8 @@ struct MacCard: View {
     }
 
     private var tint: Color {
-        switch connection.state {
+        if connection.sleepingSince != nil { return BrandColor.indigo }
+        return switch connection.state {
         case .connected:
             connection.macAppProblem == nil
                 && (connection.companionState == .ready || connection.companionState == .starting) ? .green : .orange
@@ -278,7 +299,10 @@ struct MacCard: View {
     }
 
     private var stateLine: String {
-        switch connection.state {
+        if let since = connection.sleepingSince {
+            return String(localized: "Sleeping since \(since.formatted(date: .omitted, time: .shortened))")
+        }
+        return switch connection.state {
         case .idle: String(localized: "Not connected")
         case .connecting: String(localized: "Connecting …")
         case .connected(let host): String(localized: "Connected via \(Self.describe(host))")
@@ -310,6 +334,10 @@ private struct MacStatusRows: View {
                 OverviewRow(symbol: power.lid == "closed" ? "laptopcomputer.slash" : "laptopcomputer",
                             title: MacStatusText.lidTitle(power), detail: MacStatusText.thermalDetail(power),
                             detailTint: power.thermal == "serious" || power.thermal == "critical" ? .orange : .secondary)
+            }
+            if let display = status.display {
+                OverviewRow(symbol: "display", tint: display.state == "on" ? BrandColor.indigo : .secondary,
+                            title: MacStatusText.displayTitle(display), detail: MacStatusText.displayDetail(display))
             }
             if let awake = status.awake {
                 OverviewRow(symbol: awake.setting == .off ? "moon.zzz" : "sun.max", title: String(localized: "Stay awake"),
@@ -382,6 +410,23 @@ enum MacStatusText {
         case "closed": String(localized: "Lid closed")
         case "open": String(localized: "Lid open")
         default: String(localized: "No lid")
+        }
+    }
+
+    static func displayTitle(_ d: MacStatus.Display) -> String {
+        switch d.state {
+        case "on": String(localized: "Display on")
+        case "off": String(localized: "Display off")
+        default: String(localized: "No display")
+        }
+    }
+
+    static func displayDetail(_ d: MacStatus.Display) -> String? {
+        if d.state == "none" { return String(localized: "The lid is closed and no monitor is connected.") }
+        switch d.external {
+        case 0: return nil
+        case 1: return String(localized: "With a monitor")
+        default: return String(localized: "With \(d.external) monitors")
         }
     }
 
@@ -631,6 +676,7 @@ struct WorkspaceCard: View {
 
 /// aOS on the Mac: its Claude Code session, new chats from the Claude app, kept conversations, Bitwarden.
 struct AOSCard: View {
+    @Environment(AppModel.self) private var model
     let connection: MacConnection
     @State private var actions = ActionState()
     @State private var confirmRestart = false
@@ -656,6 +702,9 @@ struct AOSCard: View {
                     OverviewRow(symbol: "plus.bubble", title: String(localized: "New chats from the Claude app"),
                                 detail: Self.chatsText(chats))
                 }
+                if Self.needsSignIn(connection.macStatus) {
+                    SignInHelp { model.openNewTerminal() }
+                }
                 if let kept = connection.macStatus?.kept {
                     OverviewRow(symbol: "bubble.left.and.bubble.right", title: String(localized: "Kept conversations"),
                                 detail: kept == 1 ? String(localized: "1 is reachable in the Claude app")
@@ -680,6 +729,12 @@ struct AOSCard: View {
         } message: {
             Text("aOS on the Mac starts Claude Code again. The conversation continues where it was.")
         }
+    }
+
+    /// Claude Code on the Mac waits for a sign-in (the session or new chats say so).
+    static func needsSignIn(_ status: MacStatus?) -> Bool {
+        (status?.session?.enabled == true && status?.session?.state == "needsLogin")
+            || (status?.newChats?.enabled == true && status?.newChats?.state == "needsLogin")
     }
 
     static func sessionText(_ s: MacStatus.Session) -> String {
@@ -723,6 +778,24 @@ struct AOSCard: View {
         case "signedOut": return String(localized: "Not signed in")
         default: return String(localized: "Checking …")
         }
+    }
+}
+
+/// What to do when Claude Code on the Mac needs a sign-in: `claude` once in a terminal there, from here too.
+private struct SignInHelp: View {
+    let openTerminal: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("On the Mac, run \(Text(verbatim: "claude").font(.footnote.monospaced().weight(.semibold))) once in a terminal and sign in. You can do that from here: Open Terminal starts a new session on the Mac.")
+                .font(.footnote)
+                .fixedSize(horizontal: false, vertical: true)
+            Button(action: openTerminal) {
+                Label("Open Terminal", systemImage: "apple.terminal")
+            }
+            .buttonStyle(.glassProminent)
+        }
+        .padding(.leading, OverviewRow<EmptyView>.iconWidth + 12)
     }
 }
 

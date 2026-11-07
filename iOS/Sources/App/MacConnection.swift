@@ -182,7 +182,28 @@ final class MacConnection {
         guard let companion, companionState == .ready else { throw CompanionError.closed }
         let result = try await companion.mac(action, value: value)
         if let status = result.status { macStatus = status }
+        if action == .sleep, let after = result.sleepsIn { macGoesToSleep(after: after) }
         return result
+    }
+
+    /// Since when the Mac sleeps: it was put to sleep from here and hasn't answered since (nil again once it does).
+    private(set) var sleepingSince: Date?
+    /// Until then no attempt to connect: the Mac is falling asleep (an attempt could still reach it, or wake it).
+    @ObservationIgnored private var sleepGrace: Date?
+    static let sleepGraceSeconds: TimeInterval = 20
+
+    /// The Mac sleeps in `after` s. Its connection then dies without a word (the phone would notice only minutes
+    /// later), so it is closed here: the app shows at once that the Mac sleeps, and the terminals wait for it.
+    func macGoesToSleep(after: TimeInterval) {
+        sleepingSince = Date()
+        sleepGrace = Date().addingTimeInterval(after + Self.sleepGraceSeconds)
+        let ssh = self.ssh
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(after + 0.5))
+            guard let self, let ssh, self.ssh === ssh else { return }
+            log.info("The Mac goes to sleep; closing its connection")
+            await ssh.close()
+        }
     }
 
     // MARK: Running
@@ -191,6 +212,13 @@ final class MacConnection {
         var delay: TimeInterval = 1
         var wakeIterator = wakes.makeAsyncIterator()
         while !Task.isCancelled {
+            if let grace = sleepGrace, grace > Date() {
+                // The Mac is falling asleep: no attempt until it had the time to (also not when woken).
+                state = .unreachable(String(localized: "The Mac is going to sleep."))
+                nextAttempt = grace
+                try? await Task.sleep(for: .seconds(grace.timeIntervalSinceNow))
+                if Task.isCancelled { return }
+            }
             state = .connecting
             nextAttempt = nil
             do {
@@ -199,6 +227,9 @@ final class MacConnection {
                     hostKey: .pinned(mac.hostKey))
                 if Task.isCancelled { await connection.close(); return }
                 ssh = connection
+                // It answers: awake again (woken on the Mac, or it didn't sleep after all).
+                sleepingSince = nil
+                sleepGrace = nil
                 state = .connected(host: connection.host)
                 let connectedAt = Date()
                 if mac.lastHost != connection.host {

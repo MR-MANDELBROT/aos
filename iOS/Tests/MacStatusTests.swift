@@ -55,6 +55,35 @@ struct MacStatusTests {
         #expect(MacStatus([:]) == MacStatus())
     }
 
+    @Test func theDisplayAndWhatToOffer() throws {
+        func status(_ json: String) throws -> MacStatus {
+            MacStatus(try #require(try JSONDecoder().decode(JSONValue.self, from: Data(json.utf8)).object))
+        }
+        let all = Set(MacAction.allCases.map(\.rawValue))
+        let on = try status(#"{"display":{"state":"on","external":1}}"#)
+        #expect(on.display == MacStatus.Display(state: "on", external: 1))
+        #expect(MacOffer.now(on, features: all, sleeping: false) == MacOffer(sleep: true, displayOff: true, displayOn: false))
+        #expect(MacStatusText.displayDetail(try #require(on.display)) != nil, "with a monitor")
+        let off = try status(#"{"display":{"state":"off","external":0}}"#)
+        #expect(MacOffer.now(off, features: all, sleeping: false) == MacOffer(sleep: true, displayOff: false, displayOn: true))
+        // An aOS that can't turn it on: nothing for the display.
+        #expect(MacOffer.now(off, features: ["mac.status", "mac.sleep"], sleeping: false) == MacOffer(sleep: true))
+        let none = try status(#"{"display":{"state":"none","external":0}}"#)
+        #expect(MacOffer.now(none, features: all, sleeping: false) == MacOffer(sleep: true))
+        #expect(MacStatusText.displayDetail(try #require(none.display))?.contains("lid") == true)
+        // Sleeping: nothing at all. An older aOS without the display: Sleep and Display Off, as before.
+        #expect(MacOffer.now(on, features: all, sleeping: true) == MacOffer())
+        #expect(MacOffer.now(MacStatus(), features: [], sleeping: false) == MacOffer(sleep: true, displayOff: true))
+    }
+
+    @Test func aSignInOnTheMacIsAskedFor() {
+        #expect(AOSCard.needsSignIn(MacStatus(session: .init(enabled: true, state: "needsLogin"))))
+        #expect(AOSCard.needsSignIn(MacStatus(newChats: .init(enabled: true, state: "needsLogin"))))
+        #expect(!AOSCard.needsSignIn(MacStatus(session: .init(enabled: false, state: "needsLogin"))))
+        #expect(!AOSCard.needsSignIn(MacStatus(session: .init(enabled: true, state: "running"))))
+        #expect(!AOSCard.needsSignIn(nil))
+    }
+
     @Test func refusalsAreWordedHere() {
         #expect(MacRefusal(code: "sleep-disabled", message: "x").text.contains("pmset disablesleep"))
         #expect(MacRefusal(code: "unheard-of", message: "As the Mac says").text == "As the Mac says")
@@ -75,6 +104,10 @@ struct MacStatusTests {
         #expect(server.received.last?.fields["text"] == .string("lidOpen"))
         let sleep = try await client.mac(.sleep)
         #expect(sleep.sleepsIn == 1.5)
+        let dark = try #require(try await client.mac(.displayOff).status)
+        #expect(dark.display?.state == "off")
+        let lit = try #require(try await client.mac(.displayOn).status)
+        #expect(lit.display?.state == "on")
         // A refusal with its code
         server.update {
             $0.refuse["workspace.start"] = "The workspace isn't set up yet."
