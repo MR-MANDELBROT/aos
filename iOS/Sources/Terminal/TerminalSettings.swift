@@ -48,6 +48,8 @@ struct TerminalSettingsForm: View {
         }
         .navigationTitle("Terminal")
         .navigationBarTitleDisplayMode(.inline)
+        // Switched off: the Live Activity goes at once.
+        .onChange(of: settings.terminalLiveActivity) { _, _ in model.keepAlive.terminalsChanged() }
         .onAppear { locationAllowed = TerminalKeepAlive.locationAllowed }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             locationAllowed = TerminalKeepAlive.locationAllowed
