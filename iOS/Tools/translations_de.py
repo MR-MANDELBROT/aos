@@ -804,4 +804,6 @@ DE.update({
     'Cool': 'Kühl',
     'No monitor': 'Kein Monitor',
     'Built-in only': 'Nur eingebaut',
+    'Show': 'Zeigen',
+    'Your agent asks for help': 'Dein Agent bittet um Hilfe',
 })

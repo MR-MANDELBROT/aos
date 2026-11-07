@@ -54,7 +54,8 @@ public struct GuestHelper: Sendable {
     }
 
     public func status() async throws -> Status { try await call(["op": "status"], timeout: 20) }
-    public func focus() async throws -> Focus { try await call(["op": "focus"], timeout: 20) }
+    /// Right after Chrome started, its first accessibility answer can take a while (Chrome builds its tree then).
+    public func focus() async throws -> Focus { try await call(["op": "focus"], timeout: 45) }
 
     /// Types the answer into the page (only if the focus is still on `host`) and submits it.
     public func fill(host: String, kind: String, username: String?, password: String?, code: String?) async throws
@@ -129,7 +130,14 @@ extension WorkspaceController {
         let helper = GuestHelper(provisioner: provisioner, host: ip)
         let status = try await helper.status()
         guard status.trusted == true else { throw WorkspaceError.helperNotAllowed }
-        let focus = try await helper.focus()
+        // One more try after a timeout: the first look at a freshly started Chrome can be slow.
+        let focus: GuestHelper.Focus
+        do {
+            focus = try await helper.focus()
+        } catch SSHError.timeout(_) {
+            log("sign_in: the workspace helper was slow, asking once more")
+            focus = try await helper.focus()
+        }
         guard focus.ok, let kind = focus.kind, kind != "none", let site = focus.host, !site.isEmpty else {
             throw WorkspaceError.noSignInField(focus.error)
         }

@@ -57,6 +57,11 @@ if (( ${#pids} )); then
   (( ${#rest} )) && kill -TERM "${rest[@]}" 2>/dev/null
   note "Chrome reopened at login without its policies, quit (${pids[*]})"
 fi
+# System Settings that macOS reopened at the login (left from the setup, where it was open at a restart): the
+# agent starts on a clear screen. Nobody can be using it this early.
+if pgrep -u "$uid" -x "System Settings" >/dev/null 2>&1; then
+  pkill -u "$uid" -x "System Settings" && note "System Settings reopened at login, quit"
+fi
 # The "background activity" notices macOS shows after every start cover the top right of the screen: the helper
 # closes them (if it is allowed to; otherwise nothing happens).
 echo '{"op":"dismiss-notifications"}' | "$LIBEXEC/AOSHelper.app/Contents/MacOS/AOSHelper" client >/dev/null 2>&1 || true
