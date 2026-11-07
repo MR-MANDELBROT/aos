@@ -179,6 +179,7 @@ final class ScreenSession {
     @ObservationIgnored private var watchTask: Task<Void, Never>?
     /// When the direct path last failed, per address: not tried again for a while.
     @ObservationIgnored private var directFailures: [String: Date] = [:]
+    @ObservationIgnored private var resuming = false
     /// Macs whose screen sharing offers no high performance (learned this run).
     @ObservationIgnored private var withoutHighPerformance: Set<UUID> = []
     #if DEBUG
@@ -199,6 +200,9 @@ final class ScreenSession {
         DirectPath.candidate(route: ssh.route, remote: await ssh.remoteIP(),
                              tailnetHosts: ConnectionPlan.tailnetHosts(of: mac), systemVPN: TailnetVPN.isActive)
     }
+
+    /// The Mac's screen sharing port on the direct path (tests: their own server's).
+    static var directPort = DirectPath.screenSharingPort
 
     /// How long a direct session may take to show a picture before the tunnel takes over.
     static var directPictureTimeout: Duration = .seconds(15)
@@ -329,7 +333,7 @@ final class ScreenSession {
                 return .tunnel
             }
         }
-        guard await DirectPath.reachable(host: host, port: DirectPath.screenSharingPort) else {
+        guard await DirectPath.reachable(host: host, port: Self.directPort) else {
             tunnelReason = .unreachable
             return .tunnel
         }
@@ -345,7 +349,7 @@ final class ScreenSession {
         var port = port ?? Int(forwarder?.port ?? 0)
         if case .direct(let address, let network) = path {
             host = address
-            port = DirectPath.screenSharingPort
+            port = Self.directPort
             highPerformance = network
         } else {
             highPerformance = nil
@@ -441,9 +445,16 @@ final class ScreenSession {
         phase = .paused
     }
 
-    /// Back in the foreground after `pause()`: the same screen again, without Face ID, once the Mac is connected.
-    func resume() async {
-        guard phase == .paused, let mac else { return }
+    /// Back in the foreground after `pause()`: the same screen again, without Face ID, once the Mac is connected
+    /// (`connection`: the app's connection to the Mac now).
+    func resume(with connection: MacConnection?) async {
+        guard phase == .paused, !resuming else { return }
+        resuming = true
+        defer { resuming = false }
+        guard let mac = connection ?? self.mac, mac.mac.id == self.mac?.mac.id || self.mac == nil else {
+            stop()
+            return
+        }
         for _ in 0..<60 where mac.ssh?.isActive != true {
             try? await Task.sleep(for: .milliseconds(250))
             guard phase == .paused else { return }

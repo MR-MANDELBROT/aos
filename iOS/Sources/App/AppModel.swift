@@ -182,8 +182,8 @@ final class AppModel {
             // Back in the foreground: connect again; the Mac's terminals attach again by themselves.
             if !isDemo { connection?.start() }
             // A screen that was on when the app went away comes back (same login, no Face ID).
-            Task { await macScreen.resume() }
-            Task { await workspaceScreen.resume() }
+            Task { await macScreen.resume(with: connection) }
+            Task { await workspaceScreen.resume(with: connection) }
         case .background:
             guard !isDemo, backgroundTask == nil else { return }
             // Keep the connection for a short while (a quick switch to another app), then let it go: iOS suspends
@@ -197,9 +197,10 @@ final class AppModel {
                     try? await Task.sleep(for: .seconds(5))
                 }
                 if !Task.isCancelled {
-                    self?.connection?.stop()
+                    // The screens first: they let go while the connection still carries their goodbye
                     self?.macScreen.pause()
                     self?.workspaceScreen.pause()
+                    self?.connection?.stop()
                 }
             }
         default:

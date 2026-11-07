@@ -108,15 +108,17 @@ struct EndToEndTests {
         // through the SSH connection (direct-tcpip) to the workspace's screen sharing, with Apple's account login
         let screen = model.workspaceScreen
         // The iPhone's picture area (iPhone 17 Pro upright, without the top safe area): the workspace takes its shape
-        await screen.start(mac: connection, login: nil, options: ScreenOptions(), area: CGSize(width: 402, height: 812))
+        let upright = ScreenArea(points: CGSize(width: 402, height: 812), screenScale: 3, resolutionScale: 1)
+        await screen.start(mac: connection, login: nil, options: ScreenOptions(), area: upright)
         #expect(screen.phase == .running)
         // Its login came sealed to a one-time key the request carried (and signed)
         #expect(companion.received.contains { $0.op == "screen" && $0.fields["reply"]?.string?.count == 88 })
         #expect(screen.route?.targetHost == "127.0.0.1" && screen.route?.targetPort == rfb.port)
         #expect(screen.route?.login == .account(username: "aos", password: "pw"))
-        // ... asked for before the first picture, so it comes in the iPhone's shape
-        #expect(companion.received.contains { $0.op == "display" && $0.fields["text"] == .string("1200x2424@2") })
-        #expect(screen.displayRequest == DisplayRequest(width: 1200, height: 2424, scale: 2))
+        // ... asked for before the first picture, so it comes in the iPhone's shape (sized as Open Screen Sharing
+        // sizes the Mac's virtual display)
+        #expect(companion.received.contains { $0.op == "display" && $0.fields["text"] == .string("1050x2120@2") })
+        #expect(screen.displayRequest == DisplayRequest(width: 1050, height: 2120, scale: 2))
         let client = try #require(screen.client)
         client.start()  // the session's view does this when it appears
         try await waitUntil(timeout: .seconds(30)) { client.state == .connected }
@@ -124,6 +126,7 @@ struct EndToEndTests {
         #expect(rfb.log.receivedLogins.first?.username == "aos")
         #expect(rfb.log.receivedLogins.first?.password == "pw")
         #expect(screen.localPort != nil && screen.localPort != UInt16(rfb.port))
+        #expect(screen.path == .tunnel && !client.usesHighPerformance && client.picturesFollowWindow)
         try await waitUntil(timeout: .seconds(10)) { rfb.log.updateCount > 0 }
         screen.stop()
         #expect(screen.phase == .idle && screen.client == nil)
@@ -133,8 +136,9 @@ struct EndToEndTests {
         // The Mac's own screen with an account it refuses: the session ends and the login form comes back
         let displayRequests = companion.received.filter { $0.op == "display" }.count
         let macScreen = model.macScreen
+        let sideways = ScreenArea(points: CGSize(width: 750, height: 402), screenScale: 3, resolutionScale: 1)
         await macScreen.start(mac: connection, login: .init(username: "max", password: "falsch"), options: ScreenOptions(),
-                              area: .zero)
+                              area: sideways)
         #expect(macScreen.route?.targetPort == macRFB.port && macScreen.route?.followsWindowShape == false)
         try #require(macScreen.client).start()
         try await waitUntil(timeout: .seconds(30)) { macScreen.phase == .needsLogin }
@@ -142,12 +146,63 @@ struct EndToEndTests {
         #expect(macRFB.log.receivedLogins.first?.password == "falsch")
         // ... and with the right one it connects
         await macScreen.start(mac: connection, login: .init(username: "max", password: "richtig"), options: ScreenOptions(),
-                              area: .zero)
+                              area: sideways)
         let macClient = try #require(macScreen.client)
         macClient.start()
         try await waitUntil(timeout: .seconds(30)) { macClient.state == .connected }
-        // The Mac's screen keeps its size (no display requests for it)
+        // The test's SSH connection reaches 127.0.0.1: no direct path, so through the tunnel in the Mac's own size
+        #expect(macScreen.path == .tunnel && macScreen.tunnelReason == .noAddress && !macClient.usesHighPerformance)
+        // (no display requests for the Mac: its virtual display is Open Screen Sharing's, on the direct path)
         #expect(companion.received.filter { $0.op == "display" }.count == displayRequests)
+        macScreen.stop()
+
+        // The Mac in the iPhone's size on the direct path (here its screen sharing server itself on 127.0.0.1, its key
+        // known from the session through SSH): high performance with the virtual display. This server offers none, so
+        // the tunnel takes over; the login is the one of this connect: one Face ID for the tap, none for the tunnel,
+        // none for coming back from the background.
+        let savedCandidate = ScreenSession.directCandidate, savedPort = ScreenSession.directPort
+        let savedUnlock = ScreenSession.unlockLogin
+        defer {
+            ScreenSession.directCandidate = savedCandidate
+            ScreenSession.directPort = savedPort
+            ScreenSession.unlockLogin = savedUnlock
+        }
+        ScreenSession.directCandidate = { _, _ in .address("127.0.0.1") }
+        ScreenSession.directPort = macRFB.port
+        final class Asks { var count = 0 }
+        let asks = Asks()
+        ScreenSession.unlockLogin = { _ in
+            asks.count += 1
+            return .init(username: "max", password: "richtig")
+        }
+        let loginsBefore = macRFB.log.receivedLogins.count
+        await macScreen.connect(mac: connection, options: ScreenOptions(), area: sideways)
+        #expect(asks.count == 1)
+        #expect(macScreen.path == .direct(host: "127.0.0.1", network: .localNetwork))
+        let direct = try #require(macScreen.client)
+        #expect(direct.usesHighPerformance)
+        direct.start()
+        try await waitUntil(timeout: .seconds(30)) { macScreen.path == .tunnel }
+        #expect(macScreen.tunnelReason == .noHighPerformance)
+        let tunneled = try #require(macScreen.client)
+        #expect(tunneled !== direct && !tunneled.usesHighPerformance)
+        tunneled.start()
+        try await waitUntil(timeout: .seconds(30)) { tunneled.state == .connected }
+        // Both signed in with the same login: directly, then through SSH
+        #expect(macRFB.log.receivedLogins.dropFirst(loginsBefore).map(\.password) == ["richtig", "richtig"])
+        // The app in the background for a while: the session lets go, and comes back with the app
+        macScreen.pause()
+        #expect(macScreen.phase == .paused && macScreen.client == nil)
+        await macScreen.resume(with: connection)
+        let resumed = try #require(macScreen.client)
+        resumed.start()
+        try await waitUntil(timeout: .seconds(30)) { resumed.state == .connected }
+        // ... still the one Face ID; the Mac without high performance goes straight through SSH now
+        #expect(asks.count == 1 && macScreen.path == .tunnel)
+        macScreen.stop()
+        // A new tap is a new connect: Face ID again
+        await macScreen.connect(mac: connection, options: ScreenOptions(matchesPhone: false), area: sideways)
+        #expect(asks.count == 2 && macScreen.path == .tunnel && macScreen.phase == .running)
         macScreen.stop()
 
         // The Mac no longer has this iPhone's key (removed there, or paired before signing keys): when the

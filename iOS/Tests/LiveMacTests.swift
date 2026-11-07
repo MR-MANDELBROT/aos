@@ -1,4 +1,5 @@
 import Foundation
+import ScreenClient
 import Testing
 @testable import aOS
 
@@ -60,7 +61,8 @@ struct LiveMacTests {
         // The workspace screen through the SSH connection (direct-tcpip to the workspace's screen sharing), with
         // Open Screen Sharing's session and the login the Mac sealed to this iPhone
         let screen = model.workspaceScreen
-        await screen.start(mac: connection, login: nil, options: ScreenOptions(), area: CGSize(width: 402, height: 812))
+        await screen.start(mac: connection, login: nil, options: ScreenOptions(),
+                           area: ScreenArea(points: CGSize(width: 402, height: 812), screenScale: 3, resolutionScale: 1))
         let client = try #require(screen.client)
         client.start()
         try await waitUntil(timeout: .seconds(40)) { client.state == .connected }
