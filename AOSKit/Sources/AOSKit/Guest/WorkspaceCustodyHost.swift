@@ -103,6 +103,7 @@ public final class WorkspaceCustodyHost: @unchecked Sendable {
                 return (r, nil)
             case .ssh: return (try await ssh(request), nil)
             case .importLegacy: return (try importLegacy(request.files ?? [:]), nil)
+            case .pin: return (try pin(request.files?["known_hosts"] ?? Data()), nil)
             case .rotateBegin: return (try rotateBegin(), nil)
             case .rotateCommit: return (try rotateCommit(keepPassword: request.keepPassword ?? false), nil)
             case .rotateAbort:
@@ -263,6 +264,20 @@ public final class WorkspaceCustodyHost: @unchecked Sendable {
         return status()
     }
 
+    /// Pins the workspace's host key from an earlier aOS's known hosts, as long as none is pinned.
+    func pin(_ knownHosts: Data) throws -> CustodyReply {
+        guard !pinned() else { throw CustodyError.helper("a host key is pinned already") }
+        guard knownHosts.count < 65_536 else { throw CustodyError.helper("too large") }
+        let lines = Self.pinLines(fromKnownHosts: String(decoding: knownHosts, as: UTF8.self))
+        guard !lines.isEmpty else { throw CustodyError.helper("no host key in it") }
+        let who = try account()
+        try makeFolders(owner: who)
+        try writeSecret(Data((lines.joined(separator: "\n") + "\n").utf8), to: layout.knownHosts, owner: who, mode: 0o644)
+        try? FileManager.default.removeItem(at: layout.pinOpen)
+        log("workspace: host key pinned from an earlier version's known hosts")
+        return status()
+    }
+
     /// The host keys of a known_hosts file whose host is an IPv4 address (the workspace's), under the fixed name.
     static func pinLines(fromKnownHosts text: String) -> [String] {
         var seen = Set<String>()
@@ -338,7 +353,8 @@ public final class WorkspaceCustodyHost: @unchecked Sendable {
         guard let key = request.key else { throw CustodyError.helper("no key") }
         var args = [
             "-F", "/dev/null",
-            "-o", "UserKnownHostsFile=\(layout.knownHosts.path)",
+            // Quoted: ssh splits this value at spaces ("Application Support") into several files.
+            "-o", "UserKnownHostsFile=\"\(layout.knownHosts.path)\"",
             "-o", "GlobalKnownHostsFile=/dev/null",
             "-o", "HostKeyAlias=\(Self.hostAlias)",
             "-o", "StrictHostKeyChecking=\(acceptNew ? "accept-new" : "yes")",
@@ -440,6 +456,10 @@ public final class WorkspaceCustodyHost: @unchecked Sendable {
         }
         _ = chown(layout.diskImage.path, 0, 0)
         chmod(layout.diskImage.path, 0o600)
+        // Without a host key from the earlier version (`pin`), the first connection pins it.
+        if !pinned() {
+            fm.createFile(atPath: layout.pinOpen.path, contents: Data(), attributes: [.posixPermissions: 0o600])
+        }
         log("workspace: took over the disk of an earlier version")
         return status()
     }
