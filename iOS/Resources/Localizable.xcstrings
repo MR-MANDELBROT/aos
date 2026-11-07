@@ -271,6 +271,16 @@
         }
       }
     },
+    "%@ left" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "noch %@"
+          }
+        }
+      }
+    },
     "%@ now presents %@. That happens when the computer was set up again, but it can also mean that someone is in between. Only continue if you know why it changed." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -383,6 +393,26 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld:%2$@ left"
+          }
+        }
+      }
+    },
+    "+%lld monitors" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld Monitore"
+          }
+        }
+      }
+    },
+    "+1 monitor" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 Monitor"
           }
         }
       }
@@ -1407,6 +1437,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beide Bildschirme nehmen die Form des iPhones an und drehen sich mit: aOS passt das Display des Arbeitsplatzes an, dein Mac bekommt ein virtuelles Display im Hochleistungsmodus von Open Screen Sharing, direkt im selben WLAN oder mit dem VPN der Tailscale-App. Nur über SSH behält dein Mac seine eigene Größe. Mehr Auflösung gibt mehr Platz und weniger Schärfe."
+          }
+        }
+      }
+    },
+    "Built-in only" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur eingebaut"
           }
         }
       }
@@ -4170,6 +4210,16 @@
         }
       }
     },
+    "No monitor" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Monitor"
+          }
+        }
+      }
+    },
     "No news from the Mac" : {
       "localizations" : {
         "de" : {
@@ -4258,6 +4308,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ohne"
+          }
+        }
+      }
+    },
+    "Normal temperature" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur normal"
           }
         }
       }
@@ -5203,6 +5263,16 @@
         }
       }
     },
+    "Plugged in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Netzteil"
+          }
+        }
+      }
+    },
     "Point the camera at the code on your Mac" : {
       "localizations" : {
         "de" : {
@@ -5253,6 +5323,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Port"
+          }
+        }
+      }
+    },
+    "Power" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzteil"
           }
         }
       }
@@ -8083,6 +8163,16 @@
         }
       }
     },
+    "Too hot" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu heiß"
+          }
+        }
+      }
+    },
     "Touch" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8540,6 +8630,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version"
+          }
+        }
+      }
+    },
+    "Very warm" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sehr warm"
           }
         }
       }
