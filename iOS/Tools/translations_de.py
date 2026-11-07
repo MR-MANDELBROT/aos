@@ -801,7 +801,7 @@ DE.update({
     'On': 'An',
     '+1 monitor': '+1 Monitor',
     '+%lld monitors': '+%lld Monitore',
-    'Normal temperature': 'Temperatur normal',
+    'Cool': 'Kühl',
     'No monitor': 'Kein Monitor',
     'Built-in only': 'Nur eingebaut',
 })
