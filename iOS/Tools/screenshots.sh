@@ -28,6 +28,9 @@ SHOTS=(
   "terminal-list|-AOSDemoTab terminal"
   "terminal|-AOSDemoTab terminal -AOSDemoSheet shell"
   "screen|-AOSDemoTab screen"
+  "screen-mac|-AOSDemoTab screen -AOSDemoScreen mac"
+  "screen-login|-AOSDemoTab screen -AOSDemoScreen mac-login-keyboard"
+  "screen-settings|-AOSDemoTab screen -AOSDemoScreen mac-login -AOSDemoSheet screen-settings"
   "screen-help|-AOSDemoTab overview -AOSDemoSheet help"
 )
 

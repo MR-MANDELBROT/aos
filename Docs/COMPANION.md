@@ -7,8 +7,8 @@ user, wherever they are:
   request with the user's Bitwarden logins that fit the site, the user approves one with Face ID, and aOS on the Mac
   gets exactly that login from Bitwarden and fills it into the workspace. The agent never sees the password.
 - **Terminal**: SSH to the paired Mac (and other hosts the user adds).
-- **Screen**: the paired Mac's screen and the aOS workspace, live, with touch, keyboard and trackpad gestures.
-  Same screen sharing code as the Mac app (`AOSKit/Sources/AOSRFB`).
+- **Screen**: the paired Mac's screen and the aOS workspace, live, with touch, keyboard and trackpad gestures, in
+  Open Screen Sharing's session (GPL-3.0, iOS/ThirdParty/OpenScreenSharing; iOS/NOTES.md, "The screen").
 - **Help requests**: when the agent asks for help (a captcha, a sign-in it can't do), the request opens the
   workspace screen on the iPhone.
 - **Settings**.
@@ -251,7 +251,8 @@ Chrome, so a filled password can't be read back.
 ## iPhone app structure
 
 - XcodeGen spec `iOS/project.yml`, target `aOS` (bundle `dev.marquart.aos.ios`, iOS 27), packages: `AOSKit`
-  (local, product `AOSRFB`), Citadel (SSH, on SwiftNIO SSH), SwiftTerm.
+  (local, product `AOSRFB`), Citadel (SSH, on SwiftNIO SSH), SwiftTerm; the framework target `ScreenClient` (Open
+  Screen Sharing's session code with its Go library libsharing, GRDB, swift-perception, swift-atomics).
 - Tabs: Overview (Mac, workspace, requests), Terminal, Screen; settings from the Overview.
 - German and English (string catalogs), German first for Max.
 - Trust in the design: what is where, said plainly ("Your passwords stay in Bitwarden. You approve every sign-in with
