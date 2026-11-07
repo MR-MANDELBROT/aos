@@ -107,10 +107,12 @@ agent's own (MCP) operations stay unsigned.
       login=<Bitwarden item id or empty>
       host=<signin.answer: the request's website, or empty>
       target=<companion.screen: mac|workspace, or empty>
-      data=<lowercase hex SHA-256 over "<name>:<UTF-8 byte count>:<value>\n" for each of username, password, totp, text that is present>
+      data=<lowercase hex SHA-256 over "<name>:<UTF-8 byte count>:<value>\n" for each of username, password, totp, text, reply that is present>
 
   No value may contain a line break (refused). The app derives `decision` and `data` from the request's fields the
-  way it acts on them, so a changed field breaks the signature.
+  way it acts on them, so a changed field breaks the signature. `reply` (since 2026-11-07) is the one-time key a
+  workspace `screen` request carries ("The workspace's screen login" below); requests without it sign exactly what
+  they signed before.
 - **The checks** (`CompanionGate` in AOSKit): a known phone id, a valid signature with that phone's key, `ts` within
   120 s of the Mac's clock, a nonce not seen before (kept in memory while its time is in the window, at most 4096).
   For `signin.answer` the signed `host` must be the website of the open request. Refusals are logged by reason (no
@@ -136,10 +138,15 @@ Requests:
   (the Mac shows the name it has from pairing, not this one)
 - `{"id":2,"op":"status"}` -> `{"id":2,"ok":true,"workspace":{"state":"stopped|starting|open|closing","purpose":"...","until":"<ISO date>"},"sessions":[{"title":"...","state":"..."}]}`
 - `{"id":3,"op":"subscribe"}` -> `{"id":3,"ok":true}`, then events.
-- `{"id":4,"op":"screen","target":"mac"|"workspace"}` -> `{"id":4,"ok":true,"host":"127.0.0.1","port":5900,"username":"...","password":"..."}`
-  (for `workspace`: the VM's address and its screen sharing account; the iPhone opens a direct-tcpip channel to
-  host:port through the same SSH connection. For `mac` there are no credentials: the user types their Mac account
-  name and password once, the app keeps them in its keychain.)
+- `{"id":4,"op":"screen","target":"mac"}` -> `{"id":4,"ok":true,"host":"127.0.0.1","port":5900}` (no credentials:
+  the user types their Mac account name and password once, the app keeps them in its keychain).
+- `{"id":4,"op":"screen","target":"workspace","reply":"<base64 X9.63 P-256 key>"}` ->
+  `{"id":4,"ok":true,"sealed":{"v":1,"key":"<base64 X9.63>","box":"<base64>"}}`: the workspace's screen login, only
+  as ciphertext for this request ("The workspace's screen login" below). Opened, the box is
+  `{"host":"<VM address>","password":"...","port":5900,"username":"aos"}`; the iPhone opens a direct-tcpip channel to
+  host:port through the same SSH connection. A request without `reply` (an older iPhone app) gets `ok: false` with
+  `code: "update"`; an answer without `sealed` (an older Mac) is refused by the iPhone. Neither side falls back to
+  plaintext.
 - `{"id":5,"op":"signin.answer","request":"<request id>","host":"<the request's host>","login":"<Bitwarden item id>"}`
   (the user approved one of the request's `logins`; the Mac gets it from Bitwarden), or
   `{"id":5,"op":"signin.answer","request":"<id>","host":"...","username":"...","password":"...","totp":"123456"}`
@@ -185,6 +192,41 @@ Events:
 
 A phone that subscribes first gets the questions still open, then everything new. `aos-companion` runs as long as
 the exec channel is open; the Mac counts a phone as connected while it polled within the last 45 s.
+
+## The workspace's screen login (2026-11-07)
+
+The answer to `screen` for the workspace carries the guest account's password. It passes `aos-companion` and the
+app's agent socket, and any program of the Mac's user can stand in for either. So it travels sealed to the phone
+(`ScreenSeal`: AOSKit/Sources/AOSKit/Companion/ScreenSeal.swift on the Mac, iOS/Sources/Core/ScreenSeal.swift on the
+iPhone):
+
+1. The iPhone makes a fresh P-256 key-agreement key for this one request (CryptoKit, in memory only) and sends its
+   public half as `reply`. The signature covers it (`data`), so a relay can't swap in its own key, and can't strip it
+   either (the Mac answers a request without one only with "update the app").
+2. The Mac (after the usual checks: signature, 120 s window, nonce once) makes its own one-time key, does ECDH with
+   the phone's, derives a 256-bit key with HKDF-SHA256 (salt `aos-screen-v1`, info below) and seals the login JSON
+   with AES-GCM (random 12-byte nonce, the info as additional data). The answer holds only its public key and the box.
+3. The iPhone opens it with its one-time key and the context of the request it signed; the key is gone afterwards.
+
+The info binds the box to one request, these lines joined with `\n`:
+
+    aos-screen-v1
+    op=companion.screen
+    key=<phone id>
+    nonce=<the request's nonce>
+    phone=<base64 of the phone's one-time key>
+    mac=<base64 of the Mac's one-time key>
+
+An answer kept from an earlier request doesn't open (other nonce, other phone key); a changed box fails the GCM tag.
+Reference vector for both sides (AOSKit `ScreenSealTests`, iOS `SealedScreenLoginTests`, also computed with Python's
+`cryptography`): phone key 01..20, Mac key 21..40, GCM nonce 00..0b, phone `4853150ceae1`, nonce
+`AAECAwQFBgcICQoLDA0ODw`, plaintext `{"password":"geheim"}`.
+
+What it doesn't do: the Mac's one-time key isn't vouched for by anything the phone trusts. A program in
+aos-companion's place can't read the login, but it could answer with a box of its own (sealed to the phone's key it
+saw), pointing the phone at a screen it serves; what the person then types there would go to it. Closing that needs a
+key of the Mac app the phone learns at pairing, signing these answers (Docs/DESIGN.md, "What this does and doesn't
+promise").
 
 ## Matching logins
 

@@ -107,6 +107,8 @@ struct EndToEndTests {
         screen.viewerArea = CGSize(width: 402, height: 778)
         await screen.start(mac: connection, login: nil, options: options)
         try await waitUntil { screen.phase == .live }
+        // Its login came sealed to a one-time key the request carried (and signed)
+        #expect(companion.received.contains { $0.op == "screen" && $0.fields["reply"]?.string?.count == 88 })
         #expect(screen.size == CGSize(width: 80, height: 50))
         #expect(companion.received.contains { $0.op == "display" && $0.fields["text"] == .string("1200x2322@2") })
         #expect(screen.displayRequest == DisplayRequest(width: 1200, height: 2322, scale: 2))

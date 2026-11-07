@@ -38,7 +38,7 @@ public struct CompanionAuth: Codable, Sendable, Equatable {
 ///     login=<Bitwarden item id or empty>
 ///     host=<the sign-in's website or empty>
 ///     target=<mac|workspace for companion.screen, else empty>
-///     data=<hex SHA-256 of the free text fields, see `dataDigest`>
+///     data=<hex SHA-256 of the free text fields and a screen request's reply key, see `dataDigest`>
 ///
 /// No value may contain a line break (such a request is refused), so no two requests have the same message.
 public enum CompanionSignature {
@@ -83,13 +83,16 @@ public enum CompanionSignature {
         return Data(lines.joined(separator: "\n").utf8)
     }
 
-    /// The free text a request carries (user name, password, code, typed text), hashed so the signature covers it
-    /// without a line format for it: for each field that is present, in this order, `<name>:<UTF-8 byte count>:<value>\n`,
-    /// then SHA-256 in lowercase hex (of nothing, if no field is present).
+    /// The free text a request carries (user name, password, code, typed text) and the one-time key a `screen`
+    /// request wants its answer sealed to (`reply`, base64 X9.63), hashed so the signature covers them without a line
+    /// format for them: for each field that is present, in this order, `<name>:<UTF-8 byte count>:<value>\n`, then
+    /// SHA-256 in lowercase hex (of nothing, if no field is present). A request without `reply` signs exactly what it
+    /// signed before.
     public static func dataDigest(username: String? = nil, password: String? = nil, totp: String? = nil,
-                                  text: String? = nil) -> String {
+                                  text: String? = nil, reply: String? = nil) -> String {
         var data = Data()
-        for (name, value) in [("username", username), ("password", password), ("totp", totp), ("text", text)] {
+        for (name, value) in [("username", username), ("password", password), ("totp", totp), ("text", text),
+                              ("reply", reply)] {
             guard let value else { continue }
             data.append(Data("\(name):\(value.utf8.count):".utf8))
             data.append(Data(value.utf8))
@@ -115,7 +118,7 @@ public enum CompanionSignature {
     public static func fields(for r: AgentRequest, auth: CompanionAuth) -> Fields {
         Fields(op: r.op, key: auth.key, ts: auth.ts, nonce: auth.nonce, request: r.request ?? "",
                decision: decision(for: r), login: r.login ?? "", host: r.host ?? "", target: r.target ?? "",
-               data: dataDigest(username: r.username, password: r.password, totp: r.totp, text: r.text))
+               data: dataDigest(username: r.username, password: r.password, totp: r.totp, text: r.text, reply: r.reply))
     }
 }
 

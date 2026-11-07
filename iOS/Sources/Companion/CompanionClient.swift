@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import os
 
@@ -26,6 +27,8 @@ enum CompanionError: LocalizedError, Equatable {
     case pairAgain
     /// The request has a value that can't be signed (a line break where none may be).
     case unsignable
+    /// The Mac answered the workspace's screen without sealing its login (aOS on the Mac is older).
+    case updateMac
 
     var errorDescription: String? {
         switch self {
@@ -35,6 +38,7 @@ enum CompanionError: LocalizedError, Equatable {
         case .invalidAnswer: String(localized: "aOS on the Mac sent an answer this app doesn't understand.")
         case .pairAgain: String(localized: "Pair again to keep approving from this iPhone.")
         case .unsignable: String(localized: "This request couldn't be signed.")
+        case .updateMac: String(localized: "Update aOS on the Mac to see the workspace from this iPhone.")
         }
     }
 }
@@ -89,11 +93,31 @@ actor CompanionClient {
         _ = try await request(.subscribe)
     }
 
+    /// Where a screen is: the Mac's own (no login), or the workspace's with its login (`workspaceLogin`).
     func screen(_ target: ScreenTarget) async throws -> ScreenEndpoint {
+        if target == .workspace { return try await workspaceLogin() }
         guard let endpoint = ScreenEndpoint(try await request(.screen(target: target))) else {
             throw CompanionError.invalidAnswer
         }
         return endpoint
+    }
+
+    /// The workspace's screen sharing login: address, port, account name and password. The Mac seals it to a P-256
+    /// key made for this one request (kept here in memory only until the answer is open; the signature covers it), so
+    /// `aos-companion`, and whatever stands in for it on the Mac, sees only ciphertext (`ScreenSeal`). An answer
+    /// without a sealed login is refused (`CompanionError.updateMac`), never taken in plaintext; one that doesn't
+    /// open is `CompanionError.invalidAnswer`.
+    func workspaceLogin() async throws -> ScreenEndpoint {
+        let oneTime = P256.KeyAgreement.PrivateKey()
+        let request = CompanionRequest.screen(target: .workspace,
+                                              reply: oneTime.publicKey.x963Representation.base64EncodedString())
+        let (response, auth) = try await send(request)
+        do {
+            return try ScreenSeal.login(in: response, with: oneTime, op: request.signedOp, auth: auth)
+        } catch {
+            log.notice("Workspace screen login not taken: \(String(describing: error), privacy: .public)")
+            throw error
+        }
     }
 
     /// Approves one of the request's Bitwarden logins: the Mac gets it from Bitwarden. `host` is the request's
@@ -138,10 +162,18 @@ actor CompanionClient {
 
     /// Sends a request and waits for the answer with its id.
     func request(_ request: CompanionRequest, timeout: Duration = .seconds(20)) async throws -> CompanionResponse {
+        try await send(request, timeout: timeout).response
+    }
+
+    /// Sends a request, waits for its answer; also returns the signature it went with (the sealed screen login is
+    /// bound to its nonce).
+    private func send(_ request: CompanionRequest, timeout: Duration = .seconds(20)) async throws
+        -> (response: CompanionResponse, auth: CompanionAuth?) {
         if let finished { throw finished }
         let id = nextID
         nextID += 1
-        let line = try request.line(id: id, auth: signer?.auth(for: request))
+        let auth = try signer?.auth(for: request)
+        let line = try request.line(id: id, auth: auth)
         let op = request.op
         let response: CompanionResponse = try await withCheckedThrowingContinuation { continuation in
             pending[id] = continuation
@@ -162,7 +194,7 @@ actor CompanionClient {
             if response.code == "pair-again" { throw CompanionError.pairAgain }
             throw CompanionError.refused(response.error ?? String(localized: "aOS on the Mac said no."))
         }
-        return response
+        return (response, auth)
     }
 
     // MARK: Reading
