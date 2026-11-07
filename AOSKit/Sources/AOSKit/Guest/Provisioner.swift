@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// Brings a freshly provisioned guest into shape (see Resources/Guest/setup.sh) and gives access to it
@@ -15,27 +16,24 @@ public struct Provisioner: Sendable {
 
     /// Maintenance access (root, key), after the bootstrap.
     public func maintenance(host: String) -> SSH {
-        SSH(host: host, auth: .key(user: "root", keyFile: secrets.maintenanceKey), secrets: secrets)
+        SSH(host: host, auth: .key(user: "root", key: .maintenance), secrets: secrets)
     }
 
     /// The stop key: runs only the orderly shutdown script in the guest.
     public func stopAccess(host: String) -> SSH {
-        SSH(host: host, auth: .key(user: "root", keyFile: secrets.stopKey), secrets: secrets)
+        SSH(host: host, auth: .key(user: "root", key: .stop), secrets: secrets)
     }
 
     /// First contact: the account's password over SSH, then the kit as root through sudo.
     public func bootstrap(host: String, log: @Sendable (String) -> Void) async throws {
-        try SSH.ensureKey(secrets.maintenanceKey, comment: "\(Brand.mcpServerName)-maintenance")
-        try SSH.ensureKey(secrets.stopKey, comment: "\(Brand.mcpServerName)-stop")
-        let password = try secrets.adminPassword(createIfMissing: false)
+        let keys = try await secrets.publicKeys()
+        let password = try await secrets.load()
 
-        let user = SSH(host: host, auth: .password(user: Brand.guestUser, passwordFile: secrets.adminPasswordURL),
-                       secrets: secrets)
+        let user = SSH(host: host, auth: .password(user: Brand.guestUser), secrets: secrets)
         log("waiting for SSH in the guest")
         try await user.waitUntilReachable(timeout: 300)
 
-        let files = try kit.files(maintenancePublicKey: try SSH.publicKey(secrets.maintenanceKey),
-                                  stopPublicKey: try SSH.publicKey(secrets.stopKey))
+        let files = try kit.files(maintenancePublicKey: keys.maintenance, stopPublicKey: keys.stop)
         let script = GuestKit.bundleScript(files: files, entry: "setup.sh")
         log("uploading the setup kit")
         try await user.run("umask 077; /bin/cat > \"$HOME/.aos-bootstrap.sh\"", input: Data(script.utf8),
@@ -182,6 +180,91 @@ public struct Provisioner: Sendable {
     public func finish(host: String) async throws {
         try await maintenance(host: host).run("/bin/zsh -f \(GuestKit.libexec)/finish.sh", timeout: 60,
                                               what: "final setup step")
+    }
+
+    // MARK: New secrets
+
+    /// Replaces the guest's maintenance and stop keys and the account's password with new ones the helper made
+    /// (after it took over the keys of an earlier aOS: copies of the old ones, wherever they are, stop working).
+    /// The new keys go in beside the old ones and are tried before anything is removed; the password changes in the
+    /// account's session (the helper there, Rekey.swift) together with its login keychain, then the automatic login
+    /// follows. Secrets travel on stdin only. Returns whether the password changed too (the keys always do, or it
+    /// throws); a password that can't change stays the old one and the helper keeps it.
+    @discardableResult
+    public func rotateSecrets(host: String, custody: WorkspaceCustodyClient, log: @Sendable (String) -> Void) async throws -> Bool {
+        let begun = try await custody.rotateBegin()
+        guard let maintenancePub = begun.nextMaintenancePublicKey, let stopPub = begun.nextStopPublicKey,
+              let old = begun.password, let new = begun.nextPassword,
+              !maintenancePub.contains("\n"), !stopPub.contains("\n") else {
+            throw CustodyError.helper("no new keys")
+        }
+        let root = maintenance(host: host)
+        let authorizedKeys = "/var/root/.ssh/authorized_keys"
+        let lines = "restrict \(maintenancePub)\nrestrict,command=\"\(GuestKit.libexec)/shutdown.sh\" \(stopPub)\n"
+        // 1. The new keys beside the old ones.
+        try await root.run("set -e; f=\(authorizedKeys); { /bin/cat \"$f\"; /bin/cat; } > \"$f.new\"; " +
+                           "/usr/sbin/chown root:wheel \"$f.new\"; /bin/chmod 600 \"$f.new\"; /bin/mv -f \"$f.new\" \"$f\"",
+                           input: Data(lines.utf8), timeout: 30, what: "new keys")
+        // 2. The new maintenance key works.
+        let next = SSH(host: host, auth: .key(user: "root", key: .next), secrets: secrets)
+        let id = try await next.run("id -u", timeout: 30, what: "new maintenance key").text
+        guard id.trimmingCharacters(in: .whitespacesAndNewlines) == "0" else {
+            throw SSHError.failed("new maintenance key", 1, "not root")
+        }
+        // 3. The account's password, in its session. Only if the automatic login's file is exactly what this version
+        //    writes for the old password (else a new one might not log in by itself after the next boot).
+        var passwordChanged = false
+        let expected = SHA256.hash(data: Kcpassword.encode(old)).map { String(format: "%02x", $0) }.joined()
+        let present = try await next.run("/usr/bin/shasum -a 256 /etc/kcpassword 2>/dev/null | /usr/bin/cut -d ' ' -f 1",
+                                         timeout: 20, check: false, what: "automatic login check").text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard present == expected else {
+            log("the account's password stays (the automatic login file isn't in the expected form)")
+            try await custody.rotateCommit(keepPassword: true)
+            try await removeOldKeys(host: host)
+            return false
+        }
+        let request = try JSONSerialization.data(withJSONObject: ["op": "rekey", "old": old, "new": new]) + Data([0x0A])
+        var reply: [String: Any]?
+        // Right after an update the helper there starts again: a few tries.
+        for attempt in 0..<6 {
+            if attempt > 0 { try await Task.sleep(nanoseconds: 2_000_000_000) }
+            let answer = try await next.run("\(GuestHelper.executable) client", input: request, timeout: 60, check: false,
+                                            what: "new account password")
+            reply = answer.text.split(separator: "\n").last.flatMap { $0.data(using: .utf8) }
+                .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            if let error = reply?["error"] as? String, error == "unknown op" { reply = nil; continue }
+            if reply != nil { break }
+        }
+        if reply?["ok"] as? Bool == true {
+            // 4. The automatic login with the new password.
+            let kc = Kcpassword.encode(new).base64EncodedString() + "\n"
+            try await next.run("set -e; IFS= read -r k; print -rn -- \"$k\" | /usr/bin/base64 -D > /etc/kcpassword.new; " +
+                               "/usr/sbin/chown root:wheel /etc/kcpassword.new; /bin/chmod 600 /etc/kcpassword.new; " +
+                               "/bin/mv -f /etc/kcpassword.new /etc/kcpassword",
+                               input: Data(kc.utf8), timeout: 30, what: "automatic login")
+            passwordChanged = true
+        } else {
+            log("the account's password stays (\(reply?["error"] as? String ?? "the workspace helper didn't answer"))")
+        }
+        // 5. The helper uses the new ones; the old keys leave the guest.
+        // A password that didn't reach the guest stays the old one.
+        try await custody.rotateCommit(keepPassword: !passwordChanged)
+        if passwordChanged { GuestSecrets.remember(password: new) }
+        try await removeOldKeys(host: host)
+        log(passwordChanged ? "new keys and a new password for the workspace" : "new keys for the workspace")
+        return passwordChanged
+    }
+
+    /// Only the current keys in the guest's authorized_keys (after a rotation).
+    private func removeOldKeys(host: String) async throws {
+        let current = try await secrets.publicKeys()
+        let only = "restrict \(current.maintenance)\nrestrict,command=\"\(GuestKit.libexec)/shutdown.sh\" \(current.stop)\n"
+        try await maintenance(host: host).run(
+            "set -e; f=/var/root/.ssh/authorized_keys; /bin/cat > \"$f.new\"; " +
+            "[ \"$(/usr/bin/wc -l < \"$f.new\" | /usr/bin/tr -d ' ')\" = 2 ]; " +
+            "/usr/sbin/chown root:wheel \"$f.new\"; /bin/chmod 600 \"$f.new\"; /bin/mv -f \"$f.new\" \"$f\"",
+            input: Data(only.utf8), timeout: 30, what: "old keys removed")
     }
 
     /// Orderly shutdown: Chrome quits (and clears what its policies say), then the guest powers off.

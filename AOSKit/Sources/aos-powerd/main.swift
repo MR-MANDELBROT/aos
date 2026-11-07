@@ -10,7 +10,8 @@ import SystemConfiguration
 //     ignored). disablesleep survives a reboot, so a marker file is written before it is set, and whoever starts
 //     next (this daemon at boot, RunAtLoad) sets it back to 0 if the marker is there.
 //   - the iPhone hotspot's join settings (auto-join and "Ask to join hotspots"), applied and read back;
-//   - joining a network macOS already knows, restarting airportd, Wi-Fi off and on (network care with the lid closed).
+//   - joining a network macOS already knows, restarting airportd, Wi-Fi off and on (network care with the lid closed);
+//   - Bitwarden's `bw` as a hidden user (BitwardenVaultHost), and the workspace's keys and disk (WorkspaceCustodyHost).
 // When Cloupi's wake daemon is on this Mac it owns sleep and Wi-Fi: then this helper refuses everything and never
 // touches pmset (Docs/DESIGN.md, "Staying awake, freezing and the hotspot").
 
@@ -18,6 +19,11 @@ let supportFolder = URL(fileURLWithPath: "/Library/Application Support/\(Brand.n
 /// Bitwarden for aOS: `bw` as the hidden user `_aosvault` (created the first time it is needed).
 let vaultHost = BitwardenVaultHost(layout: .init(base: supportFolder), account: { try VaultAccount.ensure() },
                                    log: { log($0) })
+/// The workspace's keys and disk (WorkspaceCustody.swift): ssh as the hidden user `_aosworkspace`.
+let diskGuard = DiskGuard()
+let custody = WorkspaceCustodyHost(layout: .init(base: supportFolder),
+                                   account: { try VaultAccount.ensure(name: WorkspaceCustodyHost.userName, realName: "aOS Workspace") },
+                                   attacher: HdiutilAttacher(), diskGuard: diskGuard, log: { log($0) })
 let holdMarker = supportFolder.appendingPathComponent("powerd-holding")
 let wifiMarker = supportFolder.appendingPathComponent("powerd-wifi-off")
 let logURL = URL(fileURLWithPath: "/Library/Logs/\(Brand.name)/powerd.log")
@@ -86,6 +92,9 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
 
     func start() {
         queue.sync { cleanUpEarlierRun() }
+        diskGuard?.log = { log($0) }
+        if diskGuard == nil { log("workspace disk: Disk Arbitration isn't available, the disk won't be attached") }
+        custody.recover()
         listener.setConnectionCodeSigningRequirement(PowerHelperService.appRequirement)
         listener.delegate = self
         listener.resume()
@@ -110,6 +119,11 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         // The code signing requirement set on the listener is checked by the system for every message.
         connection.exportedInterface = NSXPCInterface(with: PowerHelperXPC.self)
         connection.exportedObject = self
+        // The app that attached the workspace's disk ended: its VM ended with it.
+        let pid = connection.processIdentifier
+        connection.invalidationHandler = {
+            DispatchQueue.global().asyncAfter(deadline: .now() + 2) { custody.processEnded(pid) }
+        }
         connection.resume()
         return true
     }
@@ -140,7 +154,7 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         ticks += 1
         enforce()
         let leaseOver = leaseUntil.map { $0 <= Date() } ?? true
-        if !holding && leaseOver && !busy && !vaultHost.hasRunningLogin
+        if !holding && leaseOver && !busy && !vaultHost.hasRunningLogin && !custody.isAttached
             && Date().timeIntervalSince(lastActivity) > Self.idleExitSeconds {
             log("idle, exiting")
             exit(0)
@@ -282,6 +296,26 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
             let answer = await vaultHost.handle(parsed)
             self.queue.async { self.lastActivity = Date() }
             reply(answer.data)
+        }
+    }
+
+    func workspace(_ request: Data, reply: @escaping (Data, FileHandle?) -> Void) {
+        queue.async { self.lastActivity = Date() }
+        guard let parsed = CustodyRequest.decode(request) else {
+            reply(CustodyReply.failure("unreadable request").data, nil)
+            return
+        }
+        let connection = NSXPCConnection.current()
+        let uid = connection?.effectiveUserIdentifier ?? 0
+        let pid = connection?.processIdentifier ?? 0
+        if parsed.op == .attachDisk && diskGuard == nil {
+            reply(CustodyReply.failure("Disk Arbitration isn't available").data, nil)
+            return
+        }
+        Task {
+            let (answer, handle) = await custody.handle(parsed, caller: uid, pid: pid)
+            self.queue.async { self.lastActivity = Date() }
+            reply(answer.data, handle)
         }
     }
 

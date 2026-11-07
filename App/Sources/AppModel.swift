@@ -57,6 +57,11 @@ final class AppModel: ObservableObject {
     @Published var helperState: HelperState = .unknown
     var helperWasAdmin: Bool?
 
+    // The workspace's keys and disk with the helper (see AppModel+Custody.swift).
+    @Published var custodyMode: CustodyMode = .unknown
+    var custodySettled = false
+    var custodyTask: Task<Void, Never>?
+
     // Bitwarden (see AppModel+Bitwarden.swift); the views read `bitwarden` and redraw on the tick.
     @Published var bitwardenTick = 0
     var sleepObserver: NSObjectProtocol?
@@ -91,6 +96,7 @@ final class AppModel: ObservableObject {
         workspace.onCompanionAnswer = { [weak self] request in self?.companionAnswer(request) }
         workspace.bitwarden.log = { [weak self] line in self?.append(line) }
         workspace.bitwarden.onChange = { [weak self] in self?.bitwardenTick += 1 }
+        setUpWorkspaceCustody()
     }
 
     // MARK: Approval on the Mac
@@ -347,6 +353,7 @@ final class AppModel: ObservableObject {
             power.refreshHelperStatus()
         }
         syncBitwardenHelper()
+        if !custodySettled && custodyTask == nil && !Self.isPreview { Task { await syncWorkspaceCustody() } }
         setup.refreshCompletion()
         if !Self.isPreview { power.update(settings: settings, needed: reachabilityNeeded) }
         updateActivationPolicy()
