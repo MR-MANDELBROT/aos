@@ -108,7 +108,7 @@ struct TerminalTab: View {
 
     private func refreshSessions() async {
         #if DEBUG
-        if model.isDemo { model.macSessions.showDemo(); return }
+        if model.isDemo { model.macSessions.showDemo(phoneID: model.deviceKey?.phoneID); return }
         #endif
         await model.macSessions.load(model: model)
     }
@@ -190,13 +190,18 @@ final class MacSessionList {
     }
 
     #if DEBUG
-    func showDemo() {
+    /// Claude Code open on this iPhone, a shell nobody has open, one on the Mac's own Terminal.
+    func showDemo(phoneID: String?) {
+        let now = Date()
         sessions = [
-            MacTermSession(id: "3fa9c1d2", attached: true, since: Date().addingTimeInterval(-600), from: "ssh 192.168.178.31",
-                           command: "claude", cwd: "/Users/max/Developer/aos"),
-            MacTermSession(id: "7b2e90aa", attached: false, since: Date().addingTimeInterval(-3 * 3600), command: "zsh",
-                           cwd: "/Users/max"),
+            MacTermSession(id: "3fa9c1d2", attached: true, since: now.addingTimeInterval(-600), created: now.addingTimeInterval(-7200),
+                           from: "ssh 192.168.178.31", client: phoneID, command: "claude", cwd: "/Users/max/Developer/aos"),
+            MacTermSession(id: "7b2e90aa", attached: false, since: now.addingTimeInterval(-3 * 3600),
+                           created: now.addingTimeInterval(-5 * 3600), command: "zsh", cwd: "/Users/max"),
+            MacTermSession(id: "c41d07e5", attached: true, since: now.addingTimeInterval(-1200), created: now.addingTimeInterval(-1800),
+                           from: "local", command: "htop", cwd: "/Users/max"),
         ]
+        sessions = TermAttach.ordered(sessions)
         loaded = true
     }
     #endif
@@ -225,6 +230,8 @@ private struct MacSessionRow: View {
         case .here:
             return String(localized: "Open on this iPhone")
         case .elsewhere(let from):
+            // `term attach` in a terminal on the Mac itself says "local".
+            if from == "local" { return String(localized: "Open in a terminal on the Mac") }
             return from.map { String(localized: "Open on another device (\($0))") } ?? String(localized: "Open on another device")
         case .nobody:
             let time = session.since.map {

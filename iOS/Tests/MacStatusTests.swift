@@ -70,7 +70,7 @@ struct MacStatusTests {
         #expect(MacOffer.now(off, features: ["mac.status", "mac.sleep"], sleeping: false) == MacOffer(sleep: true))
         let none = try status(#"{"display":{"state":"none","external":0}}"#)
         #expect(MacOffer.now(none, features: all, sleeping: false) == MacOffer(sleep: true))
-        #expect(MacStatusText.displayDetail(try #require(none.display))?.contains("lid") == true)
+        #expect(MacStatusText.displayDetail(try #require(none.display)) == String(localized: "The lid is closed and no monitor is connected."))
         // Sleeping: nothing at all. An older aOS without the display: Sleep and Display Off, as before.
         #expect(MacOffer.now(on, features: all, sleeping: true) == MacOffer())
         #expect(MacOffer.now(MacStatus(), features: [], sleeping: false) == MacOffer(sleep: true, displayOff: true))

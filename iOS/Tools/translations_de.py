@@ -543,6 +543,7 @@ DE.update({
     'Open It Here': 'Hier öffnen',
     'Open Session': 'Sitzung öffnen',
     'Open on this iPhone': 'Auf diesem iPhone offen',
+    'Open in a terminal on the Mac': 'In einem Terminal auf dem Mac offen',
     'Starts another shell on %@. The others keep running.': 'Startet eine weitere Shell auf %@. Die anderen laufen weiter.',
     'No sessions on the Mac. New Session starts one.': 'Keine Sitzungen auf dem Mac. „Neue Sitzung“ startet eine.',
     'No Mac yet': 'Noch kein Mac',
