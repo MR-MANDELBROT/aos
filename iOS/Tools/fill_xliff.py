@@ -1,6 +1,6 @@
-"""Fills the German targets of an exported XLIFF from a dictionary (key: English source, value: German).
+"""Fills the German targets of an exported XLIFF from dictionaries (key: English source, value: German).
 
-Usage: python3 -I fill_xliff.py <de.xliff> <translations_de.py> [--check]
+Usage: python3 -I fill_xliff.py <de.xliff> <translations_de.py> [<more_de.py> ...] [--check]
 Also checks the German for dashes used as punctuation (house style: none in German texts) and for format
 specifiers that don't match the English.
 """
@@ -11,11 +11,15 @@ import xml.etree.ElementTree as ET
 
 sys.dont_write_bytecode = True  # no __pycache__ next to translations_de.py
 
-xliff, table, *flags = sys.argv[1:]
-spec = importlib.util.spec_from_file_location("t", table)
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
-DE = module.DE
+xliff, *rest = sys.argv[1:]
+flags = [a for a in rest if a.startswith("--")]
+DE = {}
+for number, table in enumerate(a for a in rest if not a.startswith("--")):
+    spec = importlib.util.spec_from_file_location(f"t{number}", table)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for key, value in module.DE.items():
+        DE.setdefault(key, value)  # the first table's German wins
 
 ns = "urn:oasis:names:tc:xliff:document:1.2"
 ET.register_namespace("", ns)

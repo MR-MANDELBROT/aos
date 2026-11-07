@@ -445,7 +445,7 @@ DE.update({
     'Actual pixels': 'Originalpixel',
     'Size': 'Größe',
     'Zoom out': 'Herauszoomen',
-    'Shortcuts': 'Tastenkürzel',
+    'Shortcuts': 'Kurzbefehle',
     'Quality': 'Qualität',
     'Picture rate and data': 'Bildrate und Datenmenge',
     'Screen settings': 'Bildschirm-Einstellungen',

@@ -21,7 +21,7 @@ enum ShortcutGroup: CaseIterable, Identifiable {
         case .edit: String(localized: "Edit Menu", defaultValue: "Edit")
         case .view: String(localized: "View")
         case .sound: String(localized: "Sound")
-        case .control: String(localized: "Control")
+        case .control: String(localized: "Controls")  // aOS: "Control" is the terminal's Control key
         case .debug: String(localized: "Debug")
         }
     }
@@ -180,7 +180,7 @@ struct KeyShortcut: Codable, Hashable {
             case .functionKeys: String(localized: "Function Keys")
             case .keypad: String(localized: "Keypad")
             case .system: String(localized: "System")
-            case .control: String(localized: "Control")
+            case .control: String(localized: "Controls")  // aOS: "Control" is the terminal's Control key
             }
         }
 

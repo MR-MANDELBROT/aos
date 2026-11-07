@@ -154,8 +154,13 @@ targets:
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         SWIFT_APPROACHABLE_CONCURRENCY: YES
         SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+        # Its strings are manual entries of the app's catalog (Tools/screen_strings.sh), not a catalog of its own:
+        # localize.sh's export and import leave the module out
         SWIFT_EMIT_LOC_STRINGS: NO
+        LOCALIZATION_EXPORT_SUPPORTED: NO
         SKIP_INSTALL: YES
+        # iPhone only: libsharing has no Mac Catalyst build (the string export would try one)
+        SUPPORTS_MACCATALYST: NO
 
   AOSTests:
     type: bundle.unit-test

@@ -159,7 +159,8 @@ enum SessionCommandCategory: CaseIterable, Identifiable {
         switch self {
         case .view: "View"
         case .sound: "Sound"
-        case .control: "Control"
+        // aOS: "Controls" (aOS's strings share one table, where "Control" is the terminal's Control key).
+        case .control: "Controls"
         case .clipboard: "Clipboard"
         case .debug: "Debug"
         }

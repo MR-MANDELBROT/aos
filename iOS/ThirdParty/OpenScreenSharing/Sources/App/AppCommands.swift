@@ -42,7 +42,7 @@ struct AppCommands: Commands {
             SoundCommandItems(session: session)
         }
 
-        CommandMenu("Control") {
+        CommandMenu("Controls") {  // aOS: "Control" is the terminal's Control key
             ControlCommandItems(session: session)
         }
 
