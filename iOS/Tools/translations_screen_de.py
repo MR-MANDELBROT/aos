@@ -239,3 +239,41 @@ DE = {
     '“%@” Isn’t Supported': '„%@“ wird nicht unterstützt',
     '“%@” Refused High Performance': '„%@“ hat den Hochleistungsmodus abgelehnt',
 }
+
+# The Screen tab's selection view (Open Screen Sharing's cards), the workspace's start and stop, the one setting for
+# both screens, the Mac's direct path (2026-11-07)
+DE.update({
+    'Available': 'Verfügbar',
+    'Last connected %@': 'Zuletzt verbunden %@',
+    'Closed': 'Geschlossen',
+    'Not set up yet': 'Noch nicht eingerichtet',
+    'Display': 'Darstellung',
+    "Screens in the iPhone's size": 'Bildschirme in iPhone-Größe',
+    "Both screens take the iPhone's shape and turn with it: aOS resizes the workspace's display, your Mac gets a virtual display in Open Screen Sharing's high performance mode, directly in the same Wi-Fi or with the Tailscale app's VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness.":
+        'Beide Bildschirme nehmen die Form des iPhones an und drehen sich mit: aOS passt das Display des Arbeitsplatzes an, dein Mac bekommt ein virtuelles Display im Hochleistungsmodus von Open Screen Sharing, direkt im selben WLAN oder mit dem VPN der Tailscale-App. Nur über SSH behält dein Mac seine eigene Größe. Mehr Auflösung gibt mehr Platz und weniger Schärfe.',
+    "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac (your Mac in the iPhone's size also directly), and aOS's sign-in replaces the app's own.":
+        'Der Bildschirm des Arbeitsplatzes und des Macs beruht auf Open Screen Sharing von nekohasekai, verwendet unter der GNU General Public License, Version 3. aOS hat es für den eigenen Gebrauch angepasst: Die Bildschirme kommen über die Verbindung zu deinem Mac (dein Mac in iPhone-Größe auch direkt), und die Anmeldung von aOS ersetzt die der App.',
+    'Start and show': 'Starten und zeigen',
+    'It starts now and shows up here as soon as it runs.': 'Er startet jetzt und erscheint hier, sobald er läuft.',
+    'Show the workspace': 'Arbeitsplatz zeigen',
+    "Shows the workspace's screen": 'Zeigt den Bildschirm des Arbeitsplatzes',
+    "Shows your Mac's screen": 'Zeigt den Bildschirm deines Macs',
+    'No picture from the workspace: %@': 'Kein Bild vom Arbeitsplatz: %@',
+    'No picture from your Mac: %@': 'Kein Bild von deinem Mac: %@',
+    'Not connected to your Mac. The overview shows why.': 'Nicht mit deinem Mac verbunden. Die Übersicht zeigt, warum.',
+    "The workspace isn't set up yet. Finish the setup in aOS on the Mac.":
+        'Der Arbeitsplatz ist noch nicht eingerichtet. Schließ die Einrichtung in aOS auf dem Mac ab.',
+    "The saved login couldn't be read. Enter it again.":
+        'Die gespeicherte Anmeldung konnte nicht gelesen werden. Gib sie noch einmal ein.',
+    'Mac account': 'Mac-Account',
+    "Kept on this iPhone behind Face ID. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network.":
+        'Bleibt auf diesem iPhone hinter Face ID und geht nur an die Bildschirmfreigabe des Macs, über die SSH-Verbindung oder direkt im selben Netzwerk.',
+    "Through SSH your Mac keeps its own size. In the iPhone's size it comes directly: in the same Wi-Fi, or with the Tailscale app's VPN on.":
+        'Über SSH behält dein Mac seine eigene Größe. In iPhone-Größe kommt er direkt: im selben WLAN oder mit eingeschaltetem VPN der Tailscale-App.',
+    "Through aOS's Tailscale your Mac keeps its own size. In the iPhone's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi.":
+        'Über das Tailscale von aOS behält dein Mac seine eigene Größe. In iPhone-Größe kommt er mit eingeschaltetem VPN der Tailscale-App oder im selben WLAN.',
+    "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later).":
+        'Dein Mac behält seine eigene Größe: Seine Bildschirmfreigabe hat keinen Hochleistungsmodus (dafür braucht es macOS 14 oder neuer).',
+    "Your Mac came through SSH in its own size: the direct way didn't work this time.":
+        'Dein Mac kam über SSH in seiner eigenen Größe: Der direkte Weg hat diesmal nicht geklappt.',
+})

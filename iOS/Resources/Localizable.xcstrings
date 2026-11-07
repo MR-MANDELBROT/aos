@@ -1257,6 +1257,17 @@
         }
       }
     },
+    "Available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfügbar"
+          }
+        }
+      }
+    },
     "Background time from iOS" : {
       "localizations" : {
         "de" : {
@@ -1356,6 +1367,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bitwarden ist auf deinem Mac gesperrt"
+          }
+        }
+      }
+    },
+    "Both screens take the iPhone's shape and turn with it: aOS resizes the workspace's display, your Mac gets a virtual display in Open Screen Sharing's high performance mode, directly in the same Wi-Fi or with the Tailscale app's VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beide Bildschirme nehmen die Form des iPhones an und drehen sich mit: aOS passt das Display des Arbeitsplatzes an, dein Mac bekommt ein virtuelles Display im Hochleistungsmodus von Open Screen Sharing, direkt im selben WLAN oder mit dem VPN der Tailscale-App. Nur über SSH behält dein Mac seine eigene Größe. Mehr Auflösung gibt mehr Platz und weniger Schärfe."
           }
         }
       }
@@ -1633,6 +1654,16 @@
         }
       }
     },
+    "Closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschlossen"
+          }
+        }
+      }
+    },
     "Closed. It opens when your agent needs it." : {
       "localizations" : {
         "de" : {
@@ -1665,6 +1696,7 @@
       }
     },
     "Connect" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1716,6 +1748,16 @@
         }
       }
     },
+    "Connected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden"
+          }
+        }
+      }
+    },
     "Connected for %lld more min at most." : {
       "localizations" : {
         "de" : {
@@ -1747,6 +1789,7 @@
       }
     },
     "Connecting to the screen …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2341,6 +2384,16 @@
         }
       }
     },
+    "Display" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darstellung"
+          }
+        }
+      }
+    },
     "Display %lld" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2873,6 +2926,7 @@
       }
     },
     "Full screen, with touch, the keyboard and a trackpad or mouse." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3200,11 +3254,22 @@
       }
     },
     "It opens when your agent needs it. Then you can watch here." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Er öffnet sich, wenn dein Agent ihn braucht. Dann kannst du hier zusehen."
+          }
+        }
+      }
+    },
+    "It starts now and shows up here as soon as it runs." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er startet jetzt und erscheint hier, sobald er läuft."
           }
         }
       }
@@ -3313,7 +3378,18 @@
         }
       }
     },
+    "Kept on this iPhone behind Face ID. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bleibt auf diesem iPhone hinter Face ID und geht nur an die Bildschirmfreigabe des Macs, über die SSH-Verbindung oder direkt im selben Netzwerk."
+          }
+        }
+      }
+    },
     "Kept on this iPhone behind Face ID. It only goes to the Mac's screen sharing, through the SSH connection." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3457,6 +3533,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tasten"
+          }
+        }
+      }
+    },
+    "Last connected %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt verbunden %@"
           }
         }
       }
@@ -3634,11 +3721,22 @@
       }
     },
     "Mac" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac"
+          }
+        }
+      }
+    },
+    "Mac account" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac-Account"
           }
         }
       }
@@ -3958,11 +4056,32 @@
       }
     },
     "No picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kein Bild"
+          }
+        }
+      }
+    },
+    "No picture from the workspace: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Bild vom Arbeitsplatz: %@"
+          }
+        }
+      }
+    },
+    "No picture from your Mac: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Bild von deinem Mac: %@"
           }
         }
       }
@@ -4080,6 +4199,16 @@
         }
       }
     },
+    "Not connected to your Mac. The overview shows why." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht mit deinem Mac verbunden. Die Übersicht zeigt, warum."
+          }
+        }
+      }
+    },
     "Not open anywhere" : {
       "localizations" : {
         "de" : {
@@ -4126,6 +4255,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht eingerichtet"
+          }
+        }
+      }
+    },
+    "Not set up yet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht eingerichtet"
           }
         }
       }
@@ -5240,6 +5379,7 @@
       }
     },
     "Retina sharpness" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5461,6 +5601,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm-Statistik"
+          }
+        }
+      }
+    },
+    "Screens in the iPhone's size" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirme in iPhone-Größe"
           }
         }
       }
@@ -5798,6 +5948,16 @@
         }
       }
     },
+    "Show the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz zeigen"
+          }
+        }
+      }
+    },
     "Show Tips" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5838,6 +5998,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Symbolleiste ein-/ausblenden"
+          }
+        }
+      }
+    },
+    "Shows the workspace's screen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt den Bildschirm des Arbeitsplatzes"
+          }
+        }
+      }
+    },
+    "Shows your Mac's screen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt den Bildschirm deines Macs"
           }
         }
       }
@@ -6147,6 +6327,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starten"
+          }
+        }
+      }
+    },
+    "Start and show" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starten und zeigen"
           }
         }
       }
@@ -7029,6 +7219,16 @@
         }
       }
     },
+    "The saved login couldn't be read. Enter it again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die gespeicherte Anmeldung konnte nicht gelesen werden. Gib sie noch einmal ein."
+          }
+        }
+      }
+    },
     "The screen" : {
       "localizations" : {
         "de" : {
@@ -7040,6 +7240,7 @@
       }
     },
     "The screen comes through the connection to your Mac. See the overview." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7060,7 +7261,18 @@
         }
       }
     },
+    "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac (your Mac in the iPhone's size also directly), and aOS's sign-in replaces the app's own." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirm des Arbeitsplatzes und des Macs beruht auf Open Screen Sharing von nekohasekai, verwendet unter der GNU General Public License, Version 3. aOS hat es für den eigenen Gebrauch angepasst: Die Bildschirme kommen über die Verbindung zu deinem Mac (dein Mac in iPhone-Größe auch direkt), und die Anmeldung von aOS ersetzt die der App."
+          }
+        }
+      }
+    },
     "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac, and aOS's sign-in replaces the app's own." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7152,6 +7364,7 @@
       }
     },
     "The workspace" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7173,6 +7386,7 @@
       }
     },
     "The workspace in the iPhone's shape" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7449,6 +7663,26 @@
         }
       }
     },
+    "Through aOS's Tailscale your Mac keeps its own size. In the iPhone's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über das Tailscale von aOS behält dein Mac seine eigene Größe. In iPhone-Größe kommt er mit eingeschaltetem VPN der Tailscale-App oder im selben WLAN."
+          }
+        }
+      }
+    },
+    "Through SSH your Mac keeps its own size. In the iPhone's size it comes directly: in the same Wi-Fi, or with the Tailscale app's VPN on." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über SSH behält dein Mac seine eigene Größe. In iPhone-Größe kommt er direkt: im selben WLAN oder mit eingeschaltetem VPN der Tailscale-App."
+          }
+        }
+      }
+    },
     "through Tailscale" : {
       "localizations" : {
         "de" : {
@@ -7599,6 +7833,7 @@
       }
     },
     "Try anyway" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8086,6 +8321,7 @@
       }
     },
     "While you watch it, the workspace's display takes the iPhone's shape and fills the screen. Retina draws it twice as sharp with more data. Applies the next time the workspace screen opens." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8239,6 +8475,16 @@
         }
       }
     },
+    "Your Mac came through SSH in its own size: the direct way didn't work this time." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac kam über SSH in seiner eigenen Größe: Der direkte Weg hat diesmal nicht geklappt."
+          }
+        }
+      }
+    },
     "Your Mac is in the tailnet %@. Sign out here and sign in with that account." : {
       "localizations" : {
         "de" : {
@@ -8255,6 +8501,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Mac ist nicht in diesem Tailnet. Melde dich mit dem Konto an, das du auf dem Mac benutzt hast."
+          }
+        }
+      }
+    },
+    "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac behält seine eigene Größe: Seine Bildschirmfreigabe hat keinen Hochleistungsmodus (dafür braucht es macOS 14 oder neuer)."
           }
         }
       }
@@ -8280,6 +8536,7 @@
       }
     },
     "Your Mac's screen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
