@@ -235,13 +235,11 @@ public struct Provisioner: Sendable {
             if reply != nil { break }
         }
         if reply?["ok"] as? Bool == true {
-            // 4. The automatic login with the new password.
-            let kc = Kcpassword.encode(new).base64EncodedString() + "\n"
-            try await next.run("set -e; IFS= read -r k; print -rn -- \"$k\" | /usr/bin/base64 -D > /etc/kcpassword.new; " +
-                               "/usr/sbin/chown root:wheel /etc/kcpassword.new; /bin/chmod 600 /etc/kcpassword.new; " +
-                               "/bin/mv -f /etc/kcpassword.new /etc/kcpassword",
-                               input: Data(kc.utf8), timeout: 30, what: "automatic login")
+            // 4. The automatic login with the new password (macOS turns it off when the password changes).
             passwordChanged = true
+            if !(try await ensureAutoLogin(host: host, password: new, key: .next, log: log)) {
+                log("the automatic login didn't take the new password; aOS repairs it at the next start")
+            }
         } else {
             log("the account's password stays (\(reply?["error"] as? String ?? "the workspace helper didn't answer"))")
         }
@@ -252,6 +250,54 @@ public struct Provisioner: Sendable {
         try await removeOldKeys(host: host)
         log(passwordChanged ? "new keys and a new password for the workspace" : "new keys for the workspace")
         return passwordChanged
+    }
+
+    /// Turns the automatic login on for the account with `password`, with Apple's own tool: sysadminctl writes
+    /// /etc/kcpassword and the login window's setting. The password reaches it through its own prompt on a pseudo
+    /// terminal, never in a command line (which other programs in the workspace could read). If that doesn't take,
+    /// aOS writes both itself. Returns whether the automatic login now has this password.
+    @discardableResult
+    public func ensureAutoLogin(host: String, password: String, key: CustodyRequest.Key = .maintenance,
+                                log: @Sendable (String) -> Void) async throws -> Bool {
+        let ssh = SSH(host: host, auth: .key(user: "root", key: key), secrets: secrets)
+        let user = Brand.guestUser
+        func state() async throws -> Bool {
+            let r = try await ssh.run("/usr/bin/defaults read /Library/Preferences/com.apple.loginwindow autoLoginUser " +
+                                      "2>/dev/null; echo; /usr/bin/base64 < /etc/kcpassword 2>/dev/null",
+                                      timeout: 20, check: false, what: "automatic login check")
+            let lines = r.text.split(separator: "\n", omittingEmptySubsequences: false).map {
+                $0.trimmingCharacters(in: .whitespaces)
+            }
+            guard lines.first == user, let kc = lines.dropFirst().first(where: { !$0.isEmpty }),
+                  let file = Data(base64Encoded: kc) else { return false }
+            return Kcpassword.matches(file, password: password)
+        }
+        let input = Data((password + "\n").utf8)
+        _ = try await ssh.run("IFS= read -r p; ( sleep 1; print -r -- \"$p\" ) | /usr/bin/script -q /dev/null " +
+                              "/usr/sbin/sysadminctl -autologin set -userName \(user) -password - >/dev/null 2>&1; true",
+                              input: input, timeout: 60, check: false, what: "automatic login")
+        if try await state() { return true }
+        log("sysadminctl didn't set the automatic login, writing it directly")
+        let kc = Kcpassword.encode(password).base64EncodedString() + "\n"
+        _ = try await ssh.run("set -e; IFS= read -r k; print -rn -- \"$k\" | /usr/bin/base64 -D > /etc/kcpassword.new; " +
+                              "/usr/sbin/chown root:wheel /etc/kcpassword.new; /bin/chmod 600 /etc/kcpassword.new; " +
+                              "/bin/mv -f /etc/kcpassword.new /etc/kcpassword; " +
+                              "/usr/bin/defaults write /Library/Preferences/com.apple.loginwindow autoLoginUser -string \(user)",
+                              input: Data(kc.utf8), timeout: 30, check: false, what: "automatic login")
+        return try await state()
+    }
+
+    /// Whether the workspace waits at the login window (nobody logged in) after `seconds`.
+    public func atLoginWindow(host: String, seconds: Int = 45) async -> Bool {
+        let r = try? await maintenance(host: host).run(
+            "for i in {1..\(seconds * 2)}; do [ \"$(/usr/bin/stat -f %Su /dev/console)\" = \(Brand.guestUser) ] && { echo in; exit; }; " +
+            "sleep 0.5; done; echo out", timeout: TimeInterval(seconds + 30), check: false, what: "login check")
+        return r?.text.contains("out") == true
+    }
+
+    /// Restarts the guest (it comes back by itself: the VM boots again when the guest restarts).
+    public func restartGuest(host: String) async throws {
+        _ = try await maintenance(host: host).run("/sbin/shutdown -r now", timeout: 30, check: false, what: "restart")
     }
 
     /// Only the current keys in the guest's authorized_keys (after a rotation).
