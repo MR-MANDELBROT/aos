@@ -3,6 +3,11 @@ import AppKit
 import ServiceManagement
 import SwiftUI
 
+enum PowerDaemonTiming {
+    /// The helper exits after 120 s without anything to do (aos-powerd); a little more than that.
+    static let outdatedWait: TimeInterval = 150
+}
+
 /// Staying awake, freezing with the lid closed, the display, network care and the iPhone hotspot choice
 /// (Docs/DESIGN.md, "Staying awake, freezing and the hotspot"). The decisions come from AOSKit's pure policies
 /// (AwakePolicy, FreezePlanner, NetworkCarePolicy); this class reads the Mac's state every two seconds, acts, and
@@ -181,7 +186,8 @@ final class PowerController: ObservableObject {
         } else if network.offlineSince != nil {
             network = NetworkMemory()
         }
-        updateHotspot(lidClosedMode: lidClosedMode, choice: settings.hotspotJoin, now: now)
+        // macOS 27 doesn't let apps (not even the helper as root) change the hotspot settings: aOS only explains
+        // where the person sets them (HotspotHint); `updateHotspot` stays for a macOS that allows it again.
     }
 
     /// The hotspot choice applies only while the lid is closed: on closing aOS's helper notes the user's own macOS
@@ -293,14 +299,28 @@ final class PowerController: ObservableObject {
     /// The workspace's keys and disk through the helper (WorkspaceCustody.swift).
     func workspace(_ request: CustodyRequest) async -> (CustodyReply, FileHandle?) { await helper.workspace(request) }
 
-    /// The running helper's interface version (an older one keeps running until it exits when idle).
+    /// Until then aOS leaves an older helper (from before an update) alone: no lease, no calls, so it exits by itself
+    /// when idle and the next call starts the new one from the app bundle.
+    private var outdatedHelperUntil = Date.distantPast
+
+    /// The running helper's interface version; nil while an older one is still running or none answers.
     func helperVersion() async -> Int? {
+        if Date() < outdatedHelperUntil { return nil }
         let r = await helper.status()
-        return r.ok ? r.status?.version : nil
+        guard r.ok, let version = r.status?.version else { return nil }
+        if version < PowerHelperService.version {
+            outdatedHelperUntil = Date().addingTimeInterval(PowerDaemonTiming.outdatedWait)
+            _ = await helper.hold(seconds: 0, timeout: 5)
+            helper.disconnect()
+            log("background helper: an older version still runs, waiting for it to end")
+            return nil
+        }
+        return version
     }
 
     /// The lease: renewed every 30 s while wanted; released at once when not.
     private func updateLease(_ want: Bool, now: Date) {
+        if now < outdatedHelperUntil { return }
         if want {
             leaseWanted = true
             guard now.timeIntervalSince(lastLease) >= HoldPolicy.renewSeconds else { return }

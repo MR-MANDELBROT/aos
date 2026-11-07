@@ -1,4 +1,5 @@
 import AOSKit
+import Darwin
 import Foundation
 import SystemConfiguration
 
@@ -150,8 +151,34 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         }
     }
 
+    /// The program file this helper started from (its absolute path; launchd passes a relative one): an update of aOS
+    /// puts a new file there.
+    private let startedFrom: (path: String, inode: ino_t)? = {
+        var buffer = [CChar](repeating: 0, count: 4 * Int(MAXPATHLEN))
+        guard proc_pidpath(getpid(), &buffer, UInt32(buffer.count)) > 0 else { return nil }
+        let path = String(cString: buffer)
+        var st = stat()
+        guard stat(path, &st) == 0 else { return nil }
+        return (path, st.st_ino)
+    }()
+
+    private var replaced: Bool {
+        guard let startedFrom else { return false }
+        var st = stat()
+        // Gone for the moment (the app is being replaced): wait for the new file.
+        guard stat(startedFrom.path, &st) == 0 else { return false }
+        return st.st_ino != startedFrom.inode
+    }
+
     private func tick() {
         ticks += 1
+        // aOS was updated: make way for the new helper (the app's next call starts it), unless something runs that
+        // can't be handed over (a Bitwarden sign-in, the workspace's attached disk).
+        if ticks % 6 == 0 && replaced && !busy && !vaultHost.hasRunningLogin && !custody.isAttached {
+            if holding { endHold(reason: "updated helper takes over", touchPmset: !CloupiPresence.detect()) }
+            log("the app was updated, making way for the new helper")
+            exit(0)
+        }
         enforce()
         let leaseOver = leaseUntil.map { $0 <= Date() } ?? true
         if !holding && leaseOver && !busy && !vaultHost.hasRunningLogin && !custody.isAttached

@@ -163,6 +163,16 @@
         }
       }
     },
+    "%@ keeps the workspace's keys and its disk in a background helper of its own. So no other program on your Mac, not even your agent, can take the workspace over or watch a sign-in. macOS asks you once to allow it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ verwahrt die Schlüssel und die Festplatte des Arbeitsplatzes in einem eigenen Hintergrunddienst. So kann kein anderes Programm auf deinem Mac, auch nicht dein Agent, den Arbeitsplatz übernehmen oder bei einer Anmeldung zusehen. macOS fragt dich einmal, ob du ihn erlaubst."
+          }
+        }
+      }
+    },
     "%@ on your iPhone" : {
       "localizations" : {
         "de" : {
@@ -245,6 +255,32 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ möchte sich anmelden"
+          }
+        }
+      }
+    },
+    "%@'s background helper is being updated. Try again in a minute or two." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrunddienst von %@ wird gerade aktualisiert. Versuch es in ein, zwei Minuten noch einmal."
+          }
+        }
+      }
+    },
+    "%@'s background helper keeps the workspace's keys and disk. Allow it in %@'s settings (General)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrunddienst von %1$@ verwahrt die Schlüssel und die Festplatte des Arbeitsplatzes. Erlaube ihn in den Einstellungen von %2$@ (Allgemein)."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@'s background helper keeps the workspace's keys and disk. Allow it in %2$@'s settings (General)."
           }
         }
       }
@@ -536,6 +572,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hintergrunddienst von %@ erlauben"
+          }
+        }
+      }
+    },
+    "Allow %@'s background helper first (step 1)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaube zuerst den Hintergrunddienst von %@ (Schritt 1)."
           }
         }
       }
@@ -1140,6 +1186,7 @@
       }
     },
     "Changing the Wi-Fi settings. Wi-Fi reconnects for a moment." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1515,6 +1562,7 @@
       }
     },
     "Connect automatically" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2208,6 +2256,16 @@
         }
       }
     },
+    "If the Mac should go online through your iPhone when there's no Wi-Fi, set it up once in macOS (%@ can't, macOS doesn't let apps change Wi-Fi settings):" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Soll der Mac über dein iPhone online gehen, wenn kein WLAN da ist, stell es einmal in macOS ein (%@ kann das nicht, macOS lässt Apps die WLAN-Einstellungen nicht ändern):"
+          }
+        }
+      }
+    },
     "In the menu bar" : {
       "localizations" : {
         "de" : {
@@ -2245,6 +2303,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Im Arbeitsplatz „aOS Helper“ einschalten (aOS gibt das Passwort ein)"
+          }
+        }
+      }
+    },
+    "In Wi-Fi settings, click (i) next to it and switch on Auto-Join." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klick in den WLAN-Einstellungen daneben auf (i) und schalte „Automatisch verbinden“ ein."
           }
         }
       }
@@ -2329,6 +2397,16 @@
         }
       }
     },
+    "Join your iPhone's hotspot once from the Wi-Fi menu." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde dich einmal über das WLAN-Menü mit dem Hotspot deines iPhones."
+          }
+        }
+      }
+    },
     "Keep conversations reachable" : {
       "localizations" : {
         "de" : {
@@ -2392,11 +2470,22 @@
       }
     },
     "Keeps the Mac awake with the lid closed, looks after Wi-Fi and runs Bitwarden apart from your other programs." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hält den Mac bei geschlossenem Deckel wach, kümmert sich ums WLAN und führt Bitwarden getrennt von deinen anderen Programmen aus."
+          }
+        }
+      }
+    },
+    "Keeps the workspace's keys and disk and runs Bitwarden apart from your other programs. Also keeps the Mac awake with the lid closed and looks after Wi-Fi." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwahrt die Schlüssel und die Festplatte des Arbeitsplatzes und führt Bitwarden getrennt von deinen anderen Programmen aus. Hält außerdem den Mac bei geschlossenem Deckel wach und kümmert sich ums WLAN."
           }
         }
       }
@@ -2727,7 +2816,18 @@
         }
       }
     },
+    "Needed for the workspace, for Bitwarden and to keep the Mac awake with the lid closed. macOS asks you once to allow it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nötig für den Arbeitsplatz, für Bitwarden und um den Mac bei geschlossenem Deckel wach zu halten. macOS fragt dich einmal, ob du ihn erlaubst."
+          }
+        }
+      }
+    },
     "Needed to keep the Mac awake with the lid closed and for Bitwarden. macOS asks you once to allow it." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3249,6 +3349,7 @@
       }
     },
     "Only with the lid closed. With the lid open everything stays as you set it in macOS." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4569,6 +4670,7 @@
       }
     },
     "Switch the hotspot on on your iPhone and the Mac connects; switch it off and the Mac stays disconnected. Meanwhile it keeps looking for known Wi-Fi." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4644,6 +4746,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das ist keine E-Mail-Adresse."
+          }
+        }
+      }
+    },
+    "The background helper doesn't answer." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrunddienst antwortet nicht."
           }
         }
       }
@@ -4816,6 +4928,7 @@
       }
     },
     "The Mac joins your hotspot by itself and switches it on when there's no Wi-Fi. That uses more energy, mostly your iPhone's." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4954,6 +5067,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das Fenster des Arbeitsplatzes öffnet sich von selbst. Warte, bis dort die Systemeinstellungen bei „Teilen“ erscheinen. Die Leiste oben sagt dir Bescheid."
+          }
+        }
+      }
+    },
+    "The workspace's disk isn't with the helper." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Festplatte des Arbeitsplatzes liegt nicht beim Hintergrunddienst."
           }
         }
       }
@@ -5127,6 +5250,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Code selbst eingeben"
+          }
+        }
+      }
+    },
+    "Under \"Ask to join hotspots\" choose Automatic (the Mac joins by itself) or Ask to Join (it asks first)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle bei „Fragen, ob Hotspots verbunden werden sollen“ entweder „Automatisch“ (der Mac verbindet sich von selbst) oder „Fragen“ (er fragt vorher)."
           }
         }
       }
@@ -5446,6 +5579,7 @@
       }
     },
     "When needed: you switch it on on the iPhone" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

@@ -464,7 +464,7 @@ private struct StepPage: View {
                     Divider()
                     HelperApprovalCard(reason: "For this aOS needs its background helper (it also keeps Bitwarden apart from your other programs). macOS asks you once:")
                     Divider()
-                    HotspotChoice(compact: true)
+                    HotspotHint(compact: true)
                 }
             }
         }
