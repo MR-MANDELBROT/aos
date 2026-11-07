@@ -36,6 +36,9 @@ struct ScreenRoute: Equatable, Sendable {
     var login: ScreenLogin
     /// The picture takes the iPhone's shape (the workspace), instead of turning the iPhone to the picture's.
     var followsWindowShape: Bool
+    /// "Sync Clipboard" starts on (the person's choice in the session's menu is remembered afterwards). Not for the
+    /// workspace: what the iPhone copies (a password, a code) doesn't go to the agent's Mac unasked.
+    var sharesClipboard: Bool { target == .mac }
 
     enum Problem: LocalizedError, Equatable {
         case noLogin
@@ -179,7 +182,8 @@ final class ScreenSession {
     /// Opens the session for a route whose tunnel listens on `port`.
     private func run(_ route: ScreenRoute, host: String = "127.0.0.1", port: Int) {
         let client = ScreenClientSession(screen: route.screenID, name: route.name, host: host, port: port,
-                                         login: route.login, followsWindowShape: route.followsWindowShape)
+                                         login: route.login, followsWindowShape: route.followsWindowShape,
+                                         sharesClipboard: route.sharesClipboard)
         client.onDisplayArea = { [weak self] area, _ in self?.pictureAreaChanged(area) }
         if route.target == .mac {
             client.onLoginRefused = { [weak self] in

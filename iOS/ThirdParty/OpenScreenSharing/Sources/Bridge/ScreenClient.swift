@@ -76,20 +76,24 @@ public final class ScreenClientSession: Identifiable {
     ///   - screen: which screen this is (what the session remembers is kept per screen: quality, clipboard, trusted key)
     ///   - followsWindowShape: the screen takes the iPhone's shape (aOS's display request), so the iPhone isn't turned
     ///     to the picture's orientation.
+    ///   - sharesClipboard: whether "Sync Clipboard" starts on for this screen (afterwards the person's choice in the
+    ///     session's menu is remembered). Off for the workspace: what the iPhone copies (a password, a code) shouldn't
+    ///     reach the agent's Mac unasked.
     public init(screen: UUID, name: String, host: String = "127.0.0.1", port: Int, login: ScreenLogin,
-                followsWindowShape: Bool) {
-        ScreenClientSession.prepare(screen: screen, name: name)
+                followsWindowShape: Bool, sharesClipboard: Bool = true) {
+        ScreenClientSession.prepare(screen: screen, name: name, sharesClipboard: sharesClipboard)
         controller = SessionController(route: SessionRoute(computerID: screen, name: name, host: host, port: port,
                                                            credentials: login.credentials,
                                                            followsWindowShape: followsWindowShape))
     }
 
     /// The screen's record in the store (what a session remembers per screen goes there), made once.
-    private static func prepare(screen: UUID, name: String) {
+    private static func prepare(screen: UUID, name: String, sharesClipboard: Bool) {
         let store = ComputerStore.shared
         guard store.computer(screen) == nil else { return }
         var computer = Computer(name: name, address: ComputerAddress(host: "127.0.0.1"))
         computer.id = screen
+        computer.sharesClipboard = sharesClipboard
         _ = try? store.save(computer) { _ in }
     }
 
@@ -109,6 +113,8 @@ public final class ScreenClientSession: Identifiable {
     public var pictureSize: CGSize { controller.imageSize }
     /// The server is a Mac with Apple's screen sharing (not a plain VNC server).
     public var speaksApple: Bool { controller.info.dialect == .apple }
+    /// "Sync Clipboard" is on.
+    public var sharesClipboard: Bool { controller.clipboardSharing }
 
     /// The area the picture is shown in (points) and the screen's scale, whenever it changes.
     public var onDisplayArea: ((CGSize, CGFloat) -> Void)? {
@@ -125,9 +131,19 @@ public final class ScreenClientSession: Identifiable {
         }
     }
 
-    /// Ends the session (the view calls this too, from its close button).
+    /// The session ended: closed here, or from its own close button or after a failure.
+    public private(set) var isClosed = false
+
+    /// Ends the session (once).
     public func close() {
+        guard !isClosed else { return }
+        isClosed = true
         controller.close()
+    }
+
+    /// The session closed itself (its close button, the alert after a failure).
+    fileprivate func closedBySession() {
+        isClosed = true
     }
 
     /// Zooms onto a region of the picture (its pixels), as for a help request.
@@ -155,7 +171,10 @@ public struct ScreenClientView: View {
     }
 
     public var body: some View {
-        SessionView(controller: session.controller, hasOwnWindow: false, onClose: onClose)
+        SessionView(controller: session.controller, hasOwnWindow: false) { [session, onClose] in
+            session.closedBySession()
+            onClose()
+        }
             .overlay {
                 if !tutorials.isEmpty {
                     SessionTutorialView(pages: tutorials) { tutorials = [] }
