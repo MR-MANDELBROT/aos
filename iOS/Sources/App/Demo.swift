@@ -68,16 +68,6 @@ enum Demo {
         ScreenPictures.shared = ScreenPictures(directory: nil)
         let server = MockCompanionServer()
         connection.startDemo(server)
-        // The cards' last pictures
-        // (in the shape of an iPhone 17 Pro held upright while there is no window yet)
-        let window = ScreenSession.currentArea(resolutionScale: 1).points
-        let area = window == .zero ? CGSize(width: 402, height: 812) : window
-        if let jpeg = workspacePicture(fitting: area).flatMap(jpeg) {
-            ScreenPictures.shared.save(jpeg, for: ScreenRoute.screenID(.workspace, mac: connection.mac))
-        }
-        if let jpeg = macPicture().flatMap(jpeg) {
-            ScreenPictures.shared.save(jpeg, for: ScreenRoute.screenID(.mac, mac: connection.mac))
-        }
         switch tab {
         case "terminal": model.tab = .terminal
         case "screen": model.tab = .screen
@@ -86,6 +76,18 @@ enum Demo {
         // Asked for as with a tap: the Screen tab connects it
         if screen?.hasPrefix("mac") == true { model.screenTarget = .mac }
         if screen == "workspace" { model.screenTarget = .workspace }
+        Task {
+            // The cards' last pictures, once the app is up (in the window's shape, or an iPhone 17 Pro's held upright)
+            try? await Task.sleep(for: .milliseconds(800))
+            let window = ScreenSession.currentArea(resolutionScale: 1).points
+            let area = window == .zero ? CGSize(width: 402, height: 812) : window
+            if let jpeg = workspacePicture(fitting: area).flatMap(jpeg) {
+                ScreenPictures.shared.save(jpeg, for: ScreenRoute.screenID(.workspace, mac: connection.mac))
+            }
+            if let jpeg = macPicture().flatMap(jpeg) {
+                ScreenPictures.shared.save(jpeg, for: ScreenRoute.screenID(.mac, mac: connection.mac))
+            }
+        }
         Task {
             // Once the demo's Mac answers (a slow first launch would otherwise send the request before the app listens)
             for _ in 0..<100 where connection.companionState != .ready {

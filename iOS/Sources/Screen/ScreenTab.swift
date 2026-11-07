@@ -257,13 +257,13 @@ struct ScreenTab: View {
         guard model.settings.screenMatchesPhone, let reason = model.macScreen.tunnelReason else { return nil }
         switch reason {
         case .noAddress, .unreachable:
-            return String(localized: "Your Mac came through SSH, in its own size: the iPhone's size needs the direct way to the Mac (the same Wi-Fi, or Tailscale with the VPN on).")
+            return String(localized: "Through SSH your Mac keeps its own size. In the iPhone's size it comes directly: in the same Wi-Fi, or with the Tailscale app's VPN on.")
         case .tailnetWithoutVPN:
-            return String(localized: "Your Mac came through aOS's Tailscale, in its own size: the iPhone's size needs the Tailscale app with its VPN on, or the same Wi-Fi.")
+            return String(localized: "Through aOS's Tailscale your Mac keeps its own size. In the iPhone's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi.")
         case .noHighPerformance:
-            return String(localized: "Your Mac came in its own size: its screen sharing offers no high performance (macOS 14 or later), which the iPhone's size needs.")
+            return String(localized: "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later).")
         case .failed:
-            return String(localized: "Your Mac came through SSH, in its own size: the direct way to it didn't work this time.")
+            return String(localized: "Your Mac came through SSH in its own size: the direct way didn't work this time.")
         }
     }
 
@@ -469,12 +469,19 @@ struct HelpBanner: View {
                 if !request.purpose.isEmpty {
                     Text(request.purpose).font(.subheadline).fixedSize(horizontal: false, vertical: true)
                 }
+                // Above the cards: the workspace to show, then done
+                if let show {
+                    HStack(spacing: 10) {
+                        Button("Show the workspace", action: show).buttonStyle(.glassProminent).tint(BrandColor.attention)
+                        Button("Done", action: done).buttonStyle(.glass)
+                    }
+                    .padding(.top, 8)
+                }
             }
             Spacer(minLength: 0)
-            if let show {
-                Button("Show", action: show).buttonStyle(.glassProminent).tint(BrandColor.attention)
+            if show == nil {
+                Button("Done", action: done).buttonStyle(.glassProminent).tint(BrandColor.attention)
             }
-            Button("Done", action: done).buttonStyle(.glass)
         }
         .padding(14)
         .glassEffect(.regular.tint(BrandColor.attention.opacity(0.2)), in: RoundedRectangle(cornerRadius: 22, style: .continuous))

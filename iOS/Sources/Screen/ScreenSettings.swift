@@ -21,7 +21,7 @@ struct ScreenSettingsPage: View {
             } header: {
                 Text("Display")
             } footer: {
-                Text("The workspace and your Mac take the iPhone's shape and follow it when you turn it. aOS resizes the workspace's display; your Mac gets a virtual display from Open Screen Sharing, which needs the direct way to the Mac with high performance: the same Wi-Fi, or Tailscale on both. Through SSH alone your Mac keeps its own size. A higher resolution gives more room and is less sharp.")
+                Text("Both screens take the iPhone's shape and turn with it: aOS resizes the workspace's display, your Mac gets a virtual display in Open Screen Sharing's high performance mode, directly in the same Wi-Fi or with the Tailscale app's VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness.")
             }
         }
     }
