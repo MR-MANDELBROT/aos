@@ -1,5 +1,6 @@
 import AOSRFB
 import Foundation
+import ScreenClient
 import Testing
 @testable import aOS
 
@@ -14,10 +15,14 @@ struct EndToEndTests {
     @Test func pairServeAnswerAndWatch() async throws {
         let key = try DeviceKey.loadOrCreate()  // the app's own key, in the simulator's keychain
         let started = ContinuousClock.now
-        let rfb = try await FakeRFBServer.start(width: 80, height: 50)
+        // Screen sharing servers with Apple's account login: the workspace's and the Mac's
+        let rfb = try await FakeRFBServer.start(width: 80, height: 50, account: .init(username: "aos", password: "pw"))
+        let macRFB = try await FakeRFBServer.start(width: 96, height: 60, account: .init(username: "max", password: "richtig"))
         let companion = MockCompanionServer(keepsSecrets: true)
-        companion.update { $0.screens[.workspace] = ScreenEndpoint(host: "127.0.0.1", port: UInt16(rfb.port),
-                                                                   username: "aos", password: "pw") }
+        companion.update {
+            $0.screens[.workspace] = ScreenEndpoint(host: "127.0.0.1", port: UInt16(rfb.port), username: "aos", password: "pw")
+            $0.screens[.mac] = ScreenEndpoint(host: "127.0.0.1", port: UInt16(macRFB.port))
+        }
         let server = try await TestSSHServer.start(allowedKey: key, companion: companion)
         let code = Data((0..<16).map { _ in UInt8.random(in: 0...255) })
         let listener = try await FakePairingListener.start(code: code, behavior: .accept(user: "max",
@@ -25,7 +30,7 @@ struct EndToEndTests {
         let previousMacs = ConfigStore.loadMacs()
         defer {
             try? ConfigStore.saveMacs(previousMacs)
-            Task { await listener.stop(); await server.stop(); await rfb.stop() }
+            Task { await listener.stop(); await server.stop(); await rfb.stop(); await macRFB.stop() }
         }
 
         let link = PairingLink(macName: "Test Mac", hosts: ["192.0.2.1", "127.0.0.1"], pairingPort: UInt16(listener.port),
@@ -99,31 +104,51 @@ struct EndToEndTests {
         companion.emit(.mac(state: "available", detail: ""))
         try await waitUntil { connection.macAppProblem == nil }
 
-        // The workspace screen through the SSH connection, and a click on it
+        // The workspace screen: Open Screen Sharing's session connects to a loopback listener whose connections go
+        // through the SSH connection (direct-tcpip) to the workspace's screen sharing, with Apple's account login
         let screen = model.workspaceScreen
-        var options = ScreenOptions()
-        options.interval = 0.02
-        // The phone's viewer (iPhone 17 Pro upright, without the safe area): the workspace is asked for that shape
-        screen.viewerArea = CGSize(width: 402, height: 778)
-        await screen.start(mac: connection, login: nil, options: options)
-        try await waitUntil { screen.phase == .live }
+        // The iPhone's picture area (iPhone 17 Pro upright, without the top safe area): the workspace takes its shape
+        await screen.start(mac: connection, login: nil, options: ScreenOptions(), area: CGSize(width: 402, height: 812))
+        #expect(screen.phase == .running)
         // Its login came sealed to a one-time key the request carried (and signed)
         #expect(companion.received.contains { $0.op == "screen" && $0.fields["reply"]?.string?.count == 88 })
-        #expect(screen.size == CGSize(width: 80, height: 50))
-        #expect(companion.received.contains { $0.op == "display" && $0.fields["text"] == .string("1200x2322@2") })
-        #expect(screen.displayRequest == DisplayRequest(width: 1200, height: 2322, scale: 2))
-        screen.click(at: CGPoint(x: 30, y: 20))
-        try await waitUntil { rfb.log.pointerEvents.contains { $0.buttons == 1 && $0.x == 30 && $0.y == 20 } }
-        screen.type("Hi")
-        try await waitUntil { rfb.log.keyEvents.filter(\.down).map(\.keysym) == [0xffe1, 0x48, 0x69] }
-        // Beyond ASCII the workspace types it itself (companion "type"), in order after the keys before it
-        screen.type("Grüße")
-        try await waitUntil { companion.received.last?.op == "type" }
-        #expect(companion.received.last?.fields["text"] == .string("Grüße"))
-        #expect(rfb.log.keyEvents.filter(\.down).count == 3)
+        #expect(screen.route?.targetHost == "127.0.0.1" && screen.route?.targetPort == rfb.port)
+        #expect(screen.route?.login == .account(username: "aos", password: "pw"))
+        // ... asked for before the first picture, so it comes in the iPhone's shape
+        #expect(companion.received.contains { $0.op == "display" && $0.fields["text"] == .string("1200x2424@2") })
+        #expect(screen.displayRequest == DisplayRequest(width: 1200, height: 2424, scale: 2))
+        let client = try #require(screen.client)
+        client.start()  // the session's view does this when it appears
+        try await waitUntil(timeout: .seconds(30)) { client.state == .connected }
+        // The server got the sealed login, through the tunnel; the session is plain TCP (no high performance UDP)
+        #expect(rfb.log.receivedLogins.first?.username == "aos")
+        #expect(rfb.log.receivedLogins.first?.password == "pw")
+        #expect(screen.localPort != nil && screen.localPort != UInt16(rfb.port))
+        try await waitUntil(timeout: .seconds(10)) { rfb.log.updateCount > 0 }
         screen.stop()
+        #expect(screen.phase == .idle && screen.client == nil)
         // Stopping gives the workspace its own size back
         try await waitUntil { companion.received.last?.op == "display" && companion.received.last?.fields["text"] == .string("reset") }
+
+        // The Mac's own screen with an account it refuses: the session ends and the login form comes back
+        let displayRequests = companion.received.filter { $0.op == "display" }.count
+        let macScreen = model.macScreen
+        await macScreen.start(mac: connection, login: .init(username: "max", password: "falsch"), options: ScreenOptions(),
+                              area: .zero)
+        #expect(macScreen.route?.targetPort == macRFB.port && macScreen.route?.followsWindowShape == false)
+        try #require(macScreen.client).start()
+        try await waitUntil(timeout: .seconds(30)) { macScreen.phase == .needsLogin }
+        #expect(macScreen.loginProblem != nil)
+        #expect(macRFB.log.receivedLogins.first?.password == "falsch")
+        // ... and with the right one it connects
+        await macScreen.start(mac: connection, login: .init(username: "max", password: "richtig"), options: ScreenOptions(),
+                              area: .zero)
+        let macClient = try #require(macScreen.client)
+        macClient.start()
+        try await waitUntil(timeout: .seconds(30)) { macClient.state == .connected }
+        // The Mac's screen keeps its size (no display requests for it)
+        #expect(companion.received.filter { $0.op == "display" }.count == displayRequests)
+        macScreen.stop()
 
         // The Mac no longer has this iPhone's key (removed there, or paired before signing keys): when the
         // subscription ends, subscribing again gets "pair again", and the Mac card says so

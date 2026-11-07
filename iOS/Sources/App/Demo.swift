@@ -1,17 +1,23 @@
 #if DEBUG
+import AOSRFB
 import Foundation
+import ScreenClient
 import UIKit
 
 /// Sample data for screenshots and UI work: start the app with `-AOSDemo YES` (debug builds only).
 /// `-AOSDemoTab overview|terminal|screen` picks the tab, `-AOSDemoSheet signin|signin-code|signin-none|signin-locked|
 /// signin-off|approval|help|pairing|settings|lock|requests` opens a request or sheet. Nothing here touches the keychain
-/// or the network.
+/// or the network; the Screen tab's pictures come from a screen sharing server in the app (`DemoScreenServer`), shown
+/// with the real screen client.
 enum Demo {
     static var isRequested: Bool { UserDefaults.standard.bool(forKey: "AOSDemo") }
     static var tab: String? { UserDefaults.standard.string(forKey: "AOSDemoTab") }
     static var sheet: String? { UserDefaults.standard.string(forKey: "AOSDemoSheet") }
     /// `-AOSDemoUnpaired YES`: the welcome page.
     static var unpaired: Bool { UserDefaults.standard.bool(forKey: "AOSDemoUnpaired") }
+    /// `-AOSDemoScreen mac|mac-login|mac-login-keyboard`: the Screen tab on the Mac's screen, its login form, the form
+    /// with the keyboard up.
+    static var screen: String? { UserDefaults.standard.string(forKey: "AOSDemoScreen") }
     /// `-AOSScreenDirect HOST:PORT`: the workspace screen connects straight to a screen sharing server (the
     /// simulator reaches a workspace VM's address), with the login from the environment variables AOS_SCREEN_USER and
     /// AOS_SCREEN_PASSWORD. For testing the viewer against a real screensharingd.
@@ -52,6 +58,9 @@ enum Demo {
 
     @MainActor
     static func start(_ connection: MacConnection, model: AppModel) {
+        // The screen's settings and memory stay in memory (the Screen tab shows the demo's pictures with the real
+        // session, from a screen sharing server in the app: ScreenTab.start, DemoScreenServer).
+        ScreenClient.useMemoryStore()
         let server = MockCompanionServer()
         connection.startDemo(server)
         switch tab {
@@ -59,15 +68,7 @@ enum Demo {
         case "screen": model.tab = .screen
         default: model.tab = .overview
         }
-        if let direct = directScreen {
-            let env = ProcessInfo.processInfo.environment
-            model.workspaceScreen.startDirect(host: direct.host, port: direct.port, username: env["AOS_SCREEN_USER"] ?? "",
-                                              password: env["AOS_SCREEN_PASSWORD"] ?? "",
-                                              options: ScreenOptions(settings: model.settings, cellular: false))
-        } else if let image = workspacePicture() {
-            model.workspaceScreen.showDemo(image)
-        }
-        if let image = macPicture() { model.macScreen.showDemo(image) }
+        if screen?.hasPrefix("mac") == true { model.screenTarget = .mac }
         Task {
             try? await Task.sleep(for: .milliseconds(600))
             switch sheet {
@@ -98,9 +99,11 @@ enum Demo {
                                                   purpose: "Zählerstand eintragen",
                                                   expires: Date().addingTimeInterval(3 * 60), bitwarden: .unlocked)))
             case "help":
+                let captcha = workspaceLayout(fitting: ScreenTab.pictureArea()).captcha
                 server.emit(.help(HelpRequest(id: "help-1", agent: "Claude Code",
                                               purpose: "Bitte das Captcha auf der Anmeldeseite lösen",
-                                              region: .init(x: 470, y: 430, width: 340, height: 120))))
+                                              region: .init(x: captcha.minX, y: captcha.minY,
+                                                            width: captcha.width, height: captcha.height))))
             case "pairing": model.isPairingPresented = true
             case "lock": model.lock.lockForDemo()
             case "requests":
@@ -128,31 +131,55 @@ enum Demo {
 
     // MARK: Pictures
 
-    /// A workspace screen (1280x800): a browser with a sign-in page and a captcha.
-    static func workspacePicture() -> CGImage? {
-        render(width: 1280, height: 800) { ctx, size in
+    /// Where things are in the demo's workspace picture: its size in pixels, its scale (2: Retina), and the captcha
+    /// (pixels; the help request points at it).
+    struct WorkspaceLayout {
+        var pixels: CGSize
+        var scale: CGFloat
+        var card: CGRect
+        var captcha: CGRect { CGRect(x: (card.minX + 30) * scale, y: (card.minY + 270) * scale, width: 340 * scale, height: 100 * scale) }
+    }
+
+    /// The workspace in the iPhone's shape (as the real one is while the iPhone shows it), or 1280x800 at 1x.
+    static func workspaceLayout(fitting area: CGSize) -> WorkspaceLayout {
+        guard let request = DisplayRequest.fitting(points: area, retina: true) else {
+            return WorkspaceLayout(pixels: CGSize(width: 1280, height: 800), scale: 1,
+                                   card: CGRect(x: 440, y: 170, width: 400, height: 420))
+        }
+        let points = CGSize(width: CGFloat(request.width) / 2, height: CGFloat(request.height) / 2)
+        let card = CGRect(x: (points.width - 400) / 2, y: max(120, points.height * 0.22), width: 400, height: 420)
+        return WorkspaceLayout(pixels: CGSize(width: request.width, height: request.height), scale: 2, card: card)
+    }
+
+    /// A workspace screen: a browser with a sign-in page and a captcha.
+    static func workspacePicture(fitting area: CGSize = .zero) -> CGImage? {
+        let layout = workspaceLayout(fitting: area)
+        let size = CGSize(width: layout.pixels.width / layout.scale, height: layout.pixels.height / layout.scale)
+        return render(width: Int(size.width), height: Int(size.height), scale: layout.scale) { ctx, size in
             desktop(ctx, size, top: UIColor(red: 0.30, green: 0.32, blue: 0.88, alpha: 1),
                     bottom: UIColor(red: 0.70, green: 0.73, blue: 1, alpha: 1))
-            let window = CGRect(x: 140, y: 70, width: 1000, height: 660)
+            let card = layout.card
+            let window = CGRect(x: min(140, size.width * 0.04), y: 50, width: size.width - 2 * min(140, size.width * 0.04),
+                                height: size.height - 90)
             browserWindow(ctx, window, url: "www.amazon.de/ap/signin")
-            let card = CGRect(x: 440, y: 170, width: 400, height: 420)
             ctx.setFillColor(UIColor.white.cgColor)
             ctx.addPath(UIBezierPath(roundedRect: card, cornerRadius: 12).cgPath)
             ctx.fillPath()
-            text("Anmelden", at: CGPoint(x: 470, y: 195), size: 28, weight: .bold)
-            field(CGRect(x: 470, y: 260, width: 340, height: 44), "max@marquart.dev")
-            field(CGRect(x: 470, y: 320, width: 340, height: 44), "••••••••••••")
+            let x = card.minX + 30, y = card.minY
+            text("Anmelden", at: CGPoint(x: x, y: y + 25), size: 28, weight: .bold)
+            field(CGRect(x: x, y: y + 90, width: 340, height: 44), "max@marquart.dev")
+            field(CGRect(x: x, y: y + 150, width: 340, height: 44), "••••••••••••")
             ctx.setFillColor(UIColor(red: 1, green: 0.85, blue: 0.4, alpha: 1).cgColor)
-            ctx.addPath(UIBezierPath(roundedRect: CGRect(x: 470, y: 380, width: 340, height: 40), cornerRadius: 8).cgPath)
+            ctx.addPath(UIBezierPath(roundedRect: CGRect(x: x, y: y + 210, width: 340, height: 40), cornerRadius: 8).cgPath)
             ctx.fillPath()
-            text("Weiter", at: CGPoint(x: 612, y: 389), size: 17, weight: .semibold)
+            text("Weiter", at: CGPoint(x: x + 142, y: y + 219), size: 17, weight: .semibold)
             ctx.setStrokeColor(UIColor(white: 0.75, alpha: 1).cgColor)
             ctx.setLineWidth(1.5)
-            ctx.addPath(UIBezierPath(roundedRect: CGRect(x: 470, y: 440, width: 340, height: 100), cornerRadius: 6).cgPath)
+            ctx.addPath(UIBezierPath(roundedRect: CGRect(x: x, y: y + 270, width: 340, height: 100), cornerRadius: 6).cgPath)
             ctx.strokePath()
             ctx.setStrokeColor(UIColor(white: 0.45, alpha: 1).cgColor)
-            ctx.stroke(CGRect(x: 490, y: 474, width: 30, height: 30))
-            text("Ich bin kein Roboter", at: CGPoint(x: 534, y: 478), size: 17, weight: .regular)
+            ctx.stroke(CGRect(x: x + 20, y: y + 304, width: 30, height: 30))
+            text("Ich bin kein Roboter", at: CGPoint(x: x + 64, y: y + 308), size: 17, weight: .regular)
         }
     }
 
@@ -174,9 +201,10 @@ enum Demo {
         }
     }
 
-    private static func render(width: Int, height: Int, draw: (CGContext, CGSize) -> Void) -> CGImage? {
+    /// `width` and `height` in points, `scale` pixels per point.
+    private static func render(width: Int, height: Int, scale: CGFloat = 1, draw: (CGContext, CGSize) -> Void) -> CGImage? {
         let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
+        format.scale = scale
         let size = CGSize(width: width, height: height)
         let image = UIGraphicsImageRenderer(size: size, format: format).image { context in draw(context.cgContext, size) }
         return image.cgImage
