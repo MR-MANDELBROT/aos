@@ -11,17 +11,17 @@ struct TerminalActivityAttributes: ActivityAttributes {
         struct Item: Codable, Hashable, Identifiable {
             /// The terminal (TerminalSession.Target's key).
             var id: String
-            /// The computer: the Mac's name or the host's.
+            /// The Mac's name.
             var title: String
             /// The shell is held on the Mac and survives the connection.
             var held: Bool
-            /// connected, reconnecting, detached
+            /// connected, reconnecting
             var state: String
             var since: Date?
         }
 
         var items: [Item]
-        /// What keeps the app running in the background now: "time" (iOS's background time), "location", or nil.
+        /// What keeps the app running in the background now: "location", or nil.
         var keptBy: String?
     }
 }

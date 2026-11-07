@@ -97,7 +97,7 @@ private struct LockScreenView: View {
     }
 }
 
-/// What keeps the terminal going: iOS's background time, the location option, or (stale) only the Mac.
+/// What keeps the terminal going: the location option, or (stale) only the Mac.
 private struct KeptBy: View {
     let keptBy: String?
     let isStale: Bool
@@ -108,8 +108,6 @@ private struct KeptBy: View {
                 Text("Paused")
             } else if keptBy == "location" {
                 Label("Location", systemImage: "location.fill")
-            } else if keptBy == "time" {
-                Label("In the background", systemImage: "clock")
             } else {
                 Text("Open")
             }
@@ -144,7 +142,7 @@ private struct SessionRow: View {
     }
 
     private var dot: Color {
-        if isStale || item.state == "detached" { return .gray }
+        if isStale { return .gray }
         return item.state == "connected" ? Palette.mint : .orange
     }
 
@@ -155,8 +153,6 @@ private struct SessionRow: View {
         switch item.state {
         case "connected":
             return item.held ? String(localized: "Connected, kept on the Mac") : String(localized: "Connected")
-        case "detached":
-            return String(localized: "Detached, keeps running on the Mac")
         default:
             return item.held ? String(localized: "Reconnecting, kept on the Mac") : String(localized: "Reconnecting")
         }

@@ -21,8 +21,6 @@ final class AppSettings {
     var terminalSwipeArrows: Bool { didSet { defaults.set(terminalSwipeArrows, forKey: "terminalSwipeArrows") } }
     /// The open terminals in a Live Activity (Lock Screen, Dynamic Island).
     var terminalLiveActivity: Bool { didSet { defaults.set(terminalLiveActivity, forKey: "terminalLiveActivity") } }
-    /// iOS's continued processing task while a terminal is open (more time in the background, with iOS's progress).
-    var terminalBackgroundTime: Bool { didSet { defaults.set(terminalBackgroundTime, forKey: "terminalBackgroundTime") } }
     /// The location service keeps the app running in the background while a terminal is open (costs battery).
     var terminalKeepAliveLocation: Bool { didSet { defaults.set(terminalKeepAliveLocation, forKey: "terminalKeepAliveLocation") } }
 
@@ -46,7 +44,8 @@ final class AppSettings {
         terminalArrowKeys = TerminalArrowKeys(rawValue: defaults.string(forKey: "terminalArrowKeys") ?? "") ?? .pad
         terminalSwipeArrows = bool("terminalSwipeArrows", true)
         terminalLiveActivity = bool("terminalLiveActivity", true)
-        terminalBackgroundTime = bool("terminalBackgroundTime", true)
+        // An option of an earlier version (iOS's continued processing task), gone.
+        defaults.removeObject(forKey: "terminalBackgroundTime")
         terminalKeepAliveLocation = bool("terminalKeepAliveLocation", false)
         matchWorkspaceShape = bool("matchWorkspaceShape", true)
         retinaWorkspace = bool("retinaWorkspace", true)

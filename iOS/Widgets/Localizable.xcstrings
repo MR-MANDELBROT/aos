@@ -41,16 +41,6 @@
         }
       }
     },
-    "Detached, keeps running on the Mac" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abgekoppelt, läuft auf dem Mac weiter"
-          }
-        }
-      }
-    },
     "End" : {
       "localizations" : {
         "de" : {
@@ -77,16 +67,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beendet eine Terminalsitzung von aOS. Auf dem Mac endet auch ihre Shell."
-          }
-        }
-      }
-    },
-    "In the background" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Im Hintergrund"
           }
         }
       }
