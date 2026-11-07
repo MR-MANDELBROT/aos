@@ -39,6 +39,8 @@ public final class WorkspaceController {
     var signingIn = false
     /// The paired phones' signing keys and the checks on every request from a phone.
     public let phones: CompanionGate
+    /// The phone's Overview: power and settings the app owns (Companion/CompanionControl.swift).
+    public weak var macControls: MacControls?
 
     public init(paths: Paths, bitwarden: BitwardenVault? = nil, phoneKeys: PhoneKeyStore = KeychainPhoneKeys()) {
         self.paths = paths
@@ -50,9 +52,13 @@ public final class WorkspaceController {
         self.bitwarden.lockHours = settings.bitwardenLockHours
         host.onDisplayChange = { [weak self] in self?.displayChanged() }
         host.onPhaseChange = { [weak self] phase in
+            guard let self else { return }
             // The idle time counts from the start, not from the app's launch.
-            if phase == .running { self?.lastActivity = Date() }
-            self?.onChange?()
+            if phase == .running { self.lastActivity = Date() }
+            // The phone's Overview follows the workspace without waiting for its next status.
+            self.companion.post(CompanionEvent(event: "workspace",
+                                               state: CompanionControl.workspaceState(phase, leased: self.lease != nil)))
+            self.onChange?()
         }
         self.bitwarden.onOffersChanged = { [weak self] in
             Task { @MainActor in await self?.refreshSignInOffers() }

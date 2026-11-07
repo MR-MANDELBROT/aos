@@ -240,7 +240,8 @@ extension WorkspaceController {
         case "companion.hello":
             companion.seen(device: r.device)
             let info: [String: Any] = ["mac": Host.current().localizedName ?? "Mac",
-                                       "aos": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"]
+                                       "aos": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev",
+                                       "features": CompanionControl.features]
             return json(r.id, info)
         case "companion.status":
             companion.seen(device: r.device)
@@ -298,6 +299,9 @@ extension WorkspaceController {
         case "help.done", "approval.answer":
             if let error = onCompanionAnswer?(r) { return .failure(r.id, error) }
             return AgentResponse(id: r.id, ok: true, text: "ok")
+        case _ where CompanionControl.ops.contains(r.op):
+            // The Mac and aOS on the phone's Overview (Companion/CompanionControl.swift).
+            return await handleControl(r)
         default:
             return .failure(r.id, "unknown companion operation \(r.op)")
         }
