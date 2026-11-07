@@ -5,6 +5,8 @@
 #                                             arm64); unsigned (the Xcode step "aos-tailnet" signs it)
 #   Tailnet/build.sh ios <output .xcframework>  Tailnetkit for the iPhone app (gomobile bind; device and simulator)
 #   Tailnet/build.sh test [go test flags]     the tests (Tailscale's test coordination server, no account)
+#   Tailnet/build.sh testnet                  a whole tailnet on 127.0.0.1 for the iPhone's end-to-end test
+#                                             (iOS/Tools/test-tailnet.sh); prints its admin URL, runs until stdin ends
 #
 # The build tags leave out every Tailscale feature that would offer something on the tailnet or take remote
 # configuration: the peer API server, Taildrop, Tailscale SSH, the web client, Taildrive, the peer relay server,
@@ -12,6 +14,9 @@
 # can't be built without them; the node never gets a serve configuration.) Binaries built without the tags refuse to
 # start (tailnet.BuiltForAOS).
 set -euo pipefail
+# Output paths are the caller's: relative ones count from where it was started.
+absolute() { case "$1" in /*) echo "$1" ;; *) echo "$PWD/$1" ;; esac; }
+[ -n "${2:-}" ] && OUT="$(absolute "$2")"
 cd "$(dirname "$0")"
 # Xcode's build steps run with a short PATH.
 export PATH="/opt/homebrew/bin:/usr/local/go/bin:/usr/local/bin:$HOME/go/bin:$PATH"
@@ -25,7 +30,7 @@ TAGS+=",ts_omit_netlog,ts_omit_logtail"
 
 case "${1:-}" in
   mac)
-    OUT="${2:?output file}"
+    : "${OUT:?output file}"
     mkdir -p "$(dirname "$OUT")"
     WORK="$(mktemp -d)"
     trap 'rm -rf "$WORK"' EXIT
@@ -45,7 +50,7 @@ case "${1:-}" in
     mv -f "$WORK/aos-tailnet" "$OUT"
     ;;
   ios)
-    OUT="${2:?output .xcframework}"
+    : "${OUT:?output .xcframework}"
     command -v gomobile >/dev/null || { echo "gomobile is missing: go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.13 github.com/sagernet/gomobile/cmd/gobind@v0.1.13" >&2; exit 1; }
     rm -rf "$OUT"
     mkdir -p "$(dirname "$OUT")"
@@ -56,8 +61,12 @@ case "${1:-}" in
     shift
     go test -tags "$TAGS" -count=1 "$@" ./...
     ;;
+  testnet)
+    go build -tags "$TAGS" -o "${TMPDIR:-/tmp}/aos-tailnet-testnet" ./cmd/aos-tailnet-testnet
+    exec "${TMPDIR:-/tmp}/aos-tailnet-testnet"
+    ;;
   *)
-    sed -n '2,12p' "$0" >&2
+    sed -n '2,10p' "$0" >&2
     exit 2
     ;;
 esac
