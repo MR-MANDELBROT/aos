@@ -148,7 +148,9 @@ The phone remembers the session's id (UserDefaults, per Mac) and counts the outp
 - Connection gone (app in the background, network change, Mac asleep): "Reconnecting … The session keeps running on
   the Mac." over the terminal, which keeps its contents. As soon as the app's Mac connection is up again (it reconnects
   by itself when the app comes back to the foreground and on network changes), the terminal attaches with `--have`
-  and gets exactly the missed output.
+  and gets exactly the missed output. A connection that only looks alive (TCP notices a dead peer late) is checked
+  when the app comes back and when the network path changes: a `status` with a 5 s timeout, and without an answer
+  the connection is closed and built again.
 - App killed and started again: the terminal attaches to the same session without `--have`: reset, the modes in
   effect, the last 256 KB of output (scrollback 2000 lines) and the program redraws itself.
 - Taken over by another device, the shell exited, the session ended: said plainly, with "Open It Here" or "New
