@@ -59,7 +59,7 @@ struct SettingsView: View {
 
                 Section {
                     NavigationLink {
-                        ScreenSettingsForm()
+                        ScreenSettingsPage()
                     } label: {
                         Label("Screen", systemImage: "display")
                     }
@@ -80,6 +80,11 @@ struct SettingsView: View {
                         AboutView()
                     } label: {
                         Label("What is where", systemImage: "info.circle")
+                    }
+                    NavigationLink {
+                        AcknowledgementsView()
+                    } label: {
+                        Label("Acknowledgements", systemImage: "heart.text.square")
                     }
                     LabeledContent("Version", value: MacConnection.appVersion)
                 }
