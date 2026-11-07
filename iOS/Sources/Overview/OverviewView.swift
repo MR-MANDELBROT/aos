@@ -703,11 +703,17 @@ struct AOSCard: View {
                         }
                     }
                 }
+                // What to do, under the row that asks for the sign-in (the session's first).
+                let sessionSignIn = connection.macStatus?.session.map { $0.enabled && $0.state == "needsLogin" } ?? false
+                if sessionSignIn {
+                    SignInHelp { model.openNewTerminal() }
+                }
                 if let chats = connection.macStatus?.newChats {
                     OverviewRow(symbol: "plus.bubble", title: String(localized: "New chats from the Claude app"),
-                                detail: Self.chatsText(chats))
+                                detail: Self.chatsText(chats),
+                                detailTint: chats.enabled && chats.state == "needsLogin" ? .orange : .secondary)
                 }
-                if Self.needsSignIn(connection.macStatus) {
+                if !sessionSignIn, Self.needsSignIn(connection.macStatus) {
                     SignInHelp { model.openNewTerminal() }
                 }
                 if let kept = connection.macStatus?.kept {
@@ -835,7 +841,7 @@ struct WelcomeView: View {
                     WelcomePoint(symbol: "person.badge.key", title: "Sign-ins for your agent",
                                  text: "Your agent asks, you approve with Face ID. It never sees the password.")
                     WelcomePoint(symbol: "apple.terminal", title: "Terminal",
-                                 text: "SSH to your Mac and to other computers.")
+                                 text: "Your Mac's shells, which keep running when the connection drops.")
                     WelcomePoint(symbol: "display", title: "Screen",
                                  text: "Your Mac and the workspace, live, with touch and keyboard.")
                 }

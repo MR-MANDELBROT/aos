@@ -6302,6 +6302,7 @@
       }
     },
     "SSH to your Mac and to other computers." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8596,6 +8597,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm deines Macs"
+          }
+        }
+      }
+    },
+    "Your Mac's shells, which keep running when the connection drops." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Shells deines Macs, die weiterlaufen, wenn die Verbindung abreißt."
           }
         }
       }

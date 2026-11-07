@@ -193,7 +193,8 @@ DE = {
     'Right away': 'Sofort',
     'SSH key': 'SSH-Schlüssel',
     'SSH key of this iPhone': 'SSH-Schlüssel dieses iPhones',
-    'SSH to your Mac and to other computers.': 'SSH zu deinem Mac und zu anderen Rechnern.',
+    "Your Mac's shells, which keep running when the connection drops.":
+        'Die Shells deines Macs, die weiterlaufen, wenn die Verbindung abreißt.',
     "SSH with this iPhone's key (Settings > SSH key of this iPhone) or a password kept behind Face ID.":
         'SSH mit dem Schlüssel dieses iPhones (Einstellungen > SSH-Schlüssel dieses iPhones) oder mit einem Passwort hinter Face ID.',
     'Save': 'Sichern',
