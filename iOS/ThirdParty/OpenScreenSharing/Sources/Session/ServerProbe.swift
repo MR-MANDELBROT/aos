@@ -33,6 +33,8 @@ nonisolated struct ProbedServer: Hashable, Sendable {
 nonisolated struct LoginCheck: Sendable {
     var supportsHighPerformance: Bool
     var fingerprint: String
+    /// aOS: the security types the server offered and the one used (libsharing's LoginCheck.Security, aOS's patch).
+    var security = ""
 }
 
 nonisolated enum ServerProber {
@@ -84,7 +86,8 @@ nonisolated enum ServerProber {
                 guard check.errorCode == LibsharingErrorNone else {
                     return .failure(failure(code: check.errorCode, message: check.errorMessage, fingerprint: check.fingerprint))
                 }
-                return .success(LoginCheck(supportsHighPerformance: check.supportsHighPerformance, fingerprint: check.fingerprint))
+                return .success(LoginCheck(supportsHighPerformance: check.supportsHighPerformance, fingerprint: check.fingerprint,
+                                           security: check.security))
             }.value
         } onCancel: {
             request.value.cancel()

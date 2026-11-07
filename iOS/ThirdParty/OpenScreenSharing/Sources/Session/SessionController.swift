@@ -530,6 +530,7 @@ final class SessionController: Identifiable {
             remoteProtocol: route.remoteProtocol,
             platform: route.knownPlatform,
             trustedFingerprint: trustedFingerprint,
+            requiresTrustedKey: route.requiresTrustedKey,
             allowsUnverifiedLogin: allowsUnverifiedLogin,
             keyboardLayout: WindowsKeyboardLayout.current,
             clientName: route.remoteProtocol == .rdp || credentials.username.isEmpty ? Self.deviceName : credentials.username,
