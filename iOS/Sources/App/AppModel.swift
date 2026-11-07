@@ -230,6 +230,7 @@ final class AppModel {
 
     func unpair(_ mac: PairedMac) {
         SecretStore.deleteScreenLogin(for: mac)
+        ScreenSession.forget(mac)
         try? saveMacs(macs.filter { $0.id != mac.id })
         macScreen.stop()
         workspaceScreen.stop()
