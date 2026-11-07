@@ -56,6 +56,8 @@ targets:
     platform: iOS
     sources:
       - path: Sources
+      # Shared with the widget extension: the Live Activity of the open terminals.
+      - path: Shared
       - path: Resources
         excludes:
           - "AppIcon.icon"
@@ -63,6 +65,8 @@ targets:
         type: file
         buildPhase: resources
     dependencies:
+      - target: AOSWidgets
+        embed: true
       - package: AOSKit
         product: AOSRFB
       - package: Citadel
@@ -91,11 +95,27 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        # aos-pair:// links from the Mac's QR code (the Camera app offers to open them in aOS)
+        # aos-pair:// links from the Mac's QR code (the Camera app offers to open them in aOS); aos://terminal/...
+        # from the Live Activity
         CFBundleURLTypes:
           - CFBundleURLName: dev.marquart.aos.pair
             CFBundleURLSchemes:
               - aos-pair
+          - CFBundleURLName: dev.marquart.aos.ios.links
+            CFBundleURLSchemes:
+              - aos
+        # The open terminals on the Lock Screen and in the Dynamic Island. Frequent updates only raise the budget for
+        # updates by push, which aOS doesn't use (no server of its own); kept as asked for (iOS/NOTES.md).
+        NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: true
+        # iOS's continued processing task while a terminal is open (TerminalKeepAlive); location only with the
+        # option "Keep alive with location" (off by default).
+        BGTaskSchedulerPermittedIdentifiers:
+          - dev.marquart.aos.ios.terminal.*
+        UIBackgroundModes:
+          - location
+          - processing
+        NSLocationWhenInUseUsageDescription: "With “Keep alive with location” on, the location service keeps your terminal running in the background. aOS doesn't use, keep or send your location."
         NSLocalNetworkUsageDescription: "aOS connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted."
         NSBonjourServices:
           - _aos-pair._tcp
@@ -109,6 +129,28 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_UILaunchScreen_Generation: NO
+
+  # The Live Activity of the open terminals (Widgets/, with Shared/ from the app).
+  AOSWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: Shared
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: aOS
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.aos.ios.widgets
+        PRODUCT_NAME: AOSWidgets
+        SKIP_INSTALL: YES
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: ""
 
   AOSTests:
     type: bundle.unit-test

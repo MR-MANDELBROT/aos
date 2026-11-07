@@ -61,6 +61,16 @@ final class AppSettings {
     var terminalFontSize: Double { didSet { defaults.set(terminalFontSize, forKey: "terminalFontSize") } }
     /// The screen stays on while a terminal is open and connected.
     var terminalKeepsScreenOn: Bool { didSet { defaults.set(terminalKeepsScreenOn, forKey: "terminalKeepsScreenOn") } }
+    /// The arrows in the middle of the key bar: the swipe pad or four keys.
+    var terminalArrowKeys: TerminalArrowKeys { didSet { defaults.set(terminalArrowKeys.rawValue, forKey: "terminalArrowKeys") } }
+    /// Swiping on the terminal sends arrow keys (TerminalSwipe).
+    var terminalSwipeArrows: Bool { didSet { defaults.set(terminalSwipeArrows, forKey: "terminalSwipeArrows") } }
+    /// The open terminals in a Live Activity (Lock Screen, Dynamic Island).
+    var terminalLiveActivity: Bool { didSet { defaults.set(terminalLiveActivity, forKey: "terminalLiveActivity") } }
+    /// iOS's continued processing task while a terminal is open (more time in the background, with iOS's progress).
+    var terminalBackgroundTime: Bool { didSet { defaults.set(terminalBackgroundTime, forKey: "terminalBackgroundTime") } }
+    /// The location service keeps the app running in the background while a terminal is open (costs battery).
+    var terminalKeepAliveLocation: Bool { didSet { defaults.set(terminalKeepAliveLocation, forKey: "terminalKeepAliveLocation") } }
 
     // MARK: Screen
 
@@ -97,6 +107,11 @@ final class AppSettings {
         autoLockMinutes = defaults.object(forKey: "autoLockMinutes") as? Int ?? 5
         terminalFontSize = defaults.object(forKey: "terminalFontSize") as? Double ?? 13
         terminalKeepsScreenOn = defaults.object(forKey: "terminalKeepsScreenOn") as? Bool ?? false
+        terminalArrowKeys = TerminalArrowKeys(rawValue: defaults.string(forKey: "terminalArrowKeys") ?? "") ?? .pad
+        terminalSwipeArrows = bool("terminalSwipeArrows", true)
+        terminalLiveActivity = bool("terminalLiveActivity", true)
+        terminalBackgroundTime = bool("terminalBackgroundTime", true)
+        terminalKeepAliveLocation = bool("terminalKeepAliveLocation", false)
         frameRate = FrameRate(rawValue: defaults.string(forKey: "frameRate") ?? "") ?? .smooth
         inputMode = InputMode(rawValue: defaults.string(forKey: "inputMode") ?? "") ?? .trackpad
         screenQuality = ScreenQuality(rawValue: defaults.string(forKey: "screenQuality") ?? "") ?? .automatic
