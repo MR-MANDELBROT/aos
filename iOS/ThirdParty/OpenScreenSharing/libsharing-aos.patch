@@ -1,0 +1,237 @@
+aOS's changes to Open Screen Sharing's Go library (libsharing), GPL-3.0 like Open Screen Sharing (LICENSE and COPYING
+next to this file). iOS/Tools/libsharing.sh applies them to a copy of the source before it builds
+Libsharing.xcframework; the checkout stays as it is. Made on 2026-11-07 against Max's fork of Open Screen Sharing
+(branch autofill-passwort, 8b19fc9). Each change is marked "aOS:" in the code.
+
+- internal/rfb/security_apple.go: Apple's RSA login (type 33) reports and checks the server's key before the SRP
+  exchange inside it too, not only before the plain login. screensharingd offers type 36 next to 33, so with Open
+  Screen Sharing's code a Mac never showed its key and a key learned through SSH couldn't pin a connection.
+- libsharing/types.go, session.go: SessionOptions.RequireTrustedKey: only the RSA login, and only with a server whose
+  key is TrustedFingerprint (no Kerberos, no Diffie-Hellman, no SRP without the key), for aOS's direct path to the
+  Mac.
+- libsharing/probe.go: LoginCheck.Security, the security types the server offered and the one used.
+- internal/rfb/aos_serverkey_test.go: tests of the first change (libsharing.sh runs them before building).
+
+diff -ruN a/internal/rfb/aos_serverkey_test.go b/internal/rfb/aos_serverkey_test.go
+--- a/internal/rfb/aos_serverkey_test.go
++++ b/internal/rfb/aos_serverkey_test.go
+@@ -0,0 +1,121 @@
++// aOS: tests of aOS's change to Apple's RSA login (security_apple.go, authenticateAppleRSA): the server's key is
++// checked before the SRP exchange inside it as well. Part of aOS's patch to Open Screen Sharing (GPL-3.0,
++// iOS/ThirdParty/OpenScreenSharing/libsharing-aos.patch in aOS).
++
++package rfb
++
++import (
++	"context"
++	"crypto/rand"
++	"crypto/rsa"
++	"crypto/sha256"
++	"crypto/x509"
++	"encoding/binary"
++	"encoding/hex"
++	"errors"
++	"io"
++	"net"
++	"strings"
++	"testing"
++	"time"
++)
++
++// aosAppleServer answers like screensharingd up to the key: RFB 003.889, security types 33 and 36, the RSA key on
++// request. Then it reads what the client sends next (nothing if the client stopped) and reports its first byte.
++func aosAppleServer(t *testing.T, key *rsa.PrivateKey) (string, <-chan []byte) {
++	t.Helper()
++	listener, err := net.Listen("tcp", "127.0.0.1:0")
++	if err != nil {
++		t.Fatal(err)
++	}
++	next := make(chan []byte, 1)
++	go func() {
++		defer listener.Close()
++		conn, err := listener.Accept()
++		if err != nil {
++			next <- nil
++			return
++		}
++		defer conn.Close()
++		conn.SetDeadline(time.Now().Add(5 * time.Second))
++		conn.Write([]byte("RFB 003.889\n"))
++		io.ReadFull(conn, make([]byte, 12))
++		conn.Write([]byte{2, byte(SecurityAppleRSA), byte(SecurityAppleSRP)})
++		// type 33 and the key request (a sized envelope: 01 00 "RSA1", kind 0, two zero bytes)
++		request := make([]byte, 15)
++		if _, err := io.ReadFull(conn, request); err != nil {
++			next <- nil
++			return
++		}
++		der, _ := x509.MarshalPKIXPublicKey(&key.PublicKey)
++		reply := binary.BigEndian.AppendUint32(nil, uint32(6+len(der)))
++		reply = append(reply, 1, 0, 0, 1)
++		reply = binary.BigEndian.AppendUint16(reply, uint16(len(der)))
++		conn.Write(append(reply, der...))
++		// What follows the key: the SRP identity (a type 33 envelope of kind 2), or nothing
++		conn.SetReadDeadline(time.Now().Add(1 * time.Second))
++		header := make([]byte, 12)
++		if _, err := io.ReadFull(conn, header); err != nil {
++			next <- nil
++			return
++		}
++		next <- header
++	}()
++	return listener.Addr().String(), next
++}
++
++func aosFingerprint(key *rsa.PrivateKey) string {
++	der, _ := x509.MarshalPKIXPublicKey(&key.PublicKey)
++	sum := sha256.Sum256(der)
++	return strings.ToUpper(hex.EncodeToString(sum[:]))
++}
++
++func aosLogin(address string, trusted string, seen *string) error {
++	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
++	defer cancel()
++	_, err := CheckLogin(ctx, Options{
++		Address:       address,
++		Username:      "max",
++		Password:      "secret",
++		SecurityTypes: []SecurityType{SecurityAppleRSA},
++		VerifyServerKey: func(fingerprint string) error {
++			*seen = fingerprint
++			if trusted != "" && !strings.EqualFold(fingerprint, trusted) {
++				return ErrServerKeyChanged
++			}
++			return nil
++		},
++	})
++	return err
++}
++
++func TestAOSAnotherKeyStopsTheLoginBeforeSRP(t *testing.T) {
++	key, _ := rsa.GenerateKey(rand.Reader, 2048)
++	other, _ := rsa.GenerateKey(rand.Reader, 2048)
++	address, next := aosAppleServer(t, key)
++	var seen string
++	err := aosLogin(address, aosFingerprint(other), &seen)
++	if !errors.Is(err, ErrServerKeyChanged) {
++		t.Fatalf("login with another trusted key: %v, want ErrServerKeyChanged", err)
++	}
++	if seen != aosFingerprint(key) {
++		t.Fatalf("seen fingerprint %q, want the server's", seen)
++	}
++	if sent := <-next; sent != nil {
++		t.Fatalf("the client went on after the key didn't match: % x", sent)
++	}
++}
++
++func TestAOSTheKeyIsReportedAndTheSRPExchangeFollows(t *testing.T) {
++	key, _ := rsa.GenerateKey(rand.Reader, 2048)
++	address, next := aosAppleServer(t, key)
++	var seen string
++	_ = aosLogin(address, aosFingerprint(key), &seen) // the fake server ends after the identity
++	if seen != aosFingerprint(key) {
++		t.Fatalf("seen fingerprint %q, want the server's (Open Screen Sharing reported none with SRP)", seen)
++	}
++	sent := <-next
++	if sent == nil || string(sent[6:10]) != "RSA1" || binary.BigEndian.Uint16(sent[10:12]) != 2 {
++		t.Fatalf("after a matching key the SRP identity should follow (an RSA1 envelope of kind 2), got % x", sent)
++	}
++}
+diff -ruN a/internal/rfb/security_apple.go b/internal/rfb/security_apple.go
+--- a/internal/rfb/security_apple.go
++++ b/internal/rfb/security_apple.go
+@@ -159,13 +159,16 @@
+ 	sum := sha256.Sum256(der)
+ 	fingerprint := strings.ToUpper(hex.EncodeToString(sum[:]))
+ 	h.logger.Debug("server RSA key", "bits", publicKey.N.BitLen(), "fingerprint", fingerprint)
+-	if !slices.Contains(h.info.SecurityTypes, SecurityAppleSRP) {
+-		if h.options.VerifyServerKey != nil {
+-			err = h.options.VerifyServerKey(fingerprint)
+-			if err != nil {
+-				return nil, err
+-			}
++	// aOS: the server's key is reported and checked before both ways of this login, also before the SRP exchange
++	// inside it (a server that also offers type 36). Open Screen Sharing checks it only before the plain login, so a
++	// Mac that offers SRP never showed its key, and a key learned through a trusted path couldn't pin a connection.
++	if h.options.VerifyServerKey != nil {
++		err = h.options.VerifyServerKey(fingerprint)
++		if err != nil {
++			return nil, err
+ 		}
++	}
++	if !slices.Contains(h.info.SecurityTypes, SecurityAppleSRP) {
+ 		return authenticateAppleRSAPlain(h, publicKey)
+ 	}
+ 	identity := srpIdentityMessage(h.options.Username)
+diff -ruN a/libsharing/probe.go b/libsharing/probe.go
+--- a/libsharing/probe.go
++++ b/libsharing/probe.go
+@@ -5,6 +5,7 @@
+ 	"net"
+ 	"slices"
+ 	"strconv"
++	"strings"
+ 
+ 	"github.com/nekohasekai/open-screen-sharing/internal/rfb"
+ )
+@@ -87,6 +88,10 @@
+ 
+ 	Fingerprint string
+ 
++	// aOS: the security types the server offered and the one used, for telling causes apart (e.g. "offered
++	// apple-rsa-srp(33) apple-srp(36), used apple-rsa-srp(33)").
++	Security string
++
+ 	ErrorCode    int32
+ 	ErrorMessage string
+ }
+@@ -113,5 +118,15 @@
+ 		code, message := classifyError(err)
+ 		return &LoginCheck{Fingerprint: fingerprint, ErrorCode: code, ErrorMessage: message}
+ 	}
+-	return &LoginCheck{SupportsHighPerformance: newServerInfo(info, options.Platform).SupportsHighPerformance, Fingerprint: fingerprint}
++	return &LoginCheck{SupportsHighPerformance: newServerInfo(info, options.Platform).SupportsHighPerformance, Fingerprint: fingerprint,
++		Security: securityText(info)}
++}
++
++// aOS: what LoginCheck.Security says.
++func securityText(info rfb.ServerInfo) string {
++	offered := make([]string, 0, len(info.SecurityTypes))
++	for _, securityType := range info.SecurityTypes {
++		offered = append(offered, securityType.String())
++	}
++	return "offered " + strings.Join(offered, " ") + ", used " + info.SecurityType.String()
+ }
+diff -ruN a/libsharing/session.go b/libsharing/session.go
+--- a/libsharing/session.go
++++ b/libsharing/session.go
+@@ -273,6 +273,13 @@
+ 	default:
+ 		return options, E.New("unknown login type ", o.LoginType)
+ 	}
++	// aOS: RequireTrustedKey (see SessionOptions).
++	if o.RequireTrustedKey {
++		if trusted == "" {
++			return options, E.New("rfb: no trusted server key for a connection that requires one")
++		}
++		options.SecurityTypes = []rfb.SecurityType{rfb.SecurityAppleRSA}
++	}
+ 	if options.Quality < rfb.QualityAdaptive || options.Quality > rfb.QualityLow {
+ 		return options, E.New("unknown quality ", o.Quality, "; it must be ", QualityAdaptive, " to ", QualityLow)
+ 	}
+diff -ruN a/libsharing/types.go b/libsharing/types.go
+--- a/libsharing/types.go
++++ b/libsharing/types.go
+@@ -118,6 +118,12 @@
+ 
+ 	TrustedFingerprint string
+ 
++	// aOS: only Apple's RSA login (type 33, with SRP inside when the server offers it), and only with a server whose
++	// key is TrustedFingerprint: no Kerberos, no Diffie-Hellman, no SRP without the key. For a connection that isn't
++	// already authenticated by its way (aOS's direct path to the Mac, outside its SSH tunnel), so nothing of the
++	// login reaches another server.
++	RequireTrustedKey bool
++
+ 	AllowUnverifiedLogin bool
+ 
+ 	KeyboardLayout int32
