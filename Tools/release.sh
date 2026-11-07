@@ -55,7 +55,7 @@ say "checking the signature"
 codesign --verify --deep --strict --verbose=2 "$APP" 2>&1 | tail -2
 codesign -dv "$APP" 2>&1 | grep -q "Authority=Developer ID Application: .*($TEAM)" || die "not signed with Developer ID ($TEAM)"
 codesign -d --entitlements - "$APP" 2>/dev/null | grep -q com.apple.security.virtualization || die "virtualization entitlement missing"
-for tool in aos-mcp aos-session; do
+for tool in aos-mcp aos-session aos-powerd aos-tailnet; do
   codesign -dv "$APP/Contents/MacOS/$tool" 2>&1 | grep -q "flags=.*runtime" || die "$tool lacks the hardened runtime"
 done
 
