@@ -286,39 +286,115 @@ concurrency, member import visibility). libsharing (Go) is `Libsharing.xcframewo
 `Tools/libsharing.sh` (gomobile bind like OSS's `make lib`, iPhone and simulator only; `--copy` takes the checkout's
 own build); `generate.sh` runs it when the framework is missing.
 
-**Left out**: the computer list and editor, discovery and availability, links, pairing with other devices, RDP (its
-Swift branches stay, aOS never opens one; the Go library still has it) and with it sending audio (no microphone code,
-no permission), the macOS app (its code stays compiled out),
-the server mode, updates, OSS's demo, the language picker (iOS has one per app), the fork's password fill panel, and
-"New Connection". High performance (video and audio over UDP) is off: only TCP goes through SSH.
+**Left out**: the computer list's editing (adding, editing, deleting, reordering, list layout), discovery and its
+availability monitor, links, pairing with other devices, RDP (its Swift branches stay, aOS never opens one; the Go
+library still has it) and with it sending audio (no microphone code, no permission), the macOS app (its code stays
+compiled out), the server mode, updates, OSS's demo, the language picker (iOS has one per app), the fork's password
+fill panel, and "New Connection".
 
-**aOS's changes in the module** (`aOS:`): `SessionRoute.init(computerID:name:host:port:credentials:followsWindowShape:)`
-with `managesLogin = false` (never OSS's sign-in sheet, no saved user name or password, a refused login goes to
-`onLoginRefused`); no thumbnails (aOS keeps no pictures of the screens); `onDisplayArea` (the area OSS fits the picture
-into); `followsWindowShape` (the iPhone isn't turned to the picture); `RemoteScreenUIView.focus(on:)` for help
-requests; caches in `Caches/Screen`; an in-memory store for the demo; the settings page; "Controls" for OSS's
-"Control" menu (one string table: "Control" is the terminal's key). `Bridge/ScreenClient.swift` is aOS's interface
-(`ScreenClientSession`, `ScreenClientView`, `ScreenClientSettings`, `ScreenCommands`, orientation, license texts).
+**aOS's changes in the module** (`aOS:`): `SessionRoute.init(computerID:name:host:port:credentials:followsWindowShape:
+usesHighPerformance:)` with `managesLogin = false` (never OSS's sign-in sheet, no saved user name or password, a refused
+login goes to `onLoginRefused`); the thumbnail goes to aOS (`onThumbnail`) instead of OSS's database; `onDisplayArea`
+(the area, the screen's scale and the resolution); `followsWindowShape` (aOS shapes the workspace's display itself);
+`picturesFollowWindow` (a picture in the window's shape, virtual display or aOS's display, follows the iPhone in every
+orientation; OSS turns the iPhone to landscape for a Mac's virtual display); OSS's resolution command for the
+workspace too, `onResolutionScale`; `onDirectPathFailed` (below); `RemoteScreenUIView.focus(on:)` for help requests;
+caches in `Caches/Screen`; an in-memory store for the demo; the settings page; "Controls" for OSS's "Control" menu
+(one string table: "Control" is the terminal's key). Taken in addition on 2026-11-07: `Home/ComputerCard.swift` (with
+`ComputerAvailability` from its availability monitor) and `Model/DeviceAppearance.swift`. `Bridge/ScreenClient.swift`
+is aOS's interface (`ScreenClientSession`, `ScreenClientView`, `ScreenCard`, `ScreenClientSettings`, `ScreenCommands`,
+`displaySize`, `checkServer`, `record(of:)`, orientation, license texts).
 
-**A session** (`ScreenSession`, `ScreenRoute`): one per screen, one at a time.
+**The Screen tab** (`ScreenTab`): OSS's selection view with two cards, the workspace and the Mac: the last picture
+(16:10, OSS's thumbnail; the device's icon before there is one), a dot that is green while the screen can be reached
+(the Mac: connected; the workspace: connected and `open` or `running`), the name and one line (the workspace's state;
+the Mac's "Last connected ..."). One column on an iPhone held upright, two otherwise.
+- **Nothing connects by itself**: a tap on a card connects that screen (the other one lets go). Taps elsewhere count
+  too: the overview's "Show the screen" and a help request opened in the overview set `screenTarget`, which asks the
+  tab once (`screenRequest`). A help request that arrives while the app is open only opens the tab, with a banner
+  ("Show the workspace", "Done"); the workspace connects on that tap.
+- A closed workspace: its card asks "Start and show" (`workspace.start`, then it connects once it runs); under the card
+  Start or Close (`workspace.start`, `workspace.stop`, signed, with the overview's confirmation while an agent uses
+  it). The state as the overview reads it (mac.status, else the older status), polled every 15 s while the cards are
+  on screen.
+- Failures stay as a banner above the cards until dismissed or the next tap. The Mac's login form is a sheet ("Save
+  and connect" above the keyboard); the card's context menu has "Change login".
+- **Face ID: once per connect.** The Mac's login is read once per tap (Face ID, then the keychain item with that same
+  authentication, `ScreenSession.unlockLogin`) and stays in memory for that connect only: OSS reconnecting, the tunnel
+  taking over from the direct path and the return from the background ask no more; a login just typed into the form
+  is used as it is (no Face ID). Closing the screen drops it. What caused the many prompts before: the tab started
+  sessions by itself (`.task` when it appeared, and again on every change of the connection's or the companion's
+  state while a session had failed), and each Face ID makes the app inactive and active again, which makes the
+  connection check itself (`MacConnection.probe()`), whose reconnect started the next session, with the next Face ID.
+- The background: after 25 s (`AppModel`) the screen lets go (`pause()`: OSS's session closes and keeps its last
+  picture, the tunnel and the workspace's display go) and comes back with the app (`resume(with:)`: the same screen and
+  login once the Mac is connected again).
+- **The last pictures** (`ScreenPictures`): one JPEG per screen in Application Support/Screen Pictures, written with
+  complete file protection (readable only while the iPhone is unlocked), the folder out of backups, deleted when the
+  Mac is unpaired. In the demo in memory only.
+
+**One setting for both screens** (Settings > Screen > Display): "Screens in the iPhone's size" (on by default) and
+OSS's resolution (Native, 1.25x to 2x). Both screens are sized the same way, OSS's `VirtualDisplayMode`: the picture
+area's shape (the window without the top safe area upright, without the sides on its side), grown until the short
+side has 525 and the long one 800 points, times the resolution, 2 pixels per point on a Retina screen (iPhone 17 Pro
+upright: 1050x2120 pixels, on its side 1958x1050). The workspace gets it through aOS's `display` op (before connecting,
+then from OSS's measured area; renewed every 20 s, `reset` when it stops); the Mac through OSS's virtual display. Both
+pictures then fill the screen and follow the iPhone when it turns (same toolbar: OSS's resolution command instead of
+fit and fill). A screen in its own size (the setting off, or the Mac through SSH) turns the iPhone to it as OSS does,
+with its toolbar in the letterbox. The resolution chosen in a session becomes the setting.
+
+**A session** (`ScreenSession`, `ScreenRoute`, `ScreenPath`): one per screen, one at a time.
 - Workspace: `CompanionClient.workspaceLogin()` (sealed, `ScreenSeal`) gives the VM's address, port and account;
   `LocalForwarder` listens on 127.0.0.1 (random port) and opens a direct-tcpip channel per connection to that address
   through the SSH connection (the current one: a session survives the Mac's connection being rebuilt, OSS reconnects
-  by itself); OSS's session connects to 127.0.0.1 and that port with Apple's account login.
-- Mac: the Mac account from the keychain behind Face ID (as before), the tunnel to 127.0.0.1:5900 on the Mac. A
-  refused login ends the session and shows the login form with the reason.
-- The workspace takes the iPhone's shape with aOS's `display` op (OSS's own virtual display needs high performance):
-  before connecting, from the window, then from OSS's measured area (the window without the top safe area upright,
-  without the sides on its side), grown to at least 600x900 points, Retina; renewed every 20 s, `reset` when it
-  stops. So the picture fills the screen; the iPhone turns freely and the workspace follows. The Mac's screen keeps
-  its size and OSS turns the iPhone to it (landscape), with its toolbar in the letterbox.
+  by itself); OSS's session connects to 127.0.0.1 and that port with Apple's account login, standard mode.
+- Mac through SSH: the tunnel to 127.0.0.1:5900 on the Mac, standard mode, the Mac's own size. A refused login ends
+  the session and shows the login form with the reason.
+- Mac directly (`DirectPath`): with the setting on, the Mac goes the direct path when it can, for OSS's high
+  performance and its virtual display, else through SSH (the card says why: no address, aOS's Tailscale without the
+  Tailscale app's VPN, no high performance, the direct way failed).
+  - Where: the address the SSH connection reached, by its way (`SSHRoute`): the same network (the IP it connected
+    to, also when found over Bonjour), or the Mac's tailnet address when SSH runs through the Tailscale app's VPN.
+    SSH through aOS's own Tailscale node carries only the app's SSH connection (the node hands over connected
+    sockets; libsharing dials TCP and UDP itself), so then only with the Tailscale app's VPN on too. Never loopback.
+  - The key: a direct connection is checked against the screen sharing key the Mac showed through SSH (OSS's trusted
+    fingerprint). The first time per paired Mac, OSS's setup check signs in once through the tunnel
+    (`ScreenClient.checkServer`) to learn it and whether the Mac offers high performance. Without that a stranger in
+    the network could pose as the Mac and get the password (the RSA login encrypts it to the server's key).
+  - Then a TCP check of the address and port 5900 (1.5 s), and OSS's session to that address with high performance
+    and its network quality: "local network" in the same network (four bands, 4:4:4, 60 frames a second), "internet"
+    through the tailnet (OSS's tuning for Tailscale: one band, 4:2:0, CoreDevice mode).
+  - It hands over to the tunnel (same login, no Face ID, `onDirectPathFailed`) when the connection fails or breaks,
+    the key differs, high performance fails or the Mac offers none, or no picture comes within 15 s (UDP blocked:
+    the session would wait for video forever). That address then isn't tried for 10 minutes; a Mac without high
+    performance goes through SSH for the rest of the app's run.
 - Stored (OSS's GRDB database, Application Support/Screen Sharing.sqlite): OSS's settings and, per screen (ids derived
-  from the paired Mac's id, deleted when unpairing), quality, observe mode, clipboard sync, pointer lock and the
-  screen sharing key it trusts (first use). Never a user name, password or picture.
+  from the paired Mac's id, deleted when unpairing), quality, observe mode, clipboard sync, pointer lock, the resolution
+  and high performance of the last session, the device's model (the card's icon), when it was last connected and the
+  screen sharing key it trusts. Never a user name or password; the pictures are files of their own (above).
 - "Sync Clipboard" starts off for the workspace (OSS's default is on): what the iPhone copies, a password or a code,
   doesn't go to the agent's Mac unless the person turns it on in the session's clipboard menu (remembered). The Mac
   starts with it on, as in OSS.
 - The orientation lock needs an app delegate (`AOSAppDelegate`); OSS's menu commands are on the scene.
+
+**High performance: ports and protocols** (libsharing, `internal/rfb` and `internal/rfb/media`; what the direct path
+needs between the iPhone and the Mac):
+- TCP 5900 on the Mac (Screen Sharing): RFB in Apple's dialect, Apple's account login (RSA type 33 or SRP; the RSA
+  key checked as above), then the encrypted record layer. On it the viewer sends the virtual display (message 0x1d:
+  points, pixels, refresh rate, HDR) and asks for the media stream (0x1c, with an offer that carries the SRTP keys,
+  so they travel encrypted).
+- The Mac answers in the RFB stream with a "ports" reply (media subtype 1): one UDP port each for audio, video and a
+  second video leg, chosen by the Mac per session (not fixed; OSS's own iOS server takes the TCP port + 1 and + 2).
+- UDP: for each announced port the iPhone binds the same port number locally (SO_REUSEADDR, SO_REUSEPORT) and
+  connects to the Mac's address, the one the TCP connection reached, on that port; the Mac connects its socket to the
+  iPhone's address on the same port. Video (HEVC, or H.264) and audio as SRTP, reports, keyframe requests and rate
+  feedback as SRTCP, in both directions. No STUN, ICE or relay: both addresses must reach each other directly (the
+  same network, or the tailnet); a NAT or a firewall that drops UDP breaks it (the 15 s check above then hands over).
+- So it can't go through SSH: SSH carries TCP only, and through the tunnel the TCP connection's address is
+  127.0.0.1, where libsharing would send the UDP.
+- On the Mac: Screen Sharing on, macOS 14 or later on Apple silicon (Apple's requirement for high performance; the
+  server's extended init then offers messages 0x1c and 0x1d). macOS's firewall lets Apple's screen sharing in unless it blocks all
+  incoming connections. On the iPhone: the local network permission (the same as for SSH in the same network).
 
 **Strings**: the module looks them up in the main bundle, so they are manual entries of the app's catalog.
 `Tools/screen_strings.sh` adds new ones (export with the module's strings, `screen_strings.py`, then `localize.sh`);
@@ -331,7 +407,8 @@ VM's address). libsharing logs to the app's subsystem, category `libsharing`.
 
 ## AOSRFB on the iPhone
 
-Only `DisplayRequest` (shared with the Mac) and the forwarder's integration test still use it. The loopback listener
+Only `DisplayRequest` (shared with the Mac; the iPhone sizes it with OSS's `VirtualDisplayMode` now, not with
+`DisplayRequest.fitting`) and the forwarder's integration test still use it. The loopback listener
 stays (libsharing dials TCP itself): while a screen is open, other apps on the phone could connect to that port (they
 would still need the screen sharing login).
 
@@ -404,8 +481,11 @@ would still need the screen sharing login).
 - Unpairing on the iPhone doesn't remove the key on the Mac (the design leaves that to aOS on the Mac).
 - iPhone only (no iPad layout). Landscape works but wasn't tuned.
 - The screen client was tested against in-process servers (Apple's account login over the SSH tunnel, a refused
-  login) and in the simulator's demo; not yet against the real workspace or Mac, nor on a device (rotation, the
-  keyboard bar, pointer lock with a mouse, background and return).
+  login, the setup check, the direct path to a server without high performance handing over to the tunnel, one Face
+  ID through fallback and the return from the background) and in the simulator's demo; not yet against the real
+  workspace or Mac, nor on a device: high performance and the virtual display (no Mac here), rotation with a virtual
+  display, the keyboard bar, pointer lock with a mouse, background and return, the pictures' file protection (the
+  simulator keeps no protection classes).
 - Local network denial is detected for pairing (NWConnection path); for SSH (NIO on Network.framework) it shows as
   "not reachable" with the hint about Tailscale and the local network setting.
 - aOS's Tailscale: not run against Tailscale's real coordination server (no account here) nor on a device: the

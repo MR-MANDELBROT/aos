@@ -218,7 +218,6 @@
       }
     },
     "%@ didn't accept the user name or password." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -229,7 +228,6 @@
       }
     },
     "%@ didn't accept this iPhone's key. Add the key to ~/.ssh/authorized_keys there (Settings > This iPhone)." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -272,7 +270,6 @@
       }
     },
     "%@ now presents %@. That happens when the computer was set up again, but it can also mean that someone is in between. Only continue if you know why it changed." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -515,7 +512,6 @@
       }
     },
     "Add a computer" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -537,7 +533,6 @@
       }
     },
     "Add this iPhone's public key (Settings > SSH key of this iPhone) to ~/.ssh/authorized_keys on that computer." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -803,7 +798,6 @@
       }
     },
     "aOS keeps your terminal connected." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -994,7 +988,6 @@
       }
     },
     "aOS remembers the key and warns you if it ever changes." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1233,7 +1226,6 @@
       }
     },
     "Attach Again" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1265,8 +1257,18 @@
         }
       }
     },
+    "Available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfügbar"
+          }
+        }
+      }
+    },
     "Background time from iOS" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1365,6 +1367,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bitwarden ist auf deinem Mac gesperrt"
+          }
+        }
+      }
+    },
+    "Both screens take the iPhone's shape and turn with it: aOS resizes the workspace's display, your Mac gets a virtual display in Open Screen Sharing's high performance mode, directly in the same Wi-Fi or with the Tailscale app's VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beide Bildschirme nehmen die Form des iPhones an und drehen sich mit: aOS passt das Display des Arbeitsplatzes an, dein Mac bekommt ein virtuelles Display im Hochleistungsmodus von Open Screen Sharing, direkt im selben WLAN oder mit dem VPN der Tailscale-App. Nur über SSH behält dein Mac seine eigene Größe. Mehr Auflösung gibt mehr Platz und weniger Schärfe."
           }
         }
       }
@@ -1476,7 +1488,6 @@
       }
     },
     "Check that this is the key of your computer. On it, run:" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1643,6 +1654,16 @@
         }
       }
     },
+    "Closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschlossen"
+          }
+        }
+      }
+    },
     "Closed. It opens when your agent needs it." : {
       "localizations" : {
         "de" : {
@@ -1675,6 +1696,7 @@
       }
     },
     "Connect" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1726,8 +1748,17 @@
         }
       }
     },
+    "Connected" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden"
+          }
+        }
+      }
+    },
     "Connected for %lld more min at most." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1757,17 +1788,8 @@
         }
       }
     },
-    "Connecting to the Mac …" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbinde mit dem Mac …"
-          }
-        }
-      }
-    },
     "Connecting to the screen …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2216,7 +2238,6 @@
       }
     },
     "Delete" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2259,7 +2280,6 @@
       }
     },
     "Detach" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2270,7 +2290,6 @@
       }
     },
     "Detached, the session keeps running on the Mac." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2281,7 +2300,6 @@
       }
     },
     "Detached. The session keeps running on the Mac." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2335,7 +2353,6 @@
       }
     },
     "Disconnect" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2367,6 +2384,16 @@
         }
       }
     },
+    "Display" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darstellung"
+          }
+        }
+      }
+    },
     "Display %lld" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2378,42 +2405,12 @@
         }
       }
     },
-    "Display off" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirm aus"
-          }
-        }
-      }
-    },
     "Display Off" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm aus"
-          }
-        }
-      }
-    },
-    "Display on" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirm an"
-          }
-        }
-      }
-    },
-    "Display On" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirm an"
           }
         }
       }
@@ -2525,7 +2522,6 @@
       }
     },
     "Edit" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2783,7 +2779,6 @@
       }
     },
     "First connection to %@" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2836,7 +2831,6 @@
       }
     },
     "Forget the old key" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2932,6 +2926,7 @@
       }
     },
     "Full screen, with touch, the keyboard and a trackpad or mouse." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3239,7 +3234,6 @@
       }
     },
     "It must show:" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3260,6 +3254,7 @@
       }
     },
     "It opens when your agent needs it. Then you can watch here." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3269,12 +3264,12 @@
         }
       }
     },
-    "It wakes when you open the lid or press a key on the Mac. aOS connects again by itself." : {
+    "It starts now and shows up here as soon as it runs." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er wacht auf, wenn du am Mac den Deckel aufklappst oder eine Taste drückst. aOS verbindet sich dann von selbst wieder."
+            "value" : "Er startet jetzt und erscheint hier, sobald er läuft."
           }
         }
       }
@@ -3383,7 +3378,18 @@
         }
       }
     },
+    "Kept on this iPhone behind Face ID. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bleibt auf diesem iPhone hinter Face ID und geht nur an die Bildschirmfreigabe des Macs, über die SSH-Verbindung oder direkt im selben Netzwerk."
+          }
+        }
+      }
+    },
     "Kept on this iPhone behind Face ID. It only goes to the Mac's screen sharing, through the SSH connection." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3527,6 +3533,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tasten"
+          }
+        }
+      }
+    },
+    "Last connected %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt verbunden %@"
           }
         }
       }
@@ -3683,7 +3700,6 @@
       }
     },
     "Log in with" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3705,11 +3721,22 @@
       }
     },
     "Mac" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac"
+          }
+        }
+      }
+    },
+    "Mac account" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac-Account"
           }
         }
       }
@@ -3791,7 +3818,6 @@
       }
     },
     "Name (optional)" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3907,7 +3933,6 @@
       }
     },
     "New password (empty keeps the old one)" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3960,22 +3985,11 @@
       }
     },
     "No computers yet" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Noch keine Rechner"
-          }
-        }
-      }
-    },
-    "No display" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein Bildschirm"
           }
         }
       }
@@ -4021,16 +4035,6 @@
         }
       }
     },
-    "No Mac yet" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch kein Mac"
-          }
-        }
-      }
-    },
     "No news from the Mac" : {
       "localizations" : {
         "de" : {
@@ -4052,11 +4056,32 @@
       }
     },
     "No picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kein Bild"
+          }
+        }
+      }
+    },
+    "No picture from the workspace: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Bild vom Arbeitsplatz: %@"
+          }
+        }
+      }
+    },
+    "No picture from your Mac: %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Bild von deinem Mac: %@"
           }
         }
       }
@@ -4067,16 +4092,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ohne Grund"
-          }
-        }
-      }
-    },
-    "No sessions on the Mac. New Session starts one." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Sitzungen auf dem Mac. „Neue Sitzung“ startet eine."
           }
         }
       }
@@ -4184,6 +4199,16 @@
         }
       }
     },
+    "Not connected to your Mac. The overview shows why." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht mit deinem Mac verbunden. Die Übersicht zeigt, warum."
+          }
+        }
+      }
+    },
     "Not open anywhere" : {
       "localizations" : {
         "de" : {
@@ -4230,6 +4255,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht eingerichtet"
+          }
+        }
+      }
+    },
+    "Not set up yet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht eingerichtet"
           }
         }
       }
@@ -4387,16 +4422,6 @@
         }
       }
     },
-    "On the Mac, run %@ once in a terminal and sign in. You can do that from here: Open Terminal starts a new session on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Führ auf dem Mac einmal %@ in einem Terminal aus und melde dich an. Das geht auch von hier: „Terminal öffnen“ startet eine neue Sitzung auf dem Mac."
-          }
-        }
-      }
-    },
     "On the Mac: click aOS in the menu bar, then “Pair” next to iPhone. aOS uses the Mac's Remote Login for this, nothing else." : {
       "localizations" : {
         "de" : {
@@ -4510,7 +4535,6 @@
       }
     },
     "Open here" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4521,22 +4545,11 @@
       }
     },
     "Open Here" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hier öffnen"
-          }
-        }
-      }
-    },
-    "Open in a terminal on the Mac" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In einem Terminal auf dem Mac offen"
           }
         }
       }
@@ -4581,32 +4594,12 @@
         }
       }
     },
-    "Open on this iPhone" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auf diesem iPhone offen"
-          }
-        }
-      }
-    },
     "Open Screen Sharing" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Screen Sharing"
-          }
-        }
-      }
-    },
-    "Open Session" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sitzung öffnen"
           }
         }
       }
@@ -4618,16 +4611,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einstellungen öffnen"
-          }
-        }
-      }
-    },
-    "Open Terminal" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal öffnen"
           }
         }
       }
@@ -4704,7 +4687,6 @@
       }
     },
     "Other computers" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4826,22 +4808,11 @@
       }
     },
     "Pair your Mac or add a computer to open a terminal on it." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kopple deinen Mac oder füge einen Rechner hinzu, um dort ein Terminal zu öffnen."
-          }
-        }
-      }
-    },
-    "Pair your Mac to open a terminal on it." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopple deinen Mac, um dort ein Terminal zu öffnen."
           }
         }
       }
@@ -5057,7 +5028,6 @@
       }
     },
     "Port" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5409,6 +5379,7 @@
       }
     },
     "Retina sharpness" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5511,7 +5482,6 @@
       }
     },
     "Save" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5631,6 +5601,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm-Statistik"
+          }
+        }
+      }
+    },
+    "Screens in the iPhone's size" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirme in iPhone-Größe"
           }
         }
       }
@@ -5778,16 +5758,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gesendet. aOS trägt sie im Arbeitsplatz ein."
-          }
-        }
-      }
-    },
-    "Sessions keep running on the Mac until you end them." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sitzungen laufen auf dem Mac weiter, bis du sie beendest."
           }
         }
       }
@@ -5978,6 +5948,16 @@
         }
       }
     },
+    "Show the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz zeigen"
+          }
+        }
+      }
+    },
     "Show Tips" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6018,6 +5998,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Symbolleiste ein-/ausblenden"
+          }
+        }
+      }
+    },
+    "Shows the workspace's screen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt den Bildschirm des Arbeitsplatzes"
+          }
+        }
+      }
+    },
+    "Shows your Mac's screen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt den Bildschirm deines Macs"
           }
         }
       }
@@ -6164,16 +6164,6 @@
         }
       }
     },
-    "Sleeping since %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schläft seit %@"
-          }
-        }
-      }
-    },
     "Smaller" : {
       "localizations" : {
         "de" : {
@@ -6302,7 +6292,6 @@
       }
     },
     "SSH to your Mac and to other computers." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6313,7 +6302,6 @@
       }
     },
     "SSH with this iPhone's key (Settings > SSH key of this iPhone) or a password kept behind Face ID." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6324,7 +6312,6 @@
       }
     },
     "ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6340,6 +6327,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starten"
+          }
+        }
+      }
+    },
+    "Start and show" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starten und zeigen"
           }
         }
       }
@@ -6371,16 +6368,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hochleistungsmodus wird gestartet …"
-          }
-        }
-      }
-    },
-    "Starts another shell on %@. The others keep running." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Startet eine weitere Shell auf %@. Die anderen laufen weiter."
           }
         }
       }
@@ -6442,16 +6429,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "App wechseln"
-          }
-        }
-      }
-    },
-    "Switch Session" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sitzung wechseln"
           }
         }
       }
@@ -6624,7 +6601,6 @@
       }
     },
     "Terminal in the background" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6645,22 +6621,11 @@
       }
     },
     "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. iOS gives an app time in the background for up to an hour when you open a terminal, and shows it in the Dynamic Island; it can end it earlier. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Wenn du ein Terminal öffnest, gibt iOS der App bis zu einer Stunde Zeit im Hintergrund und zeigt das in der Dynamic Island; iOS kann sie früher beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil."
-          }
-        }
-      }
-    },
-    "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil."
           }
         }
       }
@@ -6848,22 +6813,11 @@
       }
     },
     "The key of this computer changed" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Schlüssel dieses Rechners hat sich geändert"
-          }
-        }
-      }
-    },
-    "The lid is closed and no monitor is connected." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Deckel ist zu und kein Monitor ist angeschlossen."
           }
         }
       }
@@ -6982,36 +6936,6 @@
         }
       }
     },
-    "The Mac is going to sleep." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac geht in den Ruhezustand."
-          }
-        }
-      }
-    },
-    "The Mac is sleeping since %@. The sessions continue when it wakes." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac schläft seit %@. Die Sitzungen gehen weiter, wenn er aufwacht."
-          }
-        }
-      }
-    },
-    "The Mac is sleeping. The session continues when it wakes." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac schläft. Die Sitzung geht weiter, wenn er aufwacht."
-          }
-        }
-      }
-    },
     "The Mac is too hot and may sleep." : {
       "localizations" : {
         "de" : {
@@ -7048,16 +6972,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac ist gerade nicht erreichbar. Die Sitzung läuft dort weiter."
-          }
-        }
-      }
-    },
-    "The Mac isn't reachable right now. The sessions keep running there." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac ist gerade nicht erreichbar. Die Sitzungen laufen dort weiter."
           }
         }
       }
@@ -7256,7 +7170,6 @@
       }
     },
     "The password stays on this iPhone, behind Face ID." : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7306,6 +7219,16 @@
         }
       }
     },
+    "The saved login couldn't be read. Enter it again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die gespeicherte Anmeldung konnte nicht gelesen werden. Gib sie noch einmal ein."
+          }
+        }
+      }
+    },
     "The screen" : {
       "localizations" : {
         "de" : {
@@ -7317,6 +7240,7 @@
       }
     },
     "The screen comes through the connection to your Mac. See the overview." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7337,7 +7261,18 @@
         }
       }
     },
+    "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac (your Mac in the iPhone's size also directly), and aOS's sign-in replaces the app's own." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirm des Arbeitsplatzes und des Macs beruht auf Open Screen Sharing von nekohasekai, verwendet unter der GNU General Public License, Version 3. aOS hat es für den eigenen Gebrauch angepasst: Die Bildschirme kommen über die Verbindung zu deinem Mac (dein Mac in iPhone-Größe auch direkt), und die Anmeldung von aOS ersetzt die der App."
+          }
+        }
+      }
+    },
     "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac, and aOS's sign-in replaces the app's own." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7429,6 +7364,7 @@
       }
     },
     "The workspace" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7450,6 +7386,7 @@
       }
     },
     "The workspace in the iPhone's shape" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7645,7 +7582,6 @@
       }
     },
     "This iPhone's key" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7723,6 +7659,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "über das Tailscale von aOS"
+          }
+        }
+      }
+    },
+    "Through aOS's Tailscale your Mac keeps its own size. In the iPhone's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über das Tailscale von aOS behält dein Mac seine eigene Größe. In iPhone-Größe kommt er mit eingeschaltetem VPN der Tailscale-App oder im selben WLAN."
+          }
+        }
+      }
+    },
+    "Through SSH your Mac keeps its own size. In the iPhone's size it comes directly: in the same Wi-Fi, or with the Tailscale app's VPN on." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über SSH behält dein Mac seine eigene Größe. In iPhone-Größe kommt er direkt: im selben WLAN oder mit eingeschaltetem VPN der Tailscale-App."
           }
         }
       }
@@ -7857,7 +7813,6 @@
       }
     },
     "Trust and connect" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7878,6 +7833,7 @@
       }
     },
     "Try anyway" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8026,7 +7982,6 @@
       }
     },
     "Unlock the password for %@" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8106,16 +8061,6 @@
         }
       }
     },
-    "Update aOS on the Mac to keep terminals when the connection drops." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktualisiere aOS auf dem Mac, damit Terminals bleiben, wenn die Verbindung abreißt."
-          }
-        }
-      }
-    },
     "Update aOS on the Mac to keep this terminal when the connection drops." : {
       "localizations" : {
         "de" : {
@@ -8147,7 +8092,6 @@
       }
     },
     "Use the password for %@" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8377,6 +8321,7 @@
       }
     },
     "While you watch it, the workspace's display takes the iPhone's shape and fills the screen. Retina draws it twice as sharp with more data. Applies the next time the workspace screen opens." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8404,26 +8349,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Windows-Taste"
-          }
-        }
-      }
-    },
-    "With %lld monitors" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit %lld Monitoren"
-          }
-        }
-      }
-    },
-    "With a monitor" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mit einem Monitor"
           }
         }
       }
@@ -8531,7 +8456,6 @@
       }
     },
     "Your Mac" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8547,6 +8471,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Mac und der Arbeitsplatz, live, mit Touch und Tastatur."
+          }
+        }
+      }
+    },
+    "Your Mac came through SSH in its own size: the direct way didn't work this time." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac kam über SSH in seiner eigenen Größe: Der direkte Weg hat diesmal nicht geklappt."
           }
         }
       }
@@ -8567,6 +8501,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Mac ist nicht in diesem Tailnet. Melde dich mit dem Konto an, das du auf dem Mac benutzt hast."
+          }
+        }
+      }
+    },
+    "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later on Apple silicon)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac behält seine eigene Größe: Seine Bildschirmfreigabe hat keinen Hochleistungsmodus (dafür braucht es macOS 14 oder neuer auf Apple Silicon)."
+          }
+        }
+      }
+    },
+    "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later)." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac behält seine eigene Größe: Seine Bildschirmfreigabe hat keinen Hochleistungsmodus (dafür braucht es macOS 14 oder neuer)."
           }
         }
       }
@@ -8592,21 +8547,12 @@
       }
     },
     "Your Mac's screen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm deines Macs"
-          }
-        }
-      }
-    },
-    "Your Mac's shells, which keep running when the connection drops." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Shells deines Macs, die weiterlaufen, wenn die Verbindung abreißt."
           }
         }
       }

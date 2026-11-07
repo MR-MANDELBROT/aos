@@ -164,6 +164,15 @@ private final class Bridge: @unchecked Sendable {
         nw.send(content: nil, contentContext: .finalMessage, isComplete: true, completion: .contentProcessed { _ in })
     }
 
+    /// The SSH channel closed: what it delivered still goes out (a server's last words, such as a refused login's
+    /// reason, often come right before it closes), then the local connection ends.
+    func remoteClosed() {
+        guard !lock.withLock({ closed }) else { return }
+        nw.send(content: nil, contentContext: .finalMessage, isComplete: true, completion: .contentProcessed { [weak self] _ in
+            self?.close()
+        })
+    }
+
     func close() {
         let (channel, handler): (Channel?, (@Sendable () -> Void)?) = lock.withLock {
             guard !closed else { return (nil, nil) }
@@ -195,7 +204,7 @@ private final class BridgeHandler: ChannelInboundHandler, @unchecked Sendable {
     }
 
     func channelInactive(context: ChannelHandlerContext) {
-        bridge.close()
+        bridge.remoteClosed()
         context.fireChannelInactive()
     }
 

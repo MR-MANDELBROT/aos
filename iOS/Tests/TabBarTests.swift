@@ -49,7 +49,9 @@ struct TabBarTests {
         let tabs = try #require(tabBarController(in: window))
         #expect(!hidden(tabs))
 
-        // The Screen tab once: the demo's workspace in full screen, without the tab bar.
+        // The Screen tab once, as the Overview's "Show the screen" opens it: the demo's workspace in full screen,
+        // without the tab bar.
+        model.screenTarget = .workspace
         model.tab = .screen
         try await waitUntil { model.workspaceScreen.phase == .running }
         await settle()
@@ -62,7 +64,7 @@ struct TabBarTests {
         // workspace came back.
         let picture = try #require(Demo.workspacePicture(fitting: window.bounds.size))
         let session = model.workspaceScreen
-        Task { await session.startDemo(picture, name: "Workspace") }
+        Task { await session.startDemo(picture, name: "Workspace", screenID: UUID()) }
         try await waitUntil { session.phase == .running }
         await settle(1.5)
         #expect(!hidden(tabs), "the Overview keeps its tab bar")
