@@ -3937,6 +3937,16 @@
         }
       }
     },
+    "Update aOS on the Mac to see the workspace from this iPhone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisiere aOS auf dem Mac, um den Arbeitsplatz auf diesem iPhone zu sehen."
+          }
+        }
+      }
+    },
     "Use a login from another password app below, or decline." : {
       "localizations" : {
         "de" : {
