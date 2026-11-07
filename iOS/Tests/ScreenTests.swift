@@ -189,6 +189,12 @@ struct DirectPathTests {
             == .noAddress)
         #expect(DirectPath.candidate(route: .host("localhost"), remote: "::1", tailnetHosts: [], systemVPN: false) == .noAddress)
         #expect(DirectPath.candidate(route: .bonjour("Mac"), remote: nil, tailnetHosts: [], systemVPN: false) == .noAddress)
+        // A link-local address only with its interface: without it the dial finds no route.
+        #expect(DirectPath.candidate(route: .bonjour("Mac"), remote: "fe80::17:52fc:76f0:92ba", tailnetHosts: [],
+                                     systemVPN: false) == .noAddress)
+        #expect(DirectPath.candidate(route: .bonjour("Mac"), remote: "fe80::17:52fc:76f0:92ba%en0", tailnetHosts: [],
+                                     systemVPN: false) == .address("fe80::17:52fc:76f0:92ba%en0"))
+        #expect(DirectPath.isLinkLocalIPv6("fe80::1%en0") && !DirectPath.isLinkLocalIPv6("fd7a:115c:a1e0::1234"))
         #expect(DirectPath.isLoopback("127.0.0.2") && DirectPath.isLoopback("::1") && !DirectPath.isLoopback("10.0.0.1"))
     }
 

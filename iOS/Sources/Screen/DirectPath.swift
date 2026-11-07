@@ -1,6 +1,7 @@
 import AOSTailnet
 import Foundation
 import Network
+import NIOTransportServices
 import ScreenClient
 
 /// The direct path to the Mac's screen sharing, for Open Screen Sharing's high performance and its virtual display.
@@ -32,12 +33,24 @@ enum DirectPath {
             guard systemVPN else { return .tailnetWithoutVPN }
             return .address(tailnetHosts.first(where: TailnetAddress.isTailnetIPv4) ?? host)
         case .host(let host):
-            if let remote, !remote.isEmpty, !isLoopback(remote) { return .address(remote) }
-            return isLoopback(host) ? .noAddress : .address(host)
+            if let remote, usable(remote) { return .address(remote) }
+            return usable(host) ? .address(host) : .noAddress
         case .bonjour:
-            if let remote, !remote.isEmpty, !isLoopback(remote) { return .address(remote) }
+            if let remote, usable(remote) { return .address(remote) }
             return .noAddress
         }
+    }
+
+    /// An address libsharing can dial from this iPhone: not the iPhone itself, and a link-local IPv6 address only with
+    /// its interface ("fe80::1%en0"; without it the dial finds no route).
+    private static func usable(_ host: String) -> Bool {
+        !host.isEmpty && !isLoopback(host) && !(isLinkLocalIPv6(host) && !host.contains("%"))
+    }
+
+    /// An IPv6 link-local address (fe80::/10), with or without its interface.
+    static func isLinkLocalIPv6(_ host: String) -> Bool {
+        let bare = host.split(separator: "%", maxSplits: 1).first.map(String.init) ?? host
+        return IPv6Address(bare)?.isLinkLocal == true
     }
 
     /// Open Screen Sharing's network quality for the path: the tailnet counts as the internet (one band, 4:2:0,
@@ -81,8 +94,19 @@ enum DirectPath {
 }
 
 extension SSHConnection {
-    /// The IP address the connection reached (read on its event loop).
+    /// The IP address the connection reached (read on its event loop); a link-local IPv6 address with the interface
+    /// the connection went through ("fe80::1%en0"), which NIO's address drops.
     func remoteIP() async -> String? {
-        try? await channel.eventLoop.submit { self.channel.remoteAddress?.ipAddress }.get()
+        let channel = self.channel
+        guard let ip = try? await channel.eventLoop.submit({ channel.remoteAddress?.ipAddress }).get() else { return nil }
+        guard DirectPath.isLinkLocalIPv6(ip), !ip.contains("%") else { return ip }
+        // Network.framework knows the interface (only for its channels; the tailnet's addresses are never link-local).
+        guard let path = try? await channel.getOption(NIOTSChannelOptions.currentPath).get() else { return ip }
+        if case .hostPort(let host, _) = path.remoteEndpoint, case .ipv6(let address) = host,
+           let interface = address.interface {
+            return ip + "%" + interface.name
+        }
+        if let interface = path.availableInterfaces.first { return ip + "%" + interface.name }
+        return ip
     }
 }
