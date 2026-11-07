@@ -290,6 +290,15 @@ final class PowerController: ObservableObject {
     /// Bitwarden's `bw` through the helper (as its hidden user).
     func vault(_ request: VaultRequest) async -> VaultReply { await helper.vault(request) }
 
+    /// The workspace's keys and disk through the helper (WorkspaceCustody.swift).
+    func workspace(_ request: CustodyRequest) async -> (CustodyReply, FileHandle?) { await helper.workspace(request) }
+
+    /// The running helper's interface version (an older one keeps running until it exits when idle).
+    func helperVersion() async -> Int? {
+        let r = await helper.status()
+        return r.ok ? r.status?.version : nil
+    }
+
     /// The lease: renewed every 30 s while wanted; released at once when not.
     private func updateLease(_ want: Bool, now: Date) {
         if want {

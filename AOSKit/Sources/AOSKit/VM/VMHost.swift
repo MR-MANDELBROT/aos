@@ -44,6 +44,14 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
     public var onDisplayChange: (() -> Void)?
     private var displayLease: Task<Void, Never>?
 
+    /// Where the disk comes from. In the app: aOS's helper attaches it and hands over the device
+    /// (WorkspaceCustody.swift). nil, or a source that answers nil: the bundle's own disk.img (tests, the command line
+    /// tool, a workspace of an earlier aOS before the helper took it over).
+    public var diskSource: (@Sendable () async throws -> FileHandle?)?
+    /// The VM ended for good: the helper can detach the disk.
+    public var diskReleased: (@Sendable () async -> Void)?
+    private var releaseTask: Task<Void, Never>?
+
     public init(bundle: VMBundle, paths: Paths) {
         self.bundle = bundle
         self.paths = paths
@@ -52,6 +60,18 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
     private func set(_ phase: Phase) {
         self.phase = phase
         onPhaseChange?(phase)
+        if phase == .stopped || phase == .error {
+            // A restart inside the guest boots again within a second: release only if it stays off.
+            releaseTask?.cancel()
+            releaseTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 4_000_000_000)
+                guard let self, !Task.isCancelled, self.vm == nil, self.phase == .stopped || self.phase == .error else { return }
+                await self.diskReleased?()
+            }
+        } else {
+            releaseTask?.cancel()
+            releaseTask = nil
+        }
     }
 
     public var isRunning: Bool { vm?.state == .running }
@@ -59,7 +79,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
 
     // MARK: Configuration
 
-    public func makeConfiguration() throws -> VZVirtualMachineConfiguration {
+    public func makeConfiguration() async throws -> VZVirtualMachineConfiguration {
         let state = try bundle.loadState()
         let s = state.settings
         let config = VZVirtualMachineConfiguration()
@@ -84,8 +104,14 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         device.displays = [graphics]
         config.graphicsDevices = [device]
 
-        let disk = try VZDiskImageStorageDeviceAttachment(url: bundle.diskURL, readOnly: false,
+        let disk: VZStorageDeviceAttachment
+        if let diskSource, let device = try await diskSource() {
+            disk = try VZDiskBlockDeviceStorageDeviceAttachment(fileHandle: device, readOnly: false,
+                                                                synchronizationMode: .full)
+        } else {
+            disk = try VZDiskImageStorageDeviceAttachment(url: bundle.diskURL, readOnly: false,
                                                           cachingMode: .automatic, synchronizationMode: .full)
+        }
         config.storageDevices = [VZVirtioBlockDeviceConfiguration(attachment: disk)]
 
         let net = VZVirtioNetworkDeviceConfiguration()
@@ -122,7 +148,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         guard vm == nil else { throw VMHostError.alreadyRunning }
         set(.installing)
         do {
-            let config = try makeConfiguration()
+            let config = try await makeConfiguration()
             let machine = VZVirtualMachine(configuration: config)
             let installer = VZMacOSInstaller(virtualMachine: machine, restoringFromImageAt: file)
             let observation = installer.progress.observe(\.fractionCompleted, options: [.new]) { p, _ in
@@ -158,7 +184,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
         }
         set(.starting)
         do {
-            let config = try makeConfiguration()
+            let config = try await makeConfiguration()
             let machine = VZVirtualMachine(configuration: config)
             machine.delegate = self
             vm = machine
@@ -175,7 +201,7 @@ public final class VMHost: NSObject, VZVirtualMachineDelegate {
                 } catch {
                     // A state that doesn't fit any more (macOS update, changed settings): boot cold.
                     try? FileManager.default.removeItem(at: bundle.savedStateURL)
-                    let fresh = VZVirtualMachine(configuration: try makeConfiguration())
+                    let fresh = VZVirtualMachine(configuration: try await makeConfiguration())
                     fresh.delegate = self
                     vm = fresh
                     beforeStart?(fresh)

@@ -214,6 +214,7 @@ public final class WorkspaceController {
         } catch {
             log("workspace update failed (continuing): \(error.localizedDescription)")
         }
+        await rotateSecretsIfNeeded(ip: ip)
         // After a cold boot the guest logs in afresh and macOS has just removed the browser policies: put them back
         // before the agent can start Chrome (once per boot; a resumed workspace keeps its session).
         if preparedBoot != host.bootCount {
@@ -226,6 +227,27 @@ public final class WorkspaceController {
             }
         }
         return ip
+    }
+
+    /// Called after keys of an earlier aOS were replaced in the guest (the app retires the old files then).
+    public var onSecretsRotated: (() -> Void)?
+
+    /// Keys taken over from an earlier aOS (WorkspaceCustody.swift) are replaced at the workspace's first start, so
+    /// copies of the old ones stop working. A failure leaves everything working with the old ones; the next start
+    /// tries again.
+    public func rotateSecretsIfNeeded(ip: String) async {
+        guard let custody = GuestSecrets.custody, let status = try? await custody.status(),
+              status.rotationNeeded == true else { return }
+        do {
+            try await provisioner.maintenance(host: ip).waitUntilReachable(timeout: 180)
+            log("replacing the workspace's keys and password")
+            try await provisioner.rotateSecrets(host: ip, custody: custody) { [weak self] line in
+                Task { @MainActor in self?.log(line) }
+            }
+            onSecretsRotated?()
+        } catch {
+            log("replacing the workspace's keys failed (the old ones still work, next start tries again): \(error.localizedDescription)")
+        }
     }
 
     /// Types text: ASCII as key events, everything else through the guest's clipboard.

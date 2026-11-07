@@ -188,6 +188,14 @@ private struct StepPage: View {
                     Label(p, systemImage: "xmark.octagon.fill").foregroundStyle(.red)
                 }
             }
+            if setup.helperMissing {
+                GlassCard {
+                    HelperApprovalCard(reason: "\(Brand.name) keeps the workspace's keys and its disk in a background helper of its own. So no other program on your Mac, not even your agent, can take the workspace over or watch a sign-in. macOS asks you once to allow it.")
+                }
+            }
+        }
+        .onChange(of: power.helperStatus) { _, status in
+            if status == .enabled && setup.step == .requirements { setup.checkRequirements() }
         }
     }
 

@@ -46,6 +46,8 @@ final class SetupController: ObservableObject {
     @Published var step: Step = .requirements
     @Published var activity: Activity = .idle
     @Published var requirementProblems: [String] = []
+    /// aOS's background helper isn't allowed yet (it's the first requirement).
+    @Published var helperMissing = false
     @Published var installedAgents: Set<String> = []
     @Published var selectedAgents: Set<String> = []
     @Published var connectResults: [String: ConnectResult] = [:]
@@ -149,7 +151,9 @@ final class SetupController: ObservableObject {
             problems.append(String(localized: "About 75 GB of free disk space are needed (\(free / 1_000_000_000) GB free)."))
         }
         requirementProblems = problems
-        if problems.isEmpty { step = .agents; detectAgents() }
+        // The helper keeps the workspace's keys and disk: without it there is no workspace.
+        helperMissing = AppModel.shared.power.helperStatus != .enabled
+        if problems.isEmpty && !helperMissing { step = .agents; detectAgents() }
     }
 
     // MARK: 2. Agents
@@ -247,8 +251,14 @@ final class SetupController: ObservableObject {
         Task {
             do {
                 if !bundle.exists {
+                    // The disk is made by aOS's helper and stays with it (AOSKit WorkspaceCustody.swift).
+                    await AppModel.shared.syncWorkspaceCustody()
+                    guard AppModel.shared.custodyMode == .custody, let custody = GuestSecrets.custody else {
+                        throw CustodyError.helper(String(localized: "Allow \(Brand.name)'s background helper first (step 1)."))
+                    }
                     let (_, requirements) = try await RestoreImage.load(file)
-                    _ = try VMBundle.create(at: bundle.url, requirements: requirements, settings: .standard)
+                    _ = try VMBundle.create(at: bundle.url, requirements: requirements, settings: .standard, withDisk: false)
+                    try await custody.createDisk(gibibytes: VMSettings.standard.diskGiB, replace: true)
                 }
                 try await workspace.host.install(restoreImage: file) { fraction in
                     Task { @MainActor in self.activity = .progress(label, fraction) }
@@ -324,6 +334,7 @@ final class SetupController: ObservableObject {
             try? await workspace.provisioner.updateIfNeeded(host: ip) { [weak self] line in
                 Task { @MainActor in self?.note(line) }
             }
+            await workspace.rotateSecretsIfNeeded(ip: ip)
             try await workspace.provisioner.prepareSession(host: ip)
         }
         workspace.noteActivity()

@@ -506,6 +506,9 @@ func handle(_ line: Data) -> Data {
         var out: [String: Any] = [:]
         DispatchQueue.main.sync { out = dismissNotifications() }
         return reply(out)
+    case "rekey":
+        // A new password for the account (Rekey.swift).
+        return reply(rekey(r))
     case "prompt":
         // Puts the helper into the Accessibility list in System Settings (macOS shows its own question too).
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary

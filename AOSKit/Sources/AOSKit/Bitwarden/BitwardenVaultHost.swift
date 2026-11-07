@@ -289,7 +289,8 @@ public final class BitwardenVaultHost: @unchecked Sendable {
 /// `_aosvault`: a hidden account without a shell, a home or a password, only for running `bw`. Created with dscl
 /// the first time (root only), with a group of the same number.
 public enum VaultAccount {
-    public static func ensure(name: String = BitwardenVaultHost.userName) throws -> Subprocess.RunAs {
+    public static func ensure(name: String = BitwardenVaultHost.userName, realName: String = "aOS Bitwarden") throws
+        -> Subprocess.RunAs {
         if let existing = try lookup(name) { return existing }
         let used = Set(ids("/Users", "UniqueID") + ids("/Groups", "PrimaryGroupID"))
         guard let id = (360..<400).first(where: { !used.contains($0) }) else {
@@ -298,14 +299,14 @@ public enum VaultAccount {
         let steps: [[String]] = [
             ["-create", "/Groups/\(name)"],
             ["-create", "/Groups/\(name)", "PrimaryGroupID", "\(id)"],
-            ["-create", "/Groups/\(name)", "RealName", "aOS Bitwarden"],
+            ["-create", "/Groups/\(name)", "RealName", realName],
             ["-create", "/Groups/\(name)", "Password", "*"],
             ["-create", "/Users/\(name)"],
             ["-create", "/Users/\(name)", "UniqueID", "\(id)"],
             ["-create", "/Users/\(name)", "PrimaryGroupID", "\(id)"],
             ["-create", "/Users/\(name)", "UserShell", "/usr/bin/false"],
             ["-create", "/Users/\(name)", "NFSHomeDirectory", "/var/empty"],
-            ["-create", "/Users/\(name)", "RealName", "aOS Bitwarden"],
+            ["-create", "/Users/\(name)", "RealName", realName],
             ["-create", "/Users/\(name)", "Password", "*"],
             ["-create", "/Users/\(name)", "IsHidden", "1"],
         ]

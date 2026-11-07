@@ -21,13 +21,21 @@ public enum SSHError: LocalizedError {
     }
 }
 
-/// Runs commands in the guest with the system's OpenSSH client. Host keys are pinned in our own
-/// known_hosts (accepted on the very first connection, which happens on the VM's private NAT network).
+/// Runs commands in the guest with the system's OpenSSH client. In the app the helper runs it (the keys stay there,
+/// see WorkspaceCustody.swift); otherwise this process does, with the files in the Keys folder. Host keys are pinned
+/// (accepted on the very first connection, which happens on the VM's private NAT network).
 public struct SSH: Sendable {
     public enum Auth: Sendable {
-        /// Password of the guest account, handed to ssh through SSH_ASKPASS (never on a command line).
-        case password(user: String, passwordFile: URL)
-        case key(user: String, keyFile: URL)
+        /// The guest account's password (only before the bootstrap turns password logins off). Locally it reaches ssh
+        /// through SSH_ASKPASS, never on a command line.
+        case password(user: String)
+        case key(user: String, key: CustodyRequest.Key)
+
+        var user: String {
+            switch self {
+            case .password(let user), .key(let user, _): return user
+            }
+        }
     }
 
     public let host: String
@@ -42,6 +50,14 @@ public struct SSH: Sendable {
 
     private var askpassScript: URL { secrets.paths.keys.appendingPathComponent("askpass.sh") }
 
+    private func keyFile(_ key: CustodyRequest.Key) -> URL {
+        switch key {
+        case .maintenance, .password: return secrets.maintenanceKey
+        case .stop: return secrets.stopKey
+        case .next: return secrets.paths.keys.appendingPathComponent("maintenance.next")
+        }
+    }
+
     private func arguments(command: String) throws -> [String] {
         var args = [
             "-o", "UserKnownHostsFile=\(secrets.knownHosts.path)",
@@ -54,13 +70,13 @@ public struct SSH: Sendable {
             "-F", "/dev/null",
         ]
         switch auth {
-        case .password(let user, _):
+        case .password(let user):
             args += ["-o", "PubkeyAuthentication=no",
                      "-o", "PreferredAuthentications=password,keyboard-interactive",
                      "-o", "NumberOfPasswordPrompts=1",
                      "-l", user]
         case .key(let user, let key):
-            args += ["-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-i", key.path, "-l", user]
+            args += ["-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-i", keyFile(key).path, "-l", user]
         }
         args += [host, command]
         return args
@@ -68,9 +84,9 @@ public struct SSH: Sendable {
 
     private func environment() throws -> [String: String] {
         var env = ["PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "LANG": "C"]
-        if case .password(_, let file) = auth {
+        if case .password = auth {
             // The script prints the password file; ssh calls it instead of asking on a terminal.
-            let script = "#!/bin/sh\nexec /bin/cat \"\(file.path)\"\n"
+            let script = "#!/bin/sh\nexec /bin/cat \"\(secrets.adminPasswordURL.path)\"\n"
             try Data(script.utf8).write(to: askpassScript, options: .atomic)
             try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: askpassScript.path)
             env["SSH_ASKPASS"] = askpassScript.path
@@ -89,8 +105,19 @@ public struct SSH: Sendable {
         let debug = ProcessInfo.processInfo.environment["AOS_SSH_DEBUG"] != nil
         if debug { FileHandle.standardError.write(Data("ssh: start \(label)\n".utf8)) }
         defer { if debug { FileHandle.standardError.write(Data("ssh: end \(label)\n".utf8)) } }
-        let r = try await Subprocess.run("/usr/bin/ssh", try arguments(command: command), environment: try environment(),
+        let r: Subprocess.Result
+        if let custody = GuestSecrets.custody {
+            let key: CustodyRequest.Key
+            switch auth {
+            case .password: key = .password
+            case .key(_, let k): key = k
+            }
+            r = try await custody.ssh(host: host, user: auth.user, key: key, command: command, input: input,
+                                      timeout: timeout)
+        } else {
+            r = try await Subprocess.run("/usr/bin/ssh", try arguments(command: command), environment: try environment(),
                                          input: input ?? Data(), timeout: timeout)
+        }
         if r.timedOut { throw SSHError.timeout(label) }
         let result = SSHResult(status: r.status, stdout: r.stdout, stderr: String(decoding: r.stderr, as: UTF8.self))
         if check && result.status != 0 { throw SSHError.failed(label, result.status, result.stderr) }

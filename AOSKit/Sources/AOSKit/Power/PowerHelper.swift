@@ -20,6 +20,9 @@ import Foundation
     /// Bitwarden's `bw` as the hidden user `_aosvault` (a `VaultRequest`, answered with a `VaultReply`; see
     /// BitwardenRunner and BitwardenVaultHost).
     func vault(_ request: Data, reply: @escaping (Data) -> Void)
+    /// The workspace's keys and disk (a `CustodyRequest`, answered with a `CustodyReply` and, for attachDisk, the
+    /// open disk device; see WorkspaceCustody.swift).
+    func workspace(_ request: Data, reply: @escaping (Data, FileHandle?) -> Void)
 }
 
 public enum PowerHelperService {
@@ -30,7 +33,7 @@ public enum PowerHelperService {
     /// Xcode signs a command line tool with its file name as identifier.
     public static let helperIdentifier = "aos-powerd"
     /// Bumped when the interface changes.
-    public static let version = 2
+    public static let version = 3
 
     /// Only aOS may talk to the helper.
     public static var appRequirement: String {
@@ -168,6 +171,22 @@ public final class PowerHelperClient: @unchecked Sendable {
                 finish(VaultReply(ok: false, message: "the helper didn't answer"))
             }
             p.vault(request.data) { data in finish(VaultReply.decode(data)) }
+        }
+    }
+
+    /// The workspace's keys and disk through the helper (`WorkspaceCustodyClient(send:)` uses this).
+    public func workspace(_ request: CustodyRequest) async -> (CustodyReply, FileHandle?) {
+        await withCheckedContinuation { (continuation: CheckedContinuation<(CustodyReply, FileHandle?), Never>) in
+            let once = Once()
+            let finish: (CustodyReply, FileHandle?) -> Void = { r, h in if once.claim() { continuation.resume(returning: (r, h)) } }
+            guard let p = proxy({ error in finish(.failure(error.localizedDescription), nil) }) else {
+                finish(.failure("no connection to the helper"), nil)
+                return
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + (request.timeout ?? 120) + 15) {
+                finish(.failure("the helper didn't answer"), nil)
+            }
+            p.workspace(request.data) { data, handle in finish(CustodyReply.decode(data), handle) }
         }
     }
 

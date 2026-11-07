@@ -36,6 +36,8 @@ public struct VMState: Codable, Sendable, Equatable {
     /// Whether the helper in the guest may see and type (last seen; nil: never asked). The app shows it without
     /// starting the workspace.
     public var helperAllowed: Bool?
+    /// The disk is in the custody of aOS's helper (a note for the app; the helper is what decides).
+    public var diskInCustody: Bool?
 }
 
 public enum VMBundleError: LocalizedError {
@@ -67,8 +69,11 @@ public struct VMBundle: Sendable {
     /// Saved machine state while the VM is suspended.
     public var savedStateURL: URL { url.appendingPathComponent("suspended.vzvmsave") }
 
+    /// A workspace was created here. Its disk is either disk.img here or, in the app, in the helper's custody
+    /// (WorkspaceCustody.swift), which only the helper knows; `diskInCustody` says which.
     public var exists: Bool {
-        FileManager.default.fileExists(atPath: stateURL.path) && FileManager.default.fileExists(atPath: diskURL.path)
+        FileManager.default.fileExists(atPath: stateURL.path)
+            && (FileManager.default.fileExists(atPath: diskURL.path) || (try? loadState().diskInCustody) == true)
     }
 
     public func loadState() throws -> VMState {
@@ -125,8 +130,9 @@ public struct VMBundle: Sendable {
 
     /// Creates a fresh bundle for the given restore image configuration. Overwrites nothing: the
     /// directory must not contain a VM yet.
+    /// `withDisk` false: the helper makes the disk (WorkspaceCustodyClient.createDisk).
     public static func create(at url: URL, requirements: VZMacOSConfigurationRequirements,
-                              settings: VMSettings) throws -> VMBundle {
+                              settings: VMSettings, withDisk: Bool = true) throws -> VMBundle {
         let fm = FileManager.default
         let bundle = VMBundle(url: url)
         if bundle.exists { throw VMBundleError.corrupt("folder (a workspace exists already)") }
@@ -143,11 +149,12 @@ public struct VMBundle: Sendable {
         try VZMacMachineIdentifier().dataRepresentation.write(to: bundle.machineIdentifierURL)
         _ = try VZMacAuxiliaryStorage(creatingStorageAt: bundle.auxiliaryStorageURL,
                                       hardwareModel: requirements.hardwareModel, options: [])
-        try DiskImage.createSparse(at: bundle.diskURL, gibibytes: settings.diskGiB)
+        if withDisk { try DiskImage.createSparse(at: bundle.diskURL, gibibytes: settings.diskGiB) }
 
-        let state = VMState(settings: settings, macAddress: VZMACAddress.randomLocallyAdministered().string,
+        var state = VMState(settings: settings, macAddress: VZMACAddress.randomLocallyAdministered().string,
                             createdAt: Date(), guestBuild: nil, guestVersion: nil,
                             provisioned: false, bootstrapped: false, screenSharingReady: false, kitFingerprint: nil)
+        state.diskInCustody = withDisk ? nil : true
         try bundle.saveState(state)
         return bundle
     }
