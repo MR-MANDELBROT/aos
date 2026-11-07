@@ -1,5 +1,6 @@
 import SwiftTerm
 import UIKit
+import UIKit.UIGestureRecognizerSubclass
 
 /// What the terminal view asks of its session.
 @MainActor
@@ -42,10 +43,18 @@ final class AOSTerminalView: TerminalView {
     /// Rows (SwiftTerm's scroll invariant numbers) where Return was pressed at the shell, for "Copy last output".
     private var commandRows: [Int] = []
     private let selectionFeedback = UISelectionFeedbackGenerator()
+    /// Swiping on the terminal sends arrow keys (Settings > Terminal; TerminalSwipe has the rule).
+    var swipeArrows = true { didSet { swipe?.isEnabled = swipeArrows } }
+    private var swipe: ArrowSwipeRecognizer?
+    private let swipeHint = SwipeHint()
+    private var swipeKey: TerminalKey?
+    private var swipeRepeat: Task<Void, Never>?
 
     init(fontSize: CGFloat) {
         super.init(frame: CGRect(x: 0, y: 0, width: 390, height: 600), font: Self.font(size: fontSize))
         optionAsMetaKey = false
+        // Enough for what a session on the Mac replays when the terminal starts afresh (its last 256 KB).
+        changeScrollback(2000)
         inputAccessoryView = keyBar
         pasteConfiguration = UIPasteConfiguration(forAccepting: NSString.self)
         selectionHandleColor = .clear
@@ -137,6 +146,26 @@ final class AOSTerminalView: TerminalView {
         addGestureRecognizer(tap)
         pinch = UIPinchGestureRecognizer(target: self, action: #selector(pinched(_:)))
         addGestureRecognizer(pinch)
+        let swipe = ArrowSwipeRecognizer(target: self, action: #selector(swiped(_:)))
+        swipe.decide = { [weak self] translation, velocity, elapsed in
+            self?.decideSwipe(translation: translation, velocity: velocity, elapsed: elapsed) ?? TerminalSwipe.Decision.none
+        }
+        self.swipe = swipe
+        addGestureRecognizer(swipe)
+        // Scrolling waits for the swipe to know it isn't one (12 pt of movement, about the scroll's own threshold).
+        panGestureRecognizer.require(toFail: swipe)
+        swipeHint.isHidden = true
+        addSubview(swipeHint)
+    }
+
+    /// SwiftTerm adds a one-finger pan while a program uses the mouse or the alternate screen (it reports the drag as
+    /// a wheel): that one waits for the swipe too.
+    override func addGestureRecognizer(_ recognizer: UIGestureRecognizer) {
+        super.addGestureRecognizer(recognizer)
+        if let swipe, recognizer !== swipe, let pan = recognizer as? UIPanGestureRecognizer, pan !== panGestureRecognizer,
+           !pan.allowedTouchTypes.isEmpty {
+            pan.require(toFail: swipe)
+        }
     }
 
     /// A touch on a selection handle belongs to the handle: the terminal neither scrolls nor starts another selection.
@@ -310,6 +339,59 @@ final class AOSTerminalView: TerminalView {
         default:
             break
         }
+    }
+
+    // MARK: Swiping for arrow keys
+
+    /// The rule is TerminalSwipe's; here: nothing while text is selected, and "at the end" means not scrolled back.
+    private func decideSwipe(translation: CGSize, velocity: CGPoint, elapsed: TimeInterval) -> TerminalSwipe.Decision? {
+        guard swipeArrows, selected == nil, anchor == nil, !menuVisible else { return TerminalSwipe.Decision.none }
+        let atEnd = !canScroll || scrollPosition >= 0.999
+        return TerminalSwipe.decide(translation: translation, velocity: velocity, elapsed: elapsed, atEnd: atEnd)
+    }
+
+    @objc private func swiped(_ recognizer: ArrowSwipeRecognizer) {
+        switch recognizer.state {
+        case .began, .changed:
+            let key = ArrowPad.key(for: recognizer.translation)
+            if recognizer.state == .began { swipeHint.show(at: recognizer.startPoint, in: self) }
+            guard key != swipeKey else { return }
+            swipeKey = key
+            swipeHint.point(key)
+            swipeRepeat?.cancel()
+            guard let key else { return }
+            sendSwipeArrow(key)
+            // Held: like the pad, repeating faster the farther the finger is from where it started.
+            swipeRepeat = Task { @MainActor [weak self, weak recognizer] in
+                try? await Task.sleep(for: .milliseconds(350))
+                while !Task.isCancelled, let self, let recognizer {
+                    self.sendSwipeArrow(key)
+                    let distance = hypot(recognizer.translation.width, recognizer.translation.height)
+                    try? await Task.sleep(for: .seconds(ArrowPad.repeatInterval(distance: distance)))
+                }
+            }
+        default:
+            swipeRepeat?.cancel()
+            swipeRepeat = nil
+            swipeKey = nil
+            swipeHint.hide()
+        }
+    }
+
+    private func sendSwipeArrow(_ key: TerminalKey) {
+        selectionFeedback.selectionChanged()
+        sendKey(key)
+    }
+
+    // MARK: Starting afresh
+
+    /// The Mac's session starts this terminal afresh (it had nothing, or missed more than the Mac keeps): everything
+    /// goes, then the modes in effect where the replay begins.
+    func startAfresh(prefix: Data) {
+        clearTextSelection()
+        commandRows.removeAll()
+        feed(text: "\u{1b}c\u{1b}[?25h")
+        if !prefix.isEmpty { feed(byteArray: ArraySlice([UInt8](prefix))) }
     }
 
     // MARK: Scrolling while selecting
@@ -790,5 +872,133 @@ private final class SelectionHandle: UIView {
         bar.frame = CGRect(x: width / 2 - 1, y: barTop, width: 2, height: lineHeight + Self.knobSize / 2)
         knob.frame = CGRect(x: (width - Self.knobSize) / 2, y: kind == .start ? barTop - Self.knobSize + 2 : height - Self.knobSize - 2,
                             width: Self.knobSize, height: Self.knobSize)
+    }
+}
+
+// MARK: - Swiping for arrow keys
+
+/// One finger on the terminal: decides within the first 12 pt whether the drag is arrow keys (TerminalSwipe) and
+/// then follows the finger; any other drag it lets go of at once (the terminal scrolls, a program gets the wheel).
+final class ArrowSwipeRecognizer: UIGestureRecognizer {
+    /// nil: not decided yet.
+    var decide: ((CGSize, CGPoint, TimeInterval) -> TerminalSwipe.Decision?)?
+    private(set) var startPoint: CGPoint = .zero
+    private(set) var translation: CGSize = .zero
+    private var startTime: TimeInterval = 0
+    private var samples: [(point: CGPoint, time: TimeInterval)] = []
+
+    override init(target: Any?, action: Selector?) {
+        super.init(target: target, action: action)
+        cancelsTouchesInView = false
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesBegan(touches, with: event)
+        // A second finger: a pinch or a two-finger scroll.
+        guard touches.count == 1, numberOfTouches <= 1, let touch = touches.first else {
+            state = state == .possible ? .failed : .cancelled
+            return
+        }
+        // The screen's left edge belongs to the system's back swipe.
+        if touch.location(in: nil).x < TerminalSwipe.edgeMargin {
+            state = .failed
+            return
+        }
+        startPoint = touch.location(in: view)
+        startTime = touch.timestamp
+        samples = [(startPoint, touch.timestamp)]
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesMoved(touches, with: event)
+        guard let touch = touches.first else { return }
+        let point = touch.location(in: view)
+        translation = CGSize(width: point.x - startPoint.x, height: point.y - startPoint.y)
+        samples.append((point, touch.timestamp))
+        if samples.count > 6 { samples.removeFirst(samples.count - 6) }
+        switch state {
+        case .possible:
+            switch decide?(translation, velocity, touch.timestamp - startTime) {
+            case nil: break
+            case .arrows?: state = .began
+            case .scroll?, .none?: state = .failed
+            }
+        case .began, .changed:
+            state = .changed
+        default:
+            break
+        }
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesEnded(touches, with: event)
+        state = state == .possible ? .failed : .ended
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesCancelled(touches, with: event)
+        state = state == .possible ? .failed : .cancelled
+    }
+
+    override func reset() {
+        super.reset()
+        translation = .zero
+        samples = []
+    }
+
+    /// Points per second over the last few moves.
+    var velocity: CGPoint {
+        guard let first = samples.first, let last = samples.last, last.time > first.time else { return .zero }
+        let dt = CGFloat(last.time - first.time)
+        return CGPoint(x: (last.point.x - first.point.x) / dt, y: (last.point.y - first.point.y) / dt)
+    }
+}
+
+/// While swiping: a small glass circle above the finger with the arrow being sent.
+private final class SwipeHint: UIVisualEffectView {
+    private let glyph = UIImageView()
+
+    init() {
+        super.init(effect: UIGlassEffect(style: .regular))
+        frame = CGRect(x: 0, y: 0, width: 52, height: 52)
+        cornerConfiguration = .corners(radius: .fixed(26))
+        isUserInteractionEnabled = false
+        glyph.tintColor = KeyColors.accent
+        glyph.contentMode = .center
+        glyph.frame = bounds
+        glyph.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        contentView.addSubview(glyph)
+        isAccessibilityElement = false
+    }
+
+    required init?(coder: NSCoder) { fatalError("not used") }
+
+    func show(at location: CGPoint, in terminal: UIView) {
+        center = CGPoint(x: location.x, y: max(location.y - 64, terminal.bounds.minY + 30))
+        point(nil)
+        isHidden = false
+        alpha = 0
+        transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        terminal.bringSubviewToFront(self)
+        UIView.animate(withDuration: 0.12) {
+            self.alpha = 1
+            self.transform = .identity
+        }
+    }
+
+    func point(_ key: TerminalKey?) {
+        let name = switch key {
+        case .up: "arrow.up"
+        case .down: "arrow.down"
+        case .left: "arrow.left"
+        case .right: "arrow.right"
+        default: "dpad"
+        }
+        glyph.image = UIImage(systemName: name, withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold))
+    }
+
+    func hide() {
+        guard !isHidden else { return }
+        UIView.animate(withDuration: 0.18, animations: { self.alpha = 0 }) { _ in self.isHidden = true }
     }
 }

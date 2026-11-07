@@ -1,23 +1,34 @@
 import UIKit
 
-/// The keys above the keyboard: Esc, Control, Option and Tab always in reach, a scrolling row with paste, arrows,
-/// the symbols a shell needs, navigation and function keys, and a swipe pad for the arrows. Modifiers stick for the
-/// next key (tap), lock (double tap) or work while held. A glass panel like the rest of the app, 44 pt keys.
+/// The keys above the keyboard: one row that scrolls as a whole. At its start the arrows sit in the middle of the
+/// screen (the swipe pad, or four keys: Settings > Terminal), Esc, Control and Tab to their left, Option, Shift-Tab,
+/// paste, the symbols a shell needs, navigation and function keys to their right. Every key is equally wide (a calm
+/// row like a keyboard's, 44 pt high plates); the row snaps to whole keys. Modifiers stick for the next key (tap),
+/// lock (double tap) or work while held. A glass panel like the rest of the app.
 final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
     static let height: CGFloat = 58
-    /// From this width on (landscape, iPad) the arrows and Option get fixed places too.
-    static let wideWidth: CGFloat = 520
 
     weak var terminal: AOSTerminalView?
 
+    /// The arrows in the middle; the row is laid out again when it changes.
+    var arrows: TerminalArrowKeys = .pad {
+        didSet {
+            guard arrows != oldValue else { return }
+            builtFor = nil
+            setNeedsLayout()
+            scroll.setNeedsLayout()
+        }
+    }
+
     private let panel = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
-    private let leading = UIStackView()
-    private let trailing = UIStackView()
     private let scroll = KeyScrollView()
-    private let scrollRow = UIStackView()
+    private let row = UIStackView()
     private let fade = CAGradientLayer()
     private var modifierKeys: [Int: KeyButton] = [:]
-    private var isWide: Bool?
+    /// The width and arrows the row was built for.
+    private var builtFor: (width: CGFloat, arrows: TerminalArrowKeys)?
+    /// Where a key starts (the row snaps to these).
+    private var keyEdges: [CGFloat] = []
     private var repeatTask: Task<Void, Never>?
     private let tapFeedback = UIImpactFeedbackGenerator(style: .light)
     private let modifierFeedback = UISelectionFeedbackGenerator()
@@ -37,47 +48,38 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
         panel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(panel)
 
-        for stack in [leading, trailing, scrollRow] {
-            stack.axis = .horizontal
-            stack.alignment = .fill
-            stack.spacing = 0
-            stack.translatesAutoresizingMaskIntoConstraints = false
-        }
+        row.axis = .horizontal
+        row.alignment = .fill
+        row.spacing = 0
+        row.translatesAutoresizingMaskIntoConstraints = false
         scroll.showsHorizontalScrollIndicator = false
         scroll.alwaysBounceHorizontal = true
         scroll.delaysContentTouches = false
+        scroll.decelerationRate = .fast
         scroll.translatesAutoresizingMaskIntoConstraints = false
-        scroll.addSubview(scrollRow)
+        scroll.addSubview(row)
         fade.startPoint = CGPoint(x: 0, y: 0.5)
         fade.endPoint = CGPoint(x: 1, y: 0.5)
         scroll.layer.mask = fade
         scroll.delegate = self
-        scroll.onLayout = { [weak self] in self?.updateFade() }
+        scroll.onLayout = { [weak self] in self?.scrollLaidOut() }
 
         let content = panel.contentView
-        content.addSubview(leading)
         content.addSubview(scroll)
-        content.addSubview(trailing)
         NSLayoutConstraint.activate([
             panel.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 8),
             panel.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -8),
             panel.topAnchor.constraint(equalTo: topAnchor, constant: 4),
             panel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4),
-            leading.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            leading.topAnchor.constraint(equalTo: content.topAnchor),
-            leading.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-            trailing.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            trailing.topAnchor.constraint(equalTo: content.topAnchor),
-            trailing.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-            scroll.leadingAnchor.constraint(equalTo: leading.trailingAnchor),
-            scroll.trailingAnchor.constraint(equalTo: trailing.leadingAnchor),
+            scroll.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: content.trailingAnchor),
             scroll.topAnchor.constraint(equalTo: content.topAnchor),
             scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-            scrollRow.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
-            scrollRow.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
-            scrollRow.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
-            scrollRow.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
-            scrollRow.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor),
+            row.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
+            row.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
+            row.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
+            row.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
+            row.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor),
         ])
         accessibilityLabel = String(localized: "Terminal keys")
     }
@@ -87,12 +89,18 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
     override var intrinsicContentSize: CGSize { CGSize(width: UIView.noIntrinsicMetric, height: Self.height) }
 
     override func layoutSubviews() {
-        let wide = bounds.width >= Self.wideWidth
-        if wide != isWide {
-            isWide = wide
-            rebuild(wide: wide)
-        }
         super.layoutSubviews()
+        scrollLaidOut()
+    }
+
+    /// The row is built for the width the scroll area has (it gets its size inside the glass panel, after the bar).
+    private func scrollLaidOut() {
+        let width = scroll.bounds.width
+        if width > 0, builtFor.map({ abs($0.width - width) > 0.5 || $0.arrows != arrows }) ?? true {
+            builtFor = (width, arrows)
+            rebuild(width: width)
+            scroll.layoutIfNeeded()
+        }
         updateFade()
     }
 
@@ -104,10 +112,9 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
     // MARK: Keys
 
     private enum Item {
-        case key(TerminalKey, Label, extra: TerminalModifiers = [], repeats: Bool = false, width: CGFloat = 44)
+        case key(TerminalKey, Label, extra: TerminalModifiers = [], repeats: Bool = false)
         case modifier(TerminalModifiers)
         case paste
-        case pad
     }
 
     enum Label {
@@ -118,52 +125,70 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
     private static let symbols = ["~", "/", "|", "-", "_", "\\", "`", "*", "$", "&", ">", "<", "=", ":", ";", "'", "\"",
                                   "!", "?", "#", "%", "^", "@", "{", "}", "[", "]", "(", ")"]
 
-    private static func arrow(_ key: TerminalKey, _ symbol: String) -> Item {
-        .key(key, .symbol(symbol), repeats: true)
+    /// In this order from the left; the first ones fill the half left of the arrows.
+    private static var keys: [Item] {
+        let main: [Item] = [.key(.escape, .text("esc")), .modifier(.control), .key(.tab, .text("tab")), .modifier(.alt),
+                            .key(.tab, .text("⇧tab"), extra: .shift), .paste]
+        let symbols = Self.symbols.map { Item.key(.text($0), .text($0)) }
+        let navigation: [Item] = [
+            .key(.home, .text("home")), .key(.end, .text("end")),
+            .key(.pageUp, .text("pg↑"), repeats: true), .key(.pageDown, .text("pg↓"), repeats: true),
+            .key(.forwardDelete, .text("del"), repeats: true),
+        ]
+        return main + symbols + navigation + (1...12).map { .key(.function($0), .text("F\($0)")) }
     }
 
-    private static let arrows: [Item] = [arrow(.left, "arrow.left"), arrow(.down, "arrow.down"),
-                                         arrow(.up, "arrow.up"), arrow(.right, "arrow.right")]
+    /// ← ↑ → ↓, as Max listed them.
+    private static let arrowKeys: [Item] = [.key(.left, .symbol("arrow.left"), repeats: true),
+                                            .key(.up, .symbol("arrow.up"), repeats: true),
+                                            .key(.right, .symbol("arrow.right"), repeats: true),
+                                            .key(.down, .symbol("arrow.down"), repeats: true)]
 
-    /// Everything after the symbols: navigation and the function keys.
-    private static let navigation: [Item] = [
-        .key(.home, .text("home"), width: 54), .key(.end, .text("end"), width: 50),
-        .key(.pageUp, .text("pg↑"), repeats: true, width: 50), .key(.pageDown, .text("pg↓"), repeats: true, width: 50),
-        .key(.forwardDelete, .text("del"), repeats: true, width: 50),
-    ] + (1...12).map { .key(.function($0), .text("F\($0)"), width: $0 >= 10 ? 48 : 44) }
-
-    private func items(wide: Bool) -> (leading: [Item], scrolling: [Item], trailing: [Item]) {
-        let escape = Item.key(.escape, .text("esc"), width: 52)
-        let tab = Item.key(.tab, .text("tab"), width: 52)
-        let shiftTab = Item.key(.tab, .text("⇧tab"), extra: .shift, width: 60)
-        let symbols = Self.symbols.map { Item.key(.text($0), .text($0), width: 40) }
-        if wide {
-            return ([escape, .modifier(.control), .modifier(.alt), tab],
-                    [.paste, shiftTab] + symbols + Self.navigation,
-                    Self.arrows + [.pad])
-        }
-        return ([escape, .modifier(.control), tab],
-                [.modifier(.alt), .paste, shiftTab] + Self.arrows + symbols + Self.navigation,
-                [.pad])
-    }
-
-    private func rebuild(wide: Bool) {
+    private func rebuild(width: CGFloat) {
         stopRepeat()
-        for stack in [leading, scrollRow, trailing] {
-            for view in stack.arrangedSubviews { view.removeFromSuperview() }
-        }
+        for view in row.arrangedSubviews { view.removeFromSuperview() }
         modifierKeys = [:]
-        let (first, middle, last) = items(wide: wide)
-        for item in first { leading.addArrangedSubview(view(for: item)) }
-        for item in middle { scrollRow.addArrangedSubview(view(for: item)) }
-        for item in last { trailing.addArrangedSubview(view(for: item)) }
+        let plan = KeyBarLayout(width: width, arrows: arrows)
+        let all = Self.keys
+        let leading = Array(all.prefix(plan.leading)), trailing = Array(all.dropFirst(plan.leading))
+        var edges: [CGFloat] = []
+        var x: CGFloat = 0
+        func add(_ view: UIView, width: CGFloat) {
+            view.translatesAutoresizingMaskIntoConstraints = false
+            view.widthAnchor.constraint(equalToConstant: width).isActive = true
+            row.addArrangedSubview(view)
+            edges.append(x)
+            x += width
+        }
+        for item in leading { add(view(for: item), width: plan.keyWidth) }
+        switch arrows {
+        case .pad:
+            add(padView(), width: plan.centerWidth)
+        case .fourKeys:
+            for item in Self.arrowKeys { add(view(for: item), width: plan.keyWidth) }
+        }
+        for item in trailing { add(view(for: item), width: plan.keyWidth) }
+        edges.append(x)
+        keyEdges = edges
+        scroll.contentOffset = .zero
         if let modifiers = terminal?.modifiers { show(modifiers) }
+    }
+
+    private func padView() -> UIView {
+        let pad = ArrowPadControl()
+        pad.accessibilityIdentifier = "arrowPad"
+        pad.onArrow = { [weak self] key in
+            self?.modifierFeedback.selectionChanged()
+            self?.send(key, [])
+        }
+        scroll.pad = pad
+        return pad
     }
 
     private func view(for item: Item) -> UIView {
         switch item {
-        case .key(let key, let label, let extra, let repeats, let width):
-            let button = KeyButton(label: label, width: width)
+        case .key(let key, let label, let extra, let repeats):
+            let button = KeyButton(label: label)
             if let name = Self.accessibilityName(key, extra: extra) { button.accessibilityLabel = name }
             button.accessibilityIdentifier = extra.isEmpty ? "\(key)" : "\(key)+\(extra.rawValue)"
             if repeats {
@@ -180,7 +205,7 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
             }
             return button
         case .modifier(let modifier):
-            let button = KeyButton(label: .text(Self.modifierTitle(modifier)), width: 54)
+            let button = KeyButton(label: .text(Self.modifierTitle(modifier)))
             button.accessibilityLabel = Self.modifierName(modifier)
             button.accessibilityIdentifier = Self.modifierTitle(modifier)
             button.accessibilityHint = String(localized: "Double tap to keep it on")
@@ -192,14 +217,6 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
             return button
         case .paste:
             return PasteKey(target: terminal)
-        case .pad:
-            let pad = ArrowPadControl()
-            pad.accessibilityIdentifier = "arrowPad"
-            pad.onArrow = { [weak self] key in
-                self?.modifierFeedback.selectionChanged()
-                self?.send(key, [])
-            }
-            return pad
         }
     }
 
@@ -264,20 +281,30 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
         return fired
     }
 
-    // MARK: Fading edges
+    // MARK: Edges
 
+    /// A light edge only where more keys are, as a hint that the row goes on: at rest the row starts and ends with
+    /// whole keys (both halves hold whole keys of one width), so nothing looks cut off.
     private func updateFade() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         defer { CATransaction.commit() }
         fade.frame = scroll.bounds
         let width = max(scroll.bounds.width, 1)
-        let edge = min(18 / width, 0.2)
+        let edge = min(10 / width, 0.2)
         let canLeft = scroll.contentOffset.x > 1
         let canRight = scroll.contentOffset.x < scroll.contentSize.width - scroll.bounds.width - 1
-        let clear = UIColor.clear.cgColor, solid = UIColor.black.cgColor
+        let clear = UIColor.black.withAlphaComponent(0.45).cgColor, solid = UIColor.black.cgColor
         fade.colors = [canLeft ? clear : solid, solid, solid, canRight ? clear : solid]
         fade.locations = [0, NSNumber(value: edge), NSNumber(value: 1 - edge), 1]
+    }
+
+    /// The nearest key edge to `x` (the start, a key's left edge, or the end of the row).
+    static func snapped(_ x: CGFloat, edges: [CGFloat], maxOffset: CGFloat) -> CGFloat {
+        guard maxOffset > 0 else { return 0 }
+        var best: CGFloat = 0
+        for edge in edges + [maxOffset] where edge <= maxOffset && abs(edge - x) < abs(best - x) { best = edge }
+        return best
     }
 
     // MARK: Names
@@ -325,13 +352,24 @@ extension TerminalKeyBar: UIScrollViewDelegate {
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         stopRepeat()
     }
+
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint,
+                                   targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        let maxOffset = max(scrollView.contentSize.width - scrollView.bounds.width, 0)
+        targetContentOffset.pointee.x = Self.snapped(targetContentOffset.pointee.x, edges: keyEdges, maxOffset: maxOffset)
+    }
 }
 
-/// The scrolling row: a drag that starts on a key scrolls (and cancels the key).
+/// The row: a drag that starts on a key scrolls (and cancels the key), except on the arrow pad, whose drags are
+/// arrows.
 private final class KeyScrollView: UIScrollView {
     var onLayout: (() -> Void)?
+    weak var pad: UIView?
 
-    override func touchesShouldCancel(in view: UIView) -> Bool { true }
+    override func touchesShouldCancel(in view: UIView) -> Bool {
+        if let pad, view === pad || view.isDescendant(of: pad) { return false }
+        return true
+    }
 
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -344,25 +382,25 @@ enum KeyColors {
     static let plate = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.14) : UIColor(white: 0, alpha: 0.07) }
     static let pressed = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.32) : UIColor(white: 0, alpha: 0.18) }
     static let accent = UIColor(named: "AccentColor") ?? .systemIndigo
+    /// The arrow pad stands out a little: the accent, faint.
+    static let padPlate = UIColor { _ in accent.withAlphaComponent(0.16) }
     /// The system paste control takes opaque colors only (it stops working with translucent ones): about what a
     /// plate looks like on the panel.
     static let solidPlate = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.24, alpha: 1) : UIColor(white: 0.9, alpha: 1) }
 }
 
 /// A key: a rounded plate with a label or symbol. The control fills its share of the bar, so the touch area has no
-/// gaps; the plate is inset by 3 pt.
+/// gaps; the plate is inset by 3 pt and gives way a little while pressed.
 final class KeyButton: UIControl {
     private let plate = UIView()
     private let title = UILabel()
     private let symbol = UIImageView()
     private let lockMark = UIView()
-    private let width: CGFloat
 
     /// For modifier keys: once and locked fill the key with the accent color; locked adds a bar under the title.
     var modifierState: StickyModifiers.State = .off { didSet { refresh() } }
 
-    init(label: TerminalKeyBar.Label, width: CGFloat) {
-        self.width = width
+    init(label: TerminalKeyBar.Label) {
         super.init(frame: .zero)
         plate.isUserInteractionEnabled = false
         plate.layer.cornerRadius = 12
@@ -418,9 +456,17 @@ final class KeyButton: UIControl {
 
     required init?(coder: NSCoder) { fatalError("not used") }
 
-    override var intrinsicContentSize: CGSize { CGSize(width: width + 6, height: 50) }
+    override var intrinsicContentSize: CGSize { CGSize(width: KeyBarLayout.minimumKey, height: 50) }
 
-    override var isHighlighted: Bool { didSet { refresh() } }
+    override var isHighlighted: Bool {
+        didSet {
+            refresh()
+            guard isHighlighted != oldValue else { return }
+            UIView.animate(withDuration: isHighlighted ? 0.06 : 0.18, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction]) {
+                self.plate.transform = self.isHighlighted ? CGAffineTransform(scaleX: 0.94, y: 0.94) : .identity
+            }
+        }
+    }
 
     private func refresh() {
         let on = modifierState != .off
@@ -456,11 +502,12 @@ private final class PasteKey: UIView {
             control.topAnchor.constraint(equalTo: topAnchor, constant: 3),
             control.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -3),
         ])
+        accessibilityIdentifier = "paste"
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
 
-    override var intrinsicContentSize: CGSize { CGSize(width: 50, height: 50) }
+    override var intrinsicContentSize: CGSize { CGSize(width: KeyBarLayout.minimumKey, height: 50) }
 }
 
 /// The swipe pad: drag from it towards a direction to send arrows; the farther the drag, the faster they repeat.
@@ -478,13 +525,13 @@ private final class ArrowPadControl: UIControl {
     override init(frame: CGRect) {
         super.init(frame: frame)
         plate.isUserInteractionEnabled = false
-        plate.backgroundColor = KeyColors.plate
+        plate.backgroundColor = KeyColors.padPlate
         plate.layer.cornerRadius = 12
         plate.layer.cornerCurve = .continuous
         plate.translatesAutoresizingMaskIntoConstraints = false
         addSubview(plate)
         glyph.contentMode = .center
-        glyph.tintColor = .label
+        glyph.tintColor = KeyColors.accent
         glyph.translatesAutoresizingMaskIntoConstraints = false
         plate.addSubview(glyph)
         NSLayoutConstraint.activate([
@@ -506,7 +553,7 @@ private final class ArrowPadControl: UIControl {
 
     required init?(coder: NSCoder) { fatalError("not used") }
 
-    override var intrinsicContentSize: CGSize { CGSize(width: 58, height: 50) }
+    override var intrinsicContentSize: CGSize { CGSize(width: KeyBarLayout.padWidth, height: 50) }
 
     private func setGlyph(_ key: TerminalKey?) {
         let name = switch key {
@@ -516,9 +563,9 @@ private final class ArrowPadControl: UIControl {
         case .right: "dpad.right.filled"
         default: "dpad"
         }
-        glyph.image = UIImage(systemName: name, withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .regular))
+        glyph.image = UIImage(systemName: name, withConfiguration: UIImage.SymbolConfiguration(pointSize: 23, weight: .regular))
             ?? UIImage(systemName: "arrow.up.and.down.and.arrow.left.and.right")
-        plate.backgroundColor = key == nil ? (isTracking ? KeyColors.pressed : KeyColors.plate) : KeyColors.pressed
+        plate.backgroundColor = key == nil && !isTracking ? KeyColors.padPlate : KeyColors.accent.withAlphaComponent(0.3)
     }
 
     override func beginTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {

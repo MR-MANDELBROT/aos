@@ -8,6 +8,8 @@ final class SessionChannel: @unchecked Sendable {
     enum Mode: Sendable {
         case exec(String)
         case shell(term: String, columns: Int, rows: Int)
+        /// A command in a pseudo terminal (`ssh -t host command`): the terminal sessions on the Mac.
+        case terminalCommand(String, term: String, columns: Int, rows: Int)
     }
 
     enum Failure: LocalizedError {
@@ -61,6 +63,14 @@ final class SessionChannel: @unchecked Sendable {
                 }, on: child, describing: "terminal")
                 try await handler.request({ SSHChannelRequestEvent.ShellRequest(wantReply: true) }, on: child,
                                           describing: "shell")
+            case .terminalCommand(let command, let term, let columns, let rows):
+                try await handler.request({
+                    SSHChannelRequestEvent.PseudoTerminalRequest(
+                        wantReply: true, term: term, terminalCharacterWidth: columns, terminalRowHeight: rows,
+                        terminalPixelWidth: 0, terminalPixelHeight: 0, terminalModes: SSHTerminalModes([:]))
+                }, on: child, describing: "terminal")
+                try await handler.request({ SSHChannelRequestEvent.ExecRequest(command: command, wantReply: true) },
+                                          on: child, describing: command)
             }
         } catch {
             try? await child.close().get()

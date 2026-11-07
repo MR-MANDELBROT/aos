@@ -198,6 +198,50 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   for a signed `subscribe` (Docs/COMPANION.md, "Signed requests").
 - **CompanionHub** collects the events (sign-in, help, approval requests and their end); a phone that connects gets
   the open questions first. The menu shows whether a phone is connected (it asked within 45 s).
+- **The Overview** (`CompanionControl`, Docs/COMPANION.md "The Mac from the iPhone"): a signed `mac.status` and one
+  signed op per action (sleep, display off, staying awake, workspace start and stop, Bitwarden lock, restart of aOS's
+  Claude Code session). What needs the app (staying awake, sleep) goes through `MacControls`, which `AppModel`
+  implements; the rest is AOSKit's own. Starting the workspace from the phone gives no agent a lease: the agent's
+  tools still need `workspace_open` and the person's yes.
+- **Sleep from the phone with aOS's lid-closed hold**: `pmset disablesleep 1` (the helper's hold) keeps even
+  `pmset sleepnow` from working. So the app first stops holding: no idle assertion, the lease released at once
+  (`hold(0)`: the helper sets disablesleep back if it set it), then reads `pmset -g` until SleepDisabled is 0 (6 s at
+  most) and runs `pmset sleepnow` 1.5 s after answering. Until a screen comes on again (`screensDidWake`: the person
+  opened the lid or pressed a key) aOS holds nothing, so a dark wake doesn't keep the Mac up; if `willSleep` doesn't
+  come within a minute, the hold returns. If SleepDisabled stays 1, someone else set it (aOS only ever undoes its own
+  hold): the phone hears `sleep-disabled`, or `other-service` when Cloupi's daemon is on the Mac (aOS never touches
+  it). Hotspot settings stay as they are on the way to sleep (writing them restarts airportd).
+
+## Terminal sessions (aos-companion term)
+
+The iPhone's terminal on the Mac survives the connection (the app in the background or killed, a new network):
+macOS has no tmux, so aos-companion brings a small holder (Docs/COMPANION.md, "Terminal sessions"; AOSKit
+`Terminal/`).
+
+- **Holder** (`term hold`): one process per session, started by the first `term attach` with `posix_spawn` and
+  `POSIX_SPAWN_SETSID` (no controlling terminal: sshd's hangup doesn't reach it), standard descriptors on /dev/null.
+  It starts the user's login shell in a pseudo terminal (`forkpty`, argv[0] `-zsh`, the home folder, TERM
+  xterm-256color, LANG from the Mac's region with UTF-8 when the SSH session brings none, `AOS_TERM_SESSION`), owns
+  the master and listens on `run/terms/<id>.sock` (0700 folder, socket 0600, peer uid checked). One poll loop, no
+  threads, no signal handlers but SIGTERM (ends the session like `term end`).
+- **Output**: a 1 MB ring with absolute offsets. Whatever leaves the ring passes through a small terminal state tracker
+  (`TermModes`: the parser's state, UTF-8, DEC private modes 1, 7, 25, 47/1047/1049, 1000-1016, 1004, 1007, 2004,
+  keypad, cursor style, the kitty keyboard stacks, the window title), so the state at the ring's start is always
+  known. A client that comes back with `--have N` gets exactly the bytes after N; one without (or behind the ring)
+  gets a reset, the modes in effect where its replay starts, the last 256 KB from a safe point (a line break if one is
+  near), and the program in the foreground gets SIGWINCH to draw itself again (vim, htop, less, Claude Code do; a
+  shell redraws its prompt line). A client that falls behind while attached gets the same, in place.
+- **Clients**: one at a time; a new attach takes over (after a network change the old SSH connection can linger on
+  the Mac until its TCP times out). Input is queued for the shell without blocking the loop; a client's output is
+  sent from the ring as its socket takes it (no queue per client).
+- **Ending**: the shell exits (the holder sends what it wrote last, the reason and the status, removes its socket and
+  exits), or `term end` / SIGTERM: SIGHUP to the foreground process group and the shell (as when a terminal window
+  closes), SIGKILL after 3 s. Nothing ends sessions by age (that could kill a running job): the iPhone's Terminal tab
+  lists them (`term list`) with the program in the foreground and its folder (libproc), and ends them on request.
+  At most 16 at a time.
+- Tested in AOSKit (`TermTests`): the tracker, the ring and its replays, frames, the holder in-process with /bin/sh,
+  and the built binary end to end in a pseudo terminal (detach by hangup, come back with an offset, resize, takeover,
+  end, exit).
 
 ## Signing in for the agent
 

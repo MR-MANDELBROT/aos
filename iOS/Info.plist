@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>dev.marquart.aos.ios.terminal.*</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -28,6 +32,14 @@
 				<string>aos-pair</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>dev.marquart.aos.ios.links</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>aos</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
@@ -46,11 +58,22 @@
 	<string>Face ID approves sign-ins for your agent and unlocks aOS.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>aOS connects to your Mac on your network: to pair with it and to reach it over SSH. Nothing else on your network is contacted.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>With “Keep alive with location” on, the location service keeps your terminal running in the background. aOS doesn't use, keep or send your location.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>processing</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

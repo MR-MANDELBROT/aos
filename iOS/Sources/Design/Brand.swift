@@ -65,17 +65,25 @@ struct AppIconImage: View {
     }
 }
 
-/// A line of the "what is where" kind: a symbol and a plain sentence.
+/// A line of the "what is where" kind: a symbol and a plain sentence. The symbols sit in a column of one width
+/// (a wide one like the eye is centered in it, not pushing its text to the right), on the first line's baseline.
 struct FactRow: View {
     let symbol: String
     let text: LocalizedStringKey
     var tint: Color = BrandColor.indigo
 
+    /// As wide as the Overview's icon column, so the lines align with the cards above them.
+    static let iconWidth: CGFloat = 30
+
     var body: some View {
-        Label {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Image(systemName: symbol)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(tint)
+                .frame(width: Self.iconWidth)
+                .accessibilityHidden(true)
             Text(text).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: symbol).foregroundStyle(tint)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
