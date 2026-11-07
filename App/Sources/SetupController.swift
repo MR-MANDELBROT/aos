@@ -381,7 +381,11 @@ final class SetupController: ObservableObject {
         case allowingHelper
     }
 
-    @Published var sharingPhase: SharingPhase = .starting
+    @Published var sharingPhase: SharingPhase = .starting {
+        didSet { if sharingPhase != oldValue { passwordTyped = false } }
+    }
+    /// The workspace password was entered with the button in this phase: the check is the next step then.
+    @Published var passwordTyped = false
     /// Why the last check failed (shown in the workspace window's bar).
     @Published var sharingProblem: String?
     /// The check failed because macOS keeps aOS out of the local network (the bar offers the setting).
@@ -499,13 +503,6 @@ final class SetupController: ObservableObject {
         }, then: { self.connectAgents() })
     }
 
-    /// Without the helper (it can be allowed later in the settings).
-    func skipHelper() {
-        run(String(localized: "Finishing the workspace"), {
-            try await self.finishScreenSharing()
-        }, then: { self.connectAgents() })
-    }
-
     private func finishScreenSharing() async throws {
         let ip = try await startedWorkspace()
         try await workspace.provisioner.finish(host: ip)
@@ -522,6 +519,7 @@ final class SetupController: ObservableObject {
         guard let view, let password = try? GuestSecrets(paths: paths).adminPassword(createIfMissing: false) else { return }
         workspace.noteActivity()
         view.type(password + "\n")
+        passwordTyped = true
         note("entered the workspace password (button)")
     }
 
