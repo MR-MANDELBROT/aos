@@ -23,6 +23,8 @@ final class TestSSHServer: @unchecked Sendable {
     let hostKeyLine: String
     let hostKeyFingerprint: String
     let companion: MockCompanionServer
+    /// The Mac's terminal sessions (`aos-companion term`), played by the server.
+    let terms: FakeTermSessions
     let log = ServerLog()
     private let channel: Channel
 
@@ -34,6 +36,7 @@ final class TestSSHServer: @unchecked Sendable {
         let allowed = try allowedKey.map { try NIOSSHPublicKey(openSSHPublicKey: $0.publicKey) }
         let auth = ServerAuth(username: username, key: allowed, password: password)
         let log = ServerLog()
+        let terms = FakeTermSessions()
         let channel = try await ServerBootstrap(group: MultiThreadedEventLoopGroup.singleton)
             .childChannelInitializer { channel in
                 // Initializers run on the channel's event loop: synchronous pipeline operations are right there.
@@ -45,7 +48,8 @@ final class TestSSHServer: @unchecked Sendable {
                             switch type {
                             case .session:
                                 return child.eventLoop.makeCompletedFuture {
-                                    try child.pipeline.syncOperations.addHandler(SessionServer(companion: companion, log: log))
+                                    try child.pipeline.syncOperations.addHandler(SessionServer(companion: companion, log: log,
+                                                                                               terms: terms))
                                 }
                             case .directTCPIP(let target):
                                 log.add("direct-tcpip \(target.targetHost):\(target.targetPort)")
@@ -70,10 +74,12 @@ final class TestSSHServer: @unchecked Sendable {
                 }
             }
             .bind(host: "127.0.0.1", port: 0).get()
-        return TestSSHServer(channel: channel, hostKey: hostKey, companion: companion, log: log)
+        return TestSSHServer(channel: channel, hostKey: hostKey, companion: companion, log: log, terms: terms)
     }
 
-    private init(channel: Channel, hostKey: NIOSSHPrivateKey, companion: MockCompanionServer, log: ServerLog) {
+    private init(channel: Channel, hostKey: NIOSSHPrivateKey, companion: MockCompanionServer, log: ServerLog,
+                 terms: FakeTermSessions) {
+        self.terms = terms
         self.channel = channel
         port = channel.localAddress?.port ?? 0
         hostKeyLine = String(openSSHPublicKey: hostKey.publicKey)
@@ -134,13 +140,16 @@ private final class SessionServer: ChannelDuplexHandler, @unchecked Sendable {
 
     let companion: MockCompanionServer
     let log: ServerLog
+    let terms: FakeTermSessions
     private var feeder: MockCompanionServer.Feeder?
+    private var term: FakeTermSessions.Attached?
     private var shell = false
     private var hasPTY = false
 
-    init(companion: MockCompanionServer, log: ServerLog) {
+    init(companion: MockCompanionServer, log: ServerLog, terms: FakeTermSessions) {
         self.companion = companion
         self.log = log
+        self.terms = terms
     }
 
     func handlerAdded(context: ChannelHandlerContext) {
@@ -153,6 +162,20 @@ private final class SessionServer: ChannelDuplexHandler, @unchecked Sendable {
         case let exec as SSHChannelRequestEvent.ExecRequest:
             log.add("exec \(exec.command)")
             if exec.wantReply { channel.triggerUserOutboundEvent(ChannelSuccessEvent(), promise: nil) }
+            // The Mac's terminal sessions
+            let termLoop = channel.eventLoop
+            let session = self
+            let attached = FakeTermSessions.Attached(write: { data in
+                termLoop.execute { session.write(channel, data, type: .channel) }
+            }, close: { status in
+                termLoop.execute {
+                    if let status { session.exit(channel, status: status) } else { channel.close(promise: nil) }
+                }
+            })
+            if terms.handle(command: exec.command, companion: TestSSHServer.companionPath, attached: attached) {
+                term = attached
+                return
+            }
             guard exec.command == CompanionCommand.serve(path: TestSSHServer.companionPath) else {
                 // Like a login shell that doesn't find the program
                 write(channel, Data("zsh:1: no such file or directory: \(exec.command)\n".utf8), type: .stdErr)
@@ -194,7 +217,9 @@ private final class SessionServer: ChannelDuplexHandler, @unchecked Sendable {
         let message = unwrapInboundIn(data)
         guard case .byteBuffer(let buffer) = message.data, message.type == .channel else { return }
         let bytes = Data(buffer.readableBytesView)
-        if shell {
+        if let term {
+            terms.input(bytes, from: term)
+        } else if shell {
             // Echo, with "exit\r" ending the shell
             write(context.channel, bytes, type: .channel)
             if String(decoding: bytes, as: UTF8.self).contains("exit\r") { exit(context.channel, status: 0) }
