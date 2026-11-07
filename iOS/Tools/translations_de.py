@@ -580,6 +580,8 @@ DE.update({
     'Open': 'Offen',
     'Reconnecting': 'Verbinde neu',
     'Reconnecting, kept on the Mac': 'Verbinde neu, auf dem Mac gehalten',
+    "The Mac isn't reachable right now. The session keeps running there.":
+        'Der Mac ist gerade nicht erreichbar. Die Sitzung läuft dort weiter.',
 })
 
 # The Overview: the Mac and aOS from the iPhone
