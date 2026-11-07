@@ -153,13 +153,23 @@ public struct TermHello: Codable, Equatable, Sendable {
     public var rows: UInt16?
     /// Who attaches, for the list ("ssh 192.168.178.31").
     public var from: String?
+    /// Which device attaches (the iPhone's id): a client of the same device takes the session over without a word
+    /// to the one before (that one is the same phone's old connection, not someone else).
+    public var client: String?
 
-    public init(op: Op, have: UInt64? = nil, cols: UInt16? = nil, rows: UInt16? = nil, from: String? = nil) {
+    public init(op: Op, have: UInt64? = nil, cols: UInt16? = nil, rows: UInt16? = nil, from: String? = nil,
+                client: String? = nil) {
         self.op = op
         self.have = have
         self.cols = cols
         self.rows = rows
         self.from = from
+        self.client = client
+    }
+
+    /// A device id as a client may give it: 1 to 64 letters, digits, dots, dashes or underscores.
+    public static func isClientID(_ text: String) -> Bool {
+        (1...64).contains(text.count) && text.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || ".-_".contains($0)) }
     }
 }
 
@@ -190,8 +200,10 @@ public struct TermEnd: Codable, Equatable, Sendable {
         case exited
         /// Someone ended the session (the list on the iPhone, `term end`).
         case ended
-        /// Another client attached (one at a time).
+        /// A client of another device attached (one at a time).
         case taken
+        /// The same device attached again (its old connection lingered): nothing to tell anyone.
+        case replaced
     }
     public var reason: Reason
     public var status: Int32?
@@ -215,6 +227,8 @@ public struct TermInfo: Codable, Equatable, Sendable {
     public var lastOutput: Date?
     /// Who is attached ("ssh 192.168.178.31").
     public var from: String?
+    /// The attached device's id, if it gave one (the iPhone's).
+    public var client: String?
     /// The program in the foreground ("zsh", "vim", "claude") and its folder.
     public var command: String?
     public var cwd: String?
@@ -224,8 +238,8 @@ public struct TermInfo: Codable, Equatable, Sendable {
     public var rows: UInt16
 
     public init(id: String, pid: Int32, shell: Int32, created: Date, attached: Bool, since: Date,
-                lastOutput: Date? = nil, from: String? = nil, command: String? = nil, cwd: String? = nil,
-                title: String? = nil, cols: UInt16, rows: UInt16) {
+                lastOutput: Date? = nil, from: String? = nil, client: String? = nil, command: String? = nil,
+                cwd: String? = nil, title: String? = nil, cols: UInt16, rows: UInt16) {
         self.id = id
         self.pid = pid
         self.shell = shell
@@ -234,6 +248,7 @@ public struct TermInfo: Codable, Equatable, Sendable {
         self.since = since
         self.lastOutput = lastOutput
         self.from = from
+        self.client = client
         self.command = command
         self.cwd = cwd
         self.title = title
@@ -264,7 +279,7 @@ enum TermJSON {
 /// counts the output bytes: that is the offset it asks for when it attaches again.
 ///
 ///     {"t":"start","id":"3fa9c1d2","from":12345,"reset":false,"prefix":"<base64>","created":"<ISO>","new":true,"gone":"<old id>"}
-///     {"t":"end","why":"exited|ended|taken|lost","status":0}
+///     {"t":"end","why":"exited|ended|taken|replaced|lost","status":0}
 public enum TermMarker {
     public static let introducer: [UInt8] = [0x1b, 0x5d] + Array("7730;".utf8)
 

@@ -22,14 +22,17 @@ public enum TermClient {
         case failed = 1
         case taken = 3
         case lost = 4
+        /// The same device attached again: this was its old connection.
+        case replaced = 5
     }
 
     // MARK: attach
 
     /// Attaches this process's terminal (stdin, stdout) to session `id`, or to a new session when there is no `id`
     /// or that session is gone. `have`: the offset the caller's terminal has the output up to (only for `id`).
+    /// `client`: the device that attaches (the iPhone's id; its own old connection is replaced without a word).
     /// `holder`: the program that holds a new session (this executable, with `term hold`).
-    public static func attach(dir: URL, id: String?, have: UInt64?, holder: String) -> Int32 {
+    public static func attach(dir: URL, id: String?, have: UInt64?, client: String? = nil, holder: String) -> Int32 {
         do { try TermPlace.prepare(dir) } catch {
             FileHandle.standardError.write(Data("\(error.localizedDescription)\n".utf8))
             return Exit.failed.rawValue
@@ -58,7 +61,7 @@ public enum TermClient {
         }
         defer { close(fd) }
         let hello = TermHello(op: .attach, have: isNew || gone != nil ? nil : have, cols: size.cols, rows: size.rows,
-                              from: origin())
+                              from: origin(), client: client.flatMap { TermHello.isClientID($0) ? $0 : nil })
         guard TermSocket.writeAll(fd, TermFrame.hello(TermJSON.encode(hello)).encoded) else { return Exit.lost.rawValue }
 
         var saved = termios()
@@ -119,7 +122,11 @@ public enum TermClient {
                     case .end(let data):
                         let end = TermJSON.decode(TermEnd.self, data)
                         writeOut(TermMarker.end(end?.reason.rawValue ?? "ended", status: end?.status))
-                        return end?.reason == .taken ? Exit.taken.rawValue : Exit.ended.rawValue
+                        switch end?.reason {
+                        case .taken: return Exit.taken.rawValue
+                        case .replaced: return Exit.replaced.rawValue
+                        default: return Exit.ended.rawValue
+                        }
                     default:
                         break
                     }

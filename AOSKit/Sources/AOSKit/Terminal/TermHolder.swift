@@ -77,12 +77,15 @@ public final class TermHolder: @unchecked Sendable {
         var outbox: [UInt8]
         var outboxPosition = 0
         var from: String?
+        /// The device the client said it is.
+        var device: String?
 
-        init(fd: Int32, sent: UInt64, outbox: [UInt8], from: String?) {
+        init(fd: Int32, sent: UInt64, outbox: [UInt8], from: String?, device: String?) {
             self.fd = fd
             self.sent = sent
             self.outbox = outbox
             self.from = from
+            self.device = device
         }
     }
 
@@ -388,15 +391,19 @@ public final class TermHolder: @unchecked Sendable {
     // MARK: Clients
 
     private func attach(fd: Int32, hello: TermHello, reader: TermFrameReader) {
+        let device = hello.client.flatMap { TermHello.isClientID($0) ? $0 : nil }
         if let old = client {
-            // One at a time: the newest wins (the phone after a network change, while the old connection lingers).
-            send(.end(TermJSON.encode(TermEnd(reason: .taken))), to: old)
-            drop(old, note: "taken over")
+            // One at a time: the newest wins. The same device again (the phone after a network change or a relaunch,
+            // while its old connection lingers) replaces its old connection quietly; another device takes it over.
+            let same = device != nil && old.device == device
+            send(.end(TermJSON.encode(TermEnd(reason: same ? .replaced : .taken))), to: old)
+            drop(old, note: same ? "replaced by the same device" : "taken over")
         }
         let resized = setSize(cols: hello.cols ?? cols, rows: hello.rows ?? rows)
         let plan = ring.replay(have: hello.have, budget: config.replayBudget)
         let start = TermStart(session: config.id, from: plan.from, reset: plan.reset, prefix: plan.prefix, created: created)
-        let c = Client(fd: fd, sent: plan.from, outbox: TermFrame.start(TermJSON.encode(start)).encoded, from: hello.from)
+        let c = Client(fd: fd, sent: plan.from, outbox: TermFrame.start(TermJSON.encode(start)).encoded, from: hello.from,
+                       device: device)
         c.reader = reader
         client = c
         since = Date()
@@ -529,7 +536,8 @@ public final class TermHolder: @unchecked Sendable {
         command = Self.processName(pid) ?? Self.processName(shellPID)
         cwd = Self.currentDirectory(pid) ?? Self.currentDirectory(shellPID)
         return TermInfo(id: config.id, pid: getpid(), shell: shellPID, created: created, attached: client != nil,
-                        since: since, lastOutput: lastOutput, from: client?.from, command: command, cwd: cwd,
+                        since: since, lastOutput: lastOutput, from: client?.from, client: client?.device,
+                        command: command, cwd: cwd,
                         title: ring.modesAtEnd.title, cols: cols, rows: rows)
     }
 
