@@ -8505,7 +8505,18 @@
         }
       }
     },
+    "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later on Apple silicon)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac behält seine eigene Größe: Seine Bildschirmfreigabe hat keinen Hochleistungsmodus (dafür braucht es macOS 14 oder neuer auf Apple Silicon)."
+          }
+        }
+      }
+    },
     "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

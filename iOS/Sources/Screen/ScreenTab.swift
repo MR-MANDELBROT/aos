@@ -261,7 +261,7 @@ struct ScreenTab: View {
         case .tailnetWithoutVPN:
             return String(localized: "Through aOS's Tailscale your Mac keeps its own size. In the iPhone's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi.")
         case .noHighPerformance:
-            return String(localized: "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later).")
+            return String(localized: "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later on Apple silicon).")
         case .failed:
             return String(localized: "Your Mac came through SSH in its own size: the direct way didn't work this time.")
         }

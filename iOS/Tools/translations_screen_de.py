@@ -272,8 +272,8 @@ DE.update({
         'Über SSH behält dein Mac seine eigene Größe. In iPhone-Größe kommt er direkt: im selben WLAN oder mit eingeschaltetem VPN der Tailscale-App.',
     "Through aOS's Tailscale your Mac keeps its own size. In the iPhone's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi.":
         'Über das Tailscale von aOS behält dein Mac seine eigene Größe. In iPhone-Größe kommt er mit eingeschaltetem VPN der Tailscale-App oder im selben WLAN.',
-    "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later).":
-        'Dein Mac behält seine eigene Größe: Seine Bildschirmfreigabe hat keinen Hochleistungsmodus (dafür braucht es macOS 14 oder neuer).',
+    "Your Mac keeps its own size: its screen sharing has no high performance mode (that needs macOS 14 or later on Apple silicon).":
+        'Dein Mac behält seine eigene Größe: Seine Bildschirmfreigabe hat keinen Hochleistungsmodus (dafür braucht es macOS 14 oder neuer auf Apple Silicon).',
     "Your Mac came through SSH in its own size: the direct way didn't work this time.":
         'Dein Mac kam über SSH in seiner eigenen Größe: Der direkte Weg hat diesmal nicht geklappt.',
 })
