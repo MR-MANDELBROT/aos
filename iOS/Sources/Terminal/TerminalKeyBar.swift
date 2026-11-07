@@ -1,10 +1,11 @@
 import UIKit
 
-/// The keys above the keyboard: one row that scrolls as a whole. At its start the arrows sit in the middle of the
-/// screen (the swipe pad, or four keys: Settings > Terminal), Esc, Control and Tab to their left, Option, Shift-Tab,
-/// paste, the symbols a shell needs, navigation and function keys to their right. Every key is equally wide (a calm
-/// row like a keyboard's, 44 pt high plates); the row snaps to whole keys. Modifiers stick for the next key (tap),
-/// lock (double tap) or work while held. A glass panel like the rest of the app.
+/// The keys above the keyboard: only what the iPhone's keyboard lacks (its symbols are on the keyboard). One row that
+/// scrolls as a whole. At its start the arrows sit in the middle of the screen (the swipe pad, or four keys: Settings >
+/// Terminal), Esc, Control and Tab to their left, Option, Shift-Tab, paste, navigation (with forward delete) and
+/// function keys to their right. Every key is equally wide (a calm row like a keyboard's, 44 pt high plates); the row
+/// snaps to whole keys. Modifiers stick for the next key (tap), lock (double tap) or work while held. A glass panel
+/// like the rest of the app.
 final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
     static let height: CGFloat = 58
 
@@ -122,20 +123,16 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
         case symbol(String)
     }
 
-    private static let symbols = ["~", "/", "|", "-", "_", "\\", "`", "*", "$", "&", ">", "<", "=", ":", ";", "'", "\"",
-                                  "!", "?", "#", "%", "^", "@", "{", "}", "[", "]", "(", ")"]
-
     /// In this order from the left; the first ones fill the half left of the arrows.
     private static var keys: [Item] {
         let main: [Item] = [.key(.escape, .text("esc")), .modifier(.control), .key(.tab, .text("tab")), .modifier(.alt),
                             .key(.tab, .text("⇧tab"), extra: .shift), .paste]
-        let symbols = Self.symbols.map { Item.key(.text($0), .text($0)) }
         let navigation: [Item] = [
             .key(.home, .text("home")), .key(.end, .text("end")),
             .key(.pageUp, .text("pg↑"), repeats: true), .key(.pageDown, .text("pg↓"), repeats: true),
             .key(.forwardDelete, .text("del"), repeats: true),
         ]
-        return main + symbols + navigation + (1...12).map { .key(.function($0), .text("F\($0)")) }
+        return main + navigation + (1...12).map { .key(.function($0), .text("F\($0)")) }
     }
 
     /// ← ↑ → ↓, as Max listed them.
