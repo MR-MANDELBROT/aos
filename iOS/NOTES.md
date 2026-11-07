@@ -139,7 +139,8 @@ concurrency, member import visibility). libsharing (Go) is `Libsharing.xcframewo
 own build); `generate.sh` runs it when the framework is missing.
 
 **Left out**: the computer list and editor, discovery and availability, links, pairing with other devices, RDP (its
-Swift branches stay, aOS never opens one; the Go library still has it), the macOS app (its code stays compiled out),
+Swift branches stay, aOS never opens one; the Go library still has it) and with it sending audio (no microphone code,
+no permission), the macOS app (its code stays compiled out),
 the server mode, updates, OSS's demo, the language picker (iOS has one per app), the fork's password fill panel, and
 "New Connection". High performance (video and audio over UDP) is off: only TCP goes through SSH.
 
