@@ -58,7 +58,17 @@ enum Demo {
         // session, from a screen sharing server in the app: ScreenTab.start, DemoScreenServer).
         ScreenClient.useMemoryStore()
         let server = MockCompanionServer()
+        // -AOSDemoSession needsLogin: Claude Code on the Mac waits for a sign-in (the Overview says what to do).
+        // -AOSDemoDisplay off|none: the Mac's display asleep, or no screen (the lid closed, no monitor).
+        if UserDefaults.standard.string(forKey: "AOSDemoSession") == "needsLogin" {
+            server.update { $0.macStatus["session"] = .object(["enabled": .bool(true), "state": .string("needsLogin")]) }
+        }
+        if let display = UserDefaults.standard.string(forKey: "AOSDemoDisplay") {
+            server.update { $0.macStatus["display"] = .object(["state": .string(display), "external": .number(0)]) }
+        }
         connection.startDemo(server)
+        // -AOSDemoSleeping YES: put to sleep from here a moment ago.
+        if UserDefaults.standard.bool(forKey: "AOSDemoSleeping") { connection.macGoesToSleep(after: 0) }
         switch tab {
         case "terminal": model.tab = .terminal
         case "screen": model.tab = .screen
