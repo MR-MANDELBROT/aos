@@ -95,9 +95,9 @@ struct HelperRow: View {
     var detail: String {
         switch power.helperStatus {
         case .enabled:
-            return String(localized: "Keeps the Mac awake with the lid closed, looks after Wi-Fi and runs Bitwarden apart from your other programs.")
+            return String(localized: "Keeps the workspace's keys and disk and runs Bitwarden apart from your other programs. Also keeps the Mac awake with the lid closed and looks after Wi-Fi.")
         default:
-            return String(localized: "Needed to keep the Mac awake with the lid closed and for Bitwarden. macOS asks you once to allow it.")
+            return String(localized: "Needed for the workspace, for Bitwarden and to keep the Mac awake with the lid closed. macOS asks you once to allow it.")
         }
     }
 }
@@ -167,7 +167,7 @@ struct OtherWakeServiceNote: View {
     }
 }
 
-/// The hotspot question: macOS joins the iPhone's hotspot by itself, or only when the user switches it on.
+/// The iPhone's hotspot: where the person sets how macOS joins it (aOS can't change it).
 struct HotspotSection: View {
     @EnvironmentObject var model: AppModel
     @EnvironmentObject var power: PowerController
@@ -177,30 +177,8 @@ struct HotspotSection: View {
             if power.cloupiPresent {
                 OtherWakeServiceNote()
             } else {
-                HotspotChoice()
+                HotspotHint()
                 if let w = power.wifi { HotspotStateLine(state: w, choice: nil) }
-                switch power.hotspotApply {
-                case .idle, .done:
-                    EmptyView()
-                case .working:
-                    HStack(spacing: 8) {
-                        ProgressView().controlSize(.small)
-                        Text("Changing the Wi-Fi settings. Wi-Fi reconnects for a moment.").font(.caption)
-                    }
-                case .waitingForHelper:
-                    HelperRow()
-                case .failed(let message):
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label("macOS didn't take the change.", systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                        Text(message).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
-                        HStack {
-                            Button("Try Again") { power.retryHotspot() }
-                                .buttonStyle(.glass)
-                            Button("Open Wi-Fi Settings") { power.openWiFiSettings() }.buttonStyle(.glass)
-                        }
-                    }
-                }
             }
         } header: {
             Text("iPhone hotspot")
@@ -209,47 +187,32 @@ struct HotspotSection: View {
     }
 }
 
-/// The two answers for the closed lid, as radio buttons with an explanation each. With the lid open macOS's own
-/// settings stay as they are.
-struct HotspotChoice: View {
-    @EnvironmentObject var model: AppModel
+/// How the Mac reaches the internet through the iPhone's hotspot with the lid closed. macOS doesn't let apps change
+/// this (not even aOS's helper as root, macOS 27), so aOS only says where the person sets it.
+struct HotspotHint: View {
+    @EnvironmentObject var power: PowerController
     var compact = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Your iPhone's hotspot with the lid closed")
                 .fontWeight(compact ? .medium : .regular)
-            option(.manual, "When needed: you switch it on on the iPhone", recommended: true,
-                   "Switch the hotspot on on your iPhone and the Mac connects; switch it off and the Mac stays disconnected. Meanwhile it keeps looking for known Wi-Fi.")
-            option(.automatic, "Connect automatically",
-                   "The Mac joins your hotspot by itself and switches it on when there's no Wi-Fi. That uses more energy, mostly your iPhone's.")
-            Text("Only with the lid closed. With the lid open everything stays as you set it in macOS.")
-                .font(.caption).foregroundStyle(.secondary)
+            Text("If the Mac should go online through your iPhone when there's no Wi-Fi, set it up once in macOS (\(Brand.name) can't, macOS doesn't let apps change Wi-Fi settings):")
+                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 4) {
+                hintStep("1", "Join your iPhone's hotspot once from the Wi-Fi menu.")
+                hintStep("2", "In Wi-Fi settings, click (i) next to it and switch on Auto-Join.")
+                hintStep("3", "Under \"Ask to join hotspots\" choose Automatic (the Mac joins by itself) or Ask to Join (it asks first).")
+            }
+            Button("Open Wi-Fi Settings") { power.openWiFiSettings() }.buttonStyle(.glass)
         }
     }
 
-    func option(_ value: HotspotJoin, _ title: LocalizedStringKey, recommended: Bool = false,
-                _ detail: LocalizedStringKey) -> some View {
-        let selected = (model.settings.hotspotJoin ?? .manual) == value
-        return Button {
-            model.update { $0.hotspotJoin = value }
-        } label: {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: selected ? "largecircle.fill.circle" : "circle")
-                    .foregroundStyle(selected ? BrandColor.indigo : .secondary)
-                    .font(.title3)
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 8) {
-                        Text(title).fontWeight(selected ? .semibold : .regular)
-                        if recommended { RecommendedBadge() }
-                    }
-                    Text(detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-            }
-            .contentShape(Rectangle())
+    func hintStep(_ number: String, _ text: LocalizedStringKey) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(number).font(.caption.weight(.bold)).foregroundStyle(BrandColor.indigo).frame(width: 14)
+            Text(text).font(.callout).fixedSize(horizontal: false, vertical: true)
         }
-        .buttonStyle(.plain)
     }
 }
 
