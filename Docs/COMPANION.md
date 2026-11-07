@@ -12,8 +12,8 @@ user, wherever they are:
   Bitwarden, with sleep and the other actions as signed requests.
 - **Screen**: the paired Mac's screen and the aOS workspace, live, with touch, keyboard and trackpad gestures, in
   Open Screen Sharing's session (GPL-3.0, iOS/ThirdParty/OpenScreenSharing; iOS/NOTES.md, "The screen").
-- **Help requests**: when the agent asks for help (a captcha, a sign-in it can't do), the request opens the
-  workspace screen on the iPhone.
+- **Help requests**: when the agent asks for help (a captcha, a sign-in it can't do), the request opens the Screen
+  tab on the iPhone with a banner; the workspace connects when the person taps it (nothing connects by itself).
 - **Settings**.
 
 ## Decisions (2026-11-06; the first version had a vault of its own on the iPhone, replaced the same day)
@@ -39,7 +39,11 @@ user, wherever they are:
   channel running `aos-companion serve`), and the screens (direct-tcpip channels to 127.0.0.1:5900 for the Mac and
   to the workspace VM). No new server, no listening port beyond OpenSSH, strong crypto, pinned host key. Outside the
   home network it goes through Tailscale (2026-11-07, "Connecting" below): the person's own Tailscale app, or aOS's
-  own Tailscale node on the Mac and in the iPhone app; or only the same network.
+  own Tailscale node on the Mac and in the iPhone app; or only the same network. One exception, for the Mac's own
+  screen in the iPhone's size: Open Screen Sharing's high performance needs UDP, so that session goes directly to the
+  Mac's Screen Sharing (TCP 5900 and the UDP ports it announces) when the Mac can be reached in the same network or
+  through the Tailscale app's VPN, checked against the screen sharing key learned through SSH; otherwise through SSH
+  in the Mac's own size (iOS/NOTES.md, "The screen").
 - **Keys**: the iPhone's SSH key is a P-256 key in the Secure Enclave (software key in the keychain on the simulator).
   It never leaves the device. A second key of the same kind signs every companion request; the Mac got its public
   half at pairing and acts only on requests signed with it ("Signed requests", 2026-11-06, after a security review:
