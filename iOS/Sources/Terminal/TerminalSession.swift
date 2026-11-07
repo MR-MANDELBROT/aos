@@ -6,29 +6,28 @@ import UIKit
 
 private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "terminal")
 
-/// One terminal, shown by SwiftTerm. On the paired Mac it is a session that outlives the connection
-/// (`aos-companion term attach`, TerminalAttach.swift): when the connection drops (the app in the background, a new
-/// network) the shell keeps running on the Mac, and the terminal attaches again by itself as soon as the Mac is
-/// reachable, getting exactly the output it missed. On other computers it is a login shell over SSH. The terminal
-/// view lives here, so its contents survive leaving the screen and coming back.
+/// The terminal on the paired Mac, shown by SwiftTerm: one of the Mac's sessions at a time, which outlive the
+/// connection (`aos-companion term attach`, TerminalAttach.swift). When the connection drops (the app in the
+/// background, a new network, the Mac asleep) the shell keeps running on the Mac, and the terminal attaches again by
+/// itself as soon as the Mac is reachable, getting exactly the output it missed. "New Session" starts another shell
+/// there, switching shows another one (the one before keeps running). This iPhone names itself when it attaches
+/// (its phone id), so a newer connection of its own replaces an older one without a word: only another device
+/// "takes" a session. The terminal view lives here, so its contents survive leaving the screen and coming back.
 @MainActor @Observable
 final class TerminalSession: Identifiable, TerminalInteractionDelegate {
     enum Target: Hashable, Sendable {
         case mac(UUID)
-        case host(UUID)
 
         /// For links and the Live Activity.
         var key: String {
             switch self {
             case .mac(let id): "mac-\(id.uuidString)"
-            case .host(let id): "host-\(id.uuidString)"
             }
         }
 
         init?(key: String) {
-            if key.hasPrefix("mac-"), let id = UUID(uuidString: String(key.dropFirst(4))) { self = .mac(id) }
-            else if key.hasPrefix("host-"), let id = UUID(uuidString: String(key.dropFirst(5))) { self = .host(id) }
-            else { return nil }
+            guard key.hasPrefix("mac-"), let id = UUID(uuidString: String(key.dropFirst(4))) else { return nil }
+            self = .mac(id)
         }
     }
 
@@ -38,19 +37,13 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         case connected
         /// The connection dropped; on the Mac the shell keeps running and the terminal attaches again by itself.
         case reconnecting
-        /// The person detached; the session keeps running on the Mac.
-        case detached
         case ended
         case failed(String)
-        /// First connection to an added host: the person checks the key and trusts it.
-        case confirmHostKey(host: String, key: String, fingerprint: String)
-        /// The host presents another key than the one trusted before.
-        case hostKeyChanged(host: String, fingerprint: String)
     }
 
     /// Why the terminal ended.
     enum EndReason: Equatable, Sendable {
-        /// The shell on another computer, or the connection to it, ended.
+        /// The shell, or the connection to it, ended (a plain shell: an older aOS on the Mac).
         case closed
         /// The shell on the Mac exited.
         case exited
@@ -75,7 +68,6 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
     @ObservationIgnored let view: AOSTerminalView
     @ObservationIgnored private var bridge: Bridge!
     private var channel: SessionChannel?
-    private var ownConnection: SSHConnection?
     private var readTask: Task<Void, Never>?
     /// Input goes out in order through one task (separate tasks per key press could overtake each other).
     @ObservationIgnored private var writer: AsyncStream<Data>.Continuation?
@@ -98,6 +90,8 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
 
     /// The Mac connection to attach through (the app's current one).
     @ObservationIgnored var macConnection: () -> MacConnection? = { nil }
+    /// This iPhone's id (`DeviceKey.phoneID`), named when attaching.
+    @ObservationIgnored var phoneID: () -> String? = { nil }
     /// The session on the Mac this terminal shows (kept across launches of the app).
     private(set) var holderID: String?
     /// False when aOS on the Mac can't hold sessions (an older version): a plain shell then.
@@ -107,13 +101,20 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
     @ObservationIgnored private var received: UInt64 = 0
     @ObservationIgnored private var viewHasOutput = false
     @ObservationIgnored private var filter = TermNoteFilter()
-    /// The terminal should stay attached (until the person detaches or the session ends).
+    /// The terminal should stay attached (until it shows another session or the session ends).
     @ObservationIgnored private var wantsAttached = false
     @ObservationIgnored private var reattach: Task<Void, Never>?
     @ObservationIgnored private var quickFailures = 0
     @ObservationIgnored private var gotEndNote = false
     @ObservationIgnored private var gotStartNote = false
     @ObservationIgnored private var channelOpened = Date.distantPast
+    /// Which channel is this terminal's: a new round after every drop and when it lets go. Output and notes of an
+    /// older channel (one that lingers after a reconnect) are ignored: they are not this terminal's any more.
+    @ObservationIgnored private var round = 0
+    /// The round an attach is under way for (only one at a time).
+    @ObservationIgnored private var attaching: Int?
+    /// What the Mac wrote before the session started (why it didn't, if it doesn't).
+    @ObservationIgnored private var beforeStart = Data()
 
     init(id: Target, title: String, fontSize: CGFloat = TerminalFontSize.standard) {
         self.id = id
@@ -124,18 +125,24 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         bridge = Bridge(session: self)
         view.terminalDelegate = bridge
         view.interaction = self
-        if case .mac = id { holderID = UserDefaults.standard.string(forKey: holderKey).flatMap { TermAttach.isID($0) ? $0 : nil } }
+        holderID = Self.storedHolderID(for: id)
     }
 
     var isActive: Bool { phase == .connecting || phase == .connected || phase == .reconnecting }
 
-    private var holderKey: String { "terminal.session.\(id.key)" }
+    private var holderKey: String { Self.holderKey(id) }
+    private static func holderKey(_ target: Target) -> String { "terminal.session.\(target.key)" }
+
+    /// The session the terminal showed last (also before it exists in this launch: for the list).
+    static func storedHolderID(for target: Target) -> String? {
+        UserDefaults.standard.string(forKey: holderKey(target)).flatMap { TermAttach.isID($0) ? $0 : nil }
+    }
 
     private func setPhase(_ new: Phase) {
         guard phase != new else { return }
         phase = new
         if new == .connected, connectedSince == nil { connectedSince = Date() }
-        if new == .ended || new == .detached || new == .idle { connectedSince = nil }
+        if new == .ended || new == .idle { connectedSince = nil }
         if case .failed = new { connectedSince = nil }
         onChange?(self)
     }
@@ -158,7 +165,8 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
 
     /// Attaches to the Mac's session (or starts one), or waits for the Mac if it isn't reachable now.
     private func attachToMac() async {
-        guard wantsAttached else { return }
+        // Attached already, or an attach for this round is under way (two would start two new sessions).
+        guard wantsAttached, channel == nil, attaching != round else { return }
         reattach?.cancel()
         reattach = nil
         guard let mac = macConnection(), let ssh = mac.ssh, ssh.isActive else {
@@ -167,18 +175,23 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
             return
         }
         if phase != .reconnecting { setPhase(.connecting) }
+        let mine = round
+        attaching = mine
+        defer { if attaching == mine { attaching = nil } }
         do {
             let shell: SessionChannel
             if holdsSession {
                 let command = TermAttach.attach(companion: mac.mac.companionPath, id: holderID,
-                                                have: viewHasOutput ? received : nil)
+                                                have: viewHasOutput ? received : nil, client: phoneID())
                 shell = try await ssh.terminal(command: command, columns: max(size.columns, 20), rows: max(size.rows, 5))
             } else {
                 shell = try await ssh.shell(columns: max(size.columns, 20), rows: max(size.rows, 5))
             }
-            guard wantsAttached else { await shell.close(); return }
-            run(shell, held: holdsSession)
+            // The terminal let go meanwhile, or shows another session now.
+            guard wantsAttached, mine == round, channel == nil else { await shell.close(); return }
+            run(shell, held: holdsSession, round: mine)
         } catch {
+            guard wantsAttached, mine == round else { return }
             log.notice("Attaching failed: \(String(describing: error), privacy: .public)")
             quickFailures += 1
             if quickFailures >= 4 {
@@ -207,40 +220,14 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         }
     }
 
-    /// A shell on an added host, in a connection of its own.
-    func connect(host: SSHHost, key: DeviceKey?, password: String?) async {
-        disconnect()
-        setPhase(.connecting)
-        endReason = .closed
-        let policy: HostKeyPolicy = host.hostKey.map { .pinned($0) } ?? .askFirst
-        do {
-            let connection = try await SSHConnection.connect(
-                hosts: [host.host], port: Int(host.port),
-                login: SSHLogin(username: host.user, key: host.auth == .deviceKey ? key : nil,
-                                password: host.auth == .password ? password : nil),
-                hostKey: policy, perHostTimeout: 10)
-            ownConnection = connection
-            let shell = try await connection.shell(columns: max(size.columns, 20), rows: max(size.rows, 5))
-            run(shell, held: false)
-        } catch SSHConnectError.unknownHostKey(let h, let key, let fingerprint) {
-            setPhase(.confirmHostKey(host: h, key: key, fingerprint: fingerprint))
-        } catch SSHConnectError.hostKeyMismatch(let h, let fingerprint) {
-            setPhase(.hostKeyChanged(host: h, fingerprint: fingerprint))
-        } catch SSHConnectError.authenticationFailed {
-            setPhase(.failed(host.auth == .password
-                ? String(localized: "\(host.host) didn't accept the user name or password.")
-                : String(localized: "\(host.host) didn't accept this iPhone's key. Add the key to ~/.ssh/authorized_keys there (Settings > This iPhone).")))
-        } catch {
-            setPhase(.failed(error.localizedDescription))
-        }
-    }
-
     /// Reads and writes the channel until it ends.
-    private func run(_ shell: SessionChannel, held: Bool) {
+    private func run(_ shell: SessionChannel, held: Bool, round mine: Int) {
+        stopWriting()
         channel = shell
         channelOpened = Date()
         gotEndNote = false
         gotStartNote = false
+        beforeStart = Data()
         filter = TermNoteFilter()
         let (input, writer) = AsyncStream<Data>.makeStream()
         self.writer = writer
@@ -252,12 +239,12 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         readTask = Task { [weak self] in
             do {
                 for try await chunk in shell.output {
-                    guard let self else { return }
+                    guard let self, self.round == mine else { return }
                     if held { self.receive(chunk) } else { self.view.feed(byteArray: ArraySlice(chunk)) }
                 }
-                self?.channelEnded(nil, held: held)
+                self?.channelEnded(nil, held: held, round: mine)
             } catch {
-                self?.channelEnded(error, held: held)
+                self?.channelEnded(error, held: held, round: mine)
             }
         }
     }
@@ -268,6 +255,7 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
             case .bytes(let data):
                 view.feed(byteArray: ArraySlice(data))
                 received &+= UInt64(data.count)
+                if !gotStartNote, beforeStart.count < 2048 { beforeStart.append(data.prefix(2048 - beforeStart.count)) }
             case .note(let note):
                 handle(note)
             }
@@ -286,17 +274,22 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
             if new, gone != nil { show(String(localized: "The session on the Mac had ended. This is a new one.")) }
             setPhase(.connected)
         case .end(let why, _):
-            gotEndNote = true
             switch why {
             case "taken":
+                // Another device: it shows the session now.
+                gotEndNote = true
                 endReason = .taken
                 wantsAttached = false
+            case "replaced":
+                // This iPhone attached again over another connection (an older channel never gets here): this one
+                // just goes, and the terminal attaches again if it still has to.
+                break
             case "lost":
                 // The session's process on the Mac went away: the next attach starts a new one.
                 remember(holder: nil)
                 viewHasOutput = false
-                gotEndNote = false
             default:
+                gotEndNote = true
                 endReason = why == "exited" ? .exited : .ended
                 wantsAttached = false
                 remember(holder: nil)
@@ -305,11 +298,12 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         }
     }
 
-    private func channelEnded(_ error: Error?, held: Bool) {
+    private func channelEnded(_ error: Error?, held: Bool, round mine: Int) {
+        // An older channel ending is none of this terminal's business.
+        guard mine == round else { return }
         channel = nil
         stopWriting()
-        if let ownConnection { Task { await ownConnection.close() } }
-        ownConnection = nil
+        round += 1
         guard held else {
             if phase == .connected { setPhase(.ended) }
             view.feed(text: "\r\n")
@@ -319,15 +313,24 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
             setPhase(.ended)
             return
         }
-        // aOS on the Mac without terminal sessions (exit status 2: its usage), or not there (127): a plain shell.
-        if !gotStartNote, let failure = error as? SessionChannel.Failure, case .exited(let status, _) = failure,
-           status == 2 || status == 127 {
-            log.notice("The Mac can't hold terminal sessions (status \(status)); using a plain shell")
-            holdsSession = false
-            show(status == 2 ? String(localized: "Update aOS on the Mac to keep this terminal when the connection drops.")
-                             : String(localized: "aOS isn't on the Mac where it was paired: this terminal ends with the connection."))
-            Task { await attachToMac() }
-            return
+        if !gotStartNote, let failure = error as? SessionChannel.Failure, case .exited(let status, let message) = failure {
+            // aOS on the Mac without terminal sessions (exit status 2: its usage), or not there (127): a plain shell.
+            if status == 2 || status == 127 {
+                log.notice("The Mac can't hold terminal sessions (status \(status)); using a plain shell")
+                holdsSession = false
+                show(status == 2 ? String(localized: "Update aOS on the Mac to keep this terminal when the connection drops.")
+                                 : String(localized: "aOS isn't on the Mac where it was paired: this terminal ends with the connection."))
+                Task { await attachToMac() }
+                return
+            }
+            // The Mac said why it doesn't start one (too many sessions, for example): trying again won't help.
+            if status == 1 {
+                wantsAttached = false
+                let said = message.isEmpty ? String(decoding: beforeStart, as: UTF8.self) : message
+                let text = said.trimmingCharacters(in: .whitespacesAndNewlines)
+                setPhase(.failed(text.isEmpty ? String(localized: "The terminal on the Mac doesn't start.") : text))
+                return
+            }
         }
         guard wantsAttached else { return }
         if !gotStartNote, Date().timeIntervalSince(channelOpened) < 3 { quickFailures += 1 }
@@ -341,31 +344,24 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         waitForMac(after: quickFailures > 0 ? 1 : 0)
     }
 
-    /// Lets go of the terminal. On the Mac the session keeps running (detached); elsewhere the shell ends.
+    /// Lets go of the terminal: its channel closes. On the Mac the session keeps running; a plain shell ends.
     func disconnect() {
         wantsAttached = false
+        round += 1
         reattach?.cancel()
         reattach = nil
         readTask?.cancel()
         readTask = nil
-        let channel = self.channel, connection = ownConnection
+        let channel = self.channel
         self.channel = nil
-        ownConnection = nil
         stopWriting()
-        Task {
-            await channel?.close()
-            await connection?.close()
-        }
-        if case .mac = id, holdsSession, holderID != nil, isActive {
-            setPhase(.detached)
-        } else if isActive {
-            setPhase(.ended)
-        }
+        Task { await channel?.close() }
+        if isActive { setPhase(holdsSession && holderID != nil ? .idle : .ended) }
     }
 
-    /// Ends the shell on the Mac (SIGHUP, like closing a terminal window), or disconnects elsewhere.
+    /// Ends the shell on the Mac (SIGHUP, like closing a terminal window); a plain shell just closes.
     func endSession() async {
-        guard case .mac = id, holdsSession, let holderID else {
+        guard holdsSession, let holderID else {
             disconnect()
             return
         }
@@ -393,14 +389,33 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         }
     }
 
-    /// Switches this terminal to another session on the Mac (from the list).
-    func switchTo(session id: String) async {
-        guard case .mac = self.id, TermAttach.isID(id), id != holderID || !isActive else { return }
+    /// Shows another session on the Mac (from the list); the one before keeps running there.
+    func switchTo(session id: String) {
+        guard TermAttach.isID(id), id != holderID || !isActive else { return }
+        let same = id == holderID
         disconnect()
         remember(holder: id)
-        viewHasOutput = false
+        // The same session again continues where the view is; another one starts afresh.
+        if !same { viewHasOutput = false }
         holdsSession = true
-        if let mac = macConnection() { await connect(mac: mac) }
+        attachAgain()
+    }
+
+    /// Starts another shell on the Mac and shows it; the one before keeps running there.
+    func startNewSession() {
+        disconnect()
+        forgetSession()
+        holdsSession = true
+        attachAgain()
+    }
+
+    /// Attaches from scratch: right away the terminal is "connecting" (so nothing else starts a second attach).
+    private func attachAgain() {
+        wantsAttached = true
+        endReason = .closed
+        quickFailures = 0
+        setPhase(.connecting)
+        Task { await attachToMac() }
     }
 
     /// The next connect starts a new session on the Mac (after this one ended).

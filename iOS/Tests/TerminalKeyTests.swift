@@ -448,7 +448,7 @@ struct TerminalViewInputTests {
     // The key bar's layout: KeyBarViewTests (TerminalAttachTests.swift).
 
     @Test func pasteAsksFirstOnlyWhenLinesWouldRun() {
-        let session = TerminalSession(id: .host(UUID()), title: "test")
+        let session = TerminalSession(id: .mac(UUID()), title: "test")
         session.paste("ls\npwd")
         #expect(session.pendingPaste == "ls\npwd")
         session.pendingPaste = nil

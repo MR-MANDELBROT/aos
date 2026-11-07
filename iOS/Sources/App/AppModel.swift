@@ -6,7 +6,7 @@ import UIKit
 
 private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "app")
 
-/// The app's state: paired Macs, added hosts, requests from the agent, and the sessions the tabs show.
+/// The app's state: paired Macs, requests from the agent, and the sessions the tabs show.
 @MainActor @Observable
 final class AppModel {
     enum Tab: String, Hashable, CaseIterable { case overview, terminal, screen }
@@ -16,7 +16,6 @@ final class AppModel {
     let isDemo: Bool
 
     private(set) var macs: [PairedMac]
-    private(set) var hosts: [SSHHost]
     private(set) var connection: MacConnection?
     private(set) var deviceKey: DeviceKey?
     private(set) var deviceKeyError: String?
@@ -70,11 +69,13 @@ final class AppModel {
     let macScreen = ScreenSession(target: .mac)
     let workspaceScreen = ScreenSession(target: .workspace)
     private(set) var terminals: [TerminalSession.Target: TerminalSession] = [:]
-    /// A terminal to show (from the Live Activity or a link); the terminal tab opens it.
+    /// A terminal to show (from the Live Activity, a link, the Overview); the terminal tab opens it.
     var openTerminal: TerminalSession.Target?
-    /// What keeps open terminals going in the background: the Live Activity, iOS's background time, location.
+    /// The terminal sessions on the Mac (the Terminal tab's list, the terminal's menu).
+    let macSessions = MacSessionList()
+    /// What keeps open terminals going in the background: the Live Activity, location.
     @ObservationIgnored private(set) lazy var keepAlive = TerminalKeepAlive(settings: settings) { [weak self] in
-        self?.terminals.values.filter { $0.isActive || $0.phase == .detached } ?? []
+        self?.terminals.values.filter(\.isActive) ?? []
     }
 
     // Pairing
@@ -99,7 +100,6 @@ final class AppModel {
             #if DEBUG
             let demo = Demo.content()
             macs = Demo.unpaired ? [] : [demo.mac]
-            hosts = Demo.unpaired ? [] : demo.hosts
             deviceKey = DeviceKey.ephemeral()
             companionKey = CompanionKey.ephemeral()
             #else
@@ -107,7 +107,7 @@ final class AppModel {
             #endif
         } else {
             macs = ConfigStore.loadMacs()
-            hosts = ConfigStore.loadHosts()
+            ConfigStore.deleteAddedHosts()
             loadDeviceKey()
         }
         makeConnection()
@@ -284,40 +284,6 @@ final class AppModel {
         macs = updated
     }
 
-    // MARK: Hosts
-
-    func save(_ host: SSHHost, password: String?) throws {
-        if let password, host.auth == .password, !isDemo { try SecretStore.setPassword(password, for: host) }
-        if host.auth == .deviceKey { SecretStore.deletePassword(for: host) }
-        var updated = hosts
-        if let index = updated.firstIndex(where: { $0.id == host.id }) { updated[index] = host } else { updated.append(host) }
-        if !isDemo { try ConfigStore.saveHosts(updated) }
-        hosts = updated
-    }
-
-    func remove(_ host: SSHHost) {
-        SecretStore.deletePassword(for: host)
-        terminals[.host(host.id)]?.disconnect()
-        terminals[.host(host.id)] = nil
-        let updated = hosts.filter { $0.id != host.id }
-        if !isDemo { try? ConfigStore.saveHosts(updated) }
-        hosts = updated
-    }
-
-    /// The person checked the fingerprint and trusts this key from now on.
-    func trust(key: String, for host: SSHHost) {
-        var trusted = host
-        trusted.hostKey = key
-        try? save(trusted, password: nil)
-    }
-
-    /// Forgets a host's trusted key (after it changed and the person confirmed).
-    func forgetKey(of host: SSHHost) {
-        var updated = host
-        updated.hostKey = nil
-        try? save(updated, password: nil)
-    }
-
     // MARK: Terminals
 
     func terminal(for target: TerminalSession.Target) -> TerminalSession {
@@ -325,20 +291,30 @@ final class AppModel {
         let title: String
         switch target {
         case .mac(let id): title = macs.first { $0.id == id }?.name ?? "Mac"
-        case .host(let id): title = hosts.first { $0.id == id }?.displayName ?? "SSH"
         }
         let session = TerminalSession(id: target, title: title)
-        if case .mac = target { session.macConnection = { [weak self] in self?.connection } }
+        session.macConnection = { [weak self] in self?.connection }
+        session.phoneID = { [weak self] in self?.deviceKey?.phoneID }
         session.onChange = { [weak self] _ in self?.keepAlive.terminalsChanged() }
         terminals[target] = session
         return session
+    }
+
+    /// The Terminal tab with the Mac's terminal in a new session there (the Overview's "Open Terminal": to sign in to
+    /// Claude Code, for example).
+    func openNewTerminal() {
+        guard let mac = activeMac else { return }
+        let target = TerminalSession.Target.mac(mac.id)
+        if !isDemo { terminal(for: target).startNewSession() }
+        tab = .terminal
+        openTerminal = target
     }
 
     /// From the Live Activity's button: ends a terminal (the Mac's session too).
     func endTerminal(_ target: TerminalSession.Target) async {
         // After the app was closed the terminal is new here, but it knows its session on the Mac.
         let session = terminal(for: target)
-        if case .mac = target, session.macConnection()?.ssh?.isActive != true {
+        if session.macConnection()?.ssh?.isActive != true {
             // Woken in the background: the connection first, briefly.
             connection?.start()
             for _ in 0..<40 where connection?.ssh?.isActive != true { try? await Task.sleep(for: .milliseconds(250)) }
