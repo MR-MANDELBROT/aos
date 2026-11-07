@@ -1,4 +1,5 @@
 import AOSRFB
+import AOSTailnet
 import CoreGraphics
 import CryptoKit
 import Foundation
@@ -140,6 +141,8 @@ final class ScreenSession {
     enum TunnelReason: Equatable {
         /// The SSH connection doesn't go to an address in a network (a relay, for example).
         case noAddress
+        /// SSH goes through aOS's own Tailscale node, which carries only SSH; the Tailscale app's VPN is off.
+        case tailnetWithoutVPN
         /// Nothing answered at the Mac's address (another network, a firewall).
         case unreachable
         /// The Mac's screen sharing offers no high performance (macOS before 14).
@@ -191,9 +194,10 @@ final class ScreenSession {
         return try SecretStore.screenLogin(for: mac, context: context)
     }
 
-    /// The address for the direct path (tests point it at their own servers).
-    static var directHost: @MainActor (SSHConnection) async -> String? = { ssh in
-        DirectPath.host(remote: await ssh.remoteIP(), sshHost: ssh.host)
+    /// Where to try the Mac directly (tests point it at their own servers): from the SSH connection's way.
+    static var directCandidate: @MainActor (SSHConnection, PairedMac) async -> DirectPath.Candidate = { ssh, mac in
+        DirectPath.candidate(route: ssh.route, remote: await ssh.remoteIP(),
+                             tailnetHosts: ConnectionPlan.tailnetHosts(of: mac), systemVPN: TailnetVPN.isActive)
     }
 
     /// How long a direct session may take to show a picture before the tunnel takes over.
@@ -278,7 +282,8 @@ final class ScreenSession {
             let port = try await forwarder.start()
             guard phase == .preparing else { forwarder.stop(); return }
             self.forwarder = forwarder
-            let path = target == .mac && options.matchesPhone ? await directPath(for: route, ssh: ssh, port: Int(port)) : .tunnel
+            let path = target == .mac && options.matchesPhone
+                ? await directPath(for: route, ssh: ssh, mac: mac.mac, port: Int(port)) : .tunnel
             guard phase == .preparing else { return }
             run(route, path: path)
         } catch {
@@ -289,9 +294,15 @@ final class ScreenSession {
 
     /// Whether the Mac goes the direct path: an address in a network, the Mac's screen sharing key known (learned
     /// through the tunnel, once), high performance offered, the Mac answering there.
-    private func directPath(for route: ScreenRoute, ssh: SSHConnection, port: Int) async -> ScreenPath {
-        guard let host = await Self.directHost(ssh) else {
+    private func directPath(for route: ScreenRoute, ssh: SSHConnection, mac: PairedMac, port: Int) async -> ScreenPath {
+        let host: String
+        switch await Self.directCandidate(ssh, mac) {
+        case .address(let address): host = address
+        case .noAddress:
             tunnelReason = .noAddress
+            return .tunnel
+        case .tailnetWithoutVPN:
+            tunnelReason = .tailnetWithoutVPN
             return .tunnel
         }
         if let failed = directFailures[host], Date().timeIntervalSince(failed) < 10 * 60 {
