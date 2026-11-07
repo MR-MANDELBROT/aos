@@ -333,12 +333,20 @@ public final class SessionKeeper: @unchecked Sendable {
             lastForeign[k.id] = Date()
             terminate(k)
             e.state = .openElsewhere; e.detail = "Remote Control runs elsewhere"; e.since = Date()
-        } else if lower.contains("/login") || lower.contains("not logged in") || lower.contains("please log in") {
-            e.state = .needsAttention; e.detail = "Claude Code needs a sign-in"; e.since = Date()
-        } else if lower.contains("do you trust") || lower.contains("trust this folder") || lower.contains("[y/n]") {
-            e.state = .needsAttention; e.detail = "Claude Code asks a question in its terminal"; e.since = Date()
         } else {
-            return
+            // Only the latest sign counts (a Remote Control drop says "run /login" and then reconnects by itself).
+            switch SessionOutput.classify(k.recent) {
+            case .signIn:
+                guard e.detail != "Claude Code needs a sign-in" else { return }
+                e.state = .needsAttention; e.detail = "Claude Code needs a sign-in"; e.since = Date()
+            case .question:
+                guard e.detail != "Claude Code asks a question in its terminal" else { return }
+                e.state = .needsAttention; e.detail = "Claude Code asks a question in its terminal"; e.since = Date()
+            case .fine where e.state == .needsAttention:
+                e.state = .running; e.detail = ""; e.since = Date()
+            default:
+                return
+            }
         }
         entries[k.id] = e
         writeStatus(enabled: true)

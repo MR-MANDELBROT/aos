@@ -688,12 +688,8 @@ private struct StepPage: View {
         case .download:
             if setup.restoreInfo == nil { Button("Look up the newest macOS") { setup.lookUpRestoreImage() }.buttonStyle(.glass).disabled(busy) }
         case .screenSharing:
-            switch setup.sharingPhase {
-            case .verified:
-                Button("Later") { setup.skipHelper() }.buttonStyle(.glass).disabled(busy)
-            default:
-                EmptyView()
-            }
+            // The helper is required: no "Later".
+            EmptyView()
         case .connect:
             Button("Connect again") { setup.connectAgents() }.buttonStyle(.glass).disabled(busy)
         case .session:
