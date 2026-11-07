@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct AOSApp: App {
+    @UIApplicationDelegateAdaptor(AOSAppDelegate.self) private var appDelegate
     @State private var model: AppModel
     @Environment(\.scenePhase) private var scenePhase
 
@@ -20,6 +21,7 @@ struct AOSApp: App {
                 .onOpenURL { model.open($0) }
                 .onChange(of: scenePhase) { _, phase in model.scenePhaseChanged(to: phase) }
         }
+        .screenCommands()
     }
 }
 

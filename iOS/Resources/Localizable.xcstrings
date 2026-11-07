@@ -31,6 +31,116 @@
         }
       }
     },
+    "“%@” Declined the Request" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat die Anfrage abgelehnt"
+          }
+        }
+      }
+    },
+    "“%@” Doesn’t Support High Performance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ unterstützt den Hochleistungsmodus nicht"
+          }
+        }
+      }
+    },
+    "“%@” Ended Screen Sharing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat die Bildschirmfreigabe beendet"
+          }
+        }
+      }
+    },
+    "“%@” Ended the Session" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat die Sitzung beendet"
+          }
+        }
+      }
+    },
+    "“%@” Has a New Certificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat ein neues Zertifikat"
+          }
+        }
+      }
+    },
+    "“%@” Is Already in Use" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird bereits verwendet"
+          }
+        }
+      }
+    },
+    "“%@” Is in Use" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird gerade verwendet"
+          }
+        }
+      }
+    },
+    "“%@” is using it right now." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ verwendet den Mac gerade."
+          }
+        }
+      }
+    },
+    "“%@” Isn’t Supported" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird nicht unterstützt"
+          }
+        }
+      }
+    },
+    "“%@” Refused High Performance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat den Hochleistungsmodus abgelehnt"
+          }
+        }
+      }
+    },
     "%@ answered with a different SSH key (%@). If the Mac was set up again, pair it again." : {
       "localizations" : {
         "de" : {
@@ -127,6 +237,22 @@
         }
       }
     },
+    "%@ in %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ in %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in %2$@"
+          }
+        }
+      }
+    },
     "%@ is new. Its key: %@" : {
       "localizations" : {
         "de" : {
@@ -155,16 +281,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ now presents %2$@. That happens when the computer was set up again, but it can also mean that someone is in between. Only continue if you know why it changed."
-          }
-        }
-      }
-    },
-    "%@ on the go" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ unterwegs"
           }
         }
       }
@@ -205,6 +321,27 @@
         }
       }
     },
+    "%@×" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@×"
+          }
+        }
+      }
+    },
+    "%lld are reachable in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sind in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
     "%lld pt · %lld × %lld" : {
       "localizations" : {
         "de" : {
@@ -237,6 +374,16 @@
         }
       }
     },
+    "1 is reachable in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 ist in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
     "A Mac of its own for your coding agent." : {
       "localizations" : {
         "de" : {
@@ -248,6 +395,7 @@
       }
     },
     "A mouse or trackpad on the iPhone points, clicks and scrolls directly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -267,6 +415,17 @@
         }
       }
     },
+    "About" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info"
+          }
+        }
+      }
+    },
     "Account name" : {
       "localizations" : {
         "de" : {
@@ -277,12 +436,67 @@
         }
       }
     },
+    "Acknowledgements" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Danksagungen"
+          }
+        }
+      }
+    },
     "Actual pixels" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Originalpixel"
+          }
+        }
+      }
+    },
+    "Adaptive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angepasst"
+          }
+        }
+      }
+    },
+    "Adaptive Quality" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angepasste Qualität"
+          }
+        }
+      }
+    },
+    "Add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzufügen"
+          }
+        }
+      }
+    },
+    "Add %@ to Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ zur Symbolleiste hinzufügen"
           }
         }
       }
@@ -293,6 +507,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rechner hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Mapping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuordnung hinzufügen"
           }
         }
       }
@@ -347,12 +572,44 @@
         }
       }
     },
+    "All" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        }
+      }
+    },
+    "All Displays" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Displays"
+          }
+        }
+      }
+    },
     "Allow" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erlauben"
+          }
+        }
+      }
+    },
+    "Allow aOS's helper on the Mac (System Settings > General > Login Items) to keep it awake with the lid closed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaube den Hintergrunddienst von aOS auf dem Mac (Systemeinstellungen > Allgemein > Anmeldeobjekte), damit er mit geschlossenem Deckel wach bleibt."
           }
         }
       }
@@ -367,12 +624,65 @@
         }
       }
     },
+    "Also with the lid closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch mit geschlossenem Deckel"
+          }
+        }
+      }
+    },
+    "Alt Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alt-Taste"
+          }
+        }
+      }
+    },
     "Always" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Immer"
+          }
+        }
+      }
+    },
+    "Another Device Is Using High Performance on “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderes Gerät verwendet den Hochleistungsmodus auf „%@“"
+          }
+        }
+      }
+    },
+    "Another service takes care of sleep on this Mac. aOS leaves it alone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um den Ruhezustand dieses Macs kümmert sich ein anderer Dienst. aOS lässt ihn in Ruhe."
+          }
+        }
+      }
+    },
+    "Another service takes care of this on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darum kümmert sich auf dem Mac ein anderer Dienst."
           }
         }
       }
@@ -397,12 +707,12 @@
         }
       }
     },
-    "aOS can bring Tailscale along on this iPhone too: no VPN, no extra app. You sign in once with your Tailscale account, the same as on the Mac." : {
+    "aOS %@ on the Mac answers. Update it to see its battery and settings here." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "aOS kann Tailscale auch auf diesem iPhone mitbringen: kein VPN, keine zusätzliche App. Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac."
+            "value" : "aOS %@ auf dem Mac antwortet. Aktualisiere es, um hier Akku und Einstellungen zu sehen."
           }
         }
       }
@@ -417,16 +727,6 @@
         }
       }
     },
-    "aOS devices" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geräte von aOS"
-          }
-        }
-      }
-    },
     "aOS is locked" : {
       "localizations" : {
         "de" : {
@@ -437,12 +737,42 @@
         }
       }
     },
+    "aOS is not made by the author of Open Screen Sharing and is not associated with it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS stammt nicht vom Autor von Open Screen Sharing und steht nicht mit ihm in Verbindung."
+          }
+        }
+      }
+    },
     "aOS isn't installed on the Mac where it was paired. Open aOS on the Mac and pair again." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS ist auf dem Mac nicht mehr dort installiert, wo es beim Koppeln war. Öffne aOS auf dem Mac und kopple neu."
+          }
+        }
+      }
+    },
+    "aOS isn't on the Mac where it was paired: this terminal ends with the connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS ist auf dem Mac nicht mehr dort, wo es gekoppelt wurde: Dieses Terminal endet mit der Verbindung."
+          }
+        }
+      }
+    },
+    "aOS keeps your terminal connected." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS hält dein Terminal verbunden."
           }
         }
       }
@@ -463,6 +793,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS darf das lokale Netzwerk nicht nutzen. Erlaube es unter Einstellungen > Datenschutz & Sicherheit > Lokales Netzwerk."
+          }
+        }
+      }
+    },
+    "aOS may not use the location service yet. Allow it while using the app in Settings > Privacy & Security > Location Services." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS darf den Ortungsdienst noch nicht nutzen. Erlaube ihn „Beim Verwenden der App“ unter Einstellungen > Datenschutz & Sicherheit > Ortungsdienste."
           }
         }
       }
@@ -557,6 +897,26 @@
         }
       }
     },
+    "aOS on the Mac sent no screen sharing login for the workspace." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf dem Mac hat keine Anmeldung für die Bildschirmfreigabe des Arbeitsplatzes geschickt."
+          }
+        }
+      }
+    },
+    "aOS on the Mac starts Claude Code again. The conversation continues where it was." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf dem Mac startet Claude Code neu. Die Unterhaltung geht weiter, wo sie war."
+          }
+        }
+      }
+    },
     "aOS on the Mac stopped answering." : {
       "localizations" : {
         "de" : {
@@ -607,42 +967,87 @@
         }
       }
     },
-    "aOS's Tailscale (%@)" : {
+    "aOS's background process isn't running on the Mac, so there is no Claude Code session to restart." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tailscale von aOS (%@)"
+            "value" : "Der Hintergrundprozess von aOS läuft auf dem Mac nicht, also gibt es keine Claude-Code-Sitzung zum Neustarten."
           }
         }
       }
     },
-    "aOS's Tailscale isn't connected on this iPhone." : {
+    "aOS's helper didn't let go of the Mac in time. Try again in a moment." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Tailscale von aOS ist auf diesem iPhone nicht verbunden."
+            "value" : "Der Hintergrunddienst von aOS hat den Mac nicht rechtzeitig losgelassen. Versuch es gleich noch einmal."
           }
         }
       }
     },
-    "aOS's Tailscale on this iPhone" : {
+    "aOS's helper isn't set up on the Mac yet." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Tailscale von aOS auf diesem iPhone"
+            "value" : "Der Hintergrunddienst von aOS ist auf dem Mac noch nicht eingerichtet."
+          }
+        }
+      }
+    },
+    "App Switcher" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Umschalter"
           }
         }
       }
     },
     "App windows" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "App-Fenster"
+          }
+        }
+      }
+    },
+    "App Windows" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App-Fenster"
+          }
+        }
+      }
+    },
+    "Apple Key Mappings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple-Tastenzuordnungen"
+          }
+        }
+      }
+    },
+    "Applies to the next key or click." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gilt für den nächsten Tastendruck oder Klick."
           }
         }
       }
@@ -687,12 +1092,55 @@
         }
       }
     },
+    "Apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps"
+          }
+        }
+      }
+    },
+    "Arrow keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfeiltasten"
+          }
+        }
+      }
+    },
     "Arrow pad" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pfeilfeld"
+          }
+        }
+      }
+    },
+    "Ask for Permission Instead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stattdessen um Erlaubnis bitten"
+          }
+        }
+      }
+    },
+    "Ask to Share Their Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um Freigabe des Bildschirms bitten"
           }
         }
       }
@@ -717,7 +1165,18 @@
         }
       }
     },
+    "Attach Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wieder verbinden"
+          }
+        }
+      }
+    },
     "Automatic" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -728,6 +1187,7 @@
       }
     },
     "Automatic shows all colours on Wi-Fi and fewer on a cellular connection. Every quality keeps text sharp." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -737,7 +1197,18 @@
         }
       }
     },
+    "Background time from iOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundzeit von iOS"
+          }
+        }
+      }
+    },
     "Balanced" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -748,6 +1219,7 @@
       }
     },
     "Balanced (thousands of colours)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -757,7 +1229,28 @@
         }
       }
     },
+    "Battery %lld %%" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akku %lld %%"
+          }
+        }
+      }
+    },
+    "Battery below 10 percent: the Mac may sleep now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akku unter 10 Prozent: Der Mac darf jetzt schlafen."
+          }
+        }
+      }
+    },
     "Best (all colours)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -807,12 +1300,67 @@
         }
       }
     },
+    "Cache" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache"
+          }
+        }
+      }
+    },
+    "Cache Size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache-Größe"
+          }
+        }
+      }
+    },
+    "Can’t Play the Computer’s Sound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton des Computers kann nicht wiedergegeben werden"
+          }
+        }
+      }
+    },
+    "Can’t Play the Mac’s Sound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton des Mac kann nicht wiedergegeben werden"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abbrechen"
+          }
+        }
+      }
+    },
+    "Canceled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgebrochen"
           }
         }
       }
@@ -827,12 +1375,53 @@
         }
       }
     },
+    "Changing Resolution…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auflösung wird geändert …"
+          }
+        }
+      }
+    },
+    "Charging" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt"
+          }
+        }
+      }
+    },
+    "Charging, full in %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt, voll in %@"
+          }
+        }
+      }
+    },
     "Check that this is the key of your computer. On it, run:" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prüfe, ob das der Schlüssel deines Rechners ist. Führe dort aus:"
+          }
+        }
+      }
+    },
+    "Checking …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird geprüft …"
           }
         }
       }
@@ -847,12 +1436,108 @@
         }
       }
     },
+    "Claude Code asks something on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code fragt auf dem Mac etwas"
+          }
+        }
+      }
+    },
+    "Claude Code isn't installed on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code ist auf dem Mac nicht installiert"
+          }
+        }
+      }
+    },
+    "Claude Code session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude-Code-Sitzung"
+          }
+        }
+      }
+    },
+    "Clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear-Taste"
+          }
+        }
+      }
+    },
+    "Clear Cache" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache leeren"
+          }
+        }
+      }
+    },
     "Clear Scrollback" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlauf löschen"
+          }
+        }
+      }
+    },
+    "Clear Shortcut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurzbefehl löschen"
+          }
+        }
+      }
+    },
+    "Click" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicken"
+          }
+        }
+      }
+    },
+    "Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage"
+          }
+        }
+      }
+    },
+    "Clipboard Sync Asks Before Each Paste" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Zwischenablage synchronisieren“ fragt vor jedem Einsetzen nach"
           }
         }
       }
@@ -867,7 +1552,18 @@
         }
       }
     },
+    "Close the workspace?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz schließen?"
+          }
+        }
+      }
+    },
     "Close window" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -897,12 +1593,34 @@
         }
       }
     },
+    "Command Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command-Taste"
+          }
+        }
+      }
+    },
     "Connect" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbinden"
+          }
+        }
+      }
+    },
+    "Connect a keyboard to set up shortcuts." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde eine Tastatur, um Kurzbefehle einzurichten."
           }
         }
       }
@@ -917,12 +1635,33 @@
         }
       }
     },
+    "Connect Anyway" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trotzdem verbinden"
+          }
+        }
+      }
+    },
     "Connect to this Mac" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit diesem Mac verbinden"
+          }
+        }
+      }
+    },
+    "Connected for %lld more min at most." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch höchstens %lld Min. verbunden."
           }
         }
       }
@@ -957,12 +1696,24 @@
         }
       }
     },
-    "Connection" : {
+    "Connecting…" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verbindung"
+            "value" : "Verbinden …"
+          }
+        }
+      }
+    },
+    "Connection interrupted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung unterbrochen"
           }
         }
       }
@@ -987,7 +1738,19 @@
         }
       }
     },
+    "Control Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control-Taste"
+          }
+        }
+      }
+    },
     "Controls" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1047,7 +1810,151 @@
         }
       }
     },
+    "Couldn’t Cancel Drag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ziehen konnte nicht abgebrochen werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Clear the Cache" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache konnte nicht geleert werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Connect to “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung mit „%@“ konnte nicht hergestellt werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Delete “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht gelöscht werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Find “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wurde nicht gefunden"
+          }
+        }
+      }
+    },
+    "Couldn’t Finish Transferring Files" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Dateiübertragung konnte nicht abgeschlossen werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Get “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht abgerufen werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Import “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht importiert werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Receive the Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage konnte nicht empfangen werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Save “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht gesichert werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Send “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht gesendet werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Send the Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage konnte nicht gesendet werden"
+          }
+        }
+      }
+    },
+    "Couldn’t Sign In to “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung bei „%@“ fehlgeschlagen"
+          }
+        }
+      }
+    },
     "Couldn't type „%@“." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1057,7 +1964,74 @@
         }
       }
     },
+    "Couldn’t Verify “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht überprüft werden"
+          }
+        }
+      }
+    },
+    "Ctrl Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strg-Taste"
+          }
+        }
+      }
+    },
+    "Cursor Style" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigerstil"
+          }
+        }
+      }
+    },
+    "Custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigene"
+          }
+        }
+      }
+    },
+    "Customize Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste anpassen"
+          }
+        }
+      }
+    },
+    "Customize Toolbar…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste anpassen …"
+          }
+        }
+      }
+    },
     "Cut" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1068,11 +2042,34 @@
       }
     },
     "Data saver (4096 colours)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datensparend (4096 Farben)"
+          }
+        }
+      }
+    },
+    "Debug" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug"
+          }
+        }
+      }
+    },
+    "Debug Panel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug-Panel"
           }
         }
       }
@@ -1147,6 +2144,79 @@
         }
       }
     },
+    "Delete Mapping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuordnung löschen"
+          }
+        }
+      }
+    },
+    "Desktop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibtisch"
+          }
+        }
+      }
+    },
+    "Detach" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abkoppeln"
+          }
+        }
+      }
+    },
+    "Detached, the session keeps running on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgekoppelt läuft die Sitzung auf dem Mac weiter."
+          }
+        }
+      }
+    },
+    "Detached. The session keeps running on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgekoppelt. Die Sitzung läuft auf dem Mac weiter."
+          }
+        }
+      }
+    },
+    "Dictation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diktat"
+          }
+        }
+      }
+    },
+    "Didn't start" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ist nicht gestartet"
+          }
+        }
+      }
+    },
     "Direct" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1175,6 +2245,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trennen"
+          }
+        }
+      }
+    },
+    "Disconnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung getrennt"
+          }
+        }
+      }
+    },
+    "Disconnected from “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung mit „%@“ getrennt"
+          }
+        }
+      }
+    },
+    "Display %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display %lld"
+          }
+        }
+      }
+    },
+    "Display Off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm aus"
+          }
+        }
+      }
+    },
+    "Displays" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Displays"
           }
         }
       }
@@ -1220,6 +2344,7 @@
       }
     },
     "Drag one finger: drag (select, move windows)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1241,6 +2366,7 @@
       }
     },
     "Drag one finger: move the pointer (faster moves go further)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1251,6 +2377,7 @@
       }
     },
     "Drawn on the iPhone" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1261,6 +2388,7 @@
       }
     },
     "Drawn on the iPhone, the pointer moves without delay. From the Mac it also shows where your agent points." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1271,6 +2399,45 @@
       }
     },
     "Edit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit Mapping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuordnung bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit Menu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
+    "Editing" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1300,12 +2467,75 @@
         }
       }
     },
+    "End Session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung beenden"
+          }
+        }
+      }
+    },
+    "End Terminal Session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminalsitzung beenden"
+          }
+        }
+      }
+    },
+    "End this session?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Sitzung beenden?"
+          }
+        }
+      }
+    },
+    "Ends a terminal session of aOS. On the Mac its shell ends too." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beendet eine Terminalsitzung von aOS. Auf dem Mac endet auch ihre Shell."
+          }
+        }
+      }
+    },
     "Ends the screen connection" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beendet die Verbindung zum Bildschirm"
+          }
+        }
+      }
+    },
+    "Enter the password to sign in to “%@”." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib das Passwort ein, um dich bei „%@“ anzumelden."
+          }
+        }
+      }
+    },
+    "Enter the user name and password to sign in to “%@”." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib den Benutzernamen und das Passwort ein, um dich bei „%@“ anzumelden."
           }
         }
       }
@@ -1331,6 +2561,7 @@
       }
     },
     "Extra keys above the keyboard" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1350,7 +2581,30 @@
         }
       }
     },
+    "File" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ablage"
+          }
+        }
+      }
+    },
+    "File transfer failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateiübertragung fehlgeschlagen"
+          }
+        }
+      }
+    },
     "Fill" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1381,6 +2635,7 @@
       }
     },
     "Find" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1411,6 +2666,7 @@
       }
     },
     "Fit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1431,6 +2687,7 @@
       }
     },
     "Force quit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1460,6 +2717,27 @@
         }
       }
     },
+    "Forward Delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorwärts löschen"
+          }
+        }
+      }
+    },
+    "Four keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vier Tasten"
+          }
+        }
+      }
+    },
     "From another password app" : {
       "localizations" : {
         "de" : {
@@ -1481,6 +2759,7 @@
       }
     },
     "From the Mac" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1490,7 +2769,30 @@
         }
       }
     },
+    "Full" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoch"
+          }
+        }
+      }
+    },
+    "Full Quality" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hohe Qualität"
+          }
+        }
+      }
+    },
     "Full screen, with the trackpad or touch." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1500,7 +2802,18 @@
         }
       }
     },
+    "Full screen, with touch, the keyboard and a trackpad or mouse." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Vollbild, mit Berührung, Tastatur und Trackpad oder Maus."
+          }
+        }
+      }
+    },
     "Function keys" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1510,7 +2823,30 @@
         }
       }
     },
+    "Function Keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funktionstasten"
+          }
+        }
+      }
+    },
+    "General" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allgemein"
+          }
+        }
+      }
+    },
     "Gestures" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1520,17 +2856,28 @@
         }
       }
     },
-    "Get the Tailscale App" : {
+    "GNU General Public License" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tailscale-App laden"
+            "value" : "GNU General Public License"
+          }
+        }
+      }
+    },
+    "GNU General Public License, version 3" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GNU General Public License, Version 3"
           }
         }
       }
     },
     "Gray (least data)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1541,6 +2888,7 @@
       }
     },
     "Haptic feedback" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1561,6 +2909,7 @@
       }
     },
     "Hide keyboard" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1581,11 +2930,45 @@
       }
     },
     "Hide the toolbar by itself" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Werkzeugleiste von selbst ausblenden"
+          }
+        }
+      }
+    },
+    "Hide Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste ausblenden"
+          }
+        }
+      }
+    },
+    "High Dynamic Range" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoher Dynamikumfang (HDR)"
+          }
+        }
+      }
+    },
+    "High Performance Stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochleistungsmodus beendet"
           }
         }
       }
@@ -1600,6 +2983,17 @@
         }
       }
     },
+    "Home Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home-Bildschirm"
+          }
+        }
+      }
+    },
     "How the iPhone reaches it" : {
       "localizations" : {
         "de" : {
@@ -1610,17 +3004,40 @@
         }
       }
     },
-    "If you install the Tailscale app later and sign in with the same account, aOS's devices appear in the same tailnet, and you manage them there like any other device. The Tailscale app can't take over aOS's connection." : {
+    "Import" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Installierst du später die Tailscale-App und meldest dich mit demselben Konto an, erscheinen die Geräte von aOS im selben Tailnet, und du verwaltest sie dort wie jedes andere Gerät. Die Verbindung von aOS übernehmen kann die Tailscale-App nicht."
+            "value" : "Importieren"
+          }
+        }
+      }
+    },
+    "In More" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In „Mehr“"
+          }
+        }
+      }
+    },
+    "In the background" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Hintergrund"
           }
         }
       }
     },
     "In the iPhone's shape" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1641,11 +3058,23 @@
       }
     },
     "Input works in a moment …" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eingaben gehen gleich …"
+          }
+        }
+      }
+    },
+    "iPad Style" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad-Stil"
           }
         }
       }
@@ -1690,12 +3119,96 @@
         }
       }
     },
+    "It’s assigned to “%@”. Replacing it removes that shortcut." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Kurzbefehl ist „%@“ zugewiesen. Beim Ersetzen wird er dort entfernt."
+          }
+        }
+      }
+    },
+    "It’s mapped to %@. Replacing it removes that mapping." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er ist %@ zugeordnet. Beim Ersetzen wird diese Zuordnung entfernt."
+          }
+        }
+      }
+    },
+    "It’s mapped to %@. Replacing it removes those mappings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er ist %@ zugeordnet. Beim Ersetzen werden diese Zuordnungen entfernt."
+          }
+        }
+      }
+    },
+    "Item" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekt"
+          }
+        }
+      }
+    },
+    "Keep alive with location" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Ortungsdienst wach halten"
+          }
+        }
+      }
+    },
     "Keep Screen On" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm bleibt an"
+          }
+        }
+      }
+    },
+    "Keep this Mac awake" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Mac wach halten"
+          }
+        }
+      }
+    },
+    "Keeps stopping. Restart it, or look on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hört immer wieder auf. Starte sie neu oder sieh auf dem Mac nach."
+          }
+        }
+      }
+    },
+    "Kept conversations" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erreichbare Unterhaltungen"
           }
         }
       }
@@ -1721,51 +3234,34 @@
       }
     },
     "Key" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Schlüssel"
-          }
-        }
-      }
-    },
-    "key doesn't expire" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlüssel läuft nicht ab"
-          }
-        }
-      }
-    },
-    "key expired" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlüssel abgelaufen"
-          }
-        }
-      }
-    },
-    "key expires %@" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlüssel läuft ab am %@"
+            "value" : "Taste"
           }
         }
       }
     },
     "Keyboard" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tastatur"
+          }
+        }
+      }
+    },
+    "Keyboard Input for Mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastatureingabe für den Mac"
           }
         }
       }
@@ -1782,6 +3278,7 @@
       }
     },
     "Keyboard: type; ⌘ ⌥ ⌃ ⇧ in the key bar apply to the next key, tapped twice they stay on" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1801,12 +3298,45 @@
         }
       }
     },
-    "last seen %@" : {
+    "Keypad" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "zuletzt gesehen %@"
+            "value" : "Ziffernblock"
+          }
+        }
+      }
+    },
+    "Keypad %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (Ziffernblock)"
+          }
+        }
+      }
+    },
+    "Keypad Enter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter (Ziffernblock)"
+          }
+        }
+      }
+    },
+    "Keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasten"
           }
         }
       }
@@ -1831,6 +3361,76 @@
         }
       }
     },
+    "License notice" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lizenzhinweis"
+          }
+        }
+      }
+    },
+    "Lid closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel zu"
+          }
+        }
+      }
+    },
+    "Lid closed too" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch zugeklappt"
+          }
+        }
+      }
+    },
+    "Lid closed: aOS keeps the Mac awake now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel zu: aOS hält den Mac jetzt wach."
+          }
+        }
+      }
+    },
+    "Lid open" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel offen"
+          }
+        }
+      }
+    },
+    "Live Activity" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live-Aktivität"
+          }
+        }
+      }
+    },
+    "Lock" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sperren"
+          }
+        }
+      }
+    },
     "Lock again" : {
       "localizations" : {
         "de" : {
@@ -1851,12 +3451,33 @@
         }
       }
     },
+    "Locked. Unlock it in aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesperrt. Entsperre es in aOS auf dem Mac."
+          }
+        }
+      }
+    },
     "Log in to the screen of %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Am Bildschirm von %@ anmelden"
+          }
+        }
+      }
+    },
+    "Log In to Your Own Session" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei eigener Sitzung anmelden"
           }
         }
       }
@@ -1871,6 +3492,17 @@
         }
       }
     },
+    "Lost the Connection to “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung mit „%@“ verloren"
+          }
+        }
+      }
+    },
     "Mac" : {
       "localizations" : {
         "de" : {
@@ -1881,7 +3513,19 @@
         }
       }
     },
+    "Main Display" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hauptdisplay"
+          }
+        }
+      }
+    },
     "Mission Control" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1892,6 +3536,7 @@
       }
     },
     "More" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1901,7 +3546,30 @@
         }
       }
     },
+    "Move Down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach unten bewegen"
+          }
+        }
+      }
+    },
+    "Move Up" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach oben bewegen"
+          }
+        }
+      }
+    },
     "Moves the pointer (trackpad)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1941,12 +3609,66 @@
         }
       }
     },
+    "Native" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nativ"
+          }
+        }
+      }
+    },
+    "Native Touch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Native Touch-Eingabe"
+          }
+        }
+      }
+    },
     "Natural scrolling" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Natürliches Scrollen"
+          }
+        }
+      }
+    },
+    "Navigation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation"
+          }
+        }
+      }
+    },
+    "Needs a sign-in to Claude Code on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht eine Anmeldung bei Claude Code auf dem Mac"
+          }
+        }
+      }
+    },
+    "Needs aOS's background helper on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht den Hintergrunddienst von aOS auf dem Mac"
           }
         }
       }
@@ -1961,6 +3683,27 @@
         }
       }
     },
+    "New chats from the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats aus der Claude-App"
+          }
+        }
+      }
+    },
+    "New connections start with clipboard sync turned off. To sync what you copy to the Mac without being asked each time, choose Allow for Paste from Other Apps in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei neuen Verbindungen ist „Zwischenablage synchronisieren“ zunächst deaktiviert. Damit Kopiertes ohne Nachfrage mit dem Mac synchronisiert wird, wähle in „Einstellungen“ für „Aus anderen Apps einsetzen“ die Option „Erlauben“."
+          }
+        }
+      }
+    },
     "New password (empty keeps the old one)" : {
       "localizations" : {
         "de" : {
@@ -1971,12 +3714,34 @@
         }
       }
     },
+    "New Session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Sitzung"
+          }
+        }
+      }
+    },
     "New tab" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuer Tab"
+          }
+        }
+      }
+    },
+    "Next Tip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächster Tipp"
           }
         }
       }
@@ -1997,6 +3762,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Noch keine Rechner"
+          }
+        }
+      }
+    },
+    "No Keyboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Tastatur"
+          }
+        }
+      }
+    },
+    "No lid" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Deckel"
           }
         }
       }
@@ -2061,12 +3847,13 @@
         }
       }
     },
-    "No VPN and no Tailscale app needed. aOS only reaches your Mac through it, and nothing on this iPhone is reachable in your tailnet. Its keys stay on this iPhone, out of backups." : {
+    "None" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kein VPN und keine Tailscale-App nötig. aOS erreicht darüber nur deinen Mac, und auf diesem iPhone ist in deinem Tailnet nichts erreichbar. Die Schlüssel bleiben auf diesem iPhone, nicht in Backups."
+            "value" : "Ohne"
           }
         }
       }
@@ -2081,22 +3868,24 @@
         }
       }
     },
-    "not chosen (pair again to choose)" : {
+    "Not Available" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "nicht gewählt (zum Wählen neu koppeln)"
+            "value" : "Nicht verfügbar"
           }
         }
       }
     },
-    "not connected" : {
+    "Not available while observing" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "nicht verbunden"
+            "value" : "Beim Beobachten nicht verfügbar"
           }
         }
       }
@@ -2131,6 +3920,26 @@
         }
       }
     },
+    "Not open anywhere" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nirgends offen"
+          }
+        }
+      }
+    },
+    "Not open anywhere since %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nirgends offen seit %@"
+          }
+        }
+      }
+    },
     "Not reachable right now" : {
       "localizations" : {
         "de" : {
@@ -2151,12 +3960,53 @@
         }
       }
     },
-    "Now" : {
+    "Not set up" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jetzt"
+            "value" : "Nicht eingerichtet"
+          }
+        }
+      }
+    },
+    "Not set up yet. Finish the setup in aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht eingerichtet. Schließ die Einrichtung in aOS auf dem Mac ab."
+          }
+        }
+      }
+    },
+    "Not signed in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht angemeldet"
+          }
+        }
+      }
+    },
+    "Nothing to keep reachable right now: the Mac sleeps as usual." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerade muss nichts erreichbar bleiben: Der Mac schläft wie gewohnt."
+          }
+        }
+      }
+    },
+    "Observe Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beobachtungsmodus"
           }
         }
       }
@@ -2171,17 +4021,18 @@
         }
       }
     },
-    "offline" : {
+    "Off in aOS's settings" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "offline"
+            "value" : "In den Einstellungen von aOS aus"
           }
         }
       }
     },
     "OK" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2192,11 +4043,32 @@
       }
     },
     "On" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "An"
+          }
+        }
+      }
+    },
+    "On battery" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Akkubetrieb"
+          }
+        }
+      }
+    },
+    "On battery, %@ left" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Akkubetrieb, noch %@"
           }
         }
       }
@@ -2211,32 +4083,22 @@
         }
       }
     },
-    "On the go through aOS's own Tailscale. After pairing, set it up on this iPhone too, with the same Tailscale account." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unterwegs über das eigene Tailscale von aOS. Richte es nach dem Koppeln auch auf diesem iPhone ein, mit demselben Tailscale-Konto."
-          }
-        }
-      }
-    },
-    "On the go through the Tailscale app. On this iPhone you need it too, signed in with the same account (or aOS's own Tailscale, in Settings > Connection)." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unterwegs über die Tailscale-App. Auf diesem iPhone brauchst du sie auch, mit demselben Konto angemeldet (oder das eigene Tailscale von aOS, unter Einstellungen > Verbindung)."
-          }
-        }
-      }
-    },
     "On the Mac: click aOS in the menu bar, then “Pair” next to iPhone. aOS uses the Mac's Remote Login for this, nothing else." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auf dem Mac: Klicke in der Menüleiste auf aOS, dann bei „iPhone“ auf „Koppeln“. aOS nutzt dafür die entfernte Anmeldung des Macs, sonst nichts."
+          }
+        }
+      }
+    },
+    "On the power adapter, not charging" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Netzteil, lädt nicht"
           }
         }
       }
@@ -2251,7 +4113,18 @@
         }
       }
     },
+    "On: the Mac appears in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An: Der Mac erscheint in der Claude-App"
+          }
+        }
+      }
+    },
     "One finger" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2271,42 +4144,53 @@
         }
       }
     },
-    "online" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "online"
-          }
-        }
-      }
-    },
-    "only on the same network" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "nur im selben Netzwerk"
-          }
-        }
-      }
-    },
-    "Only on the same network: on the go the iPhone doesn't reach this Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nur im selben Netzwerk: Unterwegs erreicht das iPhone diesen Mac nicht."
-          }
-        }
-      }
-    },
     "Open" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geöffnet"
+            "value" : "Offen"
+          }
+        }
+      }
+    },
+    "Open for your agent" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für deinen Agent geöffnet"
+          }
+        }
+      }
+    },
+    "Open here" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hier offen"
+          }
+        }
+      }
+    },
+    "Open Here" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hier öffnen"
+          }
+        }
+      }
+    },
+    "Open It Here" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hier öffnen"
           }
         }
       }
@@ -2321,12 +4205,43 @@
         }
       }
     },
-    "Open the Tailscale Admin Console" : {
+    "Open on another device" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tailscale-Verwaltung öffnen"
+            "value" : "Auf einem anderen Gerät offen"
+          }
+        }
+      }
+    },
+    "Open on another device (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf einem anderen Gerät offen (%@)"
+          }
+        }
+      }
+    },
+    "Open Screen Sharing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Screen Sharing"
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen öffnen"
           }
         }
       }
@@ -2361,6 +4276,17 @@
         }
       }
     },
+    "Option Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option-Taste"
+          }
+        }
+      }
+    },
     "Or paste the link" : {
       "localizations" : {
         "de" : {
@@ -2387,6 +4313,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weitere Rechner"
+          }
+        }
+      }
+    },
+    "Others" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere"
           }
         }
       }
@@ -2561,6 +4498,17 @@
         }
       }
     },
+    "Password Fields Take Only English Characters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwortfelder akzeptieren nur englische Zeichen"
+          }
+        }
+      }
+    },
     "Paste" : {
       "localizations" : {
         "de" : {
@@ -2581,7 +4529,19 @@
         }
       }
     },
+    "PC Key Mappings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PC-Tastenzuordnungen"
+          }
+        }
+      }
+    },
     "Picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2592,6 +4552,7 @@
       }
     },
     "Picture rate" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2602,6 +4563,7 @@
       }
     },
     "Picture rate and data" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2612,6 +4574,7 @@
       }
     },
     "Pinch: zoom, moving the fingers moves the picture. Three fingers: move the zoomed picture" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2653,6 +4616,7 @@
       }
     },
     "Pointer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2662,7 +4626,19 @@
         }
       }
     },
+    "Pointer Lock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigersperre"
+          }
+        }
+      }
+    },
     "Pointer speed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2682,6 +4658,48 @@
         }
       }
     },
+    "Power adapter" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzteil"
+          }
+        }
+      }
+    },
+    "Preparing Remote Cursors…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernte Zeiger werden vorbereitet …"
+          }
+        }
+      }
+    },
+    "Press Gesture" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drückgeste"
+          }
+        }
+      }
+    },
+    "Programs in the workspace end; sign-ins on websites expire as set on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programme im Arbeitsplatz enden; Anmeldungen auf Websites verfallen, wie auf dem Mac eingestellt."
+          }
+        }
+      }
+    },
     "Public key" : {
       "localizations" : {
         "de" : {
@@ -2692,7 +4710,18 @@
         }
       }
     },
+    "Put %@ to sleep?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ in den Ruhezustand versetzen?"
+          }
+        }
+      }
+    },
     "Quality" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2703,6 +4732,7 @@
       }
     },
     "Quit app" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2712,17 +4742,83 @@
         }
       }
     },
-    "Reconnect" : {
+    "Raising the resolution by scaling reduces sharpness and increases bandwidth use and picture latency." : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Neu verbinden"
+            "value" : "Eine durch Skalierung erhöhte Auflösung verringert die Schärfe und erhöht Bandbreitenbedarf und Bildlatenz."
+          }
+        }
+      }
+    },
+    "Ready: the Mac stays awake when the lid closes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereit: Der Mac bleibt wach, wenn der Deckel zugeht."
+          }
+        }
+      }
+    },
+    "Receive Audio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio empfangen"
+          }
+        }
+      }
+    },
+    "Receive Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage empfangen"
+          }
+        }
+      }
+    },
+    "Receiving “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird empfangen"
+          }
+        }
+      }
+    },
+    "Reconnecting … The session keeps running on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde neu … Die Sitzung läuft auf dem Mac weiter."
+          }
+        }
+      }
+    },
+    "Reconnecting…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut verbinden …"
           }
         }
       }
     },
     "Reload" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2732,12 +4828,163 @@
         }
       }
     },
+    "Remember Password" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort merken"
+          }
+        }
+      }
+    },
     "Remote screen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entfernter Bildschirm"
+          }
+        }
+      }
+    },
+    "Remote Style" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernter Stil"
+          }
+        }
+      }
+    },
+    "Remove from Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus der Symbolleiste entfernen"
+          }
+        }
+      }
+    },
+    "Replace" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzen"
+          }
+        }
+      }
+    },
+    "Reset to Default" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset Toolbar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset Toolbar?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste zurücksetzen?"
+          }
+        }
+      }
+    },
+    "Resolution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auflösung"
+          }
+        }
+      }
+    },
+    "Resolution…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auflösung …"
+          }
+        }
+      }
+    },
+    "Restart" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu starten"
+          }
+        }
+      }
+    },
+    "Restart the Claude Code session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude-Code-Sitzung neu starten"
+          }
+        }
+      }
+    },
+    "Restart the Claude Code session?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude-Code-Sitzung neu starten?"
+          }
+        }
+      }
+    },
+    "Restarting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet neu"
+          }
+        }
+      }
+    },
+    "Restore Defaults" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard wiederherstellen"
           }
         }
       }
@@ -2748,6 +4995,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retina-Schärfe"
+          }
+        }
+      }
+    },
+    "Return" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilenschalter"
           }
         }
       }
@@ -2772,6 +5030,17 @@
         }
       }
     },
+    "Right-Click" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechtsklick"
+          }
+        }
+      }
+    },
     "Running" : {
       "localizations" : {
         "de" : {
@@ -2782,22 +5051,22 @@
         }
       }
     },
-    "same network (%@)" : {
+    "Running, reachable in the Claude app" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "dasselbe Netzwerk (%@)"
+            "value" : "Läuft, in der Claude-App erreichbar"
           }
         }
       }
     },
-    "same network, found by name" : {
+    "Running, without an agent in it" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "dasselbe Netzwerk, über den Namen gefunden"
+            "value" : "Läuft, ohne Agent darin"
           }
         }
       }
@@ -2823,11 +5092,23 @@
       }
     },
     "Saves data" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spart Daten"
+          }
+        }
+      }
+    },
+    "Scaling" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skalieren"
           }
         }
       }
@@ -2858,6 +5139,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm kopiert"
+          }
+        }
+      }
+    },
+    "Screen of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm von %@"
           }
         }
       }
@@ -2893,6 +5185,7 @@
       }
     },
     "Screen statistics" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2903,6 +5196,7 @@
       }
     },
     "Screenshot of an area" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2933,6 +5227,7 @@
       }
     },
     "Select all" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2948,6 +5243,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alles auswählen"
+          }
+        }
+      }
+    },
+    "Send Audio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio senden"
+          }
+        }
+      }
+    },
+    "Send Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage senden"
           }
         }
       }
@@ -2972,6 +5289,17 @@
         }
       }
     },
+    "Send to Desktop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An den Schreibtisch senden"
+          }
+        }
+      }
+    },
     "Sending …" : {
       "localizations" : {
         "de" : {
@@ -2982,12 +5310,44 @@
         }
       }
     },
+    "Sending “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ wird gesendet"
+          }
+        }
+      }
+    },
+    "Sends" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendet"
+          }
+        }
+      }
+    },
     "Sent. aOS fills it into the workspace." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gesendet. aOS trägt sie im Arbeitsplatz ein."
+          }
+        }
+      }
+    },
+    "Sessions on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzungen auf dem Mac"
           }
         }
       }
@@ -3012,26 +5372,6 @@
         }
       }
     },
-    "Set Up Tailscale" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tailscale einrichten"
-          }
-        }
-      }
-    },
-    "Set Up Tailscale for on the Go" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tailscale für unterwegs einrichten"
-          }
-        }
-      }
-    },
     "Settings" : {
       "localizations" : {
         "de" : {
@@ -3052,7 +5392,29 @@
         }
       }
     },
+    "Share the Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm freigeben"
+          }
+        }
+      }
+    },
     "Shift" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umschalttaste"
+          }
+        }
+      }
+    },
+    "Shift Key" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3072,12 +5434,24 @@
         }
       }
     },
-    "Shortcuts" : {
+    "Shortcut" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tastenkürzel"
+            "value" : "Kurzbefehl"
+          }
+        }
+      }
+    },
+    "Shortcuts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurzbefehle"
           }
         }
       }
@@ -3088,6 +5462,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tastatur einblenden"
+          }
+        }
+      }
+    },
+    "Show or Hide Keyboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastatur ein- oder ausblenden"
           }
         }
       }
@@ -3113,6 +5498,7 @@
       }
     },
     "Show the screen's toolbar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3122,52 +5508,57 @@
         }
       }
     },
-    "Sign In to Tailscale" : {
+    "Show Tips" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bei Tailscale anmelden"
+            "value" : "Tipps anzeigen"
           }
         }
       }
     },
-    "Sign in to Tailscale on the page that opened." : {
+    "Show Toolbar" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Melde dich auf der geöffneten Seite bei Tailscale an."
+            "value" : "Symbolleiste einblenden"
           }
         }
       }
     },
-    "Sign Out" : {
+    "Show/Hide Keyboard" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abmelden"
+            "value" : "Tastatur ein-/ausblenden"
           }
         }
       }
     },
-    "Sign out of Tailscale on this iPhone?" : {
+    "Show/Hide Toolbar" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auf diesem iPhone von Tailscale abmelden?"
+            "value" : "Symbolleiste ein-/ausblenden"
           }
         }
       }
     },
-    "Sign Out removes this iPhone from the tailnet and deletes its Tailscale keys here." : {
+    "Sign In" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Abmelden“ nimmt dieses iPhone aus dem Tailnet und löscht hier seine Tailscale-Schlüssel."
+            "value" : "Anmelden"
           }
         }
       }
@@ -3212,22 +5603,33 @@
         }
       }
     },
-    "Signed in. The tailnet's admin still has to approve this iPhone in the Tailscale admin console." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Angemeldet. Die Verwaltung des Tailnets muss dieses iPhone noch in der Tailscale-Verwaltung freigeben."
-          }
-        }
-      }
-    },
     "Size" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Größe"
+          }
+        }
+      }
+    },
+    "Sleep" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruhezustand"
+          }
+        }
+      }
+    },
+    "Sleep is switched off on this Mac by another program (pmset disablesleep). aOS doesn't change that." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderes Programm hat den Ruhezustand auf diesem Mac ausgeschaltet (pmset disablesleep). aOS ändert das nicht."
           }
         }
       }
@@ -3253,6 +5655,7 @@
       }
     },
     "Smooth" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3262,7 +5665,73 @@
         }
       }
     },
+    "Some Characters Can’t Be Typed on “%@”" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Zeichen können auf „%@“ nicht eingegeben werden"
+          }
+        }
+      }
+    },
+    "Someone at the Mac needs to accept." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jemand am Mac muss die Anfrage annehmen."
+          }
+        }
+      }
+    },
+    "Sound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton"
+          }
+        }
+      }
+    },
+    "Source Code" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quellcode"
+          }
+        }
+      }
+    },
+    "Source code of Open Screen Sharing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quellcode von Open Screen Sharing"
+          }
+        }
+      }
+    },
+    "Space" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leertaste"
+          }
+        }
+      }
+    },
     "Spotlight" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3322,6 +5791,16 @@
         }
       }
     },
+    "Start" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starten"
+          }
+        }
+      }
+    },
     "Start of selection" : {
       "localizations" : {
         "de" : {
@@ -3338,6 +5817,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Startet"
+          }
+        }
+      }
+    },
+    "Starting High Performance…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochleistungsmodus wird gestartet …"
+          }
+        }
+      }
+    },
+    "Stay awake" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wach bleiben"
           }
         }
       }
@@ -3362,6 +5862,16 @@
         }
       }
     },
+    "Swipe for arrow keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wischen für Pfeiltasten"
+          }
+        }
+      }
+    },
     "Swipe up, down, left or right to send arrow keys" : {
       "localizations" : {
         "de" : {
@@ -3373,6 +5883,7 @@
       }
     },
     "Switch app" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3393,6 +5904,28 @@
         }
       }
     },
+    "Sync Clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwischenablage synchronisieren"
+          }
+        }
+      }
+    },
+    "System" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        }
+      }
+    },
     "Tab" : {
       "localizations" : {
         "de" : {
@@ -3403,62 +5936,12 @@
         }
       }
     },
-    "Tailnet" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tailnet"
-          }
-        }
-      }
-    },
-    "Tailnet of the Mac" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tailnet des Macs"
-          }
-        }
-      }
-    },
     "Tailscale (%@)" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tailscale (%@)"
-          }
-        }
-      }
-    },
-    "Tailscale app (%@)" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tailscale-App (%@)"
-          }
-        }
-      }
-    },
-    "Tailscale app on this iPhone" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tailscale-App auf diesem iPhone"
-          }
-        }
-      }
-    },
-    "Tailscale didn't send a sign-in page. Try again in a moment." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tailscale hat keine Anmeldeseite geschickt. Versuch es gleich noch einmal."
           }
         }
       }
@@ -3475,6 +5958,7 @@
       }
     },
     "Tap: click where the pointer is. Tap twice: double click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3496,6 +5980,7 @@
       }
     },
     "Tap: click where you tap. Tap twice: double click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3515,12 +6000,43 @@
         }
       }
     },
+    "Terminal in the background" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal im Hintergrund"
+          }
+        }
+      }
+    },
     "Terminal keys" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Terminaltasten"
+          }
+        }
+      }
+    },
+    "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. iOS gives an app time in the background for up to an hour when you open a terminal, and shows it in the Dynamic Island; it can end it earlier. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Wenn du ein Terminal öffnest, gibt iOS der App bis zu einer Stunde Zeit im Hintergrund und zeigt das in der Dynamic Island; iOS kann sie früher beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil."
+          }
+        }
+      }
+    },
+    "Text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
           }
         }
       }
@@ -3571,6 +6087,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Antwort kam nicht von dem Mac, der diesen Code zeigt. Kopple noch einmal, in einem Netzwerk, dem du vertraust."
+          }
+        }
+      }
+    },
+    "The arrows sit in the middle of the key bar; the whole bar scrolls. Swiping on the terminal works like the pad: sideways for ← and →, a quick flick up or down for ↑ and ↓ while the terminal shows its end (slower drags scroll back). Keep your finger down to repeat." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Pfeile sitzen in der Mitte der Tastenleiste, die ganze Leiste scrollt. Wischen auf dem Terminal geht wie auf dem Pfeilfeld: seitwärts für ← und →, ein schneller Wischer nach oben oder unten für ↑ und ↓, solange das Terminal sein Ende zeigt (langsames Ziehen scrollt zurück). Lass den Finger liegen, um zu wiederholen."
           }
         }
       }
@@ -3655,12 +6181,13 @@
         }
       }
     },
-    "The iPhone tries the same network first, then the tailnet, then the Mac's name on the network." : {
+    "The item isn’t available on the Mac" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das iPhone versucht zuerst dasselbe Netzwerk, dann das Tailnet, dann den Namen des Macs im Netzwerk."
+            "value" : "Das Objekt ist auf dem Mac nicht verfügbar"
           }
         }
       }
@@ -3685,6 +6212,16 @@
         }
       }
     },
+    "The Mac account for screen sharing is missing." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac-Account für die Bildschirmfreigabe fehlt."
+          }
+        }
+      }
+    },
     "The Mac account name and password for its screen stay on this iPhone behind Face ID and only go to the Mac's screen sharing." : {
       "localizations" : {
         "de" : {
@@ -3701,6 +6238,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Accountname und Passwort des Macs für die Bildschirmfreigabe, auf diesem iPhone hinter Face ID."
+          }
+        }
+      }
+    },
+    "The Mac can’t write to the folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac kann nicht in den Ordner schreiben"
           }
         }
       }
@@ -3725,6 +6273,49 @@
         }
       }
     },
+    "The Mac doesn’t allow file transfers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac erlaubt keine Dateiübertragungen"
+          }
+        }
+      }
+    },
+    "The Mac doesn't fall asleep by itself while something runs. Closing the lid puts it to sleep." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange etwas läuft, schläft der Mac nicht von selbst ein. Zugeklappt schläft er."
+          }
+        }
+      }
+    },
+    "The Mac doesn’t have permission to read the item" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac hat keine Berechtigung zum Lesen des Objekts"
+          }
+        }
+      }
+    },
+    "The Mac doesn’t support file transfers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac unterstützt keine Dateiübertragungen"
+          }
+        }
+      }
+    },
     "The Mac ended the pairing. Show a new pairing code on the Mac and scan it again." : {
       "localizations" : {
         "de" : {
@@ -3735,42 +6326,42 @@
         }
       }
     },
-    "The Mac isn't reachable, also not through Tailscale. Is it awake, and is Tailscale on there?" : {
+    "The Mac is too hot and may sleep." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Mac ist nicht erreichbar, auch nicht über Tailscale. Ist er wach, und ist Tailscale dort an?"
+            "value" : "Der Mac ist zu heiß und schläft vielleicht ein."
           }
         }
       }
     },
-    "The Mac isn't reachable, and aOS's Tailscale on this iPhone isn't connected (Settings > Connection)." : {
+    "The Mac is too hot: it may sleep now." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Mac ist nicht erreichbar, und das Tailscale von aOS ist auf diesem iPhone nicht verbunden (Einstellungen > Verbindung)."
+            "value" : "Der Mac ist zu heiß: Er darf jetzt schlafen."
           }
         }
       }
     },
-    "The Mac isn't reachable. On the go, set up aOS's Tailscale on this iPhone: Settings > Connection." : {
+    "The Mac is very warm." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Mac ist nicht erreichbar. Für unterwegs richte das Tailscale von aOS auf diesem iPhone ein: Einstellungen > Verbindung."
+            "value" : "Der Mac ist sehr warm."
           }
         }
       }
     },
-    "The Mac isn't reachable. On the go, switch on Tailscale on this iPhone (the Tailscale app, or aOS's Tailscale in Settings > Connection)." : {
+    "The Mac isn't reachable right now. The session keeps running there." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Mac ist nicht erreichbar. Schalte unterwegs Tailscale auf diesem iPhone ein (die Tailscale-App oder das Tailscale von aOS unter Einstellungen > Verbindung)."
+            "value" : "Der Mac ist gerade nicht erreichbar. Die Sitzung läuft dort weiter."
           }
         }
       }
@@ -3781,16 +6372,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac ist nicht erreichbar. Außerhalb deines Heimnetzes brauchst du Tailscale oder ein anderes VPN, um ihn zu erreichen."
-          }
-        }
-      }
-    },
-    "The Mac isn't reachable. Your Mac is set up for the same network only; to reach it on the go, choose a way with Tailscale in aOS on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac ist nicht erreichbar. Dein Mac ist nur für dasselbe Netzwerk eingerichtet; um ihn unterwegs zu erreichen, wähle in aOS auf dem Mac einen Weg mit Tailscale."
           }
         }
       }
@@ -3825,12 +6406,43 @@
         }
       }
     },
+    "The Mac sleeps as usual." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac schläft wie gewohnt."
+          }
+        }
+      }
+    },
+    "The Mac stays awake with the lid closed too." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac bleibt auch mit geschlossenem Deckel wach."
+          }
+        }
+      }
+    },
     "The Mac's answer wasn't understood. Update aOS on the Mac and on this iPhone." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Antwort des Macs war nicht zu verstehen. Aktualisiere aOS auf dem Mac und auf diesem iPhone."
+          }
+        }
+      }
+    },
+    "The Mac’s disk is full" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Festplatte des Mac ist voll"
           }
         }
       }
@@ -3846,6 +6458,7 @@
       }
     },
     "The Mac's screen isn't shared. Turn on Screen Sharing on the Mac in System Settings > General > Sharing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3881,6 +6494,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Seite fragt nach dem Benutzernamen."
+          }
+        }
+      }
+    },
+    "The password is incorrect." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Passwort ist falsch."
           }
         }
       }
@@ -3956,11 +6580,22 @@
       }
     },
     "The screen connection ended." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Bildschirmverbindung ist beendet."
+          }
+        }
+      }
+    },
+    "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac, and aOS's sign-in replaces the app's own." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirm des Arbeitsplatzes und des Macs beruht auf Open Screen Sharing von nekohasekai, verwendet unter der GNU General Public License, Version 3. aOS hat es für sich angepasst: Die Bildschirme kommen über die Verbindung zu deinem Mac, und die Anmeldung von aOS ersetzt die eigene der App."
           }
         }
       }
@@ -3975,12 +6610,73 @@
         }
       }
     },
+    "The session on the Mac had ended. This is a new one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sitzung auf dem Mac war beendet. Das ist eine neue."
+          }
+        }
+      }
+    },
+    "The session was ended." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sitzung wurde beendet."
+          }
+        }
+      }
+    },
+    "The shell ended." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Shell hat sich beendet."
+          }
+        }
+      }
+    },
+    "The shell on the Mac ends, and so do the programs running in it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Shell auf dem Mac endet und mit ihr die Programme, die darin laufen."
+          }
+        }
+      }
+    },
     "The shell runs each line as soon as it arrives." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Shell führt jede Zeile aus, sobald sie ankommt."
+          }
+        }
+      }
+    },
+    "The terminal on the Mac doesn't start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Terminal auf dem Mac startet nicht."
+          }
+        }
+      }
+    },
+    "The user name or password is incorrect." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Benutzername oder das Passwort ist falsch."
           }
         }
       }
@@ -3996,11 +6692,22 @@
       }
     },
     "The workspace didn't accept the screen sharing login." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz hat die Anmeldung der Bildschirmfreigabe nicht angenommen."
+          }
+        }
+      }
+    },
+    "The workspace in the iPhone's shape" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz in der Form des iPhones"
           }
         }
       }
@@ -4025,7 +6732,18 @@
         }
       }
     },
+    "The workspace isn't set up yet. Finish the setup in aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist noch nicht eingerichtet. Schließ die Einrichtung in aOS auf dem Mac ab."
+          }
+        }
+      }
+    },
     "The workspace screen isn't available. Is the workspace open?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4041,6 +6759,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dazwischen steht kein Server von uns. Außerhalb deines Heimnetzes brauchst du Tailscale oder ein anderes VPN, um den Mac zu erreichen."
+          }
+        }
+      }
+    },
+    "They keep running when the connection drops, also with the app closed, and this iPhone picks up where it left off. End the ones you no longer need." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie laufen weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und dieses iPhone macht weiter, wo es war. Beende die, die du nicht mehr brauchst."
           }
         }
       }
@@ -4065,12 +6793,46 @@
         }
       }
     },
-    "this iPhone" : {
+    "This computer only offers an older sign-in method that can’t confirm its identity. If another device is pretending to be this computer, it could see your password." : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "dieses iPhone"
+            "value" : "Dieser Computer bietet nur eine ältere Anmeldemethode an, die seine Identität nicht bestätigen kann. Wenn sich ein anderes Gerät als dieser Computer ausgibt, könnte es dein Passwort sehen."
+          }
+        }
+      }
+    },
+    "This Device Can’t Play High Performance Video" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Gerät kann kein Video im Hochleistungsmodus wiedergeben"
+          }
+        }
+      }
+    },
+    "This device can’t read or write the file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Gerät kann die Datei nicht lesen oder schreiben"
+          }
+        }
+      }
+    },
+    "This Device Can’t Show HDR" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Gerät kann kein HDR anzeigen"
           }
         }
       }
@@ -4095,12 +6857,12 @@
         }
       }
     },
-    "This iPhone leaves your tailnet. On the go it then reaches the Mac only through the Tailscale app, if it has it." : {
+    "This iPhone loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dieses iPhone verlässt dein Tailnet. Unterwegs erreicht es den Mac dann nur noch über die Tailscale-App, falls es sie hat."
+            "value" : "Dieses iPhone verliert die Verbindung, bis der Mac wieder aufwacht (Deckel aufklappen oder eine Taste drücken). Der Arbeitsplatz und deine Agents pausieren so lange."
           }
         }
       }
@@ -4135,6 +6897,28 @@
         }
       }
     },
+    "This is expected after the computer is reinstalled or renews its certificate. If neither happened, another device may be pretending to be this computer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist normal, nachdem der Computer neu installiert wurde oder sein Zertifikat erneuert hat. Wenn beides nicht der Fall ist, gibt sich möglicherweise ein anderes Gerät als dieser Computer aus."
+          }
+        }
+      }
+    },
+    "This is expected after the Mac is reinstalled. If it wasn’t, another device may be pretending to be this Mac." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das ist normal, nachdem der Mac neu installiert wurde. Wenn das nicht der Fall ist, gibt sich möglicherweise ein anderes Gerät als dieser Mac aus."
+          }
+        }
+      }
+    },
     "This request couldn't be signed." : {
       "localizations" : {
         "de" : {
@@ -4155,32 +6939,23 @@
         }
       }
     },
-    "through aOS's Tailscale" : {
+    "This session is open on another device now. It keeps running on the Mac." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "über das Tailscale von aOS"
+            "value" : "Diese Sitzung ist jetzt auf einem anderen Gerät offen. Sie läuft auf dem Mac weiter."
           }
         }
       }
     },
-    "through Tailscale" : {
+    "Tips" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "über Tailscale"
-          }
-        }
-      }
-    },
-    "through the Tailscale app" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "über die Tailscale-App"
+            "value" : "Tipps"
           }
         }
       }
@@ -4196,6 +6971,7 @@
       }
     },
     "Touch" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4206,6 +6982,7 @@
       }
     },
     "Touch (one finger touches the screen)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4215,7 +6992,19 @@
         }
       }
     },
+    "Touch and hold anywhere on the screen for a while to simulate a press." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte eine beliebige Stelle auf dem Bildschirm eine Weile gedrückt, um ein Drücken zu simulieren."
+          }
+        }
+      }
+    },
     "Touch and hold, then move: drag (select, move windows)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4226,6 +7015,7 @@
       }
     },
     "Touch and hold: right click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4236,6 +7026,7 @@
       }
     },
     "Touches directly" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4246,6 +7037,7 @@
       }
     },
     "Trackpad" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4256,6 +7048,7 @@
       }
     },
     "Trackpad (one finger moves the pointer)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4317,6 +7110,7 @@
       }
     },
     "Two fingers: scroll (it glides on after a flick)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4338,11 +7132,34 @@
       }
     },
     "Two-finger tap: right click" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit zwei Fingern tippen: Rechtsklick"
+          }
+        }
+      }
+    },
+    "Type Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taste eingeben"
+          }
+        }
+      }
+    },
+    "Type Shortcut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurzbefehl eingeben"
           }
         }
       }
@@ -4358,11 +7175,23 @@
       }
     },
     "Undo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Widerrufen"
+          }
+        }
+      }
+    },
+    "Unlock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperren"
           }
         }
       }
@@ -4417,6 +7246,26 @@
         }
       }
     },
+    "Unlocked until %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperrt bis %@"
+          }
+        }
+      }
+    },
+    "Unlocked: sign-ins can use your logins" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperrt: aOS kann deine Anmeldungen eintragen"
+          }
+        }
+      }
+    },
     "Unlocking didn't work. Try again." : {
       "localizations" : {
         "de" : {
@@ -4453,6 +7302,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pfeil nach oben"
+          }
+        }
+      }
+    },
+    "Update aOS on the Mac to keep this terminal when the connection drops." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisiere aOS auf dem Mac, damit dieses Terminal bleibt, wenn die Verbindung abreißt."
           }
         }
       }
@@ -4507,22 +7366,23 @@
         }
       }
     },
+    "User Name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzername"
+          }
+        }
+      }
+    },
     "User name or email" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzername oder E-Mail"
-          }
-        }
-      }
-    },
-    "Users, access rules and your other devices are in Tailscale's admin console." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benutzer, Zugriffsregeln und deine anderen Geräte findest du in der Verwaltung von Tailscale."
           }
         }
       }
@@ -4537,7 +7397,19 @@
         }
       }
     },
+    "View" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darstellung"
+          }
+        }
+      }
+    },
     "Viewer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4547,22 +7419,34 @@
         }
       }
     },
-    "VPN off" : {
+    "Virtual Display" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VPN aus"
+            "value" : "Virtuelles Display"
           }
         }
       }
     },
-    "VPN on" : {
+    "Waiting for Permission…" : {
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VPN an"
+            "value" : "Warten auf Erlaubnis …"
+          }
+        }
+      }
+    },
+    "Waiting for the network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf das Netzwerk"
           }
         }
       }
@@ -4577,6 +7461,16 @@
         }
       }
     },
+    "Waits for you on the Mac (trust the folder)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf dem Mac auf dich (Ordner vertrauen)"
+          }
+        }
+      }
+    },
     "What is where" : {
       "localizations" : {
         "de" : {
@@ -4587,12 +7481,88 @@
         }
       }
     },
+    "When Magic Keyboard is connected, you can also use %@ Dictation and the %@ emoji keyboard on this iPad." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn das Magic Keyboard verbunden ist, kannst du auf diesem iPad auch das Diktat %1$@ und die Emoji-Tastatur %2$@ verwenden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When Magic Keyboard is connected, you can also use %1$@ Dictation and the %2$@ emoji keyboard on this iPad."
+          }
+        }
+      }
+    },
+    "When using a mouse or trackpad, turn on %@ › %@ so moving to the edge of the screen won’t open the Dock or Control Center." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn du eine Maus oder ein Trackpad verwendest, aktiviere „%1$@“ > „%2$@“, damit sich am Bildschirmrand nicht das Dock oder das Kontrollzentrum öffnet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When using a mouse or trackpad, turn on %1$@ › %2$@ so moving to the edge of the screen won’t open the Dock or Control Center."
+          }
+        }
+      }
+    },
+    "While a terminal is open and connected." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange ein Terminal offen und verbunden ist."
+          }
+        }
+      }
+    },
+    "While the lid is open" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange der Deckel offen ist"
+          }
+        }
+      }
+    },
+    "While you watch it, the workspace's display takes the iPhone's shape and fills the screen. Retina draws it twice as sharp with more data. Applies the next time the workspace screen opens." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während du zusiehst, nimmt der Bildschirm des Arbeitsplatzes die Form des iPhones an und füllt das Display. Retina zeichnet ihn doppelt so scharf, mit mehr Daten. Gilt ab dem nächsten Öffnen des Arbeitsplatzes."
+          }
+        }
+      }
+    },
     "While you watch, the workspace's screen takes the shape of your iPhone, upright or sideways. It gets its own size back when you stop. Retina draws twice the pixels: sharper, more data." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Während du zusiehst, nimmt der Bildschirm des Arbeitsplatzes die Form deines iPhones an, hochkant oder quer. Wenn du aufhörst, bekommt er seine eigene Größe zurück. Retina zeichnet doppelt so viele Pixel: schärfer, mehr Daten."
+          }
+        }
+      }
+    },
+    "Windows Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows-Taste"
           }
         }
       }
@@ -4637,6 +7607,28 @@
         }
       }
     },
+    "You Can’t Control Your Own Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigener Bildschirm kann nicht gesteuert werden"
+          }
+        }
+      }
+    },
+    "Your account is logged in at the Mac." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Account ist auf dem Mac angemeldet."
+          }
+        }
+      }
+    },
     "Your agent" : {
       "localizations" : {
         "de" : {
@@ -4653,6 +7645,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Agent fragt, du gibst mit Face ID frei. Er sieht das Passwort nie."
+          }
+        }
+      }
+    },
+    "Your agent is using it for „%@“. Its work there stops." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Agent nutzt ihn für „%@“. Seine Arbeit dort hört auf."
           }
         }
       }
@@ -4683,46 +7685,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Mac und der Arbeitsplatz, live, mit Touch und Tastatur."
-          }
-        }
-      }
-    },
-    "Your Mac is in the tailnet %@. Sign out here and sign in with that account." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein Mac ist im Tailnet %@. Melde dich hier ab und mit diesem Konto wieder an."
-          }
-        }
-      }
-    },
-    "Your Mac isn't in this tailnet. Sign in with the account you used on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein Mac ist nicht in diesem Tailnet. Melde dich mit dem Konto an, das du auf dem Mac benutzt hast."
-          }
-        }
-      }
-    },
-    "Your Mac uses aOS's own Tailscale. Set it up here too: you sign in once with your Tailscale account, the same as on the Mac." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein Mac nutzt das eigene Tailscale von aOS. Richte es hier auch ein: Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac."
-          }
-        }
-      }
-    },
-    "Your Mac uses the Tailscale app. On this iPhone the Tailscale app, signed in with the same account, reaches it too; so does aOS's own Tailscale below." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein Mac nutzt die Tailscale-App. Auf diesem iPhone erreicht ihn die Tailscale-App, mit demselben Konto angemeldet, ebenfalls; genauso das eigene Tailscale von aOS weiter unten."
           }
         }
       }
@@ -4787,12 +7749,57 @@
         }
       }
     },
+    "Zoom Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoommodus"
+          }
+        }
+      }
+    },
     "Zoom out" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Herauszoomen"
+          }
+        }
+      }
+    },
+    "Zoom to Actual Size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Originalgröße zoomen"
+          }
+        }
+      }
+    },
+    "Zoom to Fit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größe anpassen"
+          }
+        }
+      }
+    },
+    "Zoom to Fit / Actual Size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größe anpassen / Originalgröße"
           }
         }
       }

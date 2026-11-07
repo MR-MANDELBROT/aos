@@ -8,13 +8,15 @@ private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "forward")
 /// `ssh -L` on the iPhone: a listener on 127.0.0.1 (random port) whose connections each open a direct-tcpip channel
 /// through the SSH connection to `targetHost:targetPort` as seen from the Mac.
 ///
-/// The screen sharing client (AOSRFB's `RFBClient`) connects with Network.framework to a host and port, so it is
-/// pointed at this listener. Only loopback connections are accepted, and the listener lives only while a screen is
-/// open.
+/// The screen client (Open Screen Sharing's libsharing, iOS/ThirdParty/OpenScreenSharing) connects to a host and port
+/// with TCP, so it is pointed at this listener. Only loopback connections are accepted, and the listener lives only
+/// while a screen is open.
 final class LocalForwarder: @unchecked Sendable {
-    private let connection: SSHConnection
-    private let targetHost: String
-    private let targetPort: Int
+    /// The SSH connection for each new forwarded connection: the screen client connects again after the Mac's
+    /// connection was rebuilt (a network change), and then gets the new one.
+    private let connection: @Sendable () async throws -> SSHConnection
+    let targetHost: String
+    let targetPort: Int
     private let queue = DispatchQueue(label: "dev.marquart.aos.forward")
     private var listener: NWListener?
     private let lock = NSLock()
@@ -24,11 +26,18 @@ final class LocalForwarder: @unchecked Sendable {
     /// Why the last forwarded connection couldn't be opened (the Mac refused, for example).
     var lastError: Error? { lock.withLock { _lastError } }
 
-    init(connection: SSHConnection, targetHost: String, targetPort: Int) {
+    convenience init(connection: SSHConnection, targetHost: String, targetPort: Int) {
+        self.init(targetHost: targetHost, targetPort: targetPort) { connection }
+    }
+
+    init(targetHost: String, targetPort: Int, connection: @escaping @Sendable () async throws -> SSHConnection) {
         self.connection = connection
         self.targetHost = targetHost
         self.targetPort = targetPort
     }
+
+    /// The local port while listening.
+    var port: UInt16? { listener?.port?.rawValue }
 
     /// Starts listening; returns the local port.
     func start() async throws -> UInt16 {
@@ -75,7 +84,8 @@ final class LocalForwarder: @unchecked Sendable {
         nw.start(queue: queue)
         Task {
             do {
-                let channel = try await connection.directTCPIP(to: targetHost, port: targetPort) {
+                let ssh = try await connection()
+                let channel = try await ssh.directTCPIP(to: targetHost, port: targetPort) {
                     BridgeHandler(bridge: bridge)
                 }
                 bridge.attach(channel)

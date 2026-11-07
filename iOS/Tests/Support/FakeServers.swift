@@ -1,12 +1,16 @@
+import CommonCrypto
 import CryptoKit
 import Foundation
 import NIOCore
 import NIOPosix
+import Security
 @testable import aOS
 
 // MARK: - Screen sharing
 
-/// A minimal RFB 3.8 server: no authentication, a fixed picture, records pointer and key events.
+/// A minimal RFB 3.8 server: a fixed picture, records pointer and key events. Without `account` no authentication;
+/// with it, Apple's account login (security type 33: the client encrypts name and password with AES-128-ECB under a
+/// random key it sends encrypted to the server's RSA key), checked against `account`.
 final class FakeRFBServer: @unchecked Sendable {
     let port: Int
     let width: Int
@@ -14,23 +18,35 @@ final class FakeRFBServer: @unchecked Sendable {
     let log: EventLog
     private let channel: Channel
 
+    struct Account: Sendable {
+        var username: String
+        var password: String
+    }
+
     final class EventLog: @unchecked Sendable {
         private let lock = NSLock()
         private var pointer: [(buttons: UInt8, x: Int, y: Int)] = []
         private var keys: [(down: Bool, keysym: UInt32)] = []
         private var updates = 0
+        private var logins: [Account] = []
         func addPointer(_ b: UInt8, _ x: Int, _ y: Int) { lock.withLock { pointer.append((b, x, y)) } }
         func addKey(_ down: Bool, _ k: UInt32) { lock.withLock { keys.append((down, k)) } }
         func addUpdate() { lock.withLock { updates += 1 } }
+        func addLogin(_ login: Account) { lock.withLock { logins.append(login) } }
         var pointerEvents: [(buttons: UInt8, x: Int, y: Int)] { lock.withLock { pointer } }
         var keyEvents: [(down: Bool, keysym: UInt32)] { lock.withLock { keys } }
         var updateCount: Int { lock.withLock { updates } }
+        /// The account logins the server received (decrypted), right or wrong.
+        var receivedLogins: [Account] { lock.withLock { logins } }
     }
 
-    static func start(width: Int = 64, height: Int = 48) async throws -> FakeRFBServer {
+    static func start(width: Int = 64, height: Int = 48, account: Account? = nil) async throws -> FakeRFBServer {
         let log = EventLog()
+        let rsa = try account.map { _ in try RSAKey() }
         let channel = try await ServerBootstrap(group: MultiThreadedEventLoopGroup.singleton)
-            .childChannelInitializer { $0.pipeline.addHandler(RFBSession(width: width, height: height, log: log)) }
+            .childChannelInitializer {
+                $0.pipeline.addHandler(RFBSession(width: width, height: height, log: log, account: account, rsa: rsa))
+            }
             .bind(host: "127.0.0.1", port: 0).get()
         return FakeRFBServer(channel: channel, width: width, height: height, log: log)
     }
@@ -46,21 +62,49 @@ final class FakeRFBServer: @unchecked Sendable {
     func stop() async { try? await channel.close().get() }
 }
 
+/// The server's RSA key for Apple's account login.
+final class RSAKey: @unchecked Sendable {
+    let privateKey: SecKey
+    /// PKCS#1 RSAPublicKey (DER), as the server sends it.
+    let publicDER: Data
+
+    init() throws {
+        var error: Unmanaged<CFError>?
+        let attributes: [String: Any] = [kSecAttrKeyType as String: kSecAttrKeyTypeRSA, kSecAttrKeySizeInBits as String: 2048]
+        guard let key = SecKeyCreateRandomKey(attributes as CFDictionary, &error),
+              let publicKey = SecKeyCopyPublicKey(key),
+              let der = SecKeyCopyExternalRepresentation(publicKey, &error) as Data? else {
+            throw error!.takeRetainedValue() as Error
+        }
+        privateKey = key
+        publicDER = der
+    }
+
+    /// The client's AES key, encrypted with PKCS#1 v1.5.
+    func decrypt(_ data: Data) -> Data? {
+        SecKeyCreateDecryptedData(privateKey, .rsaEncryptionPKCS1, data as CFData, nil) as Data?
+    }
+}
+
 private final class RFBSession: ChannelInboundHandler, @unchecked Sendable {
     typealias InboundIn = ByteBuffer
     typealias OutboundOut = ByteBuffer
 
-    enum Phase { case version, security, clientInit, messages }
+    enum Phase { case version, security, rsaRequest, rsaCredentials, clientInit, messages }
 
     let width: Int, height: Int
     let log: FakeRFBServer.EventLog
+    let account: FakeRFBServer.Account?
+    let rsa: RSAKey?
     var phase = Phase.version
     var buffer = ByteBuffer()
 
-    init(width: Int, height: Int, log: FakeRFBServer.EventLog) {
+    init(width: Int, height: Int, log: FakeRFBServer.EventLog, account: FakeRFBServer.Account? = nil, rsa: RSAKey? = nil) {
         self.width = width
         self.height = height
         self.log = log
+        self.account = account
+        self.rsa = rsa
     }
 
     func channelActive(context: ChannelHandlerContext) {
@@ -82,11 +126,58 @@ private final class RFBSession: ChannelInboundHandler, @unchecked Sendable {
         switch phase {
         case .version:
             guard buffer.readSlice(length: 12) != nil else { return false }
-            send(context, [1, 1])  // one security type: None
-            phase = .security
+            if account != nil {
+                send(context, [1, 33])  // one security type: Apple's account login
+                phase = .rsaRequest
+            } else {
+                send(context, [1, 1])  // one security type: None
+                phase = .security
+            }
         case .security:
             guard buffer.readInteger(as: UInt8.self) != nil else { return false }
             send(context, [0, 0, 0, 0])  // SecurityResult OK
+            phase = .clientInit
+        case .rsaRequest:
+            // The type (33) and the request for the key: a sized envelope 01 00 "RSA1", kind 0, two zero bytes
+            guard buffer.readableBytes >= 15, let rsa else { return false }
+            buffer.moveReaderIndex(forwardBy: 15)
+            var out = ByteBuffer()
+            out.writeInteger(UInt32(6 + rsa.publicDER.count))
+            out.writeBytes([1, 0, 0, 1])
+            out.writeInteger(UInt16(rsa.publicDER.count))
+            out.writeBytes(rsa.publicDER)
+            context.writeAndFlush(wrapOutboundOut(out), promise: nil)
+            phase = .rsaCredentials
+        case .rsaCredentials:
+            guard let size = buffer.getInteger(at: buffer.readerIndex, as: UInt32.self),
+                  var message = buffer.readSlice(length: 4 + Int(size)) else { return false }
+            message.moveReaderIndex(forwardBy: 4 + 8)  // size, 01 00 "RSA1", kind 1
+            guard let credentials = message.readBytes(length: 128),
+                  let low = message.readInteger(as: UInt8.self), let high = message.readInteger(as: UInt8.self),
+                  let encryptedKey = message.readBytes(length: Int(low) | Int(high) << 8),
+                  let key = rsa?.decrypt(Data(encryptedKey)), let plain = Self.decryptECB(Data(credentials), key: key) else {
+                context.close(promise: nil)
+                return false
+            }
+            func field(_ bytes: Data.SubSequence) -> String {
+                String(decoding: bytes.prefix { $0 != 0 }, as: UTF8.self)
+            }
+            let login = FakeRFBServer.Account(username: field(plain[0..<64]), password: field(plain[64..<128]))
+            log.addLogin(login)
+            let accepted = login.username == account?.username && login.password == account?.password
+            var out = ByteBuffer()
+            out.writeInteger(UInt32(0))
+            out.writeInteger(UInt32(accepted ? 0 : 1))
+            if !accepted {
+                let reason = Array("Authentication failed".utf8)
+                out.writeInteger(UInt32(reason.count))
+                out.writeBytes(reason)
+            }
+            context.writeAndFlush(wrapOutboundOut(out), promise: nil)
+            if !accepted {
+                context.close(promise: nil)
+                return false
+            }
             phase = .clientInit
         case .clientInit:
             guard buffer.readInteger(as: UInt8.self) != nil else { return false }
@@ -128,6 +219,23 @@ private final class RFBSession: ChannelInboundHandler, @unchecked Sendable {
             }
         }
         return true
+    }
+
+    /// AES-128-ECB without padding (the account login's credential block).
+    static func decryptECB(_ data: Data, key: Data) -> Data? {
+        guard key.count == kCCKeySizeAES128 else { return nil }
+        var out = Data(count: data.count)
+        var moved = 0
+        let status = out.withUnsafeMutableBytes { output in
+            data.withUnsafeBytes { input in
+                key.withUnsafeBytes { keyBytes in
+                    CCCrypt(CCOperation(kCCDecrypt), CCAlgorithm(kCCAlgorithmAES), CCOptions(kCCOptionECBMode),
+                            keyBytes.baseAddress, key.count, nil, input.baseAddress, data.count,
+                            output.baseAddress, data.count, &moved)
+                }
+            }
+        }
+        return status == kCCSuccess ? out : nil
     }
 
     private func sendFrame(_ context: ChannelHandlerContext) {

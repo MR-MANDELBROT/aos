@@ -6,9 +6,12 @@ user, wherever they are:
 - **Sign-ins for the agent** ("agentic passwords"): the agent in the workspace needs to sign in, the iPhone shows the
   request with the user's Bitwarden logins that fit the site, the user approves one with Face ID, and aOS on the Mac
   gets exactly that login from Bitwarden and fills it into the workspace. The agent never sees the password.
-- **Terminal**: SSH to the paired Mac (and other hosts the user adds).
-- **Screen**: the paired Mac's screen and the aOS workspace, live, with touch, keyboard and trackpad gestures.
-  Same screen sharing code as the Mac app (`AOSKit/Sources/AOSRFB`).
+- **Terminal**: SSH to the paired Mac (and other hosts the user adds). On the Mac the shell outlives the connection
+  ("Terminal sessions", below); a Live Activity shows open terminals.
+- **The Mac from the iPhone** (Overview): battery, lid, staying awake, the workspace, aOS's Claude Code session and
+  Bitwarden, with sleep and the other actions as signed requests.
+- **Screen**: the paired Mac's screen and the aOS workspace, live, with touch, keyboard and trackpad gestures, in
+  Open Screen Sharing's session (GPL-3.0, iOS/ThirdParty/OpenScreenSharing; iOS/NOTES.md, "The screen").
 - **Help requests**: when the agent asks for help (a captcha, a sign-in it can't do), the request opens the
   workspace screen on the iPhone.
 - **Settings**.
@@ -98,7 +101,7 @@ agent's own (MCP) operations stay unsigned.
   in the request line, ECDSA P-256 with SHA-256 over these lines (UTF-8, joined with `\n`, no newline at the end):
 
       aos-companion-v1
-      op=<the app's op: companion.hello|companion.status|companion.subscribe|companion.screen|companion.type|signin.answer|help.done|approval.answer>
+      op=<the app's op: companion.hello|companion.status|companion.subscribe|companion.screen|companion.type|companion.display|companion.mac.status|companion.mac.sleep|...|signin.answer|help.done|approval.answer>
       key=<phone id>
       ts=<seconds>
       nonce=<nonce>
@@ -108,6 +111,9 @@ agent's own (MCP) operations stay unsigned.
       host=<signin.answer: the request's website, or empty>
       target=<companion.screen: mac|workspace, or empty>
       data=<lowercase hex SHA-256 over "<name>:<UTF-8 byte count>:<value>\n" for each of username, password, totp, text, reply that is present>
+
+  The Overview's ops ("The Mac from the iPhone", below) are signed the same way: `op` is "companion." and the
+  phone's op (`companion.mac.sleep`), a parameter travels only in `text` and so is covered by `data`.
 
   No value may contain a line break (refused). The app derives `decision` and `data` from the request's fields the
   way it acts on them, so a changed field breaks the signature. `reply` (since 2026-11-07) is the one-time key a
@@ -134,8 +140,9 @@ refused a signature, see above). Every request carries `auth` (left out below). 
 any time after `subscribe`.
 
 Requests:
-- `{"id":1,"op":"hello","app":"<version>","device":"<name>"}` -> `{"id":1,"ok":true,"mac":"<name>","aos":"<version>"}`
-  (the Mac shows the name it has from pairing, not this one)
+- `{"id":1,"op":"hello","app":"<version>","device":"<name>"}` -> `{"id":1,"ok":true,"mac":"<name>","aos":"<version>","features":["mac.status",...,"term"]}`
+  (the Mac shows the name it has from pairing, not this one; `features` lists the Overview's ops and `term`, the
+  terminal sessions; an older Mac sends none)
 - `{"id":2,"op":"status"}` -> `{"id":2,"ok":true,"workspace":{"state":"stopped|starting|open|closing","purpose":"...","until":"<ISO date>"},"sessions":[{"title":"...","state":"..."}]}`
 - `{"id":3,"op":"subscribe"}` -> `{"id":3,"ok":true}`, then events.
 - `{"id":4,"op":"screen","target":"mac"}` -> `{"id":4,"ok":true,"host":"127.0.0.1","port":5900}` (no credentials:
@@ -191,7 +198,73 @@ Events:
   `subscribe`)
 
 A phone that subscribes first gets the questions still open, then everything new. `aos-companion` runs as long as
-the exec channel is open; the Mac counts a phone as connected while it polled within the last 45 s.
+the exec channel is open; the Mac counts a phone as connected while it polled within the last 45 s. The Mac sends a
+`workspace` event when the workspace starts, opens or closes (`stopped|starting|running|open|closing|failed`).
+
+## The Mac from the iPhone (Overview)
+
+One signed op reads, one signed op per action changes (AOSKit `CompanionControl`; checked by `CompanionGate` like
+every phone request: signature, 2 minutes, nonce). Every answer carries the new `status`. A refusal is `ok: false`
+with `error` (English) and `code`, which the phone says in its own words.
+
+- `{"id":10,"op":"mac.status"}` -> `{"id":10,"ok":true,"status":{...}}` with
+  - `power`: `{"source":"ac|battery|ups|unknown","battery":76,"charging":false,"minutes":312,"lid":"open|closed|none","thermal":"nominal|fair|serious|critical"}`
+    (`minutes`: until empty on battery, until full while charging, when macOS knows; no `battery` on a Mac without one)
+  - `awake`: `{"setting":"off|lidOpen|lidClosed","holding":true,"lidClosedMode":false,"blocker":"cloupi|nothingToKeep|helperNotReady|lowBattery|thermal","helper":"enabled|requiresApproval|notRegistered|notFound","otherService":false}`
+    (Settings > General > Staying awake; `holding`: aOS's helper holds the Mac for a closed lid now)
+  - `workspace`: `{"state":"stopped|starting|running|open|closing|failed","setupComplete":true,"purpose":"...","until":"<ISO>","error":"..."}`
+    (`open`: an agent has it; `running`: started without an agent, from the phone or the setup)
+  - `session`: `{"enabled":true,"state":"running|starting|restarting|waitingForNetwork|needsLogin|needsAttention|missingClaude|stopped|failed","detail":"...","since":"<ISO>"}`
+    (aOS's own Claude Code session)
+  - `newChats`: `{"enabled":true,"state":"off|waitingForNetwork|starting|running|needsLogin|needsTrust|missingClaude|restarting"}`
+  - `kept`: `{"enabled":true,"running":2}` (kept conversations)
+  - `bitwarden`: `{"state":"unlocked|locked|signedOut|needsHelper|unknown","until":"<ISO, if it locks by itself>"}`
+- `mac.sleep` -> `{"ok":true,"sleeping":true,"after":1.5,"status":...}`: the Mac sleeps 1.5 s later (the answer goes
+  out first). With aOS's lid-closed hold the helper first sets `pmset disablesleep` back, and aOS holds nothing until
+  a screen comes on again (a dark wake doesn't keep the Mac up). Refused when sleep stays off: `sleep-disabled`
+  (another program set `disablesleep`), `other-service` (Cloupi's wake daemon owns sleep and has it off),
+  `sleep-held` (aOS's helper didn't answer in time).
+- `mac.display-off` (`pmset displaysleepnow`; macOS locks the screen if it asks for the password after the display
+  sleeps).
+- `{"op":"mac.stay-awake","text":"off|lidOpen|lidClosed"}`: the setting; `other-service` while Cloupi owns sleep.
+  "Also with the lid closed" registers the helper; macOS may still want the person's yes in Login Items
+  (`awake.helper` says so).
+- `workspace.start` (`not-set-up` before the setup is done; started without an agent lease: the agent's tools still
+  need its own `workspace_open`), `workspace.stop` (closes it like the agent's `workspace_close`, also when an agent
+  has it: the phone asks first).
+- `bitwarden.lock`, `session.restart` (`no-session` when aOS's background process isn't running).
+
+## Terminal sessions
+
+The Terminal tab's shell on the paired Mac outlives the connection. The phone opens a session channel with a pseudo
+terminal (pty-req) and runs, through the login shell, `'<companion>' term attach [--id <id> [--have <offset>]]`.
+`aos-companion term attach` connects to the session's holder (`term hold`, a process of its own, started by the first
+attach: setsid, so the SSH connection closing doesn't reach it) over `run/terms/<id>.sock` (folder 0700, peer uid
+checked), puts its terminal into raw mode and relays bytes; terminal size changes reach the shell (SIGWINCH of the
+client's terminal). One client at a time: a new one takes over (the old one hears `taken`).
+
+The client tells the phone where the output starts with a note on the terminal, `ESC ] 7730 ; <JSON> BEL` (the phone
+takes notes out; other terminals ignore an OSC they don't know):
+
+    {"t":"start","id":"3fa9c1d2","from":12345,"reset":false,"prefix":"<base64>","created":"<ISO>","new":false}
+    {"t":"end","why":"exited|ended|taken|lost","status":0}
+
+- `from`: the offset of the next output byte. The phone counts every byte after the start note (notes don't count)
+  and attaches again with `--have <that count>`: it gets exactly what it missed (the holder keeps the last MB).
+- `reset: true` (no `--have`, or it missed more than the holder keeps): the phone resets its terminal, applies
+  `prefix` (escape sequences for the modes in effect where the replay begins: alternate screen, cursor keys, keypad,
+  mouse, bracketed paste, keyboard protocol, cursor), then gets the last 256 KB from a point between two sequences,
+  after a line break where there is one; the program in the foreground gets SIGWINCH and draws itself again.
+- `new: true` with `gone`: the session asked for had ended (the Mac restarted, someone ended it); this one is new.
+- `end`: `exited` (the shell ended; exit status), `ended` (someone ended it), `taken` (another device attached),
+  `lost` (the holder went away). Without an end note the connection dropped: the phone attaches again.
+
+`'<companion>' term list --json` -> `{"sessions":[{"id":"3fa9c1d2","pid":123,"shell":124,"created":"<ISO>","attached":true,"since":"<ISO>","lastOutput":"<ISO>","from":"ssh 192.168.178.31","command":"zsh","cwd":"/Users/max","title":"...","cols":80,"rows":24}]}`
+and `'<companion>' term end <id>` -> `{"ok":true}` (`{"ok":false,"gone":true}`) run in exec channels. Ending sends
+SIGHUP to the program in the foreground and to the shell, as closing a terminal window does, SIGKILL 3 s later. A Mac
+holds at most 16 sessions. These commands aren't companion requests and aren't signed: the phone's SSH login can run
+any command as the user anyway, and a signature can't protect a shell from the user's own processes. An older
+aos-companion without `term` exits with its usage (status 2): the phone then opens a plain shell.
 
 ## The workspace's screen login (2026-11-07)
 
@@ -251,8 +324,12 @@ Chrome, so a filled password can't be read back.
 ## iPhone app structure
 
 - XcodeGen spec `iOS/project.yml`, target `aOS` (bundle `dev.marquart.aos.ios`, iOS 27), packages: `AOSKit`
-  (local, product `AOSRFB`), Citadel (SSH, on SwiftNIO SSH), SwiftTerm.
-- Tabs: Overview (Mac, workspace, requests), Terminal, Screen; settings from the Overview.
+  (local, product `AOSRFB`), Citadel (SSH, on SwiftNIO SSH), SwiftTerm; the framework target `ScreenClient` (Open
+  Screen Sharing's session code with its Go library libsharing, GRDB, swift-perception, swift-atomics). Widget
+  extension `AOSWidgets` (`dev.marquart.aos.ios.widgets`): the Live Activity of the open terminals.
+- Tabs: Overview (Mac with battery, lid and staying awake, requests, workspace, aOS's Claude Code session and
+  Bitwarden, with their actions), Terminal (the Mac's sessions survive the connection), Screen; settings from the
+  Overview.
 - German and English (string catalogs), German first for Max.
 - Trust in the design: what is where, said plainly ("Your passwords stay in Bitwarden. You approve every sign-in with
   Face ID."), lock and shield symbols only where they are true, no dark patterns, every approval shows who asks for

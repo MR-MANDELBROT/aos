@@ -115,8 +115,80 @@ final class PowerController: ObservableObject {
         })
         // The lid opened (the screens wake): continue the frozen apps at once, not at the next tick.
         observers.append(center.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.updateAgain() }
+            Task { @MainActor in
+                self?.sleepEnded()
+                self?.updateAgain()
+            }
         })
+        observers.append(center.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.sleepBegan() }
+        })
+    }
+
+    // MARK: Sleep from the iPhone
+
+    /// The iPhone asked the Mac to sleep: aOS holds nothing (no assertion, no lid-closed hold) until the Mac was
+    /// really awake again (a screen came on), so a dark wake doesn't keep it up. If it didn't sleep within a minute,
+    /// everything is as before.
+    private var sleepPausedSince: Date?
+    private var sleepStarted = false
+
+    func sleepNow() async -> MacSleepResult {
+        let aosHeld = holding || leaseWanted
+        sleepPausedSince = Date()
+        sleepStarted = false
+        updateAgain()
+        var released = true
+        if aosHeld {
+            // aOS's own hold: the helper sets disablesleep back to what it was.
+            let reply = await helper.hold(seconds: 0, timeout: 8)
+            released = reply.ok
+            holding = false
+            leaseWanted = false
+            var tries = 0
+            while tries < 12, await Self.sleepDisabled() == 1 {
+                tries += 1
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            }
+        }
+        let disabled = await Self.sleepDisabled()
+        switch SleepPolicy.next(aosHolds: false, sleepDisabled: disabled, otherService: cloupiPresent) {
+        case .sleep, .releaseHold:
+            log("the iPhone puts the Mac to sleep")
+            let delay = 1.5
+            Task.detached(priority: .userInitiated) {
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                _ = try? await Subprocess.run("/usr/bin/pmset", ["sleepnow"], timeout: 15)
+            }
+            Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                guard let self, !self.sleepStarted, self.sleepPausedSince != nil else { return }
+                self.log("the Mac didn't go to sleep")
+                self.sleepEnded(force: true)
+                self.updateAgain()
+            }
+            return .sleeping(after: delay)
+        case .refuse(let refusal):
+            sleepEnded(force: true)
+            updateAgain()
+            return .refused(aosHeld && !released ? .holdNotReleased : refusal)
+        }
+    }
+
+    private func sleepBegan() {
+        if sleepPausedSince != nil { sleepStarted = true }
+    }
+
+    private func sleepEnded(force: Bool = false) {
+        guard sleepPausedSince != nil, sleepStarted || force else { return }
+        sleepPausedSince = nil
+        sleepStarted = false
+    }
+
+    /// pmset's SleepDisabled (readable as the user); nil if pmset didn't answer.
+    static func sleepDisabled() async -> Int? {
+        guard let r = try? await Subprocess.run("/usr/bin/pmset", ["-g"], timeout: 10), r.status == 0 else { return nil }
+        return HoldPolicy.parseDisableSleep(String(decoding: r.stdout, as: UTF8.self))
     }
 
     private var lastInputs: (settings: AgentSettings, needed: Bool)?
@@ -170,7 +242,9 @@ final class PowerController: ObservableObject {
                                batteryPercent: power?.percent, thermalCritical: MacState.thermalCritical,
                                externalDisplay: (displays?.external ?? 1) > 0, cloupiPresent: cloupi,
                                helperReady: helperStatus == .enabled)
-        let d = AwakePolicy.decide(facts)
+        // Asked to sleep from the iPhone: nothing holds the Mac until it woke up again.
+        let sleepRequested = sleepPausedSince != nil
+        let d = sleepRequested ? AwakeDecision() : AwakePolicy.decide(facts)
         if d != decision { decision = d }
 
         keepAwake.set(d.idleAssertion)

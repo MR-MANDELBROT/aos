@@ -4,6 +4,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 export MINT_PATH="${MINT_PATH:-$HOME/Developer/bitwarden-agent/mint}"
 
+# The screen client's Go library (not checked in): built once from Open Screen Sharing's source.
+Tools/libsharing.sh
+
 # The app icon is the Mac app's Icon Composer document with iOS as its platform; refreshed here so both stay the same.
 rm -rf Resources/AppIcon.icon
 cp -R ../App/Resources/AppIcon.icon Resources/AppIcon.icon
