@@ -299,6 +299,9 @@ final class PowerController: ObservableObject {
     /// The workspace's keys and disk through the helper (WorkspaceCustody.swift).
     func workspace(_ request: CustodyRequest) async -> (CustodyReply, FileHandle?) { await helper.workspace(request) }
 
+    /// aOS's own Tailscale node through the helper (TailnetHelper.swift; helper version 4 or later).
+    func tailnet(_ request: TailnetRequest) async -> TailnetReply { await helper.tailnet(request) }
+
     /// Until then aOS leaves an older helper (from before an update) alone: no lease, no calls, so it exits by itself
     /// when idle and the next call starts the new one from the app bundle.
     private var outdatedHelperUntil = Date.distantPast

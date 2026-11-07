@@ -92,7 +92,8 @@ extension AppModel {
 
     func startPairing() {
         pairing?.stop()
-        let session = PairingSession()
+        // The way away from home and this Mac's tailnet hosts go into the code too.
+        let session = PairingSession(reach: TailnetController.shared.pairingReach)
         session.onChange = { [weak self, weak session] in
             guard let self, let session else { return }
             self.pairingTick += 1
