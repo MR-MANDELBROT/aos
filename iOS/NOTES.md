@@ -239,7 +239,9 @@ fit (`MacOffer`): Sleep (asks first: the phone loses the connection until the Ma
 Off while the display is on, Display On (`caffeinate -u` on the Mac) while it is off. After Sleep the card says
 "Sleeping since" with the time at once, and the connection is closed when the Mac falls asleep (it would die without a
 word, and the app would still say "connected"); no new attempt for 20 s, then the usual ones, and the first that
-works ends "sleeping". The aOS card isn't shown while the Mac sleeps or aOS doesn't answer (it would be old).
+works ends "sleeping". The aOS card isn't shown while the Mac sleeps or aOS doesn't answer (it would be old), and the
+workspace card then says "No news from the Mac", without its purpose and buttons (a closed connection sets the
+companion back to not started, so nothing reads as ready any more).
 Workspace card: Start (closed),
 Close (asks first while an agent has it), Show the screen. aOS card: Claude Code session (Restart, asks first), new
 chats from the Claude app, kept conversations, Bitwarden (Lock). When Claude Code on the Mac needs a sign-in (the
