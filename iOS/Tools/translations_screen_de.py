@@ -277,3 +277,16 @@ DE.update({
     "Your Mac came through SSH in its own size: the direct way didn't work this time.":
         'Dein Mac kam über SSH in seiner eigenen Größe: Der direkte Weg hat diesmal nicht geklappt.',
 })
+
+# Why the Mac came through SSH, in detail (the card's brackets)
+DE.update({
+    'SSH reached the Mac at %@, not at an address in a network':
+        'SSH erreicht den Mac über %@, nicht über eine Adresse im Netzwerk',
+    '%@ failed %lld min ago, tried again after 10 minutes: %@':
+        '%@ ist vor %lld Min. gescheitert, nach 10 Minuten wird es wieder versucht: %@',
+    'the Mac showed no screen sharing key through SSH (%@)':
+        'der Mac hat über SSH keinen Schlüssel der Bildschirmfreigabe gezeigt (%@)',
+    'the Mac refused the login in the check through SSH': 'der Mac hat die Anmeldung bei der Prüfung über SSH abgelehnt',
+    'the check through SSH failed: %@': 'die Prüfung über SSH ist gescheitert: %@',
+    'nothing answered at %@, port %lld': 'unter %@, Port %lld, hat nichts geantwortet',
+})

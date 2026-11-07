@@ -283,8 +283,23 @@ Model/ (its settings, key mappings and shortcuts, toolbar layout, the GRDB store
 its settings page), App/ helpers and its menu commands. Packages as in OSS: GRDB 7.11.1, swift-perception 2.0.12,
 swift-atomics. The framework target `ScreenClient` keeps OSS's Swift settings (main actor by default, approachable
 concurrency, member import visibility). libsharing (Go) is `Libsharing.xcframework`, built from OSS's source by
-`Tools/libsharing.sh` (gomobile bind like OSS's `make lib`, iPhone and simulator only; `--copy` takes the checkout's
-own build); `generate.sh` runs it when the framework is missing.
+`Tools/libsharing.sh` (gomobile bind like OSS's `make lib`, iPhone and simulator only): it copies the checkout's Go
+module, applies aOS's changes (`ThirdParty/OpenScreenSharing/libsharing-aos.patch`, below), runs their Go tests and
+builds the copy; `generate.sh` runs it, and it builds again when the checkout's commit or the patch changed
+(`Libsharing.source` next to the framework records what it was built from).
+
+**aOS's changes to libsharing** (the patch, GPL-3.0 like OSS, marked `aOS:` in the Go code):
+- Apple's RSA login (type 33) reports and checks the server's key before the SRP exchange inside it too. screensharingd
+  offers SRP (type 36) next to 33; then OSS's type 33 runs SRP inside the RSA envelope and never called
+  `VerifyServerKey`: no key was reported (the setup check's fingerprint stayed empty, which is what Max's iPhone hit on
+  2026-11-07: "the Mac's screen sharing key couldn't be learned") and a pinned key didn't stop a login to another server.
+  The patch's Go tests show both on OSS's code and pass with the patch.
+- `SessionOptions.RequireTrustedKey`: only Apple's RSA login (33, with SRP inside where offered), and only with a
+  server whose key is `TrustedFingerprint`; no Kerberos (35: `gss_lkdc_acquire` would hand the password's Kerberos
+  exchange to whatever answers on port 88 at that address), no Diffie-Hellman (30), no SRP without the key (36), no
+  connection without a trusted key. For aOS's direct path.
+- `LoginCheck.Security`: the types the server offered and the one used ("offered apple-rsa-srp(33) apple-srp(36)
+  kerberos(35), used apple-rsa-srp(33)"), shown on the card when the key wasn't learned.
 
 **Left out**: the computer list's editing (adding, editing, deleting, reordering, list layout), discovery and its
 availability monitor, links, pairing with other devices, RDP (its Swift branches stay, aOS never opens one; the Go
@@ -357,10 +372,16 @@ with its toolbar in the letterbox. The resolution chosen in a session becomes th
     to, also when found over Bonjour), or the Mac's tailnet address when SSH runs through the Tailscale app's VPN.
     SSH through aOS's own Tailscale node carries only the app's SSH connection (the node hands over connected
     sockets; libsharing dials TCP and UDP itself), so then only with the Tailscale app's VPN on too. Never loopback.
-  - The key: a direct connection is checked against the screen sharing key the Mac showed through SSH (OSS's trusted
-    fingerprint). The first time per paired Mac, OSS's setup check signs in once through the tunnel
-    (`ScreenClient.checkServer`) to learn it and whether the Mac offers high performance. Without that a stranger in
-    the network could pose as the Mac and get the password (the RSA login encrypts it to the server's key).
+  - The key: a direct connection signs in only with the screen sharing key the Mac showed through SSH (OSS's trusted
+    fingerprint, libsharing's `RequireTrustedKey`): the RSA key comes first in Apple's login, before anything of the
+    login is sent, and another key ends the connection. The first time per paired Mac, OSS's setup check signs in once
+    through the tunnel (`ScreenClient.checkServer`) to learn it and whether the Mac offers high performance; every
+    session through the tunnel reports it too. Without that a stranger in the network could pose as the Mac: with the
+    plain RSA login it would get the password (encrypted to its own key), with Kerberos a Kerberos exchange to attack.
+    Measured on Max's Mac (macOS 27, 2026-11-07, a read-only probe of 127.0.0.1:5900, the way the tunnel arrives):
+    screensharingd offers apple-dh(30), apple-rsa-srp(33), apple-srp(36), kerberos(35) and sends its RSA key (2048
+    bits, 294 bytes SPKI) on the key request, before any login. So the key does come through SSH; OSS's code just
+    didn't report it with SRP. A locked screen wasn't tested; the offer and the key come before any login.
   - Then a TCP check of the address and port 5900 (1.5 s), and OSS's session to that address with high performance
     and its network quality: "local network" in the same network (four bands, 4:4:4, 60 frames a second), "internet"
     through the tailnet (OSS's tuning for Tailscale: one band, 4:2:0, CoreDevice mode).
@@ -368,6 +389,9 @@ with its toolbar in the letterbox. The resolution chosen in a session becomes th
     the key differs, high performance fails or the Mac offers none, or no picture comes within 15 s (UDP blocked:
     the session would wait for video forever). That address then isn't tried for 10 minutes; a Mac without high
     performance goes through SSH for the rest of the app's run.
+  - The card says why the Mac came through SSH, with the detail in brackets: how SSH reached the Mac, nothing
+    answering at the address and port, the check's error or the security types the Mac offered, the direct session's
+    error (libsharing's text, e.g. "the server key changed" or "it offers security types ...").
 - Stored (OSS's GRDB database, Application Support/Screen Sharing.sqlite): OSS's settings and, per screen (ids derived
   from the paired Mac's id, deleted when unpairing), quality, observe mode, clipboard sync, pointer lock, the resolution
   and high performance of the last session, the device's model (the card's icon), when it was last connected and the
