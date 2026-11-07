@@ -510,3 +510,164 @@ DE.update({
     'A mouse or trackpad on the iPhone points, clicks and scrolls directly':
         'Eine Maus oder ein Trackpad am iPhone zeigt, klickt und scrollt direkt',
 })
+
+# Terminal: the key bar's arrows, swiping, sessions that outlive the connection, the background
+DE.update({
+    'NSLocationWhenInUseUsageDescription':
+        'Mit „Mit Ortungsdienst wach halten“ hält der Ortungsdienst dein Terminal im Hintergrund am Laufen. aOS nutzt, speichert und sendet deinen Standort nicht.',
+    'Arrow keys': 'Pfeiltasten',
+    'Four keys': 'Vier Tasten',
+    'Keys': 'Tasten',
+    'Swipe for arrow keys': 'Wischen für Pfeiltasten',
+    'The arrows sit in the middle of the key bar; the whole bar scrolls. Swiping on the terminal works like the pad: sideways for ← and →, a quick flick up or down for ↑ and ↓ while the terminal shows its end (slower drags scroll back). Keep your finger down to repeat.':
+        'Die Pfeile sitzen in der Mitte der Tastenleiste, die ganze Leiste scrollt. Wischen auf dem Terminal geht wie auf dem Pfeilfeld: seitwärts für ← und →, ein schneller Wischer nach oben oder unten für ↑ und ↓, solange das Terminal sein Ende zeigt (langsames Ziehen scrollt zurück). Lass den Finger liegen, um zu wiederholen.',
+    'While a terminal is open and connected.': 'Solange ein Terminal offen und verbunden ist.',
+    'In the background': 'Im Hintergrund',
+    'Live Activity': 'Live-Aktivität',
+    'Background time from iOS': 'Hintergrundzeit von iOS',
+    'Keep alive with location': 'Mit Ortungsdienst wach halten',
+    'aOS may not use the location service yet. Allow it while using the app in Settings > Privacy & Security > Location Services.':
+        'aOS darf den Ortungsdienst noch nicht nutzen. Erlaube ihn „Beim Verwenden der App“ unter Einstellungen > Datenschutz & Sicherheit > Ortungsdienste.',
+    "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. iOS gives an app time in the background for up to an hour when you open a terminal, and shows it in the Dynamic Island; it can end it earlier. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow.":
+        'Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Wenn du ein Terminal öffnest, gibt iOS der App bis zu einer Stunde Zeit im Hintergrund und zeigt das in der Dynamic Island; iOS kann sie früher beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil.',
+    'Detach': 'Abkoppeln',
+    'Detached, the session keeps running on the Mac.': 'Abgekoppelt läuft die Sitzung auf dem Mac weiter.',
+    'Detached. The session keeps running on the Mac.': 'Abgekoppelt. Die Sitzung läuft auf dem Mac weiter.',
+    'Attach Again': 'Wieder verbinden',
+    'End Session': 'Sitzung beenden',
+    'End this session?': 'Diese Sitzung beenden?',
+    'The shell on the Mac ends, and so do the programs running in it.':
+        'Die Shell auf dem Mac endet und mit ihr die Programme, die darin laufen.',
+    'New Session': 'Neue Sitzung',
+    'Open Here': 'Hier öffnen',
+    'Open It Here': 'Hier öffnen',
+    'Open here': 'Hier offen',
+    'Open on another device': 'Auf einem anderen Gerät offen',
+    'Open on another device (%@)': 'Auf einem anderen Gerät offen (%@)',
+    'Not open anywhere': 'Nirgends offen',
+    'Not open anywhere since %@': 'Nirgends offen seit %@',
+    '%@ in %@': '%1$@ in %2$@',
+    'Sessions on the Mac': 'Sitzungen auf dem Mac',
+    'They keep running when the connection drops, also with the app closed, and this iPhone picks up where it left off. End the ones you no longer need.':
+        'Sie laufen weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und dieses iPhone macht weiter, wo es war. Beende die, die du nicht mehr brauchst.',
+    'Reconnecting … The session keeps running on the Mac.': 'Verbinde neu … Die Sitzung läuft auf dem Mac weiter.',
+    'The session on the Mac had ended. This is a new one.': 'Die Sitzung auf dem Mac war beendet. Das ist eine neue.',
+    'The session was ended.': 'Die Sitzung wurde beendet.',
+    'The shell ended.': 'Die Shell hat sich beendet.',
+    'This session is open on another device now. It keeps running on the Mac.':
+        'Diese Sitzung ist jetzt auf einem anderen Gerät offen. Sie läuft auf dem Mac weiter.',
+    "The terminal on the Mac doesn't start.": 'Das Terminal auf dem Mac startet nicht.',
+    'Update aOS on the Mac to keep this terminal when the connection drops.':
+        'Aktualisiere aOS auf dem Mac, damit dieses Terminal bleibt, wenn die Verbindung abreißt.',
+    "aOS isn't on the Mac where it was paired: this terminal ends with the connection.":
+        'aOS ist auf dem Mac nicht mehr dort, wo es gekoppelt wurde: Dieses Terminal endet mit der Verbindung.',
+    'Terminal in the background': 'Terminal im Hintergrund',
+    'aOS keeps your terminal connected.': 'aOS hält dein Terminal verbunden.',
+    'Connected for %lld more min at most.': 'Noch höchstens %lld Min. verbunden.',
+    # The Live Activity and its button (app and widget extension)
+    'End Terminal Session': 'Terminalsitzung beenden',
+    'Ends a terminal session of aOS. On the Mac its shell ends too.':
+        'Beendet eine Terminalsitzung von aOS. Auf dem Mac endet auch ihre Shell.',
+    'aOS Terminal': 'aOS-Terminal',
+    '%lld': '%lld',
+    'Connected': 'Verbunden',
+    'Connected, kept on the Mac': 'Verbunden, auf dem Mac gehalten',
+    'Detached, keeps running on the Mac': 'Abgekoppelt, läuft auf dem Mac weiter',
+    'Kept on the Mac. Open aOS to continue.': 'Auf dem Mac gehalten. Öffne aOS, um weiterzumachen.',
+    'Open aOS to continue.': 'Öffne aOS, um weiterzumachen.',
+    'Location': 'Ortung',
+    'Paused': 'Pausiert',
+    'Open': 'Offen',
+    'Reconnecting': 'Verbinde neu',
+    'Reconnecting, kept on the Mac': 'Verbinde neu, auf dem Mac gehalten',
+})
+
+# The Overview: the Mac and aOS from the iPhone
+DE.update({
+    'Battery %lld %%': 'Akku %lld %%',
+    'Power adapter': 'Netzteil',
+    'Charging': 'Lädt',
+    'Charging, full in %@': 'Lädt, voll in %@',
+    'On battery': 'Im Akkubetrieb',
+    'On battery, %@ left': 'Im Akkubetrieb, noch %@',
+    'On the power adapter, not charging': 'Am Netzteil, lädt nicht',
+    'Lid open': 'Deckel offen',
+    'Lid closed': 'Deckel zu',
+    'No lid': 'Kein Deckel',
+    'The Mac is very warm.': 'Der Mac ist sehr warm.',
+    'The Mac is too hot and may sleep.': 'Der Mac ist zu heiß und schläft vielleicht ein.',
+    'Stay awake': 'Wach bleiben',
+    'Keep this Mac awake': 'Diesen Mac wach halten',
+    'While the lid is open': 'Solange der Deckel offen ist',
+    'Also with the lid closed': 'Auch mit geschlossenem Deckel',
+    'Lid closed too': 'Auch zugeklappt',
+    'Another service takes care of this on the Mac.': 'Darum kümmert sich auf dem Mac ein anderer Dienst.',
+    'Battery below 10 percent: the Mac may sleep now.': 'Akku unter 10 Prozent: Der Mac darf jetzt schlafen.',
+    'The Mac is too hot: it may sleep now.': 'Der Mac ist zu heiß: Er darf jetzt schlafen.',
+    'Nothing to keep reachable right now: the Mac sleeps as usual.': 'Gerade muss nichts erreichbar bleiben: Der Mac schläft wie gewohnt.',
+    "Allow aOS's helper on the Mac (System Settings > General > Login Items) to keep it awake with the lid closed.":
+        'Erlaube den Hintergrunddienst von aOS auf dem Mac (Systemeinstellungen > Allgemein > Anmeldeobjekte), damit er mit geschlossenem Deckel wach bleibt.',
+    "aOS's helper isn't set up on the Mac yet.": 'Der Hintergrunddienst von aOS ist auf dem Mac noch nicht eingerichtet.',
+    'The Mac sleeps as usual.': 'Der Mac schläft wie gewohnt.',
+    "The Mac doesn't fall asleep by itself while something runs. Closing the lid puts it to sleep.":
+        'Solange etwas läuft, schläft der Mac nicht von selbst ein. Zugeklappt schläft er.',
+    'Lid closed: aOS keeps the Mac awake now.': 'Deckel zu: aOS hält den Mac jetzt wach.',
+    'Ready: the Mac stays awake when the lid closes.': 'Bereit: Der Mac bleibt wach, wenn der Deckel zugeht.',
+    'The Mac stays awake with the lid closed too.': 'Der Mac bleibt auch mit geschlossenem Deckel wach.',
+    'Sleep': 'Ruhezustand',
+    'Display Off': 'Bildschirm aus',
+    'Put %@ to sleep?': '%@ in den Ruhezustand versetzen?',
+    'This iPhone loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile.':
+        'Dieses iPhone verliert die Verbindung, bis der Mac wieder aufwacht (Deckel aufklappen oder eine Taste drücken). Der Arbeitsplatz und deine Agents pausieren so lange.',
+    'aOS %@ on the Mac answers. Update it to see its battery and settings here.':
+        'aOS %@ auf dem Mac antwortet. Aktualisiere es, um hier Akku und Einstellungen zu sehen.',
+    'Another service takes care of sleep on this Mac. aOS leaves it alone.':
+        'Um den Ruhezustand dieses Macs kümmert sich ein anderer Dienst. aOS lässt ihn in Ruhe.',
+    "Sleep is switched off on this Mac by another program (pmset disablesleep). aOS doesn't change that.":
+        'Ein anderes Programm hat den Ruhezustand auf diesem Mac ausgeschaltet (pmset disablesleep). aOS ändert das nicht.',
+    "aOS's helper didn't let go of the Mac in time. Try again in a moment.":
+        'Der Hintergrunddienst von aOS hat den Mac nicht rechtzeitig losgelassen. Versuch es gleich noch einmal.',
+    "The workspace isn't set up yet. Finish the setup in aOS on the Mac.":
+        'Der Arbeitsplatz ist noch nicht eingerichtet. Schließ die Einrichtung in aOS auf dem Mac ab.',
+    "aOS's background process isn't running on the Mac, so there is no Claude Code session to restart.":
+        'Der Hintergrundprozess von aOS läuft auf dem Mac nicht, also gibt es keine Claude-Code-Sitzung zum Neustarten.',
+    # Workspace
+    'Start': 'Starten',
+    'Close the workspace?': 'Arbeitsplatz schließen?',
+    'Your agent is using it for „%@“. Its work there stops.': 'Dein Agent nutzt ihn für „%@“. Seine Arbeit dort hört auf.',
+    'Programs in the workspace end; sign-ins on websites expire as set on the Mac.':
+        'Programme im Arbeitsplatz enden; Anmeldungen auf Websites verfallen, wie auf dem Mac eingestellt.',
+    'Not set up yet. Finish the setup in aOS on the Mac.': 'Noch nicht eingerichtet. Schließ die Einrichtung in aOS auf dem Mac ab.',
+    'Open for your agent': 'Für deinen Agent geöffnet',
+    'Running, without an agent in it': 'Läuft, ohne Agent darin',
+    "Didn't start": 'Ist nicht gestartet',
+    # aOS: Claude Code, Bitwarden
+    'Claude Code session': 'Claude-Code-Sitzung',
+    'Restart': 'Neu starten',
+    'Restart the Claude Code session': 'Claude-Code-Sitzung neu starten',
+    'Restart the Claude Code session?': 'Claude-Code-Sitzung neu starten?',
+    'aOS on the Mac starts Claude Code again. The conversation continues where it was.':
+        'aOS auf dem Mac startet Claude Code neu. Die Unterhaltung geht weiter, wo sie war.',
+    "Off in aOS's settings": 'In den Einstellungen von aOS aus',
+    'Running, reachable in the Claude app': 'Läuft, in der Claude-App erreichbar',
+    'Restarting': 'Startet neu',
+    'Waiting for the network': 'Wartet auf das Netzwerk',
+    'Needs a sign-in to Claude Code on the Mac': 'Braucht eine Anmeldung bei Claude Code auf dem Mac',
+    'Claude Code asks something on the Mac': 'Claude Code fragt auf dem Mac etwas',
+    "Claude Code isn't installed on the Mac": 'Claude Code ist auf dem Mac nicht installiert',
+    'Keeps stopping. Restart it, or look on the Mac.': 'Hört immer wieder auf. Starte sie neu oder sieh auf dem Mac nach.',
+    'Not set up': 'Nicht eingerichtet',
+    'New chats from the Claude app': 'Neue Chats aus der Claude-App',
+    'On: the Mac appears in the Claude app': 'An: Der Mac erscheint in der Claude-App',
+    'Waits for you on the Mac (trust the folder)': 'Wartet auf dem Mac auf dich (Ordner vertrauen)',
+    'Kept conversations': 'Erreichbare Unterhaltungen',
+    '1 is reachable in the Claude app': '1 ist in der Claude-App erreichbar',
+    '%lld are reachable in the Claude app': '%lld sind in der Claude-App erreichbar',
+    'Lock': 'Sperren',
+    'Unlocked until %@': 'Entsperrt bis %@',
+    'Unlocked: sign-ins can use your logins': 'Entsperrt: aOS kann deine Anmeldungen eintragen',
+    'Locked. Unlock it in aOS on the Mac.': 'Gesperrt. Entsperre es in aOS auf dem Mac.',
+    "Needs aOS's background helper on the Mac": 'Braucht den Hintergrunddienst von aOS auf dem Mac',
+    'Not signed in': 'Nicht angemeldet',
+    'Checking …': 'Wird geprüft …',
+})

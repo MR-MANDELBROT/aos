@@ -127,6 +127,22 @@
         }
       }
     },
+    "%@ in %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ in %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in %2$@"
+          }
+        }
+      }
+    },
     "%@ is new. Its key: %@" : {
       "localizations" : {
         "de" : {
@@ -195,6 +211,16 @@
         }
       }
     },
+    "%lld are reachable in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sind in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
     "%lld pt · %lld × %lld" : {
       "localizations" : {
         "de" : {
@@ -223,6 +249,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld:%2$@ left"
+          }
+        }
+      }
+    },
+    "1 is reachable in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 ist in der Claude-App erreichbar"
           }
         }
       }
@@ -347,6 +383,16 @@
         }
       }
     },
+    "Allow aOS's helper on the Mac (System Settings > General > Login Items) to keep it awake with the lid closed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaube den Hintergrunddienst von aOS auf dem Mac (Systemeinstellungen > Allgemein > Anmeldeobjekte), damit er mit geschlossenem Deckel wach bleibt."
+          }
+        }
+      }
+    },
     "Allowed. The workspace opens." : {
       "localizations" : {
         "de" : {
@@ -357,12 +403,42 @@
         }
       }
     },
+    "Also with the lid closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch mit geschlossenem Deckel"
+          }
+        }
+      }
+    },
     "Always" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Immer"
+          }
+        }
+      }
+    },
+    "Another service takes care of sleep on this Mac. aOS leaves it alone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um den Ruhezustand dieses Macs kümmert sich ein anderer Dienst. aOS lässt ihn in Ruhe."
+          }
+        }
+      }
+    },
+    "Another service takes care of this on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darum kümmert sich auf dem Mac ein anderer Dienst."
           }
         }
       }
@@ -383,6 +459,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS %@ auf dem Mac antwortet."
+          }
+        }
+      }
+    },
+    "aOS %@ on the Mac answers. Update it to see its battery and settings here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS %@ auf dem Mac antwortet. Aktualisiere es, um hier Akku und Einstellungen zu sehen."
           }
         }
       }
@@ -417,6 +503,26 @@
         }
       }
     },
+    "aOS isn't on the Mac where it was paired: this terminal ends with the connection." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS ist auf dem Mac nicht mehr dort, wo es gekoppelt wurde: Dieses Terminal endet mit der Verbindung."
+          }
+        }
+      }
+    },
+    "aOS keeps your terminal connected." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS hält dein Terminal verbunden."
+          }
+        }
+      }
+    },
     "aOS may not use the local network. Allow it in Settings > Privacy & Security > Local Network, then try again." : {
       "localizations" : {
         "de" : {
@@ -433,6 +539,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS darf das lokale Netzwerk nicht nutzen. Erlaube es unter Einstellungen > Datenschutz & Sicherheit > Lokales Netzwerk."
+          }
+        }
+      }
+    },
+    "aOS may not use the location service yet. Allow it while using the app in Settings > Privacy & Security > Location Services." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS darf den Ortungsdienst noch nicht nutzen. Erlaube ihn „Beim Verwenden der App“ unter Einstellungen > Datenschutz & Sicherheit > Ortungsdienste."
           }
         }
       }
@@ -527,6 +643,16 @@
         }
       }
     },
+    "aOS on the Mac starts Claude Code again. The conversation continues where it was." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf dem Mac startet Claude Code neu. Die Unterhaltung geht weiter, wo sie war."
+          }
+        }
+      }
+    },
     "aOS on the Mac stopped answering." : {
       "localizations" : {
         "de" : {
@@ -573,6 +699,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS merkt sich den Schlüssel und warnt dich, falls er sich je ändert."
+          }
+        }
+      }
+    },
+    "aOS's background process isn't running on the Mac, so there is no Claude Code session to restart." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrundprozess von aOS läuft auf dem Mac nicht, also gibt es keine Claude-Code-Sitzung zum Neustarten."
+          }
+        }
+      }
+    },
+    "aOS's helper didn't let go of the Mac in time. Try again in a moment." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrunddienst von aOS hat den Mac nicht rechtzeitig losgelassen. Versuch es gleich noch einmal."
+          }
+        }
+      }
+    },
+    "aOS's helper isn't set up on the Mac yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrunddienst von aOS ist auf dem Mac noch nicht eingerichtet."
           }
         }
       }
@@ -627,6 +783,16 @@
         }
       }
     },
+    "Arrow keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfeiltasten"
+          }
+        }
+      }
+    },
     "Arrow pad" : {
       "localizations" : {
         "de" : {
@@ -657,6 +823,16 @@
         }
       }
     },
+    "Attach Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wieder verbinden"
+          }
+        }
+      }
+    },
     "Automatic" : {
       "localizations" : {
         "de" : {
@@ -677,6 +853,16 @@
         }
       }
     },
+    "Background time from iOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundzeit von iOS"
+          }
+        }
+      }
+    },
     "Balanced" : {
       "localizations" : {
         "de" : {
@@ -693,6 +879,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausgewogen (Tausende Farben)"
+          }
+        }
+      }
+    },
+    "Battery %lld %%" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akku %lld %%"
+          }
+        }
+      }
+    },
+    "Battery below 10 percent: the Mac may sleep now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akku unter 10 Prozent: Der Mac darf jetzt schlafen."
           }
         }
       }
@@ -767,6 +973,26 @@
         }
       }
     },
+    "Charging" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt"
+          }
+        }
+      }
+    },
+    "Charging, full in %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt, voll in %@"
+          }
+        }
+      }
+    },
     "Check that this is the key of your computer. On it, run:" : {
       "localizations" : {
         "de" : {
@@ -777,12 +1003,52 @@
         }
       }
     },
+    "Checking …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird geprüft …"
+          }
+        }
+      }
+    },
     "Checking the Mac's key" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prüfe den Schlüssel des Macs"
+          }
+        }
+      }
+    },
+    "Claude Code asks something on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code fragt auf dem Mac etwas"
+          }
+        }
+      }
+    },
+    "Claude Code isn't installed on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code ist auf dem Mac nicht installiert"
+          }
+        }
+      }
+    },
+    "Claude Code session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude-Code-Sitzung"
           }
         }
       }
@@ -803,6 +1069,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schließen"
+          }
+        }
+      }
+    },
+    "Close the workspace?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz schließen?"
           }
         }
       }
@@ -863,6 +1139,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit diesem Mac verbinden"
+          }
+        }
+      }
+    },
+    "Connected for %lld more min at most." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch höchstens %lld Min. verbunden."
           }
         }
       }
@@ -1077,6 +1363,46 @@
         }
       }
     },
+    "Detach" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abkoppeln"
+          }
+        }
+      }
+    },
+    "Detached, the session keeps running on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgekoppelt läuft die Sitzung auf dem Mac weiter."
+          }
+        }
+      }
+    },
+    "Detached. The session keeps running on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgekoppelt. Die Sitzung läuft auf dem Mac weiter."
+          }
+        }
+      }
+    },
+    "Didn't start" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ist nicht gestartet"
+          }
+        }
+      }
+    },
     "Direct" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1105,6 +1431,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trennen"
+          }
+        }
+      }
+    },
+    "Display Off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm aus"
           }
         }
       }
@@ -1226,6 +1562,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ende der Auswahl"
+          }
+        }
+      }
+    },
+    "End Session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung beenden"
+          }
+        }
+      }
+    },
+    "End Terminal Session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminalsitzung beenden"
+          }
+        }
+      }
+    },
+    "End this session?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Sitzung beenden?"
+          }
+        }
+      }
+    },
+    "Ends a terminal session of aOS. On the Mac its shell ends too." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beendet eine Terminalsitzung von aOS. Auf dem Mac endet auch ihre Shell."
           }
         }
       }
@@ -1390,6 +1766,16 @@
         }
       }
     },
+    "Four keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vier Tasten"
+          }
+        }
+      }
+    },
     "From another password app" : {
       "localizations" : {
         "de" : {
@@ -1530,6 +1916,16 @@
         }
       }
     },
+    "In the background" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Hintergrund"
+          }
+        }
+      }
+    },
     "In the iPhone's shape" : {
       "localizations" : {
         "de" : {
@@ -1600,12 +1996,52 @@
         }
       }
     },
+    "Keep alive with location" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Ortungsdienst wach halten"
+          }
+        }
+      }
+    },
     "Keep Screen On" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildschirm bleibt an"
+          }
+        }
+      }
+    },
+    "Keep this Mac awake" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Mac wach halten"
+          }
+        }
+      }
+    },
+    "Keeps stopping. Restart it, or look on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hört immer wieder auf. Starte sie neu oder sieh auf dem Mac nach."
+          }
+        }
+      }
+    },
+    "Kept conversations" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erreichbare Unterhaltungen"
           }
         }
       }
@@ -1671,6 +2107,16 @@
         }
       }
     },
+    "Keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasten"
+          }
+        }
+      }
+    },
     "Later" : {
       "localizations" : {
         "de" : {
@@ -1691,6 +2137,66 @@
         }
       }
     },
+    "Lid closed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel zu"
+          }
+        }
+      }
+    },
+    "Lid closed too" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch zugeklappt"
+          }
+        }
+      }
+    },
+    "Lid closed: aOS keeps the Mac awake now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel zu: aOS hält den Mac jetzt wach."
+          }
+        }
+      }
+    },
+    "Lid open" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckel offen"
+          }
+        }
+      }
+    },
+    "Live Activity" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live-Aktivität"
+          }
+        }
+      }
+    },
+    "Lock" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sperren"
+          }
+        }
+      }
+    },
     "Lock again" : {
       "localizations" : {
         "de" : {
@@ -1707,6 +2213,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Festgestellt"
+          }
+        }
+      }
+    },
+    "Locked. Unlock it in aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesperrt. Entsperre es in aOS auf dem Mac."
           }
         }
       }
@@ -1811,6 +2327,26 @@
         }
       }
     },
+    "Needs a sign-in to Claude Code on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht eine Anmeldung bei Claude Code auf dem Mac"
+          }
+        }
+      }
+    },
+    "Needs aOS's background helper on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht den Hintergrunddienst von aOS auf dem Mac"
+          }
+        }
+      }
+    },
     "Needs your attention" : {
       "localizations" : {
         "de" : {
@@ -1821,12 +2357,32 @@
         }
       }
     },
+    "New chats from the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats aus der Claude-App"
+          }
+        }
+      }
+    },
     "New password (empty keeps the old one)" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neues Passwort (leer behält das alte)"
+          }
+        }
+      }
+    },
+    "New Session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Sitzung"
           }
         }
       }
@@ -1857,6 +2413,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Noch keine Rechner"
+          }
+        }
+      }
+    },
+    "No lid" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Deckel"
           }
         }
       }
@@ -1961,6 +2527,26 @@
         }
       }
     },
+    "Not open anywhere" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nirgends offen"
+          }
+        }
+      }
+    },
+    "Not open anywhere since %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nirgends offen seit %@"
+          }
+        }
+      }
+    },
     "Not reachable right now" : {
       "localizations" : {
         "de" : {
@@ -1981,12 +2567,62 @@
         }
       }
     },
+    "Not set up" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht eingerichtet"
+          }
+        }
+      }
+    },
+    "Not set up yet. Finish the setup in aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nicht eingerichtet. Schließ die Einrichtung in aOS auf dem Mac ab."
+          }
+        }
+      }
+    },
+    "Not signed in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht angemeldet"
+          }
+        }
+      }
+    },
+    "Nothing to keep reachable right now: the Mac sleeps as usual." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerade muss nichts erreichbar bleiben: Der Mac schläft wie gewohnt."
+          }
+        }
+      }
+    },
     "Off" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aus"
+          }
+        }
+      }
+    },
+    "Off in aOS's settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In den Einstellungen von aOS aus"
           }
         }
       }
@@ -2011,6 +2647,26 @@
         }
       }
     },
+    "On battery" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Akkubetrieb"
+          }
+        }
+      }
+    },
+    "On battery, %@ left" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Akkubetrieb, noch %@"
+          }
+        }
+      }
+    },
     "On for the next key" : {
       "localizations" : {
         "de" : {
@@ -2031,12 +2687,32 @@
         }
       }
     },
+    "On the power adapter, not charging" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Netzteil, lädt nicht"
+          }
+        }
+      }
+    },
     "On your Mac, click aOS in the menu bar, then “Pair” next to iPhone. Then scan the code it shows." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Klicke auf deinem Mac in der Menüleiste auf aOS, dann bei „iPhone“ auf „Koppeln“. Scanne dann den Code, den es zeigt."
+          }
+        }
+      }
+    },
+    "On: the Mac appears in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An: Der Mac erscheint in der Claude-App"
           }
         }
       }
@@ -2062,11 +2738,52 @@
       }
     },
     "Open" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geöffnet"
+            "value" : "Offen"
+          }
+        }
+      }
+    },
+    "Open for your agent" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für deinen Agent geöffnet"
+          }
+        }
+      }
+    },
+    "Open here" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hier offen"
+          }
+        }
+      }
+    },
+    "Open Here" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hier öffnen"
+          }
+        }
+      }
+    },
+    "Open It Here" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hier öffnen"
           }
         }
       }
@@ -2077,6 +2794,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Link öffnen"
+          }
+        }
+      }
+    },
+    "Open on another device" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf einem anderen Gerät offen"
+          }
+        }
+      }
+    },
+    "Open on another device (%@)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf einem anderen Gerät offen (%@)"
           }
         }
       }
@@ -2432,12 +3169,42 @@
         }
       }
     },
+    "Power adapter" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzteil"
+          }
+        }
+      }
+    },
+    "Programs in the workspace end; sign-ins on websites expire as set on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programme im Arbeitsplatz enden; Anmeldungen auf Websites verfallen, wie auf dem Mac eingestellt."
+          }
+        }
+      }
+    },
     "Public key" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffentlicher Schlüssel"
+          }
+        }
+      }
+    },
+    "Put %@ to sleep?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ in den Ruhezustand versetzen?"
           }
         }
       }
@@ -2462,6 +3229,26 @@
         }
       }
     },
+    "Ready: the Mac stays awake when the lid closes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereit: Der Mac bleibt wach, wenn der Deckel zugeht."
+          }
+        }
+      }
+    },
+    "Reconnecting … The session keeps running on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde neu … Die Sitzung läuft auf dem Mac weiter."
+          }
+        }
+      }
+    },
     "Reload" : {
       "localizations" : {
         "de" : {
@@ -2478,6 +3265,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entfernter Bildschirm"
+          }
+        }
+      }
+    },
+    "Restart" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu starten"
+          }
+        }
+      }
+    },
+    "Restart the Claude Code session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude-Code-Sitzung neu starten"
+          }
+        }
+      }
+    },
+    "Restart the Claude Code session?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude-Code-Sitzung neu starten?"
+          }
+        }
+      }
+    },
+    "Restarting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet neu"
           }
         }
       }
@@ -2518,6 +3345,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Läuft"
+          }
+        }
+      }
+    },
+    "Running, reachable in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läuft, in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
+    "Running, without an agent in it" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läuft, ohne Agent darin"
           }
         }
       }
@@ -2712,6 +3559,16 @@
         }
       }
     },
+    "Sessions on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzungen auf dem Mac"
+          }
+        }
+      }
+    },
     "Set a passcode for this iPhone first (Settings > Face ID & Passcode)." : {
       "localizations" : {
         "de" : {
@@ -2872,6 +3729,26 @@
         }
       }
     },
+    "Sleep" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruhezustand"
+          }
+        }
+      }
+    },
+    "Sleep is switched off on this Mac by another program (pmset disablesleep). aOS doesn't change that." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderes Programm hat den Ruhezustand auf diesem Mac ausgeschaltet (pmset disablesleep). aOS ändert das nicht."
+          }
+        }
+      }
+    },
     "Smaller" : {
       "localizations" : {
         "de" : {
@@ -2962,6 +3839,16 @@
         }
       }
     },
+    "Start" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starten"
+          }
+        }
+      }
+    },
     "Start of selection" : {
       "localizations" : {
         "de" : {
@@ -2982,6 +3869,16 @@
         }
       }
     },
+    "Stay awake" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wach bleiben"
+          }
+        }
+      }
+    },
     "Stay in touch with your agent's Mac, wherever you are." : {
       "localizations" : {
         "de" : {
@@ -2998,6 +3895,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gestoppt"
+          }
+        }
+      }
+    },
+    "Swipe for arrow keys" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wischen für Pfeiltasten"
           }
         }
       }
@@ -3105,12 +4012,32 @@
         }
       }
     },
+    "Terminal in the background" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal im Hintergrund"
+          }
+        }
+      }
+    },
     "Terminal keys" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Terminaltasten"
+          }
+        }
+      }
+    },
+    "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. iOS gives an app time in the background for up to an hour when you open a terminal, and shows it in the Dynamic Island; it can end it earlier. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Wenn du ein Terminal öffnest, gibt iOS der App bis zu einer Stunde Zeit im Hintergrund und zeigt das in der Dynamic Island; iOS kann sie früher beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil."
           }
         }
       }
@@ -3161,6 +4088,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Antwort kam nicht von dem Mac, der diesen Code zeigt. Kopple noch einmal, in einem Netzwerk, dem du vertraust."
+          }
+        }
+      }
+    },
+    "The arrows sit in the middle of the key bar; the whole bar scrolls. Swiping on the terminal works like the pad: sideways for ← and →, a quick flick up or down for ↑ and ↓ while the terminal shows its end (slower drags scroll back). Keep your finger down to repeat." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Pfeile sitzen in der Mitte der Tastenleiste, die ganze Leiste scrollt. Wischen auf dem Terminal geht wie auf dem Pfeilfeld: seitwärts für ← und →, ein schneller Wischer nach oben oder unten für ↑ und ↓, solange das Terminal sein Ende zeigt (langsames Ziehen scrollt zurück). Lass den Finger liegen, um zu wiederholen."
           }
         }
       }
@@ -3305,12 +4242,52 @@
         }
       }
     },
+    "The Mac doesn't fall asleep by itself while something runs. Closing the lid puts it to sleep." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange etwas läuft, schläft der Mac nicht von selbst ein. Zugeklappt schläft er."
+          }
+        }
+      }
+    },
     "The Mac ended the pairing. Show a new pairing code on the Mac and scan it again." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac hat das Koppeln beendet. Lass dir auf dem Mac einen neuen Kopplungscode zeigen und scanne ihn."
+          }
+        }
+      }
+    },
+    "The Mac is too hot and may sleep." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist zu heiß und schläft vielleicht ein."
+          }
+        }
+      }
+    },
+    "The Mac is too hot: it may sleep now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist zu heiß: Er darf jetzt schlafen."
+          }
+        }
+      }
+    },
+    "The Mac is very warm." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist sehr warm."
           }
         }
       }
@@ -3351,6 +4328,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Mac hat %@ nicht gestartet."
+          }
+        }
+      }
+    },
+    "The Mac sleeps as usual." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac schläft wie gewohnt."
+          }
+        }
+      }
+    },
+    "The Mac stays awake with the lid closed too." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac bleibt auch mit geschlossenem Deckel wach."
           }
         }
       }
@@ -3505,12 +4502,62 @@
         }
       }
     },
+    "The session on the Mac had ended. This is a new one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sitzung auf dem Mac war beendet. Das ist eine neue."
+          }
+        }
+      }
+    },
+    "The session was ended." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sitzung wurde beendet."
+          }
+        }
+      }
+    },
+    "The shell ended." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Shell hat sich beendet."
+          }
+        }
+      }
+    },
+    "The shell on the Mac ends, and so do the programs running in it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Shell auf dem Mac endet und mit ihr die Programme, die darin laufen."
+          }
+        }
+      }
+    },
     "The shell runs each line as soon as it arrives." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Shell führt jede Zeile aus, sobald sie ankommt."
+          }
+        }
+      }
+    },
+    "The terminal on the Mac doesn't start." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Terminal auf dem Mac startet nicht."
           }
         }
       }
@@ -3555,6 +4602,16 @@
         }
       }
     },
+    "The workspace isn't set up yet. Finish the setup in aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist noch nicht eingerichtet. Schließ die Einrichtung in aOS auf dem Mac ab."
+          }
+        }
+      }
+    },
     "The workspace screen isn't available. Is the workspace open?" : {
       "localizations" : {
         "de" : {
@@ -3571,6 +4628,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dazwischen steht kein Server von uns. Außerhalb deines Heimnetzes brauchst du Tailscale oder ein anderes VPN, um den Mac zu erreichen."
+          }
+        }
+      }
+    },
+    "They keep running when the connection drops, also with the app closed, and this iPhone picks up where it left off. End the ones you no longer need." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie laufen weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und dieses iPhone macht weiter, wo es war. Beende die, die du nicht mehr brauchst."
           }
         }
       }
@@ -3611,6 +4678,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieses iPhone vergisst den Mac. Um den Schlüssel des iPhones auch vom Mac zu entfernen, öffne aOS auf dem Mac und entferne es aus den gekoppelten Geräten."
+          }
+        }
+      }
+    },
+    "This iPhone loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses iPhone verliert die Verbindung, bis der Mac wieder aufwacht (Deckel aufklappen oder eine Taste drücken). Der Arbeitsplatz und deine Agents pausieren so lange."
           }
         }
       }
@@ -3661,6 +4738,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Anfrage ist abgelaufen."
+          }
+        }
+      }
+    },
+    "This session is open on another device now. It keeps running on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Sitzung ist jetzt auf einem anderen Gerät offen. Sie läuft auf dem Mac weiter."
           }
         }
       }
@@ -3897,6 +4984,26 @@
         }
       }
     },
+    "Unlocked until %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperrt bis %@"
+          }
+        }
+      }
+    },
+    "Unlocked: sign-ins can use your logins" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entsperrt: aOS kann deine Anmeldungen eintragen"
+          }
+        }
+      }
+    },
     "Unlocking didn't work. Try again." : {
       "localizations" : {
         "de" : {
@@ -3933,6 +5040,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pfeil nach oben"
+          }
+        }
+      }
+    },
+    "Update aOS on the Mac to keep this terminal when the connection drops." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisiere aOS auf dem Mac, damit dieses Terminal bleibt, wenn die Verbindung abreißt."
           }
         }
       }
@@ -4007,6 +5124,16 @@
         }
       }
     },
+    "Waiting for the network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf das Netzwerk"
+          }
+        }
+      }
+    },
     "Waiting for you" : {
       "localizations" : {
         "de" : {
@@ -4017,12 +5144,42 @@
         }
       }
     },
+    "Waits for you on the Mac (trust the folder)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf dem Mac auf dich (Ordner vertrauen)"
+          }
+        }
+      }
+    },
     "What is where" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Was ist wo"
+          }
+        }
+      }
+    },
+    "While a terminal is open and connected." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange ein Terminal offen und verbunden ist."
+          }
+        }
+      }
+    },
+    "While the lid is open" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange der Deckel offen ist"
           }
         }
       }
@@ -4093,6 +5250,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Agent fragt, du gibst mit Face ID frei. Er sieht das Passwort nie."
+          }
+        }
+      }
+    },
+    "Your agent is using it for „%@“. Its work there stops." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Agent nutzt ihn für „%@“. Seine Arbeit dort hört auf."
           }
         }
       }
