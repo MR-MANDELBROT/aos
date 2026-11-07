@@ -9,7 +9,7 @@ options:
   developmentLanguage: en
 
 packages:
-  # Only the screen sharing client (product AOSRFB); AOSKit itself is macOS-only.
+  # Only the screen sharing client (product AOSRFB) and the tailnet model (AOSTailnet); AOSKit itself is macOS-only.
   AOSKit:
     path: ../AOSKit
   # SSH. Pinned to 0.12.0 on purpose: 0.12.1 switched its swift-nio-ssh dependency from the Citadel author's fork
@@ -80,6 +80,12 @@ targets:
         embed: true
       - package: AOSKit
         product: AOSRFB
+      # Tailscale's status, the ways to reach the Mac, Tailscale's address ranges (shared with the Mac app)
+      - package: AOSKit
+        product: AOSTailnet
+      # aOS's own Tailscale node (gomobile, Tailnet/tailnetkit); generate.sh builds it with Tailnet/build.sh ios
+      - framework: Frameworks/Tailnetkit.xcframework
+        embed: false
       - package: Citadel
       - package: swift-nio-ssh
         product: NIOSSH

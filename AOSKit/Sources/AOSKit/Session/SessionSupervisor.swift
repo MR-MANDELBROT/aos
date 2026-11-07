@@ -182,18 +182,21 @@ public final class SessionSupervisor: @unchecked Sendable {
         let text = String(decoding: data, as: UTF8.self)
             .replacingOccurrences(of: "\u{1B}\\[[0-9;?]*[A-Za-z]", with: "", options: .regularExpression)
         recentText = String((recentText + text).suffix(4000))
-        let lower = recentText.lowercased()
-        if lower.contains("enable remote control?") || lower.contains("do you trust") || lower.contains("trust the files")
-            || lower.contains("trust this folder") || lower.contains("[y/n]") {
+        switch SessionOutput.classify(recentText) {
+        case .question:
             setStatus(.needsAttention, "Claude Code is asking a question")
-        } else if lower.contains("/login") || lower.contains("not logged in") || lower.contains("please log in")
-                    || lower.contains("invalid api key") {
+        case .signIn:
             setStatus(.needsLogin, "sign in to Claude Code")
-        } else if status.state == .needsAttention || status.state == .needsLogin,
-                  lower.hasSuffix(text.lowercased()), Date().timeIntervalSince(status.since) > 5 {
-            // New output after the question: probably answered.
-            setStatus(.running)
-            recentText = ""
+        case .fine:
+            if status.state == .needsLogin { setStatus(.running) }
+            fallthrough
+        case .unknown:
+            if status.state == .needsAttention, Date().timeIntervalSince(status.since) > 5, !text.isEmpty,
+               SessionOutput.classify(text) == .unknown {
+                // New output after the question: probably answered.
+                setStatus(.running)
+                recentText = ""
+            }
         }
     }
 
@@ -453,5 +456,30 @@ public enum Network {
             ai = a.pointee.ai_next
         }
         return false
+    }
+}
+
+/// What Claude Code's latest output says, for the session's state. Only the latest sign counts: Claude Code prints
+/// "OAuth token refresh failed, run /login" when Remote Control drops for a moment, and "/remote-control is active"
+/// once it reconnected by itself; a sign-in is needed only while the first is the newer one.
+enum SessionOutput: Equatable {
+    case question, signIn, fine, unknown
+
+    static let questions = ["enable remote control?", "do you trust", "trust the files", "trust this folder", "[y/n]"]
+    static let signIns = ["/login", "not logged in", "please log in", "invalid api key"]
+    static let fines = ["remote-control is active", "remote control is active", "remote control connected",
+                        "continue here, on your phone"]
+
+    static func classify(_ text: String) -> SessionOutput {
+        let lower = text.lowercased()
+        func last(_ markers: [String]) -> String.Index? {
+            markers.compactMap { lower.range(of: $0, options: .backwards)?.lowerBound }.max()
+        }
+        let q = last(questions), s = last(signIns), f = last(fines)
+        let newest = [q, s, f].compactMap { $0 }.max()
+        guard let newest else { return .unknown }
+        if newest == f { return .fine }
+        if newest == s { return .signIn }
+        return .question
     }
 }

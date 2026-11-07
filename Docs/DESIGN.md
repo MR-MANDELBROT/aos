@@ -49,6 +49,8 @@ Claude app (phone) ──Remote Control──▶ claude (pty) ◀── aos-sess
 - **aos-powerd** (optional) is a root LaunchDaemon from `Contents/Library/LaunchDaemons`, registered with
   `SMAppService.daemon` once the user wants the Mac awake with the lid closed or answers the hotspot question
   (see "Staying awake, freezing and the hotspot").
+- **aos-tailnet** (Go, in Contents/MacOS) is aOS's own Tailscale node; aos-powerd runs it as the hidden user
+  `_aostailnet` when the person chose "aOS sets up Tailscale" (see "Reaching the Mac on the go").
 
 ## Keeping conversations reachable (SessionKeeper)
 
@@ -96,7 +98,7 @@ charge, thermal state, external screens, whether Cloupi is on the Mac, and wheth
   it. It exits after two idle minutes; launchd starts it again with the next message.
 - **The helper's surface** (`PowerHelperXPC`, Mach service `dev.marquart.aos.powerd`): status, hold, apply the
   hotspot choice, join a network macOS already knows, restart airportd, Wi-Fi off and on (each at most every 4
-  minutes). The listener's code signing requirement admits only aOS (`identifier "dev.marquart.aos"`, team
+  minutes), Bitwarden, the workspace's keys and disk, and since version 4 aOS's tailnet node. The listener's code signing requirement admits only aOS (`identifier "dev.marquart.aos"`, team
   S3725YB7V6), checked by the system for every message through the caller's audit token; the app requires the
   helper's signature (`aos-powerd`, same team) in turn. macOS asks the user once to allow it (Login Items &
   Extensions); the settings show its state and, only while macOS waits for that, a button to Login Items. Log:
@@ -186,7 +188,7 @@ See Docs/COMPANION.md for the protocol. On the Mac:
 
 - **Pairing** (`PairingSession`): a TCP listener on a random port with Bonjour `_aos-pair._tcp`, 3 minutes, one
   pairing, five wrong proofs end it. The QR code carries the Mac's addresses, the SHA-256 fingerprint of its ed25519
-  host key and a 16-byte code; the phone proves the code with HMAC-SHA256 over its SSH key, its name and its signing
+  host key, a 16-byte code, and the way on the go with the Mac's tailnet hosts (`w`, `t`, `tn`); the phone proves the code with HMAC-SHA256 over its SSH key, its name and its signing
   key, the Mac keeps the signing key in its keychain and appends the SSH key to `~/.ssh/authorized_keys`
   (`no-agent-forwarding,no-X11-forwarding`, marked `aos-companion:<id>`). Remote Login must be on; Settings > iPhone
   checks it and lists and removes paired phones (both keys go).
@@ -242,6 +244,96 @@ macOS has no tmux, so aos-companion brings a small holder (Docs/COMPANION.md, "T
 - Tested in AOSKit (`TermTests`): the tracker, the ring and its replays, frames, the holder in-process with /bin/sh,
   and the built binary end to end in a pseudo terminal (detach by hangup, come back with an offset, resize, takeover,
   end, exit).
+
+## Reaching the Mac on the go (Tailscale)
+
+Max's decision (2026-11-07): the iPhone reaches the Mac at home by itself; on the go through Tailscale, a private
+network of the person's own devices (a "tailnet"). The setup step "On the go", right before pairing, always offers
+all three ways, and recommends one by what it finds (`ReachAdvisor`, AOSTailnet, tested):
+
+| Way (`ReachWay`, link `w`) | Recommended when | What aOS does |
+|----------------------------|------------------|---------------|
+| Your Tailscale app (`app`) | the Tailscale app runs on this Mac and is connected | reads its status, puts the Mac's tailnet address and MagicDNS name into the pairing code; the iPhone needs the Tailscale app too (same account) |
+| aOS sets up Tailscale (`aos`) | otherwise | runs its own Tailscale node on the Mac (below) and in aOS on the iPhone; the person signs in once per device in the browser |
+| Only on the same network (`lan`) | never (the fallback) | as before |
+
+The choice is `AgentSettings.reachWay`; Settings > Connection shows it again with the state of the node of the way in
+use (this Mac's tailnet name, addresses, tailnet, account, key expiry), aOS's devices in the tailnet (names starting
+with `aos-`: online or last seen, key expiry) and the actions Reconnect, Sign Out (the device leaves the tailnet and
+its keys are deleted) and the Tailscale admin console (https://login.tailscale.com/admin/machines). No Tailscale API
+keys: users, access rules and other devices stay in Tailscale's own console. After changing the way the person pairs
+the iPhone again (the code tells it the way).
+
+- **The person's Tailscale app**: aOS runs `tailscale status --json` as the person (`TailscaleApp`: the app's own
+  executable, then `/usr/local/bin/tailscale`, then Homebrew's) and reads Tailscale's status JSON (`TailnetStatus`).
+  It never changes the app's settings or its sign-in.
+- **aOS's own node on the Mac** (`aos-tailnet`, Go, `tailscale.com/tsnet` v1.104.5, in `Tailnet/`): userspace
+  networking, no VPN, no network extension, no system setting. It must not be the person's file, because a program
+  running as the person (a coding agent with a shell) could copy its keys and pose as this Mac in the tailnet. So it
+  follows the custody pattern of Bitwarden and the workspace:
+  - aOS's root helper starts it as the hidden user `_aostailnet` (`VaultAccount.ensure`, `Subprocess.spawn` with
+    `RunAs`: the child gives up root before exec), with a fresh environment and its state (the node's keys) in
+    `/Library/Application Support/aOS/Tailscale` (0700, `_aostailnet`; its log there too, sign-in URLs removed).
+    The person's processes can neither read that folder nor the process's memory or environment.
+  - It runs from a copy in `/Library/Application Support/aOS/bin` (root, 0755) whose code signature the helper
+    checks first: `anchor apple generic and identifier "aos-tailnet" and certificate leaf[subject.OU] = "S3725YB7V6"`.
+    The app bundle in /Applications belongs to the person, the copy doesn't, so nothing can be swapped between the
+    check and the start.
+  - The helper talks to it over the child's stdin and stdout (JSON lines: status, login, logout; no socket, no port).
+    When stdin ends, the node closes. The app reaches it only through the helper's XPC call `tailnet` (a
+    `TailnetRequest`: status, start with a name `aos-<Mac's local host name>`, stop, login, reconnect, logout;
+    names checked: a DNS label starting with `aos-`), which only the signed aOS app may make. The app never sees a key.
+  - **Exposure**: port 22 of its tailnet addresses (IPv4 and IPv6) is forwarded to `127.0.0.1:22`, the Mac's own
+    sshd; the target is fixed in the program. Everything else is refused (tsnet answers only ports with a listener).
+    The build (`Tailnet/build.sh`) also leaves out what would offer something in the tailnet or take remote
+    configuration: the peer API server (otherwise it listens on a random port of the node's address), Taildrop,
+    Tailscale SSH, the web client, Taildrive, the relay server, routes and exit nodes, remote configuration, packet
+    capture, port lists and log uploads (`ts_omit_*`); a binary built without these tags refuses to start
+    (`tailnet.BuiltForAOS`). Serve stays in (tsnet needs it), but the node never gets a serve configuration.
+    Logs aren't sent to Tailscale (`TS_NO_LOGS_NO_SUPPORT`); a tailnet that requires network flow logs then stops
+    the node with a health message.
+  - **Lifetime**: the helper keeps the node on while `tailnet.json` (root, 0600: on, name) says so: it doesn't exit
+    when idle meanwhile (`TailnetHost.isOn`), starts the node again whenever it starts itself (at boot, RunAtLoad;
+    after an update) and after the node's process ended (2 s, 5 s, 15 s, ... 5 min). A replaced binary still makes
+    way (an update): the helper stops the node first, and the new helper starts it again at the app's next call (the
+    app asks for the status every 30 s while this is the way). The node doesn't need the app's window or the app.
+  - **Sign-in**: without a key the node reports `NeedsLogin` with a sign-in URL in its status; the helper relays it,
+    and the app opens it in the browser, only after the person clicked "Set Up Tailscale" or "Sign In" and only if
+    it is an https page of `tailscale.com`. Whoever completes a sign-in URL first gets the node into their tailnet, so
+    it never reaches a log. First use can create the Tailscale account there.
+  - **Status** comes from tsnet's LocalClient (in the process, no LocalAPI socket): Tailscale's own status JSON, the
+    same format the Tailscale app prints.
+  - **The helper's version** is 4 (the `tailnet` call); its other calls are unchanged. An older helper is left alone
+    until it exits (the app waits for it), a replaced binary makes way (above).
+- **aOS's own node on the iPhone** (`Tailnetkit.xcframework`, built by iOS/generate.sh: the same Go package as a C
+  library, `go build -buildmode=c-archive` of `Tailnet/tailnetkit` in a static framework with `tailnetkit.h`; not
+  gomobile, because Open Screen Sharing's gomobile library is in the app too and two of them define the same
+  Objective-C classes, GoSeqRef and others; two Go runtimes in one process, each in its own image, are what the
+  end-to-end test runs): the state is in the app's container (Application Support/Tailnet, file protection until the
+  first unlock, excluded from backups so the keys never move to another device), named `aos-<iPhone's name>`. The
+  sign-in runs in an `ASWebAuthenticationSession` (it shares Safari's sign-ins); Tailscale's page doesn't lead back
+  to the app, so the app closes the session once the node runs. The node listens on nothing; the app dials the Mac
+  through it: `tailnetkit_dial` returns one end of a socket pair whose other end is spliced to the tailnet connection,
+  and SwiftNIO takes that socket as its channel (`SSHRoute.tailnet`).
+- **The phone's order** (`ConnectionPlan`, tested): the same network first (the address that worked last first among
+  them), then the tailnet (aOS's node in the app, then the Tailscale app's VPN, detected as a utun interface with an
+  address in 100.64.0.0/10 or fd7a:115c:a1e0::/48), then Bonjour (`_ssh._tcp` by the Mac's name). The attempts start
+  a moment apart and the first complete SSH login wins.
+- **Host keys**: whichever way, the phone accepts the Mac only with the host key pinned at pairing, so another
+  device of the tailnet can't pose as the Mac (tested with a socket from a stand-in tailnet).
+- **The Tailscale app later**: if the person installs the Tailscale app later and signs in with the same account,
+  aOS's devices appear in the same tailnet and are managed there like any device. The app can't take over aOS's
+  connection (aOS's nodes have their own keys); on the Mac both can run side by side, as two devices.
+- **Tested** without an account, against Tailscale's own test coordination server (`tstest/integration/testcontrol`,
+  what tsnet's tests use) and a DERP server on 127.0.0.1 (`Tailnet/build.sh test`): the Mac's node joins, a second
+  node reaches a test server through its port 22 (IPv4, IPv6, MagicDNS name), a scan of all 65535 TCP ports of both
+  addresses finds only 22, the node offers no peer API, the interactive sign-in and the sign-out, the line protocol,
+  and aos-tailnet itself over stdin and stdout. AOSKit tests the helper's custody with a stand-in node (start, sign
+  in, stop, start again after a restart, after a crash, sign out, an executable that isn't aOS's), the request
+  checks, the status JSON, the recommendation and the link. End to end on the iPhone (`iOS/Tools/test-tailnet.sh`:
+  a whole test tailnet on this Mac, `Tailnet/build.sh testnet`): the app's real Tailnetkit node in the simulator
+  signs in through a sign-in URL, dials the Mac node's port 22 by address and by name, logs in with the pinned host
+  key, runs the companion over it, and finds the other ports closed.
 
 ## Signing in for the agent
 

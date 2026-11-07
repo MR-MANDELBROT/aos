@@ -194,6 +194,8 @@ public final class PairingSession {
     private var failures = 0
     private let hosts: [String]?
     private let companion: String
+    /// How the phone reaches this Mac away from home: the way and the tailnet hosts (`w`, `t`, `tn` in the link).
+    private let reach: PairingReach?
 
     /// aos-companion in this app (the phone runs it over SSH), or where aOS is normally installed.
     public static var companionPath: String {
@@ -208,7 +210,8 @@ public final class PairingSession {
     /// Tests pass another key file, key store, SSH port and host key fingerprint (an sshd of their own), and may name
     /// the hosts and the companion program.
     public init(keys: AuthorizedKeys = AuthorizedKeys(), phones: PhoneKeyStore = KeychainPhoneKeys(), sshPort: UInt16 = 22,
-                hostKeyFingerprint: String? = nil, hosts: [String]? = nil, companion: String? = nil) {
+                hostKeyFingerprint: String? = nil, hosts: [String]? = nil, companion: String? = nil,
+                reach: PairingReach? = nil) {
         var bytes = [UInt8](repeating: 0, count: 16)
         _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         code = Data(bytes)
@@ -218,6 +221,7 @@ public final class PairingSession {
         self.fixedFingerprint = hostKeyFingerprint
         self.hosts = hosts
         self.companion = companion ?? Self.companionPath
+        self.reach = reach
     }
 
     public func start() {
@@ -275,15 +279,22 @@ public final class PairingSession {
     func makeURL(port: UInt16, fingerprint: String) -> String {
         let codeText = code.base64EncodedString().replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
-        let items: [(String, String)] = [
+        let local = hosts ?? MacSSH.addresses()
+        var items: [(String, String)] = [
             ("n", MacSSH.macName()),
-            ("h", (hosts ?? MacSSH.addresses()).joined(separator: ",")),
+            ("h", (reach?.linkHosts(local: local) ?? local).joined(separator: ",")),
             ("p", String(port)),
             ("s", String(sshPort)),
             ("u", NSUserName()),
             ("k", fingerprint),
             ("c", codeText),
         ]
+        // The way away from home and the Mac's tailnet hosts (older phones ignore these and use `h`).
+        if let reach {
+            items.append(("w", reach.way.rawValue))
+            if !reach.tailnetHosts.isEmpty { items.append(("t", reach.tailnetHosts.joined(separator: ","))) }
+            if let name = reach.tailnetName, !name.isEmpty { items.append(("tn", name)) }
+        }
         // Every value strictly encoded: only A-Z a-z 0-9 - . _ ~ stay as they are (the fingerprint's base64 has
         // + / = that must not change meaning).
         let unreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
@@ -368,14 +379,16 @@ public final class PairingSession {
     }
 
     /// For tests: a session with a known code.
-    init(code: Data, keys: AuthorizedKeys, phones: PhoneKeyStore, companion: String) {
+    init(code: Data, keys: AuthorizedKeys, phones: PhoneKeyStore, companion: String, hosts: [String]? = nil,
+         reach: PairingReach? = nil) {
         self.code = code
         self.keys = keys
         self.phones = phones
         self.sshPort = 22
         self.fixedFingerprint = nil
-        self.hosts = nil
+        self.hosts = hosts
         self.companion = companion
+        self.reach = reach
     }
 }
 
