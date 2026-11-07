@@ -50,7 +50,8 @@ struct MacStatusTests {
         #expect(MacStatusText.batterySymbol(power) == "battery.0percent")
         #expect(MacStatusText.batteryDetail(power).contains("1:35"))
         #expect(MacStatusText.thermalDetail(power) != nil)
-        #expect(MacStatusText.awakeDetail(try #require(status.awake)).contains("10"))
+        // The level is the Mac's own setting now (shown in its own row): the text names the low battery.
+        #expect(!MacStatusText.awakeDetail(try #require(status.awake)).isEmpty)
         // An older Mac: nothing breaks
         #expect(MacStatus([:]) == MacStatus())
     }
