@@ -63,7 +63,7 @@ public enum MacState {
 
     /// Screen sharing's virtual display in "High Performance" mode: vendor 'aapl', model 0x1234, serial 'mvs'. One
     /// can outlive its connection (Cloupi, ~/cloupi/mac/DESIGN.md 41); it never counts as a monitor.
-    private static func isSharingDisplay(_ id: CGDirectDisplayID) -> Bool {
+    static func isSharingDisplay(_ id: CGDirectDisplayID) -> Bool {
         CGDisplayVendorNumber(id) == 0x6161_706C && CGDisplayModelNumber(id) == 0x1234 && CGDisplaySerialNumber(id) == 0x6D76_7300
     }
 

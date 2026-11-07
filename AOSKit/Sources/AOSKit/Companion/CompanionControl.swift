@@ -161,9 +161,8 @@ public struct MacDisplayStatus: Codable, Equatable, Sendable {
         guard CGGetOnlineDisplayList(16, &ids, &online) == .success else { return MacDisplayStatus(state: "off", external: 0) }
         var lit = 0, external = 0, counted = 0
         for id in ids.prefix(Int(online)) {
-            // Screen sharing's virtual display ("High Performance" mode): vendor 'aapl', model 0x1234, serial 'mvs'.
-            if CGDisplayVendorNumber(id) == 0x6161_706C && CGDisplayModelNumber(id) == 0x1234
-                && CGDisplaySerialNumber(id) == 0x6D76_7300 { continue }
+            // Screen sharing's virtual display ("High Performance" mode) is no screen of the Mac.
+            if MacState.isSharingDisplay(id) { continue }
             counted += 1
             if CGDisplayIsBuiltin(id) == 0 { external += 1 }
             if CGDisplayIsAsleep(id) == 0 { lit += 1 }
