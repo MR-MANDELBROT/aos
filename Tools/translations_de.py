@@ -703,4 +703,10 @@ DE.update({
     "Join your iPhone's hotspot once from the Wi-Fi menu.": "Verbinde dich einmal über das WLAN-Menü mit dem Hotspot deines iPhones.",
     "In Wi-Fi settings, click (i) next to it and switch on Auto-Join.": "Klick in den WLAN-Einstellungen daneben auf (i) und schalte „Automatisch verbinden“ ein.",
     "Under \"Ask to join hotspots\" choose Automatic (the Mac joins by itself) or Ask to Join (it asks first).": "Wähle bei „Fragen, ob Hotspots verbunden werden sollen“ entweder „Automatisch“ (der Mac verbindet sich von selbst) oder „Fragen“ (er fragt vorher).",
+    "Delete and Set Up Again …": "Löschen und neu einrichten …",
+    "Delete and Set Up Again": "Löschen und neu einrichten",
+    "Start the workspace over": "Arbeitsplatz neu aufsetzen",
+    "Deletes the workspace with everything in it and sets it up again from the start (macOS is downloaded again).": "Löscht den Arbeitsplatz mit allem, was darin ist, und richtet ihn von vorn neu ein (macOS wird neu geladen).",
+    "Delete the workspace?": "Arbeitsplatz löschen?",
+    "Everything in the workspace is deleted: files, programs and sign-ins. Your Mac and your Exchange folder stay as they are.": "Alles im Arbeitsplatz wird gelöscht: Dateien, Programme und Anmeldungen. Dein Mac und dein Austauschordner bleiben, wie sie sind.",
 })

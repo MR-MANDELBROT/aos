@@ -190,4 +190,33 @@ extension AppModel {
         guard custodyMode == .custody else { return }
         await custodyClient.detachDisk()
     }
+
+    // MARK: Starting over
+
+    /// Deletes the workspace (the helper removes its disk; the rest of its folder goes to the Trash) and opens the
+    /// setup at its first step. The keys and the password stay with the helper; the new workspace gets them.
+    func resetWorkspace() async {
+        append("workspace: deleting it to set it up again")
+        if workspace.host.isRunning {
+            _ = await workspace.close()
+            if workspace.host.isRunning { try? await workspace.host.forceStop() }
+        }
+        if custodyMode == .custody {
+            do {
+                try await custodyClient.eraseDisk()
+            } catch {
+                append("workspace: the helper couldn't remove the disk: \(error.localizedDescription)")
+                return
+            }
+        }
+        let bundle = workspace.host.bundle.url
+        if FileManager.default.fileExists(atPath: bundle.path) {
+            try? FileManager.default.trashItem(at: bundle, resultingItemURL: nil)
+        }
+        update { $0.setupFinished = false }
+        custodySettled = false
+        setup.startOver()
+        refresh()
+        openWindow?(WindowID.setup)
+    }
 }

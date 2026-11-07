@@ -273,13 +273,14 @@ public struct Provisioner: Sendable {
             return Kcpassword.matches(file, password: password)
         }
         let input = Data((password + "\n").utf8)
-        _ = try await ssh.run("IFS= read -r p; ( sleep 1; print -r -- \"$p\" ) | /usr/bin/script -q /dev/null " +
+        _ = try await ssh.run("IFS= read -r p; ( sleep 1; printf '%s\\n' \"$p\" ) | /usr/bin/script -q /dev/null " +
                               "/usr/sbin/sysadminctl -autologin set -userName \(user) -password - >/dev/null 2>&1; true",
                               input: input, timeout: 60, check: false, what: "automatic login")
         if try await state() { return true }
         log("sysadminctl didn't set the automatic login, writing it directly")
         let kc = Kcpassword.encode(password).base64EncodedString() + "\n"
-        _ = try await ssh.run("set -e; IFS= read -r k; print -rn -- \"$k\" | /usr/bin/base64 -D > /etc/kcpassword.new; " +
+        _ = try await ssh.run("set -e; IFS= read -r k; printf '%s' \"$k\" | /usr/bin/base64 -D > /etc/kcpassword.new; " +
+                              "[ -s /etc/kcpassword.new ]; " +
                               "/usr/sbin/chown root:wheel /etc/kcpassword.new; /bin/chmod 600 /etc/kcpassword.new; " +
                               "/bin/mv -f /etc/kcpassword.new /etc/kcpassword; " +
                               "/usr/bin/defaults write /Library/Preferences/com.apple.loginwindow autoLoginUser -string \(user)",
@@ -290,8 +291,9 @@ public struct Provisioner: Sendable {
     /// Whether the workspace waits at the login window (nobody logged in) after `seconds`.
     public func atLoginWindow(host: String, seconds: Int = 45) async -> Bool {
         let r = try? await maintenance(host: host).run(
-            "for i in {1..\(seconds * 2)}; do [ \"$(/usr/bin/stat -f %Su /dev/console)\" = \(Brand.guestUser) ] && { echo in; exit; }; " +
-            "sleep 0.5; done; echo out", timeout: TimeInterval(seconds + 30), check: false, what: "login check")
+            "i=0; while [ $i -lt \(seconds * 2) ]; do [ \"$(/usr/bin/stat -f %Su /dev/console)\" = \(Brand.guestUser) ] && " +
+            "{ echo in; exit 0; }; sleep 0.5; i=$((i+1)); done; echo out", timeout: TimeInterval(seconds + 30), check: false,
+            what: "login check")
         return r?.text.contains("out") == true
     }
 

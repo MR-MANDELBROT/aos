@@ -71,6 +71,19 @@ final class SetupController: ObservableObject {
     var workspaceReady: Bool { vmState.map { $0.bootstrapped && $0.screenSharingReady } == true }
     var wantsClaudeSession: Bool { selectedAgents.contains("claude-code") }
 
+    /// After the workspace was deleted: the setup from its first step.
+    func startOver() {
+        activity = .idle
+        details = []
+        sharingWatch?.cancel()
+        sharingPhase = .starting
+        sharingProblem = nil
+        localNetworkBlocked = false
+        refreshCompletion()
+        step = .requirements
+        checkRequirements()
+    }
+
     func refreshCompletion() {
         let done = workspaceReady && workspace.settings.setupFinished
         if done != isComplete { isComplete = done }
