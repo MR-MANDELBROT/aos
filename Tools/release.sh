@@ -10,8 +10,12 @@
 #        build/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys
 #
 # Usage: Tools/release.sh            (version from project.yml: MARKETING_VERSION / CURRENT_PROJECT_VERSION)
+#        Tools/release.sh --app      only the notarized, stapled app, for installing on this Mac (no DMG, no Sparkle
+#                                    signature)
 set -euo pipefail
 cd "$(dirname "$0")/.."
+APP_ONLY=0
+[ "${1:-}" = "--app" ] && APP_ONLY=1
 
 TEAM=S3725YB7V6
 PROFILE="${NOTARY_PROFILE:-aos-notary}"
@@ -23,7 +27,8 @@ ARCHIVE="$OUT/aOS.xcarchive"
 die() { echo "ERROR: $*" >&2; exit 1; }
 say() { echo "==> $*"; }
 
-grep -q "REPLACE_WITH_SPARKLE_PUBLIC_KEY" project.yml && die "set SUPublicEDKey in project.yml first (see the header)"
+[ "$APP_ONLY" = 1 ] || ! grep -q "REPLACE_WITH_SPARKLE_PUBLIC_KEY" project.yml \
+  || die "set SUPublicEDKey in project.yml first (see the header)"
 [ -z "$(git status --porcelain)" ] || die "the working tree has uncommitted changes"
 xcrun notarytool history --keychain-profile "$PROFILE" >/dev/null 2>&1 || die "notarization profile $PROFILE missing (see the header)"
 
@@ -65,6 +70,11 @@ xcrun notarytool submit "$OUT/aOS-notarize.zip" --keychain-profile "$PROFILE" --
 grep -q "status: Accepted" "$OUT/notary-app.log" || die "notarization of the app failed"
 xcrun stapler staple "$APP"
 rm -f "$OUT/aOS-notarize.zip"
+if [ "$APP_ONLY" = 1 ]; then
+  spctl --assess --type execute -v "$APP"
+  say "done: $APP"
+  exit 0
+fi
 
 say "building the DMG"
 STAGE="$OUT/dmg"
