@@ -6,10 +6,11 @@ user, wherever they are:
 - **Sign-ins for the agent** ("agentic passwords"): the agent in the workspace needs to sign in, the iPhone shows the
   request with the user's Bitwarden logins that fit the site, the user approves one with Face ID, and aOS on the Mac
   gets exactly that login from Bitwarden and fills it into the workspace. The agent never sees the password.
-- **Terminal**: SSH to the paired Mac (and other hosts the user adds). On the Mac the shell outlives the connection
-  ("Terminal sessions", below); a Live Activity shows open terminals.
-- **The Mac from the iPhone** (Overview): battery, lid, staying awake, the workspace, aOS's Claude Code session and
-  Bitwarden, with sleep and the other actions as signed requests.
+- **Terminal**: the paired Mac's terminal sessions over SSH (only the Mac's; other computers were taken out on
+  2026-11-07). They outlive the connection ("Terminal sessions", below); New Session starts another shell, switching
+  shows another one, a Live Activity shows the open terminal.
+- **The Mac from the iPhone** (Overview): battery, lid, display, staying awake, the workspace, aOS's Claude Code
+  session and Bitwarden, with sleep and the other actions as signed requests.
 - **Screen**: the paired Mac's screen and the aOS workspace, live, with touch, keyboard and trackpad gestures, in
   Open Screen Sharing's session (GPL-3.0, iOS/ThirdParty/OpenScreenSharing; iOS/NOTES.md, "The screen").
 - **Help requests**: when the agent asks for help (a captcha, a sign-in it can't do), the request opens the
@@ -244,6 +245,9 @@ with `error` (English) and `code`, which the phone says in its own words.
 - `{"id":10,"op":"mac.status"}` -> `{"id":10,"ok":true,"status":{...}}` with
   - `power`: `{"source":"ac|battery|ups|unknown","battery":76,"charging":false,"minutes":312,"lid":"open|closed|none","thermal":"nominal|fair|serious|critical"}`
     (`minutes`: until empty on battery, until full while charging, when macOS knows; no `battery` on a Mac without one)
+  - `display`: `{"state":"on|off|none","external":1}` (`CGDisplayIsAsleep` of every online screen, screen sharing's
+    virtual one left out: `on` while one is lit, `off` while all sleep, `none` without a screen, the lid closed and no
+    monitor; `external`: monitors besides the built-in screen)
   - `awake`: `{"setting":"off|lidOpen|lidClosed","holding":true,"lidClosedMode":false,"blocker":"cloupi|nothingToKeep|helperNotReady|lowBattery|thermal","helper":"enabled|requiresApproval|notRegistered|notFound","otherService":false}`
     (Settings > General > Staying awake; `holding`: aOS's helper holds the Mac for a closed lid now)
   - `workspace`: `{"state":"stopped|starting|running|open|closing|failed","setupComplete":true,"purpose":"...","until":"<ISO>","error":"..."}`
@@ -258,8 +262,14 @@ with `error` (English) and `code`, which the phone says in its own words.
   a screen comes on again (a dark wake doesn't keep the Mac up). Refused when sleep stays off: `sleep-disabled`
   (another program set `disablesleep`), `other-service` (Cloupi's wake daemon owns sleep and has it off),
   `sleep-held` (aOS's helper didn't answer in time).
+  The phone then shows "Sleeping since" with the time at once and closes the connection itself 0.5 s after the Mac's
+  `after` (it would die without a word); it tries again 20 s later at the earliest, so an attempt doesn't reach or
+  wake the Mac while it falls asleep, and the first connection that works ends "sleeping".
 - `mac.display-off` (`pmset displaysleepnow`; macOS locks the screen if it asks for the password after the display
-  sleeps).
+  sleeps) and `mac.display-on` (`caffeinate -u -t 2`: user activity, which wakes a sleeping display; a closed lid keeps
+  the built-in one dark). Both answer after the change, with `display` as it is then. The phone offers Display Off
+  only while `display` is `on`, Display On only while it is `off` (and the Mac knows `mac.display-on`), neither for
+  `none`, and no action at all while the Mac sleeps (no Sleep either).
 - `{"op":"mac.stay-awake","text":"off|lidOpen|lidClosed"}`: the setting; `other-service` while Cloupi owns sleep.
   "Also with the lid closed" registers the helper; macOS may still want the person's yes in Login Items
   (`awake.helper` says so).
@@ -271,17 +281,22 @@ with `error` (English) and `code`, which the phone says in its own words.
 ## Terminal sessions
 
 The Terminal tab's shell on the paired Mac outlives the connection. The phone opens a session channel with a pseudo
-terminal (pty-req) and runs, through the login shell, `'<companion>' term attach [--id <id> [--have <offset>]]`.
+terminal (pty-req) and runs, through the login shell,
+`'<companion>' term attach [--id <id> [--have <offset>]] [--client <phone id>]`.
 `aos-companion term attach` connects to the session's holder (`term hold`, a process of its own, started by the first
 attach: setsid, so the SSH connection closing doesn't reach it) over `run/terms/<id>.sock` (folder 0700, peer uid
 checked), puts its terminal into raw mode and relays bytes; terminal size changes reach the shell (SIGWINCH of the
-client's terminal). One client at a time: a new one takes over (the old one hears `taken`).
+client's terminal). One client at a time: a new one takes over. `--client` names the device (the iPhone sends its
+phone id, 1 to 64 letters, digits, `.`, `-`, `_`): when the same device attaches again, its older connection (one
+that lingers after a network change or a relaunch of the app) hears `replaced` and goes without a word; a client of
+another device, or one that names none, takes the session (the old one hears `taken`). An aos-companion from before
+`--client` takes it as an unknown flag and ignores it.
 
 The client tells the phone where the output starts with a note on the terminal, `ESC ] 7730 ; <JSON> BEL` (the phone
 takes notes out; other terminals ignore an OSC they don't know):
 
     {"t":"start","id":"3fa9c1d2","from":12345,"reset":false,"prefix":"<base64>","created":"<ISO>","new":false}
-    {"t":"end","why":"exited|ended|taken|lost","status":0}
+    {"t":"end","why":"exited|ended|taken|replaced|lost","status":0}
 
 - `from`: the offset of the next output byte. The phone counts every byte after the start note (notes don't count)
   and attaches again with `--have <that count>`: it gets exactly what it missed (the holder keeps the last MB).
@@ -290,10 +305,14 @@ takes notes out; other terminals ignore an OSC they don't know):
   mouse, bracketed paste, keyboard protocol, cursor), then gets the last 256 KB from a point between two sequences,
   after a line break where there is one; the program in the foreground gets SIGWINCH and draws itself again.
 - `new: true` with `gone`: the session asked for had ended (the Mac restarted, someone ended it); this one is new.
-- `end`: `exited` (the shell ended; exit status), `ended` (someone ended it), `taken` (another device attached),
-  `lost` (the holder went away). Without an end note the connection dropped: the phone attaches again.
+- `end`: `exited` (the shell ended; exit status), `ended` (someone ended it), `taken` (another device attached; the
+  client exits 3), `replaced` (the same device attached again; exits 5), `lost` (the holder went away). Without an
+  end note the connection dropped: the phone attaches again. The phone only listens to its newest channel: notes and
+  output of an older one are ignored, so its own takeover never reads as "open on another device".
 
-`'<companion>' term list --json` -> `{"sessions":[{"id":"3fa9c1d2","pid":123,"shell":124,"created":"<ISO>","attached":true,"since":"<ISO>","lastOutput":"<ISO>","from":"ssh 192.168.178.31","command":"zsh","cwd":"/Users/max","title":"...","cols":80,"rows":24}]}`
+`'<companion>' term list --json` -> `{"sessions":[{"id":"3fa9c1d2","pid":123,"shell":124,"created":"<ISO>","attached":true,"since":"<ISO>","lastOutput":"<ISO>","from":"ssh 192.168.178.31","client":"4853150ceae1","command":"zsh","cwd":"/Users/max","title":"...","cols":80,"rows":24}]}`
+(`client`: the attached device, if it named one; the phone shows a session attached with its own id as "Open on this
+iPhone", also after the app was closed while the Mac still holds the old connection)
 and `'<companion>' term end <id>` -> `{"ok":true}` (`{"ok":false,"gone":true}`) run in exec channels. Ending sends
 SIGHUP to the program in the foreground and to the shell, as closing a terminal window does, SIGKILL 3 s later. A Mac
 holds at most 16 sessions. These commands aren't companion requests and aren't signed: the phone's SSH login can run
@@ -362,9 +381,9 @@ Chrome, so a filled password can't be read back.
   (aOS's Tailscale node, a C library built from `Tailnet/` by iOS/generate.sh); the framework target `ScreenClient` (Open
   Screen Sharing's session code with its Go library libsharing, GRDB, swift-perception, swift-atomics). Widget
   extension `AOSWidgets` (`dev.marquart.aos.ios.widgets`): the Live Activity of the open terminals.
-- Tabs: Overview (Mac with battery, lid and staying awake, requests, workspace, aOS's Claude Code session and
-  Bitwarden, with their actions), Terminal (the Mac's sessions survive the connection), Screen; settings from the
-  Overview.
+- Tabs: Overview (Mac with battery, lid, display and staying awake, requests, workspace, aOS's Claude Code session and
+  Bitwarden, with their actions), Terminal (the Mac's sessions, which survive the connection: New Session, switching,
+  ending), Screen (built only while it is the tab on screen); settings from the Overview.
 - German and English (string catalogs), German first for Max.
 - Trust in the design: what is where, said plainly ("Your passwords stay in Bitwarden. You approve every sign-in with
   Face ID."), lock and shield symbols only where they are true, no dark patterns, every approval shows who asks for
