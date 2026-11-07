@@ -450,6 +450,7 @@ DE.update({
     'Quality': 'Qualität',
     'Picture rate and data': 'Bildrate und Datenmenge',
     'Screen settings': 'Bildschirm-Einstellungen',
+    'Terminal settings': 'Terminal-Einstellungen',
     'Copy': 'Kopieren',
     'Paste': 'Einsetzen',
     'Cut': 'Ausschneiden',
