@@ -369,11 +369,19 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
             disconnect()
             return
         }
+        guard let mac = macConnection(), let ssh = mac.ssh, ssh.isActive,
+              let command = TermAttach.end(companion: mac.mac.companionPath, id: holderID) else {
+            show(String(localized: "The Mac isn't reachable right now. The session keeps running there."))
+            return
+        }
+        let wanted = wantsAttached
         wantsAttached = false
         reattach?.cancel()
-        if let mac = macConnection(), let ssh = mac.ssh, ssh.isActive,
-           let command = TermAttach.end(companion: mac.mac.companionPath, id: holderID) {
-            _ = try? await ssh.run(command, timeout: .seconds(10))
+        guard (try? await ssh.run(command, timeout: .seconds(10))) != nil else {
+            wantsAttached = wanted
+            if wanted, channel == nil { waitForMac() }
+            show(String(localized: "The Mac isn't reachable right now. The session keeps running there."))
+            return
         }
         // The attached channel hears it too; without one the session is gone anyway.
         if channel == nil || !gotStartNote {

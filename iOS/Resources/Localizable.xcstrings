@@ -4292,6 +4292,16 @@
         }
       }
     },
+    "The Mac isn't reachable right now. The session keeps running there." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist gerade nicht erreichbar. Die Sitzung läuft dort weiter."
+          }
+        }
+      }
+    },
     "The Mac isn't reachable. Outside your home network you need Tailscale or another VPN to reach it." : {
       "localizations" : {
         "de" : {

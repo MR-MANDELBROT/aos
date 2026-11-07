@@ -27,7 +27,6 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
     private var modifierKeys: [Int: KeyButton] = [:]
     /// The width and arrows the row was built for.
     private var builtFor: (width: CGFloat, arrows: TerminalArrowKeys)?
-    private(set) var layout: KeyBarLayout?
     /// Where a key starts (the row snaps to these).
     private var keyEdges: [CGFloat] = []
     private var repeatTask: Task<Void, Never>?
@@ -150,7 +149,6 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
         for view in row.arrangedSubviews { view.removeFromSuperview() }
         modifierKeys = [:]
         let plan = KeyBarLayout(width: width, arrows: arrows)
-        layout = plan
         let all = Self.keys
         let leading = Array(all.prefix(plan.leading)), trailing = Array(all.dropFirst(plan.leading))
         var edges: [CGFloat] = []
@@ -255,11 +253,6 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
         }
     }
 
-    /// Back to the start of the row (the arrows in the middle).
-    func scrollToStart(animated: Bool) {
-        scroll.setContentOffset(.zero, animated: animated)
-    }
-
     // MARK: Repeat
 
     /// Repeats `action` while a key is held: the first time after 0.4 s, then 14 times a second.
@@ -290,17 +283,18 @@ final class TerminalKeyBar: UIInputView, UIInputViewAudioFeedback {
 
     // MARK: Edges
 
-    /// A soft edge only where more keys are: at rest the row starts and ends with whole keys.
+    /// A light edge only where more keys are, as a hint that the row goes on: at rest the row starts and ends with
+    /// whole keys (both halves hold whole keys of one width), so nothing looks cut off.
     private func updateFade() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         defer { CATransaction.commit() }
         fade.frame = scroll.bounds
         let width = max(scroll.bounds.width, 1)
-        let edge = min(14 / width, 0.2)
+        let edge = min(10 / width, 0.2)
         let canLeft = scroll.contentOffset.x > 1
         let canRight = scroll.contentOffset.x < scroll.contentSize.width - scroll.bounds.width - 1
-        let clear = UIColor.black.withAlphaComponent(0.15).cgColor, solid = UIColor.black.cgColor
+        let clear = UIColor.black.withAlphaComponent(0.45).cgColor, solid = UIColor.black.cgColor
         fade.colors = [canLeft ? clear : solid, solid, solid, canRight ? clear : solid]
         fade.locations = [0, NSNumber(value: edge), NSNumber(value: 1 - edge), 1]
     }
