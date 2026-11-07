@@ -76,6 +76,28 @@ public struct PairingReach: Equatable, Sendable {
     }
 }
 
+/// The names aOS's own nodes register with.
+public enum TailnetNames {
+    /// "aos-" and the device's name in lowercase letters and digits, everything else as one hyphen, at most 63
+    /// characters ("Maxs-MacBook-Pro" -> "aos-maxs-macbook-pro", "Max’s iPhone" -> "aos-max-s-iphone").
+    public static func hostname(device name: String, fallback: String) -> String {
+        var label = ""
+        for scalar in name.lowercased().unicodeScalars {
+            if ("a"..."z").contains(scalar) || ("0"..."9").contains(scalar) {
+                label.unicodeScalars.append(scalar)
+            } else if !label.isEmpty && !label.hasSuffix("-") {
+                label += "-"
+            }
+        }
+        while label.hasSuffix("-") { label.removeLast() }
+        if label.isEmpty { label = fallback }
+        var result = "aos-" + label
+        if result.utf8.count > 63 { result = String(result.prefix(63)) }
+        while result.hasSuffix("-") { result.removeLast() }
+        return result
+    }
+}
+
 /// Tailscale's address ranges.
 public enum TailnetAddress {
     /// 100.64.0.0/10 (the shared address space Tailscale takes its IPv4 addresses from).
