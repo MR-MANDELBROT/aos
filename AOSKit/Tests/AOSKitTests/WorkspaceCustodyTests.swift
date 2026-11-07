@@ -262,6 +262,16 @@ final class WorkspaceCustodyTests: XCTestCase {
         XCTAssertEqual(HdiutilAttacher.wholeDisk(fromAttachPlist: data), "disk10")
     }
 
+    func testKcpasswordMatchesWhateverThePadding() {
+        let password = "bcdefghijklnoprstuvxBCDEFGHIJKLN"
+        var file = [UInt8](Kcpassword.encode(password))
+        // macOS may fill the padding after the zero byte with other bytes.
+        for i in 33..<file.count { file[i] = UInt8.random(in: 0...255) }
+        XCTAssertTrue(Kcpassword.matches(Data(file), password: password))
+        XCTAssertFalse(Kcpassword.matches(Data(file), password: "bcdefghijklnoprstuvxBCDEFGHIJKLO"))
+        XCTAssertFalse(Kcpassword.matches(Data(file.prefix(30)), password: password))
+    }
+
     func testKcpassword() {
         let encoded = Kcpassword.encode("bcdefghijklnoprstuvxBCDEFGHIJKLN")
         XCTAssertEqual(encoded.count % 12, 0)

@@ -236,14 +236,18 @@ public final class WorkspaceController {
     /// copies of the old ones stop working. A failure leaves everything working with the old ones; the next start
     /// tries again.
     public func rotateSecretsIfNeeded(ip: String) async {
-        guard let custody = GuestSecrets.custody, let status = try? await custody.status(),
-              status.rotationNeeded == true else { return }
+        guard let custody = GuestSecrets.custody, let status = try? await custody.status() else { return }
+        let state = try? host.bundle.loadState()
+        // Also once for a workspace whose password an earlier aOS kept as a file of the user.
+        let oldPassword = state?.diskInCustody == true && state?.passwordFromHelper != true
+        guard status.rotationNeeded == true || oldPassword else { return }
         do {
             try await provisioner.maintenance(host: ip).waitUntilReachable(timeout: 180)
             log("replacing the workspace's keys and password")
-            try await provisioner.rotateSecrets(host: ip, custody: custody) { [weak self] line in
+            let passwordChanged = try await provisioner.rotateSecrets(host: ip, custody: custody) { [weak self] line in
                 Task { @MainActor in self?.log(line) }
             }
+            if passwordChanged { try? host.bundle.updateState { $0.passwordFromHelper = true } }
             onSecretsRotated?()
         } catch {
             log("replacing the workspace's keys failed (the old ones still work, next start tries again): \(error.localizedDescription)")
@@ -286,9 +290,10 @@ public final class WorkspaceController {
     /// minutes. Right after a start the VM's bridge is not up yet (connections then go nowhere), so this tries for a
     /// few seconds; anything but Network.framework's explicit denial counts as "allowed".
     private func checkLocalNetwork(ip: String) async throws {
-        let deadline = Date().addingTimeInterval(15)
-        // Right after an app update macOS refuses the first connections once while it learns the new build
-        // (nehelper: "allowed by preference ... but received prompt"); only a denial that lasts counts.
+        let deadline = Date().addingTimeInterval(60)
+        // Right after an app update macOS refuses the first connections for a while as it learns the new build
+        // (nehelper: "allowed by preference ... but received prompt"; measured: longer than 15 s); only a denial
+        // that lasts counts.
         var deniedSince: Date?
         while Date() < deadline {
             let probe = RFBStream(host: ip, port: 22)
@@ -299,7 +304,7 @@ public final class WorkspaceController {
             } catch RFBError.localNetworkDenied {
                 let since = deniedSince ?? Date()
                 deniedSince = since
-                if Date().timeIntervalSince(since) > 6 { throw WorkspaceError.localNetworkDenied }
+                if Date().timeIntervalSince(since) > 45 { throw WorkspaceError.localNetworkDenied }
             } catch {
                 if case .posix(let code) = error as? NWError, code == .ECONNREFUSED { return }
                 deniedSince = nil

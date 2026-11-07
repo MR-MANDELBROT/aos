@@ -38,6 +38,9 @@ public struct VMState: Codable, Sendable, Equatable {
     public var helperAllowed: Bool?
     /// The disk is in the custody of aOS's helper (a note for the app; the helper is what decides).
     public var diskInCustody: Bool?
+    /// The account's password was made by the helper and never was a file of the user (a new workspace, or one whose
+    /// password was replaced after the helper took it over).
+    public var passwordFromHelper: Bool?
 }
 
 public enum VMBundleError: LocalizedError {
@@ -155,6 +158,7 @@ public struct VMBundle: Sendable {
                             createdAt: Date(), guestBuild: nil, guestVersion: nil,
                             provisioned: false, bootstrapped: false, screenSharingReady: false, kitFingerprint: nil)
         state.diskInCustody = withDisk ? nil : true
+        state.passwordFromHelper = withDisk ? nil : true
         try bundle.saveState(state)
         return bundle
     }
