@@ -243,9 +243,10 @@ enum TailnetError: LocalizedError {
 final class TailnetNodeBox: @unchecked Sendable {
     private let node: TailnetkitNode
 
-    init(directory: String, hostname: String) throws {
+    /// `controlURL` is empty for Tailscale's coordination server (the end-to-end test passes its own).
+    init(directory: String, hostname: String, controlURL: String = "") throws {
         var error: NSError?
-        guard let node = TailnetkitNewNode(directory, hostname, "", &error) else {
+        guard let node = TailnetkitNewNode(directory, hostname, controlURL, &error) else {
             throw error ?? TailnetError.notRunning
         }
         self.node = node
