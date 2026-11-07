@@ -41,7 +41,14 @@ struct RootView: View {
                 TerminalTab()
             }
             Tab("Screen", systemImage: "display", value: AppModel.Tab.screen) {
-                ScreenTab()
+                // Only while it is the tab on screen. Behind the others it started the screen by itself when the Mac
+                // or the workspace came back (after a reload, say), and its full screen took the tab bar away from
+                // the tab on screen (TabBarTests).
+                if model.tab == .screen {
+                    ScreenTab()
+                } else {
+                    Color.clear
+                }
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
