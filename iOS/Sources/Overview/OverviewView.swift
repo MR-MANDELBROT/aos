@@ -545,6 +545,7 @@ struct WorkspaceCard: View {
         if let state = connection.macStatus?.workspace?.state { return state }
         switch connection.workspace?.state {
         case .open: return "open"
+        case .running: return "running"
         case .starting: return "starting"
         case .closing: return "closing"
         case .stopped, nil: return "stopped"

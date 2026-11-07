@@ -55,7 +55,7 @@ struct ScreenTab: View {
             await start()
         }
         .onChange(of: model.connection?.workspace?.state) { _, state in
-            guard state == .open, model.screenTarget == .workspace, session.phase == .idle else { return }
+            guard state?.isViewable == true, model.screenTarget == .workspace, session.phase == .idle else { return }
             Task { await start() }
         }
         // The Mac is back (after a network change, for example): pick the screen up again.
@@ -129,7 +129,7 @@ struct ScreenTab: View {
             if model.connection?.isConnected != true, !model.isDemo {
                 Placeholder(symbol: "wifi.slash", title: "Not connected to your Mac",
                             text: "The screen comes through the connection to your Mac. See the overview.")
-            } else if model.screenTarget == .workspace, model.connection?.workspace?.state != .open, !model.isDemo {
+            } else if model.screenTarget == .workspace, model.connection?.workspace?.state.isViewable != true, !model.isDemo {
                 Placeholder(symbol: "moon.zzz", title: "The workspace is closed",
                             text: "It opens when your agent needs it. Then you can watch here.") {
                     Button("Try anyway") { Task { await start() } }.buttonStyle(.glass)

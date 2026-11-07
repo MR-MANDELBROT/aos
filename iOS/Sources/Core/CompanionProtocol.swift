@@ -304,18 +304,23 @@ struct CompanionResponse: Sendable, Equatable {
 }
 
 enum WorkspaceState: Equatable, Sendable {
-    case stopped, starting, open, closing
+    /// `running`: the workspace runs without an agent's session (started from the iPhone or the Mac).
+    case stopped, starting, running, open, closing
     case other(String)
 
     init(_ raw: String) {
         switch raw {
         case "stopped": self = .stopped
         case "starting": self = .starting
+        case "running": self = .running
         case "open": self = .open
         case "closing": self = .closing
         default: self = .other(raw)
         }
     }
+
+    /// Its screen can be shown (with or without an agent's session).
+    var isViewable: Bool { self == .open || self == .running }
 }
 
 /// A sign-in the agent asks for. Shown to the person, who approves or declines it.
