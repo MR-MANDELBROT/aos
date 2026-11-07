@@ -179,6 +179,7 @@ struct SignedRequestTests {
         let signer = CompanionSigner(phoneID: "4853150ceae1", key: CompanionKey.ephemeral())
         let requests: [CompanionRequest] = [
             .hello(app: "1", device: "d"), .status, .subscribe, .screen(target: .mac), .screen(target: .workspace),
+            .screen(target: .workspace, reply: "BFFcPW6545a5BNP+yn9U/c0MwemXvzddylFa0KbDtANfRTa+OlDzGPv5pUdZAqIhUCvvDVfgjFOyzApW8X2fk1Q="),
             .signInLogin(request: "r", host: "a.de", login: "l"),
             .signInAnswer(request: "r", host: "a.de", username: "max", password: "p\"w ü", totp: "123456"),
             .signInAnswer(request: "r", host: "a.de", username: "max", password: "pw", totp: ""),

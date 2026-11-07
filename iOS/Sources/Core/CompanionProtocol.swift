@@ -59,7 +59,9 @@ enum CompanionRequest: Sendable, Equatable {
     case hello(app: String, device: String)
     case status
     case subscribe
-    case screen(target: ScreenTarget)
+    /// Where a screen is. `reply` (the workspace): this request's one-time key-agreement key, base64 X9.63; the Mac
+    /// seals the login to it (`ScreenSeal`), and the signature covers it.
+    case screen(target: ScreenTarget, reply: String? = nil)
     /// A Bitwarden login the person approved (its id): the Mac gets it from Bitwarden and fills it (for a code
     /// request: its current one-time code). `host`: the request's website, as the person saw it (signed).
     case signInLogin(request: String, host: String, login: String)
@@ -111,8 +113,9 @@ enum CompanionRequest: Sendable, Equatable {
         switch self {
         case .hello, .status, .subscribe:
             break
-        case .screen(let target):
+        case .screen(let target, let reply):
             f.target = target.rawValue
+            f.data = CompanionSignature.dataDigest(reply: reply)
         case .signInLogin(let request, let host, let login):
             f.request = request
             f.host = host
@@ -156,8 +159,9 @@ enum CompanionRequest: Sendable, Equatable {
             object["device"] = .string(device)
         case .status, .subscribe:
             break
-        case .screen(let target):
+        case .screen(let target, let reply):
             object["target"] = .string(target.rawValue)
+            if let reply { object["reply"] = .string(reply) }
         case .signInLogin(let request, let host, let login):
             object["request"] = .string(request)
             object["host"] = .string(host)
@@ -238,7 +242,7 @@ struct CompanionAuth: Sendable, Equatable {
 ///     login=<Bitwarden item id or empty>
 ///     host=<the sign-in's website or empty>
 ///     target=<mac|workspace or empty>
-///     data=<dataDigest of user name, password, code, typed text>
+///     data=<dataDigest of user name, password, code, typed text, a screen request's reply key>
 enum CompanionSignature {
     static let version = "aos-companion-v1"
 
@@ -265,10 +269,12 @@ enum CompanionSignature {
     }
 
     /// For each field present, in this order: `<name>:<UTF-8 byte count>:<value>\n`; SHA-256 of that, lowercase hex.
+    /// `reply` is a screen request's one-time key (absent everywhere else, so other requests sign what they did).
     static func dataDigest(username: String? = nil, password: String? = nil, totp: String? = nil,
-                           text: String? = nil) -> String {
+                           text: String? = nil, reply: String? = nil) -> String {
         var data = Data()
-        for (name, value) in [("username", username), ("password", password), ("totp", totp), ("text", text)] {
+        for (name, value) in [("username", username), ("password", password), ("totp", totp), ("text", text),
+                              ("reply", reply)] {
             guard let value else { continue }
             data.append(Data("\(name):\(value.utf8.count):".utf8))
             data.append(Data(value.utf8))
@@ -529,13 +535,16 @@ struct ScreenEndpoint: Equatable, Sendable {
         self.password = password
     }
 
-    init?(_ r: CompanionResponse) {
-        guard let host = r.body["host"]?.string, !host.isEmpty,
-              let port = r.body["port"]?.int, (1...65535).contains(port) else { return nil }
+    init?(_ r: CompanionResponse) { self.init(body: r.body) }
+
+    /// From an answer (the Mac's own screen), or from the workspace's sealed login once opened.
+    init?(body: [String: JSONValue]) {
+        guard let host = body["host"]?.string, !host.isEmpty,
+              let port = body["port"]?.int, (1...65535).contains(port) else { return nil }
         self.host = host
         self.port = UInt16(port)
-        username = r.body["username"]?.string
-        password = r.body["password"]?.string
+        username = body["username"]?.string
+        password = body["password"]?.string
     }
 }
 

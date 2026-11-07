@@ -258,12 +258,8 @@ extension WorkspaceController {
             let list = (try? JSONSerialization.jsonObject(with: encoder.encode(events))) ?? []
             return json(r.id, ["events": list, "seq": seq])
         case "companion.screen":
-            if r.target == "workspace" {
-                guard host.isRunning, let ip = try? host.guestAddress(), let password = try? guestPassword() else {
-                    return .failure(r.id, "The workspace is not running.")
-                }
-                return json(r.id, ["host": ip, "port": 5900, "username": Brand.guestUser, "password": password])
-            }
+            if r.target == "workspace" { return sealedWorkspaceScreen(r) }
+            // The Mac's own screen: no login from here (the person enters their Mac account on the phone).
             return json(r.id, ["host": "127.0.0.1", "port": 5900])
         case "signin.answer":
             guard let id = r.request, pendingSignIns[id] != nil else {
@@ -301,6 +297,37 @@ extension WorkspaceController {
         default:
             return .failure(r.id, "unknown companion operation \(r.op)")
         }
+    }
+
+    /// The workspace's screen login, only as ciphertext for the phone that asked (Companion/ScreenSeal.swift): whoever
+    /// stands in for aos-companion or the agent socket sees two one-time public keys and the box. Inside: address,
+    /// port, account and password of the workspace's screen sharing. No plaintext answer: a phone that sent no key
+    /// (an older iPhone app) is told to update.
+    func sealedWorkspaceScreen(_ r: AgentRequest) -> AgentResponse {
+        guard r.auth != nil, r.reply != nil else {
+            log("iPhone screen request refused: no key to seal the login to (an older iPhone app)")
+            return AgentResponse(id: r.id, ok: false, text: "Update aOS on the iPhone to see the workspace: this version can't receive its screen login safely.", code: "update")
+        }
+        guard host.isRunning, let ip = try? host.guestAddress(), let password = try? guestPassword() else {
+            return .failure(r.id, "The workspace is not running.")
+        }
+        let login: [String: Any] = ["host": ip, "port": 5900, "username": Brand.guestUser, "password": password]
+        do {
+            return json(r.id, ["sealed": try Self.seal(login, for: r).json])
+        } catch {
+            log("iPhone screen request refused: the login couldn't be sealed (\(error))")
+            return .failure(r.id, "The iPhone's key for the screen login isn't valid. Try again.")
+        }
+    }
+
+    /// `login` as JSON, sealed for the phone that signed `r`: to its one-time key, bound to its op, its id and the
+    /// request's nonce. `r` passed the gate (signature, time, nonce) before it got here.
+    static func seal(_ login: [String: Any], for r: AgentRequest) throws -> ScreenSeal.Sealed {
+        guard let auth = r.auth, let reply = r.reply, let phoneKey = Data(base64Encoded: reply) else {
+            throw ScreenSeal.Failure.badKey
+        }
+        let plaintext = try JSONSerialization.data(withJSONObject: login, options: [.sortedKeys])
+        return try ScreenSeal.seal(plaintext, to: phoneKey, op: r.op, phone: auth.key, nonce: auth.nonce)
     }
 
     private func json(_ id: Int, _ object: [String: Any]) -> AgentResponse {

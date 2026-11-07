@@ -157,7 +157,11 @@ while let line = readLine(strippingNewline: true) {
             }
         case "screen":
             let target = (r["target"] as? String) == "workspace" ? "workspace" : "mac"
-            let response = try requests.call { $0.op = "companion.screen"; $0.target = target; $0.auth = signature }
+            // `reply`: the phone's one-time key; the app seals the workspace's login to it, this program only ever
+            // sees ciphertext.
+            let response = try requests.call { q in
+                q.op = "companion.screen"; q.target = target; q.reply = r["reply"] as? String; q.auth = signature
+            }
             relay(id, response, fields: true)
         case "signin.answer":
             let response = try requests.call { q in

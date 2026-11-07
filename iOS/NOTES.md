@@ -11,7 +11,8 @@ iOS/
                                 also copies the Mac app's Icon Composer icon (platform iOS) and Package.resolved
   Package.resolved              exact package revisions (the generated project is gitignored)
   Sources/Core                  pure logic: pairing link and proof, OpenSSH key format, companion protocol (JSON
-                                lines), keysym mapping
+                                lines), the workspace's sealed screen login (ScreenSeal, the same scheme as
+                                AOSKit's), keysym mapping
   Sources/Services              keychain, Face ID, device key (Secure Enclave), stores for Macs, hosts, secrets
   Sources/SSH                   SSHConnection (Citadel over Network.framework), SessionChannel (exec, PTY),
                                 LocalForwarder (127.0.0.1 listener -> direct-tcpip), PairingClient
@@ -95,6 +96,12 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
 - `help.done` when the person taps Done.
 - Dates: ISO 8601 with or without fractional seconds. `region`: workspace pixels; `w` or `h` 0 means no region.
 - `screen` `mac`: if the companion isn't ready, the iPhone assumes 127.0.0.1:5900.
+- `screen` `workspace` (since 2026-11-07): `CompanionClient.workspaceLogin()` (also behind `screen(.workspace)` and
+  `MacConnection.screenEndpoint(.workspace)`) sends `reply`, a P-256 key-agreement key made for this one request
+  (base64 X9.63, in memory only until the answer is open), signed as part of `data`. The answer must be `sealed`
+  (`ScreenSeal`: ECDH, HKDF-SHA256 over op, phone id, nonce and both keys, AES-GCM); it returns host, port, user name
+  and password. An answer with the login in plaintext is refused ("Update aOS on the Mac"), one that doesn't open is
+  "an answer this app doesn't understand". Docs/COMPANION.md, "The workspace's screen login".
 - Session `state` strings the iPhone shows in words: `running`, `starting`, `stopped`, `waiting`/`asking`,
   `failed`; others as they come.
 - Matching logins to the site is the Mac's job (AOSKit `HostMatching`, ported from the iPhone's first version with

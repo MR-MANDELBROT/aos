@@ -307,11 +307,19 @@ See Docs/COMPANION.md for the protocol. On the Mac:
   program on the Mac (a coding agent with a shell, as the same user) can't approve a sign-in, finish a help or
   approval request, read the open requests or get the workspace's screen sharing login through the agent socket.
   It can still stop the phone's requests (delete the keychain item, rewrite authorized_keys, replace what the phone
-  runs over SSH) and, by putting its own program in place of aos-companion, read what the Mac sends the phone (the
-  open requests, the workspace's screen login when the phone asks for it) and drop answers; it can't change or replay
-  them. Replies encrypted to the phone's key would close that. Open hardening steps: a key only the signed helper
-  can use, so the request is encrypted to it (instead of trusting the socket's peer), and a check of Chrome's profile
-  settings before each sign-in.
+  runs over SSH) and, by putting its own program in place of aos-companion, read what the Mac sends the phone in
+  plaintext (the open requests) and drop answers; it can't change or replay the phone's requests.
+- **The workspace's screen login** (since 2026-11-07, Docs/COMPANION.md "The workspace's screen login"): the Mac sends
+  it to the phone only sealed. The phone's signed `screen` request carries a one-time P-256 key; the Mac answers with
+  its own one-time key and an AES-GCM box (ECDH, HKDF-SHA256 over a context naming the op, the phone, the request's
+  nonce and both keys). A program in aos-companion's place sees two public keys and ciphertext; swapping or removing
+  the phone's key breaks the signature, and an answer kept from one request doesn't open for a later one. Neither side
+  falls back to plaintext for the workspace (the Mac's own screen has no login to send). Still open: the Mac's
+  one-time key is vouched for by nothing the phone trusts, so such a program could answer with a box of its own and
+  point the phone at a screen it serves (it would get what the person types there, not the workspace's login).
+- Open hardening steps: signed answers from the Mac app (a key of the app the phone learns at pairing), a key only
+  the signed helper can use, so the request is encrypted to it (instead of trusting the socket's peer), and a check
+  of Chrome's profile settings before each sign-in.
 
 ## New chats from the Claude app (server mode)
 

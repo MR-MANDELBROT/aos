@@ -157,10 +157,26 @@ final class MockCompanionServer: @unchecked Sendable {
                   let endpoint = state.screens[target] else {
                 return Self.encode(["id": .number(Double(id)), "ok": .bool(false), "error": .string("no such screen")])
             }
-            body["host"] = .string(endpoint.host)
-            body["port"] = .number(Double(endpoint.port))
-            if let username = endpoint.username { body["username"] = .string(username) }
-            if let password = endpoint.password { body["password"] = .string(password) }
+            var login: [String: JSONValue] = ["host": .string(endpoint.host), "port": .number(Double(endpoint.port))]
+            if let username = endpoint.username { login["username"] = .string(username) }
+            if let password = endpoint.password { login["password"] = .string(password) }
+            guard target == .workspace else {
+                body.merge(login) { $1 }
+                break
+            }
+            // As aOS on the Mac: the workspace's login only sealed to the request's one-time key, never in plaintext
+            guard let key = object["reply"]?.string.flatMap({ Data(base64Encoded: $0) }) else {
+                return Self.encode(["id": .number(Double(id)), "ok": .bool(false), "code": .string("update"),
+                                    "error": .string("Update aOS on the iPhone to see the workspace.")])
+            }
+            let auth = CompanionAuth(object["auth"])
+            var plaintext = Self.encode(login)
+            plaintext.removeLast()
+            guard let sealed = try? ScreenSeal.seal(plaintext, to: key, op: "companion.screen", phone: auth?.key ?? "",
+                                                    nonce: auth?.nonce ?? "") else {
+                return Self.encode(["id": .number(Double(id)), "ok": .bool(false), "error": .string("bad key")])
+            }
+            body["sealed"] = sealed.json
         default:
             return Self.encode(["id": .number(Double(id)), "ok": .bool(false), "error": .string("unknown op \(op)")])
         }
@@ -199,6 +215,7 @@ final class MockCompanionServer: @unchecked Sendable {
         switch op {
         case "screen":
             f.target = text("target") == "workspace" ? "workspace" : "mac"
+            f.data = CompanionSignature.dataDigest(reply: text("reply"))
         case "signin.answer":
             f.request = text("request") ?? ""
             f.host = text("host") ?? ""
