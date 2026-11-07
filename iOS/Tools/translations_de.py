@@ -714,7 +714,7 @@ DE.update({
     'Tailnet of the Mac': 'Tailnet des Macs',
     'Set Up Tailscale': 'Tailscale einrichten',
     'Tailnet': 'Tailnet',
-    'Key': 'Schlüssel',
+    'Tailscale key': 'Tailscale-Schlüssel',
     'Your Mac is in the tailnet %@. Sign out here and sign in with that account.':
         'Dein Mac ist im Tailnet %@. Melde dich hier ab und mit diesem Konto wieder an.',
     "Your Mac isn't in this tailnet. Sign in with the account you used on the Mac.":

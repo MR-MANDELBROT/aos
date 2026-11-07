@@ -179,7 +179,7 @@ struct ConnectionSettings: View {
                     LabeledContent("Address", value: device.addresses.joined(separator: ", "))
                     if let name = status.tailnet { LabeledContent("Tailnet", value: name) }
                     if let user = status.user { LabeledContent("Account", value: user) }
-                    LabeledContent("Key", value: TailnetText.keyLine(device))
+                    LabeledContent("Tailscale key", value: TailnetText.keyLine(device))
                 }
                 Section {
                     if status.aosDevices.isEmpty {

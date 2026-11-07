@@ -746,7 +746,7 @@ DE.update({
     "Name": "Name",
     "Address": "Adresse",
     "Tailnet": "Tailnet",
-    "Key": "Schlüssel",
+    "Tailscale key": "Tailscale-Schlüssel",
     "No %@ devices in this tailnet yet.": "Noch keine Geräte von %@ in diesem Tailnet.",
     "%@ devices": "Geräte von %@",
     "Users, access rules and your other devices are in Tailscale's admin console.": "Benutzer, Zugriffsregeln und deine anderen Geräte findest du in der Verwaltung von Tailscale.",
