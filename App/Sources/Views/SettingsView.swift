@@ -12,6 +12,9 @@ struct SettingsView: View {
             Tab("Claude Code", systemImage: "iphone.radiowaves.left.and.right", value: "claude") { ReachableSettings().endsEditingOnClick() }
             Tab("Bitwarden", systemImage: "key.horizontal", value: "bitwarden") { BitwardenSettings().endsEditingOnClick() }
             Tab("iPhone", systemImage: "iphone", value: "iphone") { PhoneSettings().endsEditingOnClick() }
+            Tab("Connection", systemImage: "point.3.connected.trianglepath.dotted", value: "connection") {
+                ConnectionSettings().endsEditingOnClick()
+            }
         }
         .frame(minWidth: 600, idealWidth: 700, maxWidth: .infinity, minHeight: 460, idealHeight: 680, maxHeight: .infinity)
         // SwiftUI makes settings windows without a resize edge; the window itself gets one.

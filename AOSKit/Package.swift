@@ -13,6 +13,8 @@ let package = Package(
         .library(name: "AOSKit", targets: ["AOSKit"]),
         // The screen sharing (RFB) client, shared with the iPhone app
         .library(name: "AOSRFB", targets: ["AOSRFB"]),
+        // Tailscale's status, the ways to reach the Mac and Tailscale's address ranges, shared with the iPhone app
+        .library(name: "AOSTailnet", targets: ["AOSTailnet"]),
         .executable(name: "aosctl", targets: ["aosctl"]),
         .executable(name: "aos-mcp", targets: ["aos-mcp"]),
         .executable(name: "aos-session", targets: ["aos-session"]),
@@ -26,9 +28,10 @@ let package = Package(
             path: "Sources/AOSRFB",
             linkerSettings: [.linkedLibrary("z")]
         ),
+        .target(name: "AOSTailnet", path: "Sources/AOSTailnet"),
         .target(
             name: "AOSKit",
-            dependencies: ["AOSRFB"],
+            dependencies: ["AOSRFB", "AOSTailnet"],
             path: "Sources/AOSKit",
             resources: [.copy("Resources/Guest")],
             linkerSettings: [
@@ -45,7 +48,7 @@ let package = Package(
         // Runs inside the workspace (its own app bundle there, see project.yml); depends on nothing of aOS.
         .executableTarget(name: "aos-guest-helper", path: "Sources/aos-guest-helper"),
         // Fixtures/fake-bw stands in for Bitwarden's command line tool in the tests.
-        .testTarget(name: "AOSKitTests", dependencies: ["AOSKit", "AOSRFB"], path: "Tests/AOSKitTests",
+        .testTarget(name: "AOSKitTests", dependencies: ["AOSKit", "AOSRFB", "AOSTailnet"], path: "Tests/AOSKitTests",
                     resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v5]

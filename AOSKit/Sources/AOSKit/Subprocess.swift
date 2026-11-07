@@ -297,6 +297,115 @@ public enum Subprocess {
         }
     }
 
+    // MARK: Programs that keep running
+
+    /// Starts a program that keeps running and talks over its stdin and stdout (aOS's Tailscale node, started by the
+    /// helper): the caller writes to `input`, reads `output` and `errors`, and ends it with `terminate()` or by
+    /// closing `input`. Like `runBlocking`, only stdin, stdout and stderr reach the child, with every signal at its
+    /// default, and with `runAs` it gives up root before the program starts.
+    public static func spawn(_ path: String, _ arguments: [String], environment: [String: String],
+                             cwd: String? = nil, runAs: RunAs? = nil) throws -> Running {
+        let (inRead, inWrite) = try cloexecPipe(path)
+        let outPipe: (Int32, Int32), errPipe: (Int32, Int32)
+        do { outPipe = try cloexecPipe(path) } catch { close(inRead); close(inWrite); throw error }
+        do { errPipe = try cloexecPipe(path) } catch {
+            [inRead, inWrite, outPipe.0, outPipe.1].forEach { close($0) }
+            throw error
+        }
+        _ = fcntl(inWrite, F_SETNOSIGPIPE, 1)
+        var actions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&actions)
+        defer { posix_spawn_file_actions_destroy(&actions) }
+        posix_spawn_file_actions_adddup2(&actions, inRead, 0)
+        posix_spawn_file_actions_adddup2(&actions, outPipe.1, 1)
+        posix_spawn_file_actions_adddup2(&actions, errPipe.1, 2)
+        if let cwd { posix_spawn_file_actions_addchdir(&actions, cwd) }
+        var attributes: posix_spawnattr_t?
+        posix_spawnattr_init(&attributes)
+        defer { posix_spawnattr_destroy(&attributes) }
+        var all = sigset_t(), none = sigset_t()
+        sigfillset(&all)
+        sigemptyset(&none)
+        posix_spawnattr_setsigdefault(&attributes, &all)
+        posix_spawnattr_setsigmask(&attributes, &none)
+        posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGDEF
+                                                    | POSIX_SPAWN_SETSIGMASK))
+        let argv = ([path] + arguments).map { strdup($0) } + [nil]
+        let env = environment.map { strdup("\($0.key)=\($0.value)") } + [nil]
+        defer {
+            argv.forEach { free($0) }
+            env.forEach { free($0) }
+        }
+        var pid: pid_t = 0
+        let fdPlan: [(Int32, Int32)] = [(inRead, 0), (outPipe.1, 1), (errPipe.1, 2)]
+        let rc = runAs.map { forkExec(&pid, path, argv, env, fdPlan, cwd, $0) }
+            ?? posix_spawn(&pid, path, &actions, &attributes, argv, env)
+        close(inRead); close(outPipe.1); close(errPipe.1)
+        guard rc == 0 else {
+            close(inWrite); close(outPipe.0); close(errPipe.0)
+            throw Failure.spawn(path, rc)
+        }
+        return Running(pid: pid, input: inWrite, output: outPipe.0, errors: errPipe.0)
+    }
+
+    /// A program started with `spawn`.
+    public final class Running: @unchecked Sendable {
+        public let pid: pid_t
+        /// The program's stdin, its stdout and its stderr (this side owns them).
+        public let input: FileHandle
+        public let output: FileHandle
+        public let errors: FileHandle
+        private let state = State()
+        private let lock = NSLock()
+        private var status: Int32?
+        private var waiting: [CheckedContinuation<Int32, Never>] = []
+
+        fileprivate init(pid: pid_t, input: Int32, output: Int32, errors: Int32) {
+            self.pid = pid
+            self.input = FileHandle(fileDescriptor: input, closeOnDealloc: true)
+            self.output = FileHandle(fileDescriptor: output, closeOnDealloc: true)
+            self.errors = FileHandle(fileDescriptor: errors, closeOnDealloc: true)
+            let state = self.state
+            Thread.detachNewThread { [self] in
+                var info = siginfo_t()
+                while waitid(P_PID, id_t(pid), &info, WEXITED | WNOWAIT) == -1 && errno == EINTR {}
+                state.markExited()
+                var raw: Int32 = 0
+                var waited: pid_t
+                repeat { waited = waitpid(pid, &raw, 0) } while waited == -1 && errno == EINTR
+                let code: Int32 = waited == -1 ? -1 : ((raw & 0x7f) == 0 ? (raw >> 8) & 0xff : 128 + (raw & 0x7f))
+                let resume = lock.withLock { () -> [CheckedContinuation<Int32, Never>] in
+                    status = code
+                    defer { waiting = [] }
+                    return waiting
+                }
+                resume.forEach { $0.resume(returning: code) }
+            }
+        }
+
+        /// The exit status once it ended (128 + signal when a signal ended it).
+        public var exitStatus: Int32? { lock.withLock { status } }
+
+        /// SIGTERM, then SIGKILL after `grace` seconds. Never signals a pid that was already reaped.
+        public func terminate(grace: TimeInterval = 5) {
+            let state = self.state, pid = self.pid
+            guard state.signalIfRunning(pid, SIGTERM) else { return }
+            DispatchQueue.global().asyncAfter(deadline: .now() + grace) { _ = state.signalIfRunning(pid, SIGKILL) }
+        }
+
+        /// Waits until it ended; its exit status.
+        public func waitForExit() async -> Int32 {
+            await withCheckedContinuation { continuation in
+                let ready: Int32? = lock.withLock {
+                    if let status { return status }
+                    waiting.append(continuation)
+                    return nil
+                }
+                if let ready { continuation.resume(returning: ready) }
+            }
+        }
+    }
+
     // MARK: Programs that ask questions
 
     /// Starts a program that asks its questions on a terminal (prompt libraries such as the one in Bitwarden's

@@ -1,0 +1,47 @@
+#!/bin/bash
+# Stands in for aos-tailnet in the tests: `serve --dir <state> --hostname <name>`, then the line protocol on stdin and
+# stdout (Tailnet/protocol.go). Its state folder's parent may hold "behavior" (crash: ends at once with status 3); it
+# notes every start in <state>/starts and a sign-out in <parent>/logged-out. "login" stands for a sign-in the person
+# completed in the browser.
+dir="" name=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dir) dir="$2"; shift ;;
+    --hostname) name="$2"; shift ;;
+  esac
+  shift
+done
+echo "$name $USER $HOME" >> "$dir/starts"
+if [ "$(cat "$dir/../behavior" 2>/dev/null)" = "crash" ]; then
+  echo "crashing on purpose" >&2
+  exit 3
+fi
+state=NeedsLogin
+[ -f "$dir/tailscaled.state" ] && state=Running
+echo "fake node started" >&2
+while IFS= read -r line; do
+  id=$(printf '%s' "$line" | sed -n 's/.*"id":\([0-9][0-9]*\).*/\1/p')
+  op=$(printf '%s' "$line" | sed -n 's/.*"op":"\([a-z]*\)".*/\1/p')
+  case "$op" in
+    status)
+      if [ "$state" = Running ]; then
+        printf '{"id":%s,"ok":true,"status":{"BackendState":"Running","Self":{"ID":"n1","HostName":"%s","DNSName":"%s.tail-aos.ts.net.","TailscaleIPs":["100.101.102.103","fd7a:115c:a1e0::1"],"Online":true},"CurrentTailnet":{"Name":"max@example.com","MagicDNSSuffix":"tail-aos.ts.net"}}}\n' "$id" "$name" "$name"
+      else
+        printf '{"id":%s,"ok":true,"status":{"BackendState":"NeedsLogin","AuthURL":"https://login.tailscale.com/a/test"}}\n' "$id"
+      fi
+      ;;
+    login)
+      touch "$dir/tailscaled.state"
+      state=Running
+      printf '{"id":%s,"ok":true}\n' "$id"
+      ;;
+    logout)
+      touch "$dir/../logged-out"
+      state=NeedsLogin
+      printf '{"id":%s,"ok":true}\n' "$id"
+      ;;
+    *)
+      printf '{"id":%s,"ok":false,"error":"unknown op"}\n' "$id"
+      ;;
+  esac
+done
