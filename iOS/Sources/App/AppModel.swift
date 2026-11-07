@@ -66,7 +66,11 @@ final class AppModel {
     var activeHelp: HelpRequest?
 
     // Sessions
-    var screenTarget: ScreenTarget = .workspace
+    /// The screen the Screen tab shows. Set from elsewhere (the overview's "Show the screen", a help request the person
+    /// opened) it asks the Screen tab to connect it: that was a tap on that screen.
+    var screenTarget: ScreenTarget = .workspace { didSet { screenRequest = screenTarget } }
+    /// A screen someone asked to see; the Screen tab connects it once and clears this.
+    var screenRequest: ScreenTarget?
     let macScreen = ScreenSession(target: .mac)
     let workspaceScreen = ScreenSession(target: .workspace)
     private(set) var terminals: [TerminalSession.Target: TerminalSession] = [:]
@@ -177,6 +181,9 @@ final class AppModel {
             backgroundTask = nil
             // Back in the foreground: connect again; the Mac's terminals attach again by themselves.
             if !isDemo { connection?.start() }
+            // A screen that was on when the app went away comes back (same login, no Face ID).
+            Task { await macScreen.resume() }
+            Task { await workspaceScreen.resume() }
         case .background:
             guard !isDemo, backgroundTask == nil else { return }
             // Keep the connection for a short while (a quick switch to another app), then let it go: iOS suspends
@@ -191,8 +198,8 @@ final class AppModel {
                 }
                 if !Task.isCancelled {
                     self?.connection?.stop()
-                    self?.macScreen.stop()
-                    self?.workspaceScreen.stop()
+                    self?.macScreen.pause()
+                    self?.workspaceScreen.pause()
                 }
             }
         default:
@@ -364,7 +371,9 @@ final class AppModel {
         case .help(let request):
             guard !helpRequests.contains(where: { $0.id == request.id }) else { return }
             helpRequests.append(request)
-            showHelp(request)
+            // Shown on the Screen tab; the workspace connects when the person taps it.
+            activeHelp = request
+            tab = .screen
         case .helpClosed(let id):
             helpRequests.removeAll { $0.id == id }
             if activeHelp?.id == id { activeHelp = helpRequests.last }
