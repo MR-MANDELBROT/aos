@@ -6,6 +6,7 @@ struct TerminalTab: View {
     @Environment(AppModel.self) private var model
     @State private var path: [TerminalSession.Target] = []
     @State private var ending: MacTermSession?
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -55,6 +56,12 @@ struct TerminalTab: View {
                 }
             }
             .navigationTitle("Terminal")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Terminal settings", systemImage: "gearshape") { showSettings = true }
+                }
+            }
+            .sheet(isPresented: $showSettings) { TerminalSettingsSheet { showSettings = false } }
             .navigationDestination(for: TerminalSession.Target.self) { target in
                 TerminalScreen(session: model.terminal(for: target))
             }
@@ -249,6 +256,7 @@ struct TerminalScreen: View {
     @Environment(\.scenePhase) private var scenePhase
     let session: TerminalSession
     @State private var visible = false
+    @State private var showSettings = false
 
     var body: some View {
         ZStack {
@@ -315,9 +323,10 @@ struct TerminalScreen: View {
                        systemImage: session.keyboardShown ? "keyboard.chevron.compact.down" : "keyboard") {
                     session.toggleKeyboard()
                 }
-                TerminalMenu(session: session, home: home) { newSession() }
+                TerminalMenu(session: session, home: home, settings: { showSettings = true }) { newSession() }
             }
         }
+        .sheet(isPresented: $showSettings) { TerminalSettingsSheet { showSettings = false } }
         .alert(pasteTitle, isPresented: Binding(get: { session.pendingPaste != nil }, set: { if !$0 { session.pendingPaste = nil } }),
                presenting: session.pendingPaste) { text in
             Button("Paste") { session.confirmPaste(text) }
@@ -421,6 +430,7 @@ private struct TerminalMenu: View {
     @Environment(AppModel.self) private var model
     let session: TerminalSession
     let home: String
+    let settings: () -> Void
     let newSession: () -> Void
     @State private var confirmEnd = false
 
@@ -455,6 +465,7 @@ private struct TerminalMenu: View {
             Section {
                 Toggle("Keep Screen On", systemImage: "sun.max", isOn: Binding(
                     get: { model.settings.terminalKeepsScreenOn }, set: { model.settings.terminalKeepsScreenOn = $0 }))
+                Button("Terminal settings", systemImage: "gearshape") { settings() }
             }
             Section {
                 Button("New Session", systemImage: "plus") { newSession() }
@@ -473,6 +484,18 @@ private struct TerminalMenu: View {
             }
         } label: {
             Label("Terminal", systemImage: "ellipsis")
+        }
+    }
+}
+
+/// Settings > Terminal as a sheet, from the Terminal tab and from an open terminal.
+private struct TerminalSettingsSheet: View {
+    let done: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            TerminalSettingsForm()
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done", action: done) } }
         }
     }
 }
