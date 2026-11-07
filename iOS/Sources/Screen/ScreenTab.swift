@@ -426,9 +426,10 @@ struct ScreenTab: View {
 
     // MARK: Help requests
 
+    /// Over a running screen only a small pill: the screen stays visible (tap it for the whole text).
     @ViewBuilder private func helpBanner(over target: ScreenTarget) -> some View {
         if let help = model.activeHelp {
-            HelpBanner(request: help, show: target == .workspace ? nil : { tapWorkspace() }) {
+            HelpPill(request: help, show: target == .workspace ? nil : { tapWorkspace() }) {
                 Task { await model.finishHelp(help) }
             }
             .padding(.horizontal)
@@ -487,6 +488,41 @@ struct HelpBanner: View {
         }
         .padding(14)
         .glassEffect(.regular.tint(BrandColor.attention.opacity(0.2)), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+}
+
+/// The help request over a running screen: one line with the button that matters; a tap shows the whole request.
+struct HelpPill: View {
+    let request: HelpRequest
+    var show: (() -> Void)?
+    let done: () -> Void
+    @State private var expanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: "hand.raised.fill").foregroundStyle(BrandColor.attention)
+                Text(request.purpose.isEmpty ? String(localized: "Your agent asks for help") : request.purpose)
+                    .font(.footnote.weight(.medium))
+                    .lineLimit(expanded ? nil : 1)
+                    .fixedSize(horizontal: false, vertical: expanded)
+                    .contentShape(Rectangle())
+                    .onTapGesture { withAnimation(.snappy) { expanded.toggle() } }
+                if let show {
+                    Button("Show", action: show)
+                        .font(.footnote.weight(.semibold))
+                        .buttonStyle(.glassProminent).tint(BrandColor.attention)
+                } else {
+                    Button("Done", action: done)
+                        .font(.footnote.weight(.semibold))
+                        .buttonStyle(.glassProminent).tint(BrandColor.attention)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .frame(maxWidth: 420)
+        .glassEffect(.regular.tint(BrandColor.attention.opacity(0.15)), in: Capsule())
     }
 }
 

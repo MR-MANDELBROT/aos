@@ -386,6 +386,20 @@ public final class WorkspaceController {
         return "\(error)".contains("Network is down") || "\(error)".contains("error 50")
     }
 
+    /// A screenshot; after a timeout (the connection can hang when the phone changed the display's size) once more
+    /// over a fresh screen connection.
+    private func screenshotReconnecting(_ client: RFBClient) async throws -> CGImage {
+        do {
+            return try await client.screenshot()
+        } catch RFBError.timeout(_) {
+            guard let ip = try? host.guestAddress() else { throw RFBError.timeout("screenshot") }
+            log("screenshot timed out, connecting the screen again")
+            await rfb?.disconnect()
+            rfb = nil
+            return try await connectScreen(ip: ip, timeout: 30).screenshot()
+        }
+    }
+
     func requireLease() throws -> RFBClient {
         guard let lease, lease.until > Date() else { throw WorkspaceError.notOpen }
         guard let rfb else { throw WorkspaceError.notOpen }
@@ -417,7 +431,7 @@ public final class WorkspaceController {
         let at = { (x: Double?, y: Double?) in "\(Int((x ?? 0).rounded())),\(Int((y ?? 0).rounded()))" }
         switch request.op {
         case "screenshot":
-            let image = agentView(try await client.screenshot())
+            let image = agentView(try await screenshotReconnecting(client))
             if let r = request.region, r.count == 4, let crop = ScreenImage.crop(image, to: CGRect(x: r[0], y: r[1], width: r[2], height: r[3])) {
                 return try picture(request.id, "Region \(Int(r[0])),\(Int(r[1])) \(crop.width)x\(crop.height) of the screen.", crop)
             }
