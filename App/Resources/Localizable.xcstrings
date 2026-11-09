@@ -574,6 +574,16 @@
         }
       }
     },
+    "Accept edits" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen annehmen"
+          }
+        }
+      }
+    },
     "Account" : {
       "localizations" : {
         "de" : {
@@ -1054,6 +1064,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authenticator-App"
+          }
+        }
+      }
+    },
+    "Auto (Claude Code decides)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto (Claude Code entscheidet)"
           }
         }
       }
@@ -4364,12 +4384,32 @@
         }
       }
     },
+    "Permissions" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berechtigungen"
+          }
+        }
+      }
+    },
     "Pin a conversation in the list below and aOS keeps it reachable; nothing else." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hefte eine Unterhaltung in der Liste unten an, dann hält aOS sie erreichbar, sonst keine."
+          }
+        }
+      }
+    },
+    "Plan only" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur planen"
           }
         }
       }
