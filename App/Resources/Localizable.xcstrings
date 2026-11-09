@@ -2778,6 +2778,16 @@
         }
       }
     },
+    "Leave the hotspot for known Wi-Fi" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hotspot für bekanntes WLAN verlassen"
+          }
+        }
+      }
+    },
     "Lid closed: %lld apps frozen until you open it." : {
       "localizations" : {
         "de" : {
@@ -6301,6 +6311,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Solange der Deckel offen ist"
+          }
+        }
+      }
+    },
+    "While the Mac uses your iPhone's hotspot, %@ looks for your known Wi-Fi networks every 2 minutes and switches to one with a good signal (macOS stays on the hotspot by itself). Needs the background helper." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solange der Mac den Hotspot deines iPhones nutzt, sucht %@ alle 2 Minuten nach deinen bekannten WLANs und wechselt zu einem mit gutem Signal (macOS selbst bleibt im Hotspot). Dafür braucht es den Helfer."
           }
         }
       }
