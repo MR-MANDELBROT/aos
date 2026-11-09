@@ -39,6 +39,8 @@ final class AppModel: ObservableObject {
     @Published var sessionAgentStatus: SMAppService.Status = .notRegistered
     /// What the session keeper does (run/keeper.json, written by aos-session).
     @Published var keeper: KeeperStatus?
+    /// What the session's routines do next and what was sent (run/routines.json, written by aos-session).
+    @Published var routines: RoutinesStatus?
     @Published var remote: RemoteServerStatus?
     /// Recent Claude Code conversations, for the settings (filled while the settings show them).
     @Published var conversations: [ClaudeConversation] = []
@@ -351,6 +353,9 @@ final class AppModel: ObservableObject {
         let k = KeeperStatus.read(paths)
         if k?.enabled != keeper?.enabled || k?.entries != keeper?.entries { keeper = k }
         changed(\.remote, RemoteServerStatus.read(paths))
+        let r = RoutinesStatus.read(paths)
+        if r?.next != routines?.next || r?.reminders != routines?.reminders || r?.queued != routines?.queued
+            || r?.recent != routines?.recent { routines = r }
         if loginItems {
             changed(\.loginItemEnabled, SMAppService.mainApp.status == .enabled)
             changed(\.sessionAgentStatus, SessionAgent.service.status)
