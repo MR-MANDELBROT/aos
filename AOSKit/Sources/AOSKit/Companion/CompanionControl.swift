@@ -20,6 +20,8 @@ public protocol MacControls: AnyObject {
     func setBatteryLimit(_ percent: Int) -> MacControlRefusal?
     /// Turns the display off or wakes it (`MacDisplayStatus.set(on:)` unless the app does it itself).
     func setDisplay(on: Bool) async
+    /// Changes the session's routines in the settings.
+    func updateRoutines(_ change: (inout [Routine]) -> Void)
 }
 
 extension MacControls {
@@ -201,9 +203,24 @@ public enum CompanionControl {
     public static let workspaceStop = "companion.workspace.stop"
     public static let bitwardenLock = "companion.bitwarden.lock"
     public static let sessionRestart = "companion.session.restart"
+    /// The session's routines: add or change one (JSON in `text`), delete one, send one now (its id in `text`).
+    public static let routineSet = "companion.routines.set"
+    public static let routineDelete = "companion.routines.delete"
+    public static let routineRun = "companion.routines.run"
 
     public static let ops: Set<String> = [status, sleep, displayOff, displayOn, stayAwake, batteryLimit, workspaceStart, workspaceStop,
-                                          bitwardenLock, sessionRestart]
+                                          bitwardenLock, sessionRestart, routineSet, routineDelete, routineRun]
+
+    /// A routine from the phone, checked: a name, a message, a valid schedule, sensible lengths.
+    public static func routine(fromPhone text: String?) -> Routine? {
+        guard let data = text?.data(using: .utf8), var r = try? JSONDecoder().decode(Routine.self, from: data) else { return nil }
+        r.name = r.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        r.prompt = r.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !r.name.isEmpty, r.name.count <= 80, !r.prompt.isEmpty, r.prompt.count <= 8000,
+              let cron = CronSchedule(r.schedule), UUID(uuidString: r.id) != nil else { return nil }
+        r.schedule = cron.text
+        return r
+    }
 
     /// What this Mac offers the phone beyond the first version (`hello` lists it): these ops and the terminal
     /// sessions (`aos-companion term`).
@@ -270,6 +287,23 @@ extension WorkspaceController {
             result["kept"] = ["enabled": k.enabled && settings.keepReachable,
                               "running": k.entries.filter { $0.state == .running }.count]
         }
+        // The session's routines (with their messages, the phone edits them), reminders waiting, what went in lately
+        let routinesStatus = RoutinesStatus.read(paths)
+        let now = Date()
+        var routines: [String: Any] = [
+            "items": settings.routines.map { r -> [String: Any] in
+                var item: [String: Any] = ["id": r.id, "name": r.name, "schedule": r.schedule, "prompt": r.prompt,
+                                           "enabled": r.enabled]
+                if r.enabled, let next = r.cron?.next(after: now) { item["next"] = iso.string(from: next) }
+                return item
+            },
+            "queued": routinesStatus?.queued ?? 0,
+        ]
+        if let rs = routinesStatus {
+            routines["reminders"] = rs.reminders.prefix(10).map { ["name": $0.name, "at": iso.string(from: $0.at)] }
+            routines["recent"] = rs.recent.prefix(5).map { ["kind": $0.kind.rawValue, "name": $0.name, "at": iso.string(from: $0.at)] }
+        }
+        result["routines"] = routines
         var vault: [String: Any] = ["state": CompanionControl.bitwardenState(bitwarden.phase)]
         if bitwarden.phase == .unlocked, let until = bitwarden.lockedAt, until != .distantFuture {
             vault["until"] = iso.string(from: until)
@@ -352,6 +386,32 @@ extension WorkspaceController {
         case CompanionControl.bitwardenLock:
             log("\(from) locks Bitwarden")
             await bitwarden.lock(reason: "locked from \(from)")
+            return done()
+
+        case CompanionControl.routineSet:
+            guard let routine = CompanionControl.routine(fromPhone: r.text) else {
+                return .failure(r.id, "Not a routine: it needs a name, a message and a valid schedule.")
+            }
+            guard let controls = macControls else { return .failure(r.id, "\(Brand.name) can't do that right now.") }
+            controls.updateRoutines { list in
+                if let i = list.firstIndex(where: { $0.id == routine.id }) { list[i] = routine } else { list.append(routine) }
+            }
+            log("\(from) saved the routine \"\(routine.name)\"")
+            return done()
+
+        case CompanionControl.routineDelete:
+            guard let id = r.text, !id.isEmpty else { return .failure(r.id, "Which routine?") }
+            guard let controls = macControls else { return .failure(r.id, "\(Brand.name) can't do that right now.") }
+            controls.updateRoutines { $0.removeAll { $0.id == id } }
+            log("\(from) deleted a routine")
+            return done()
+
+        case CompanionControl.routineRun:
+            guard let id = r.text, let routine = settings.routines.first(where: { $0.id == id }) else {
+                return .failure(r.id, "This routine doesn't exist (any more).")
+            }
+            guard SessionCommand.run(routine: id).send(paths: paths) else { return refused(.noSession) }
+            log("\(from) runs the routine \"\(routine.name)\" now")
             return done()
 
         case CompanionControl.sessionRestart:

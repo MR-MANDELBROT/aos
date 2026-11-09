@@ -32,6 +32,8 @@ final class CompanionControlTests: XCTestCase {
         func setDisplay(on: Bool) async { displays.append(on) }
         var batteryLimit = 10
         func setBatteryLimit(_ percent: Int) -> MacControlRefusal? { batteryLimit = percent; return nil }
+        var routines: [Routine] = []
+        func updateRoutines(_ change: (inout [Routine]) -> Void) { change(&routines) }
     }
 
     final class LogBox: @unchecked Sendable { var lines: [String] = [] }
@@ -197,6 +199,36 @@ final class CompanionControlTests: XCTestCase {
         XCTAssertTrue(restart.ok, restart.text)
         await fulfillment(of: [received], timeout: 5)
         XCTAssertEqual(String(decoding: box.bytes, as: UTF8.self), "\u{1B}]aos;restart\u{07}")
+    }
+
+    @MainActor
+    func testRoutinesFromThePhone() async throws {
+        let (c, controls, _, _) = try controller()
+        let id = UUID().uuidString
+        let json = #"{"id":"\#(id)","name":" Routine-Check ","schedule":"3  10 * * *","prompt":"Lies prompts/routine-check.md","enabled":true}"#
+        let saved = await c.handle(phone.sign(request(CompanionControl.routineSet, text: json)))
+        XCTAssertTrue(saved.ok, saved.text)
+        XCTAssertEqual(controls.routines.first?.name, "Routine-Check")
+        XCTAssertEqual(controls.routines.first?.schedule, "3 10 * * *")
+        // Changed under the same id: replaced, not added
+        let changed = json.replacingOccurrences(of: "3  10", with: "13 14")
+        _ = await c.handle(phone.sign(request(CompanionControl.routineSet, text: changed)))
+        XCTAssertEqual(controls.routines.count, 1)
+        XCTAssertEqual(controls.routines.first?.schedule, "13 14 * * *")
+        // Not a schedule, no name, not JSON: refused
+        for bad in [json.replacingOccurrences(of: "3  10 * * *", with: "jeden Tag"),
+                    json.replacingOccurrences(of: " Routine-Check ", with: " "), "kein json"] {
+            let r = await c.handle(phone.sign(request(CompanionControl.routineSet, text: bad)))
+            XCTAssertFalse(r.ok, bad)
+        }
+        XCTAssertEqual(controls.routines.count, 1)
+        let unknown = await c.handle(phone.sign(request(CompanionControl.routineRun, text: UUID().uuidString)))
+        XCTAssertFalse(unknown.ok)
+        let deleted = await c.handle(phone.sign(request(CompanionControl.routineDelete, text: id)))
+        XCTAssertTrue(deleted.ok, deleted.text)
+        XCTAssertTrue(controls.routines.isEmpty)
+        let status = try XCTUnwrap(try object(deleted)["status"] as? [String: Any])
+        XCTAssertNotNil((status["routines"] as? [String: Any])?["items"] as? [Any])
     }
 
     @MainActor
