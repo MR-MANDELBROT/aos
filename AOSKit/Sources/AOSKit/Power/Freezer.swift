@@ -61,8 +61,9 @@ public enum FreezePlanner {
     /// Never frozen: aOS itself (its VM runs in the app), Claude (the desktop app hosts Claude Code sessions), Cloupi,
     /// Finder and the system's own tools, terminals and code editors (agents and Claude Code run there, and builds the
     /// user left running), password managers, VPNs (the iPhone reaches the Mac through them), file providers (a
-    /// frozen one hangs every program that opens one of its files), and tools that intercept the keyboard or mouse
-    /// (frozen, input would stall when the lid opens). A "*" at the end stands for a prefix.
+    /// frozen one hangs every program that opens one of its files), tools that intercept the keyboard or mouse
+    /// (frozen, input would stall when the lid opens), and Apple's apps that agents' tools automate (Mail, Notes,
+    /// Calendar, Reminders, Contacts, Messages). A "*" at the end stands for a prefix.
     public static let builtinExclude: [String] = [
         Brand.bundleIdentifierPrefix + "*", "com.anthropic.*", "de.cloupi.*",
         "com.apple.finder", "com.apple.systempreferences", "com.apple.SystemPreferences", "com.apple.ActivityMonitor",
@@ -78,6 +79,9 @@ public enum FreezePlanner {
         "com.apphousekitchen.aldente-pro", "com.apphousekitchen.aldente",
         "com.hegenberg.BetterTouchTool", "org.pqrs.*", "com.stairways.keyboardmaestro.*", "org.hammerspoon.Hammerspoon",
         "com.lwouis.alt-tab-macos",
+        // Apps agents' tools talk to through Apple Events (a frozen Mail made Cloupi's mail tool time out, 2026-11-09)
+        "com.apple.mail", "com.apple.Notes", "com.apple.iCal", "com.apple.reminders", "com.apple.AddressBook",
+        "com.apple.MobileSMS",
     ]
 
     /// Processes that keep their whole app awake when they run inside it: a Claude Code session or one of aOS's own

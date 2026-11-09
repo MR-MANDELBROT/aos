@@ -541,3 +541,14 @@ final class WiFiPreferencesTests: XCTestCase {
         XCTAssertFalse(WiFiState(hotspotMode: .automatic).matches(.automatic), "unknown counts as not done")
     }
 }
+
+final class FreezeExclusionTests: XCTestCase {
+    func testAppsThatAgentsAutomateNeverFreeze() {
+        for id in ["com.apple.mail", "com.apple.Notes", "com.apple.iCal", "com.apple.reminders", "com.apple.AddressBook",
+                   "com.apple.MobileSMS"] {
+            XCTAssertTrue(FreezePlanner.matches(id, FreezePlanner.builtinExclude), id)
+        }
+        XCTAssertFalse(FreezePlanner.matches("com.apple.Safari", FreezePlanner.builtinExclude))
+        XCTAssertFalse(FreezePlanner.matches("net.whatsapp.WhatsApp", FreezePlanner.builtinExclude))
+    }
+}
