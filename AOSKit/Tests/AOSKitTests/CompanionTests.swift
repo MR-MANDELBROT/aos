@@ -265,6 +265,123 @@ final class KeeperTests: XCTestCase {
         XCTAssertEqual(SessionKeeper.select(list, settings: s, exclude: "/x").map(\.0.id), ["app-old"])
     }
 
+    func testTheOrderComesFromTheActivityNotTheInput() {
+        var s = AgentSettings()
+        s.keepReachable = true
+        s.keepMax = 2
+        s.keptConversations = ["pinned-old"]
+        // In file order (the keeper's own restarts made the old ones' files the freshest)
+        let list = [conversation("used-3d", hoursAgo: 72), conversation("used-1h", hoursAgo: 1),
+                    conversation("pinned-old", hoursAgo: 100), conversation("used-2h", hoursAgo: 2)]
+        s.keepHours = 96
+        XCTAssertEqual(SessionKeeper.select(list, settings: s, exclude: "/x").map(\.0.id), ["pinned-old", "used-1h"])
+        s.keepMax = 3
+        XCTAssertEqual(SessionKeeper.select(list, settings: s, exclude: "/x").map(\.0.id), ["pinned-old", "used-1h", "used-2h"])
+    }
+
+    func testWhyNotKept() {
+        var s = AgentSettings()
+        s.keepHours = 24
+        s.keepMax = 1
+        let recent = conversation("recent")
+        XCTAssertEqual(SessionKeeper.reason(recent, settings: s, exclude: "/own", kept: []), .off)
+        s.keepReachable = true
+        func reason(_ c: ClaudeConversation, kept: Set<String> = []) -> KeepReason? {
+            SessionKeeper.reason(c, settings: s, exclude: "/own", kept: kept)
+        }
+        XCTAssertNil(reason(recent, kept: ["recent"]))
+        XCTAssertEqual(reason(recent), .overLimit)
+        XCTAssertEqual(reason(conversation("old", hoursAgo: 30)), .inactive)
+        XCTAssertEqual(reason(conversation("t", origin: "cli")), .terminal)
+        XCTAssertEqual(reason(conversation("sdk", origin: "sdk-cli")), .automation)
+        XCTAssertEqual(reason(conversation("norc", rc: false)), .noRemoteControl)
+        XCTAssertEqual(reason(conversation("arch", archived: true)), .archived)
+        XCTAssertEqual(reason(conversation("own", cwd: "/own/sub")), .ownSession)
+        s.skippedConversations = ["recent"]
+        XCTAssertEqual(reason(recent), .skipped)
+        s.skippedConversations = []
+        s.keepAutomatic = false
+        XCTAssertEqual(reason(recent), .onlyPinned)
+        s.keptConversations = ["old"]
+        XCTAssertNil(reason(conversation("old", hoursAgo: 30), kept: ["old"]), "pinned: kept regardless of age")
+        // The rules the selection uses
+        XCTAssertEqual(SessionKeeper.select([conversation("old", hoursAgo: 30), recent], settings: s, exclude: "/own")
+                        .map(\.0.id), ["old"])
+    }
+
+    func testAOSsOwnSessionIsNeverKeptAlsoInAnotherFolder() throws {
+        var s = AgentSettings()
+        s.keepReachable = true
+        s.keepMax = 6
+        // aOS's own session runs in ~/cloupi, where other conversations are too; pinned by mistake even.
+        let own = conversation("own-session", cwd: "/Users/x/cloupi")
+        let neighbour = conversation("neighbour", cwd: "/Users/x/cloupi")
+        s.keptConversations = ["own-session"]
+        let chosen = SessionKeeper.select([own, neighbour], settings: s, exclude: "/aOS/Session",
+                                          ownConversation: "own-session").map(\.0.id)
+        XCTAssertEqual(chosen, ["neighbour"], "only its id rules it out, not the folder it shares")
+        XCTAssertEqual(SessionKeeper.reason(own, settings: s, exclude: "/aOS/Session", ownConversation: "own-session",
+                                            kept: Set(chosen)), .ownSession)
+        XCTAssertEqual(SessionKeeper.select([own, neighbour], settings: s, exclude: "/aOS/Session").map(\.0.id),
+                       ["own-session", "neighbour"], "without the id: as before")
+
+        // Where the id comes from: run/session-conversation.json
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("aos-own-\(UUID().uuidString.prefix(6))")
+        let paths = Paths(root: root)
+        try paths.prepare()
+        defer { try? FileManager.default.removeItem(at: root) }
+        XCTAssertNil(SessionKeeper.ownConversation(paths))
+        try Data("not json".utf8).write(to: SessionKeeper.ownConversationURL(paths))
+        XCTAssertNil(SessionKeeper.ownConversation(paths))
+        try Data(#"{"folder":"/Users/x/cloupi","id":"own-session"}"#.utf8).write(to: SessionKeeper.ownConversationURL(paths))
+        XCTAssertEqual(SessionKeeper.ownConversation(paths), "own-session")
+        // The phone's list says why
+        let chats = CompanionChats.json([own, neighbour], keeper: nil, settings: s, exclude: "/aOS/Session",
+                                        ownConversation: SessionKeeper.ownConversation(paths))
+        let list = try XCTUnwrap(chats["list"] as? [[String: Any]])
+        XCTAssertEqual(list.first { $0["id"] as? String == "own-session" }?["reason"] as? String, "ownSession")
+        XCTAssertNil(list.first { $0["id"] as? String == "neighbour" }?["reason"])
+    }
+
+    func testTheKeepersNotesForThePhone() {
+        func entry(_ state: KeeperStatus.State, _ detail: String) -> KeeperStatus.Entry {
+            KeeperStatus.Entry(id: "x", title: "x", cwd: "/", pinned: false, state: state, detail: detail, pid: nil,
+                               since: Date(), lastActivity: Date())
+        }
+        XCTAssertEqual(entry(.openElsewhere, KeeperStatus.Detail.inClaudeApp).note, "app")
+        XCTAssertEqual(entry(.openElsewhere, KeeperStatus.Detail.inTerminal).note, "terminal")
+        XCTAssertEqual(entry(.openElsewhere, KeeperStatus.Detail.remoteControlElsewhere).note, "elsewhere")
+        XCTAssertEqual(entry(.needsAttention, KeeperStatus.Detail.signIn).note, "signIn")
+        XCTAssertEqual(entry(.needsAttention, KeeperStatus.Detail.question).note, "question")
+        XCTAssertEqual(entry(.needsAttention, "\(KeeperStatus.Detail.keepsExiting); next try in 5 min").note, "exiting")
+        XCTAssertEqual(entry(.starting, "\(KeeperStatus.Detail.restarting) in 10 s").note, "restarting")
+        XCTAssertNil(entry(.running, "").note)
+
+        // The phone hears of a change in what it shows, not of every new time stamp
+        let running = KeeperStatus(enabled: true, entries: [entry(.running, "")], updated: Date())
+        var later = running
+        later.updated = Date().addingTimeInterval(15)
+        later.entries[0].lastActivity = Date().addingTimeInterval(10)
+        XCTAssertFalse(KeeperStatus.chatsChanged(from: running, to: later))
+        later.entries[0].state = .openElsewhere
+        XCTAssertTrue(KeeperStatus.chatsChanged(from: running, to: later))
+        XCTAssertTrue(KeeperStatus.chatsChanged(from: nil, to: running))
+        XCTAssertFalse(KeeperStatus.chatsChanged(from: nil, to: KeeperStatus(enabled: false, entries: [], updated: Date())))
+    }
+
+    func testTheRestartCommandForTheKeeper() {
+        let id = "5f0c1c2e-8b1d-4d0e-9a51-0b8f6f2f7a10"
+        XCTAssertEqual(SessionSupervisor.keeperRestart(in: SessionSupervisor.keeperRestartCommand(id)), id)
+        XCTAssertNil(SessionSupervisor.keeperRestart(in: Data("\u{1B}]aos;restart\u{07}".utf8)))
+        XCTAssertNil(SessionSupervisor.keeperRestart(in: SessionSupervisor.keeperRestartCommand("../../etc")))
+        XCTAssertNil(SessionSupervisor.keeperRestart(in: Data("ls\n".utf8)), "typing stays typing")
+        // An old status file (no commands) still reads
+        let old = #"{"enabled":true,"entries":[],"updated":"2026-11-09T10:00:00Z"}"#
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        XCTAssertNil(try decoder.decode(KeeperStatus.self, from: Data(old.utf8)).commands)
+    }
+
     func testReadingATranscript() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("aos-tr-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

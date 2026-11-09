@@ -19,6 +19,17 @@ enum MacAction: String, Sendable, CaseIterable {
     case routineSet = "routines.set"
     case routineDelete = "routines.delete"
     case routineRun = "routines.run"
+    /// The chats (Claude Code conversations the Mac keeps reachable, Core/Chats.swift): the list, and one change per
+    /// op with the chat's id as the value.
+    case chatsList = "chats.list"
+    case chatsPin = "chats.pin"
+    case chatsUnpin = "chats.unpin"
+    case chatsSkip = "chats.skip"
+    case chatsUnskip = "chats.unskip"
+    case chatsRestart = "chats.restart"
+
+    /// Changes a chat (the list answers with the new one, the keeper on the Mac follows a moment later).
+    var changesChat: Bool { rawValue.hasPrefix("chats.") && self != .chatsList }
 }
 
 /// When aOS keeps the Mac awake (AOSKit `StayAwake`).
@@ -227,15 +238,19 @@ struct MacActionResult: Equatable, Sendable {
     var status: MacStatus?
     /// mac.sleep: the Mac goes to sleep in this many seconds.
     var sleepsIn: Double?
+    /// The chats ops: the list as it is now.
+    var chats: ChatList?
 
-    init(status: MacStatus? = nil, sleepsIn: Double? = nil) {
+    init(status: MacStatus? = nil, sleepsIn: Double? = nil, chats: ChatList? = nil) {
         self.status = status
         self.sleepsIn = sleepsIn
+        self.chats = chats
     }
 
     init(_ r: CompanionResponse) {
         status = r.body["status"]?.object.map(MacStatus.init)
         sleepsIn = r.body["sleeping"]?.bool == true ? (r.body["after"]?.number ?? 0) : nil
+        chats = r.body["chats"]?.object.map(ChatList.init)
     }
 }
 
@@ -252,6 +267,9 @@ struct MacRefusal: Error, Equatable, Sendable {
         case "sleep-held": String(localized: "aOS's helper didn't let go of the Mac in time. Try again in a moment.")
         case "not-set-up": String(localized: "The workspace isn't set up yet. Finish the setup in aOS on the Mac.")
         case "no-session": String(localized: "aOS's background process isn't running on the Mac, so there is no Claude Code session to restart.")
+        case "no-keeper": String(localized: "aOS's background process on the Mac doesn't keep chats reachable right now.")
+        case "keeper-old": String(localized: "aOS's background process on the Mac is older and can't restart a single chat yet. It can after the Mac restarts.")
+        case "not-kept": String(localized: "aOS doesn't run this chat on the Mac right now, so there is nothing to restart.")
         default: message.isEmpty ? String(localized: "aOS on the Mac said no.") : message
         }
     }

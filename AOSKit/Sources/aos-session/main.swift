@@ -21,6 +21,8 @@ supervisor.log = { line in
 }
 let keeper = SessionKeeper(paths: paths)
 keeper.log = supervisor.log
+// The phone restarts a kept conversation through the app, which sends the command to this process's socket.
+supervisor.onKeeperRestart = { id in keeper.restart(id) }
 let remote = RemoteServer(paths: paths)
 remote.log = supervisor.log
 signal(SIGTERM, SIG_IGN)

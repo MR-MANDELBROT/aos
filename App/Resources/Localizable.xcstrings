@@ -3534,6 +3534,7 @@
       }
     },
     "Newest activity first; pinned ones on top." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4400,6 +4401,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hefte eine Unterhaltung in der Liste unten an, dann hält aOS sie erreichbar, sonst keine."
+          }
+        }
+      }
+    },
+    "Pinned ones on top, then the ones you wrote in or got an answer in last." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angeheftete ganz oben, dann die, in denen du zuletzt geschrieben oder eine Antwort bekommen hast."
           }
         }
       }
@@ -5496,6 +5507,16 @@
         }
       }
     },
+    "Started by automation" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von einer Automatisierung gestartet"
+          }
+        }
+      }
+    },
     "starting" : {
       "localizations" : {
         "de" : {
@@ -5522,6 +5543,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Startet …"
+          }
+        }
+      }
+    },
+    "Starting soon" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet gleich"
           }
         }
       }

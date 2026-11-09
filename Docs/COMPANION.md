@@ -233,6 +233,7 @@ Events:
 - `{"event":"approval.closed","request":"<id>","result":"allowed|declined"}`
 - `{"event":"mac","state":"unavailable","detail":"..."}` (aos-companion can't reach the app; it retries)
 - `{"event":"workspace","state":"..."}`
+- `{"event":"chats"}` (a kept chat started, ended or changed its state: "Chats" below)
 - `{"event":"subscription","state":"ended"}` (the app ended the subscription; the iPhone sends a new signed
   `subscribe`)
 
@@ -281,6 +282,36 @@ with `error` (English) and `code`, which the phone says in its own words.
   need its own `workspace_open`), `workspace.stop` (closes it like the agent's `workspace_close`, also when an agent
   has it: the phone asks first).
 - `bitwarden.lock`, `session.restart` (`no-session` when aOS's background process isn't running).
+
+### Chats (since 2026-11-09)
+
+The Claude Code conversations aOS keeps reachable for the Claude app (Docs/DESIGN.md, "Keeping conversations
+reachable"), as the Mac's settings list them: the last week (or `keepHours`, if longer) and the pinned ones, pinned
+first, then by the person's last activity, at most 40 besides the pinned ones, no automation (`sdk-cli`). AOSKit
+`CompanionChats`; on the iPhone the Overview's Chats card (iOS/Sources/Overview/ChatsCard.swift).
+
+- `{"id":11,"op":"chats.list"}` -> `{"id":11,"ok":true,"chats":{...},"status":{...}}` with
+  `{"enabled":true,"automatic":true,"terminal":false,"hours":48,"max":6,"running":2,"restart":true,"list":[...]}`
+  (`enabled`: "Keep conversations reachable" is on; `restart`: aos-session's keeper takes the restart command) and per
+  chat `{"id":"<session id>","title":"...","folder":"~/Developer/annex","origin":"app|terminal|other",
+  "activity":"<ISO: the person's last prompt or answer>","pinned":false,"skipped":false}` plus, while the keeper has
+  it, `"state":"running|starting|openElsewhere|waitingForNetwork|needsAttention|failed|folderMissing"`, `"detail"`
+  (English), `"note":"app|terminal|elsewhere|signIn|question|exiting|restarting"` (the detail as a code the phone
+  words itself) and `"since"`, or else `"reason":"off|skipped|archived|scheduled|remoteControlOff|ownSession|
+  automation|onlyPinned|terminal|noRemoteControl|inactive|overLimit"` (`SessionKeeper.reason`, the selection's own
+  rules). Neither: kept by the rules, the keeper hasn't started it yet.
+- `chats.pin`, `chats.unpin`, `chats.skip` (stop: never keep it, the keeper ends it if it runs), `chats.unskip` (keep
+  it again), each with the chat's id in `text` (signed; anything but a session id is refused). They go through
+  `MacControls.changeConversation`, which the app implements as its settings' pin and skip; the keeper follows the
+  settings within a second. The answer has the new list (the new choice; the keeper's state a moment later, so the
+  phone reads it again after 2 and 7 s).
+- `chats.restart` (text: the id): the keeper starts its copy again (`no-keeper` when it doesn't run or keeping is off,
+  `keeper-old` when aos-session is from before this, `not-kept` when the keeper has no running copy of it).
+- The event `{"event":"chats"}`: a chat started, ended or changed its state on the Mac (the app sees it in
+  run/keeper.json); the phone reads the list again.
+
+The phone shows the card when `hello` lists `chats.list`; with an older Mac it keeps the AOS card's count of kept
+conversations (`kept` in `mac.status`). An older phone ignores the event and the ops it doesn't know.
 
 ## Terminal sessions
 
@@ -386,7 +417,7 @@ Chrome, so a filled password can't be read back.
   Screen Sharing's session code with its Go library libsharing, GRDB, swift-perception, swift-atomics). Widget
   extension `AOSWidgets` (`dev.marquart.aos.ios.widgets`): the Live Activity of the open terminals.
 - Tabs: Overview (Mac with battery, lid, display and staying awake, requests, workspace, aOS's Claude Code session and
-  Bitwarden, with their actions), Terminal (the Mac's sessions, which survive the connection: New Session, switching,
+  Bitwarden, the chats aOS keeps reachable, with their actions), Terminal (the Mac's sessions, which survive the connection: New Session, switching,
   ending), Screen (built only while it is the tab on screen); settings from the Overview.
 - German and English (string catalogs), German first for Max.
 - Trust in the design: what is where, said plainly ("Your passwords stay in Bitwarden. You approve every sign-in with
