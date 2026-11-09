@@ -252,6 +252,18 @@ the first line's baseline (the eye was wider than the others and pushed its text
 
 Note for the screen tab: a workspace started from the phone reports `running` (no agent lease), not `open`.
 
+**Starting and closing the workspace** (Max, 2026-11-09: after Close the progress went away at once, the card looked
+as if nothing happened, and only later the workspace closed). aOS on the Mac answers `workspace.start` and
+`workspace.stop` at once, with the state before, and starts or closes the workspace afterwards (a close first ends the
+agent's lease, so `open` becomes `running`, then `closing`, `stopped`). `MacConnection.workspaceOperation`
+(`WorkspaceOperation`) keeps it under way until the Mac reports `running`/`open` (start) or `stopped` (close), shared
+by the Overview and the Screen tab: the state shows "Starting" or "Closing" meanwhile, with progress and without Start
+or Close, and the Mac's status is asked every 3 s besides its events. A start ends with `failed` only when the state
+changed since (a start after a failure first sees the old `failed`); the card then shows the Mac's error. After 5
+minutes (start) or 3 (close), counted only while the Mac answers, the cards say it didn't start or close in that time
+(`workspaceTimeout`, gone with the next start or close, or once the workspace gets there). A refusal ends it at once.
+The demo's mock moves the workspace the same way, a step every 2 s. Tests: `WorkspaceOperationTests`.
+
 **The tab bar** (Max, 2026-11-07: it was gone after a reload). The terminal hides it while it is shown and the Screen
 tab while its screen is in full screen (`.toolbar(.hidden, for: .tabBar)`). The Screen tab, kept alive behind the
 others by the TabView, started its screen by itself when the Mac came back or the workspace opened (its `onChange`
@@ -314,6 +326,7 @@ login goes to `onLoginRefused`); the thumbnail goes to aOS (`onThumbnail`) inste
 `picturesFollowWindow` (a picture in the window's shape, virtual display or aOS's display, follows the iPhone in every
 orientation; OSS turns the iPhone to landscape for a Mac's virtual display); OSS's resolution command for the
 workspace too, `onResolutionScale`; `onDirectPathFailed` (below); `RemoteScreenUIView.focus(on:)` for help requests;
+the keyboard's frame from its notifications (below, "The keyboard");
 caches in `Caches/Screen`; an in-memory store for the demo; the settings page; "Controls" for OSS's "Control" menu
 (one string table: "Control" is the terminal's key). Taken in addition on 2026-11-07: `Home/ComputerCard.swift` (with
 `ComputerAvailability` from its availability monitor) and `Model/DeviceAppearance.swift`. `Bridge/ScreenClient.swift`
@@ -323,15 +336,18 @@ is aOS's interface (`ScreenClientSession`, `ScreenClientView`, `ScreenCard`, `Sc
 **The Screen tab** (`ScreenTab`): OSS's selection view with two cards, the workspace and the Mac: the last picture
 (16:10, OSS's thumbnail; the device's icon before there is one), a dot that is green while the screen can be reached
 (the Mac: connected; the workspace: connected and `open` or `running`), the name and one line (the workspace's state;
-the Mac's "Last connected ..."). One column on an iPhone held upright, two otherwise.
+the Mac's "Last connected ..."). One column on an iPhone held upright, two otherwise. While a screen connects, a spinner
+sits in the middle of its card's picture (an overlay in the picture's 16:10 shape at the card's top; centered on the
+whole card it sat below the middle, Max 2026-11-09).
 - **Nothing connects by itself**: a tap on a card connects that screen (the other one lets go). Taps elsewhere count
   too: the overview's "Show the screen" and a help request opened in the overview set `screenTarget`, which asks the
   tab once (`screenRequest`). A help request that arrives while the app is open only opens the tab, with a banner
   ("Show the workspace", "Done"); the workspace connects on that tap.
 - A closed workspace: its card asks "Start and show" (`workspace.start`, then it connects once it runs); under the card
   Start or Close (`workspace.start`, `workspace.stop`, signed, with the overview's confirmation while an agent uses
-  it). The state as the overview reads it (mac.status, else the older status), polled every 15 s while the cards are
-  on screen.
+  it), under way until the Mac reports it done ("Starting and closing the workspace" above); a tap on the card while it
+  closes says to start it once it's closed. The state as the overview reads it (mac.status, else the older status),
+  polled every 15 s while the cards are on screen.
 - Failures stay as a banner above the cards until dismissed or the next tap. The Mac's login form is a sheet ("Save
   and connect" above the keyboard); the card's context menu has "Change login".
 - **Face ID: once per connect.** The Mac's login is read once per tap (Face ID, then the keychain item with that same
@@ -357,6 +373,26 @@ then from OSS's measured area; renewed every 20 s, `reset` when it stops); the M
 pictures then fill the screen and follow the iPhone when it turns (same toolbar: OSS's resolution command instead of
 fit and fill). A screen in its own size (the setting off, or the Mac through SSH) turns the iPhone to it as OSS does,
 with its toolbar in the letterbox. The resolution chosen in a session becomes the setting.
+
+**Upright, below the Dynamic Island** (Max, 2026-11-09: the Mac's menu bar under the Dynamic Island). The picture
+itself was right: in his screenshot (iPhone 16) it started at 59 pt, the top safe area, as `ScreenWindowTracker`'s
+area and the display's shape have it. What was wrong was OSS's toolbar: ScreenTab wrapped the session in
+`.ignoresSafeArea()`, so the toolbar inside it saw no safe area and sat at the very top, its handle behind the Dynamic
+Island (under a Live Activity there it can't be tapped), its open bar (44 to 88 pt) over the menu bar. The session
+view lies in the safe area now, as in OSS (its own view spreads the picture over the whole screen): the handle starts at
+the picture's top edge (a small glass capsule in the middle of the menu bar, as in OSS on its side) and the open bar
+comes below it, so the menu bar stays visible. On its side the top safe area is 0: as before. `ScreenLayoutTests`.
+
+**The keyboard** (Max, 2026-11-09: the Mac's login password field stayed behind the keyboard). OSS lifts the picture
+while its keyboard is up so the pointer (where a tap clicks, so where one types) stays 48 pt above the keyboard, at
+most until the picture's bottom reaches the keyboard; moving the pointer lower lifts it further, and it goes back when
+the keyboard closes. It read the keyboard from the view's `keyboardLayoutGuide`, which in aOS's tab (TabView,
+NavigationStack, the session inside) stayed at the bottom while the keyboard was up (simulator: keyboard at 475, guide
+at 874), so nothing lifted; a plain view in the same window, or the guide in a fresh SwiftUI hierarchy, followed it.
+aOS's change in `RemoteScreenUIView` reads the keyboard's frame from `keyboardWillChangeFrame`/`WillHide` instead
+(`ScreenLayoutTests`). Screen sharing doesn't tell where the text cursor is (libsharing has no such message): on the
+Mac's login window the password field has the focus while the pointer may be elsewhere; dragging the pointer down to
+the field brings the picture up with it.
 
 **A session** (`ScreenSession`, `ScreenRoute`, `ScreenPath`): one per screen, one at a time.
 - Workspace: `CompanionClient.workspaceLogin()` (sealed, `ScreenSeal`) gives the VM's address, port and account;
@@ -510,6 +546,11 @@ would still need the screen sharing login).
   workspace or Mac, nor on a device: high performance and the virtual display (no Mac here), rotation with a virtual
   display, the keyboard bar, pointer lock with a mouse, background and return, the pictures' file protection (the
   simulator keeps no protection classes).
+- From 2026-11-09, checked in the simulator only: the toolbar at the picture's top edge (and on its side, which the
+  simulator wasn't turned to), the picture lifting above the keyboard, the spinner on the cards, starting and closing
+  the workspace against the real Mac (its timing; a Close in the moment the VM itself is still starting may do nothing
+  on the Mac, `WorkspaceController.close()` returns unless the VM runs: the phone then says after 3 minutes that it
+  didn't close).
 - Local network denial is detected for pairing (NWConnection path); for SSH (NIO on Network.framework) it shows as
   "not reachable" with the hint about Tailscale and the local network setting.
 - aOS's Tailscale: not run against Tailscale's real coordination server (no account here) nor on a device: the

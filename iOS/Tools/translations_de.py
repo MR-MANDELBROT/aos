@@ -654,6 +654,12 @@ DE.update({
         'Der Hintergrunddienst von aOS hat den Mac nicht rechtzeitig losgelassen. Versuch es gleich noch einmal.',
     "The workspace isn't set up yet. Finish the setup in aOS on the Mac.":
         'Der Arbeitsplatz ist noch nicht eingerichtet. Schließ die Einrichtung in aOS auf dem Mac ab.',
+    "The workspace didn't start within 5 minutes. Look at aOS on the Mac.":
+        'Der Arbeitsplatz ist nach 5 Minuten noch nicht gestartet. Sieh in aOS auf dem Mac nach.',
+    "The workspace didn't close within 3 minutes. Look at aOS on the Mac.":
+        'Der Arbeitsplatz ist nach 3 Minuten noch nicht geschlossen. Sieh in aOS auf dem Mac nach.',
+    "The workspace is closing. Start it again once it's closed.":
+        'Der Arbeitsplatz wird gerade geschlossen. Starte ihn wieder, sobald er zu ist.',
     "aOS's background process isn't running on the Mac, so there is no Claude Code session to restart.":
         'Der Hintergrundprozess von aOS läuft auf dem Mac nicht, also gibt es keine Claude-Code-Sitzung zum Neustarten.',
     # Workspace
