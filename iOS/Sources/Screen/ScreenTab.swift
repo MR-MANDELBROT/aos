@@ -25,10 +25,13 @@ struct ScreenTab: View {
         NavigationStack {
             Group {
                 if let session = shown, let client = session.client {
+                    // In the safe area, as in Open Screen Sharing: its session view spreads the picture's view over
+                    // the whole screen itself (the picture starts below the top safe area upright) and keeps its
+                    // toolbar in the safe area, at the picture's top edge. Ignoring the safe area here as well put the
+                    // toolbar behind the Dynamic Island and its open bar over the Mac's menu bar.
                     ScreenClientView(session: client) { [weak client] in
                         if let client { session.closed(client) }
                     }
-                    .ignoresSafeArea()
                     .overlay(alignment: .top) {
                         helpBanner(over: session.target, toolbarOpen: client.isToolbarVisible, barBottom: client.toolbarBarBottom)
                     }
