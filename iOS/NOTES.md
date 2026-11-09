@@ -323,7 +323,9 @@ is aOS's interface (`ScreenClientSession`, `ScreenClientView`, `ScreenCard`, `Sc
 **The Screen tab** (`ScreenTab`): OSS's selection view with two cards, the workspace and the Mac: the last picture
 (16:10, OSS's thumbnail; the device's icon before there is one), a dot that is green while the screen can be reached
 (the Mac: connected; the workspace: connected and `open` or `running`), the name and one line (the workspace's state;
-the Mac's "Last connected ..."). One column on an iPhone held upright, two otherwise.
+the Mac's "Last connected ..."). One column on an iPhone held upright, two otherwise. While a screen connects, a spinner
+sits in the middle of its card's picture (an overlay in the picture's 16:10 shape at the card's top; centered on the
+whole card it sat below the middle, Max 2026-11-09).
 - **Nothing connects by itself**: a tap on a card connects that screen (the other one lets go). Taps elsewhere count
   too: the overview's "Show the screen" and a help request opened in the overview set `screenTarget`, which asks the
   tab once (`screenRequest`). A help request that arrives while the app is open only opens the tab, with a banner
