@@ -177,6 +177,7 @@ public final class SessionSupervisor: @unchecked Sendable {
         }
         args += ["--remote-control", settings.sessionName]
         if !settings.sessionEffort.isEmpty { args += ["--effort", settings.sessionEffort] }
+        if !settings.sessionPermissionMode.isEmpty { args += ["--permission-mode", settings.sessionPermissionMode] }
         self.folder = folder
         spawn(args, folder: folder, settings: settings)
     }

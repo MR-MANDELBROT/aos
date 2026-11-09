@@ -32,6 +32,12 @@ struct SessionSettingsSections: View {
                 Text("Extra high").tag("xhigh")
                 Text("Max").tag("max")
             }
+            Picker("Permissions", selection: binding(\.sessionPermissionMode)) {
+                Text("Claude Code's default").tag("")
+                Text("Auto (Claude Code decides)").tag("auto")
+                Text("Accept edits").tag("acceptEdits")
+                Text("Plan only").tag("plan")
+            }
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text("Environment files")
