@@ -164,8 +164,10 @@ charge, thermal state, external screens, whether Cloupi is on the Mac, and wheth
     opens, a screen is connected, input arrives, the setting changes or aOS quits. Never frozen: aOS, Claude (the
     desktop app hosts Claude Code sessions), Cloupi, Finder and the system's tools, terminals and code editors
     (agents, Claude Code and builds run there), password managers, VPNs (the iPhone reaches the Mac through them),
-    file providers (a frozen one hangs every program that opens its files), keyboard and mouse tools, and any app
-    with `claude` or `aos-mcp` (an agent using the workspace) in its process tree. Menu bar apps are left as they
+    file providers (a frozen one hangs every program that opens its files), keyboard and mouse tools, Apple's apps
+    that agents' tools automate through Apple Events (Mail, Notes, Calendar, Reminders, Contacts, Messages; a frozen
+    Mail made Cloupi's mail tool time out), and any app with `claude` or `aos-mcp` (an agent using the workspace) in
+    its process tree. Menu bar apps are left as they
     are, and so are processes someone else stopped.
   - **Never left frozen**: the record `run/frozen.json` (pids with start times, and the process that froze them) is
     written before the first signal, and nothing is signalled whose start time doesn't match. aOS thaws what it lists
