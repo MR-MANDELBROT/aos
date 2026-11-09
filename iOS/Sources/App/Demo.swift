@@ -8,7 +8,8 @@ import UniformTypeIdentifiers
 
 /// Sample data for screenshots and UI work: start the app with `-AOSDemo YES` (debug builds only).
 /// `-AOSDemoTab overview|terminal|screen` picks the tab, `-AOSDemoSheet signin|signin-code|signin-none|signin-locked|
-/// signin-off|approval|help|pairing|settings|lock|requests` opens a request or sheet. Nothing here touches the keychain
+/// signin-off|approval|help|pairing|settings|lock|requests|chat` opens a request or sheet (`chat`: a chat's page, with
+/// `-AOSDemoScroll bottom` to see the Chats card under it; `-AOSDemoChats off|old` below). Nothing here touches the keychain
 /// or the network; the Screen tab's pictures come from a screen sharing server in the app (`DemoScreenServer`), shown
 /// with the real screen client.
 enum Demo {
@@ -68,6 +69,12 @@ enum Demo {
         }
         if let display = UserDefaults.standard.string(forKey: "AOSDemoDisplay") {
             server.update { $0.macStatus["display"] = .object(["state": .string(display), "external": .number(0)]) }
+        }
+        // -AOSDemoChats off|old: keeping chats reachable is off on the Mac, or its keeper can't restart single chats.
+        switch UserDefaults.standard.string(forKey: "AOSDemoChats") {
+        case "off": server.update { $0.chatsEnabled = false }
+        case "old": server.update { $0.chatsRestart = false }
+        default: break
         }
         connection.startDemo(server)
         // -AOSDemoSleeping YES: put to sleep from here a moment ago.
