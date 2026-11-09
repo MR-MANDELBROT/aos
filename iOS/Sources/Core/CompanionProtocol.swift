@@ -321,6 +321,18 @@ enum WorkspaceState: Equatable, Sendable {
 
     /// Its screen can be shown (with or without an agent's session).
     var isViewable: Bool { self == .open || self == .running }
+
+    /// As the Mac names it (the name `mac.status` uses too).
+    var name: String {
+        switch self {
+        case .stopped: "stopped"
+        case .starting: "starting"
+        case .running: "running"
+        case .open: "open"
+        case .closing: "closing"
+        case .other(let name): name
+        }
+    }
 }
 
 /// A sign-in the agent asks for. Shown to the person, who approves or declines it.

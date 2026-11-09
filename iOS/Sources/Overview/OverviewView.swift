@@ -639,10 +639,11 @@ struct WorkspaceCard: View {
                     }
                 }
                 if live { buttons }
-                ProblemLine(text: actions.problem)
+                ProblemLine(text: actions.problem ?? connection.workspaceTimeout?.timeoutText)
             }
         }
         .animation(.snappy(duration: 0.2), value: actions.problem)
+        .animation(.snappy(duration: 0.2), value: connection.workspaceTimeout)
         .confirmationDialog("Close the workspace?", isPresented: $confirmClose, titleVisibility: .visible) {
             Button("Close", role: .destructive) { actions.run(.workspaceStop, on: connection) }
         } message: {
@@ -654,18 +655,9 @@ struct WorkspaceCard: View {
         }
     }
 
-    /// The state as the Mac reports it: mac.status if this Mac knows it, else the older status.
-    private var state: String {
-        if let state = connection.macStatus?.workspace?.state { return state }
-        switch connection.workspace?.state {
-        case .open: return "open"
-        case .running: return "running"
-        case .starting: return "starting"
-        case .closing: return "closing"
-        case .stopped, nil: return "stopped"
-        case .other(let raw): return raw
-        }
-    }
+    /// The state as the Mac reports it (mac.status if this Mac knows it, else the older status), "starting" or
+    /// "closing" while a start or close from here is under way.
+    private var state: String { connection.workspaceState ?? "stopped" }
 
     /// aOS on the Mac answers now (not while the Mac sleeps or the connection is gone): only then the workspace's
     /// state counts, and its buttons.
@@ -682,7 +674,8 @@ struct WorkspaceCard: View {
                     Label("Show the screen", systemImage: "display")
                 }
             }
-            if connection.macStatus != nil, ready {
+            // Not while a start or close from here is under way: until the Mac reports it done, the progress shows.
+            if connection.macStatus != nil, ready, connection.workspaceOperation == nil {
                 if state == "stopped" || state == "failed" {
                     Button {
                         actions.run(.workspaceStart, on: connection)
@@ -698,7 +691,7 @@ struct WorkspaceCard: View {
                     }
                 }
             }
-            if actions.running != nil { ProgressView().controlSize(.small) }
+            if actions.running != nil || connection.workspaceOperation != nil { ProgressView().controlSize(.small) }
         }
         .buttonStyle(.glass)
         .disabled(actions.running != nil)

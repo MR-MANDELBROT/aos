@@ -134,3 +134,92 @@ struct MacStatusTests {
         #expect(try await old.hello(app: "1", device: "d").features.isEmpty)
     }
 }
+
+/// Starting and closing the workspace from the iPhone: under way until the Mac reports it done (it answers at once,
+/// with the state before), failed, or too slow.
+struct WorkspaceOperationTests {
+    @Test func aCloseIsDoneWhenTheWorkspaceIsClosedNotWhenTheMacAnswers() {
+        var close = WorkspaceOperation(.stop, from: "open")
+        #expect(close.observe("open") == .underWay, "the answer: the state before")
+        #expect(close.observe("running") == .underWay, "the agent's lease ended first")
+        #expect(close.observe("closing") == .underWay)
+        #expect(close.observe("stopped") == .done)
+        #expect(close.shownState == "closing")
+    }
+
+    @Test func aStartIsDoneWhenItRunsAndFailsOnlyWithANewFailure() {
+        var start = WorkspaceOperation(.start, from: "stopped")
+        #expect(start.observe("stopped") == .underWay)
+        #expect(start.observe("starting") == .underWay)
+        #expect(start.observe("running") == .done)
+        var forAgent = WorkspaceOperation(.start, from: "stopped")
+        #expect(forAgent.observe("open") == .done)
+        // Started again after it failed: the old failure is no result, a new one is
+        var again = WorkspaceOperation(.start, from: "failed")
+        #expect(again.observe("failed") == .underWay)
+        #expect(again.observe("starting") == .underWay)
+        #expect(again.observe("failed") == .failed)
+        var quick = WorkspaceOperation(.start, from: "stopped")
+        #expect(quick.observe("failed") == .failed, "failed before the phone saw it start")
+        #expect(start.shownState == "starting")
+    }
+
+    @Test func itTakesMinutesAtMost() {
+        let then = Date(timeIntervalSince1970: 1_000_000)
+        var start = WorkspaceOperation(.start, from: "stopped", since: then)
+        #expect(start.observe("starting", at: then.addingTimeInterval(4 * 60 + 59)) == .underWay)
+        #expect(start.observe("starting", at: then.addingTimeInterval(5 * 60)) == .timedOut)
+        var close = WorkspaceOperation(.stop, from: "running", since: then)
+        #expect(close.observe("running", at: then.addingTimeInterval(3 * 60)) == .timedOut)
+        // In the simulator's language: the minutes are what count
+        #expect(close.timeoutText.contains("3") && start.timeoutText.contains("5"))
+        #expect(close.arrived(at: "stopped"))
+    }
+
+    @Test func onlyStartAndCloseAreOperations() {
+        #expect(WorkspaceOperation(.workspaceStart, from: nil)?.kind == .start)
+        #expect(WorkspaceOperation(.workspaceStop, from: nil)?.kind == .stop)
+        #expect(WorkspaceOperation(.displayOff, from: nil) == nil)
+    }
+
+    /// The cards' state against a Mac that starts and closes the workspace after answering (the demo's mock, as aOS on
+    /// the Mac): never the state before while it is under way, nothing to tap twice.
+    @MainActor
+    @Test func theCardsDontJumpBackWhileTheMacIsAtIt() async throws {
+        let server = MockCompanionServer()
+        server.update { $0.workspaceStep = .milliseconds(400) }
+        let connection = MacConnection(mac: Demo.content().mac, key: DeviceKey.ephemeral(), signer: nil,
+                                       deviceName: "Test iPhone")
+        connection.startDemo(server)
+        try await waitUntil { connection.companionState == .ready }
+        await connection.refreshMacStatus()
+        #expect(connection.workspaceState == "open")
+
+        try await connection.perform(.workspaceStop)
+        #expect(connection.reportedWorkspaceState == "open", "the Mac's answer: the state before")
+        #expect(connection.workspaceOperation?.kind == .stop)
+        var seen: [String] = []
+        try await waitUntil {
+            if let state = connection.workspaceState, seen.last != state { seen.append(state) }
+            return connection.workspaceOperation == nil
+        }
+        #expect(seen == ["closing", "stopped"])
+        #expect(connection.workspaceTimeout == nil)
+
+        try await connection.perform(.workspaceStart)
+        #expect(connection.workspaceState == "starting")
+        seen = []
+        try await waitUntil {
+            if let state = connection.workspaceState, seen.last != state { seen.append(state) }
+            return connection.workspaceOperation == nil
+        }
+        #expect(seen == ["starting", "running"])
+
+        // Refused: nothing under way, the refusal is what the card shows
+        server.update { $0.refuse["workspace.stop"] = "Not now." }
+        await #expect(throws: MacRefusal.self) { try await connection.perform(.workspaceStop) }
+        #expect(connection.workspaceOperation == nil)
+        #expect(connection.workspaceState == "running")
+        connection.stop()
+    }
+}

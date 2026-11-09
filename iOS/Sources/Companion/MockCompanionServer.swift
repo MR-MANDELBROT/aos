@@ -22,6 +22,10 @@ final class MockCompanionServer: @unchecked Sendable {
         var macStatus = MockCompanionServer.demoMacStatus
         /// The Mac is older and doesn't know the Overview's ops.
         var oldMac = false
+        /// As aOS on the Mac: `workspace.start` and `workspace.stop` answer with the state before, then the workspace
+        /// starts or closes, a step (`starting` then `running`, `closing` then `stopped`) per this time, each with its
+        /// event. Nil: at once, in the answer.
+        var workspaceStep: Duration?
         /// The phone the Mac knows: with it set, every request must be signed by that phone, as aOS on the Mac
         /// checks it (refused with "pair-again" without, "invalid" for a bad signature or a nonce seen before).
         var trustedPhone: TrustedSigner?
@@ -156,7 +160,7 @@ final class MockCompanionServer: @unchecked Sendable {
                 body["features"] = .array((MacAction.allCases.map(\.rawValue) + ["term"]).map { .string($0) })
             }
         case "status":
-            var workspace: [String: JSONValue] = ["state": .string(Self.raw(state.workspace.state)),
+            var workspace: [String: JSONValue] = ["state": .string(state.workspace.state.name),
                                                   "purpose": .string(state.workspace.purpose)]
             if let until = state.workspace.until { workspace["until"] = .string(ISO8601.format(until)) }
             body["workspace"] = .object(workspace)
@@ -233,14 +237,14 @@ final class MockCompanionServer: @unchecked Sendable {
             switch action {
             case .stayAwake:
                 if let value { set("awake", "setting", .string(value)); set("awake", "holding", .bool(value == "lidClosed")) }
-            case .workspaceStart:
-                set("workspace", "state", .string("starting"))
-            case .workspaceStop:
-                set("workspace", "state", .string("stopped"))
-                if var w = status["workspace"]?.object {
-                    w["purpose"] = nil
-                    w["until"] = nil
-                    status["workspace"] = .object(w)
+            case .workspaceStart, .workspaceStop:
+                let start = action == .workspaceStart
+                if let step = state.workspaceStep {
+                    // The answer carries the state before; the workspace moves on afterwards
+                    moveWorkspace(through: start ? ["starting", "running"] : ["closing", "stopped"], every: step)
+                } else {
+                    Self.setWorkspace(start ? "starting" : "stopped", in: &state)
+                    status = state.macStatus
                 }
             case .bitwardenLock:
                 set("bitwarden", "state", .string("locked"))
@@ -257,6 +261,31 @@ final class MockCompanionServer: @unchecked Sendable {
             }
             state.macStatus = status
             return status
+        }
+    }
+
+    /// The workspace in another state, in both statuses (`status` and `mac.status`); closed, it has no purpose.
+    private static func setWorkspace(_ name: String, in state: inout State) {
+        var workspace = state.macStatus["workspace"]?.object ?? [:]
+        workspace["state"] = .string(name)
+        state.workspace.state = WorkspaceState(name)
+        if name == "stopped" {
+            workspace["purpose"] = nil
+            workspace["until"] = nil
+            state.workspace.purpose = ""
+            state.workspace.until = nil
+        }
+        state.macStatus["workspace"] = .object(workspace)
+    }
+
+    /// Starts or closes the workspace after the answer, as aOS on the Mac: a state per step, each with its event.
+    private func moveWorkspace(through states: [String], every step: Duration) {
+        Task {
+            for name in states {
+                try? await Task.sleep(for: step)
+                update { Self.setWorkspace(name, in: &$0) }
+                emit(.workspace(WorkspaceState(name)))
+            }
         }
     }
 
@@ -367,20 +396,9 @@ final class MockCompanionServer: @unchecked Sendable {
         case .mac(let state, let detail):
             return encode(["event": .string("mac"), "state": .string(state), "detail": .string(detail)])
         case .workspace(let state):
-            return encode(["event": .string("workspace"), "state": .string(raw(state))])
+            return encode(["event": .string("workspace"), "state": .string(state.name)])
         case .subscriptionEnded:
             return encode(["event": .string("subscription"), "state": .string("ended")])
-        }
-    }
-
-    static func raw(_ state: WorkspaceState) -> String {
-        switch state {
-        case .stopped: "stopped"
-        case .starting: "starting"
-        case .running: "running"
-        case .open: "open"
-        case .closing: "closing"
-        case .other(let s): s
         }
     }
 

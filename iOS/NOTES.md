@@ -252,6 +252,18 @@ the first line's baseline (the eye was wider than the others and pushed its text
 
 Note for the screen tab: a workspace started from the phone reports `running` (no agent lease), not `open`.
 
+**Starting and closing the workspace** (Max, 2026-11-09: after Close the progress went away at once, the card looked
+as if nothing happened, and only later the workspace closed). aOS on the Mac answers `workspace.start` and
+`workspace.stop` at once, with the state before, and starts or closes the workspace afterwards (a close first ends the
+agent's lease, so `open` becomes `running`, then `closing`, `stopped`). `MacConnection.workspaceOperation`
+(`WorkspaceOperation`) keeps it under way until the Mac reports `running`/`open` (start) or `stopped` (close), shared
+by the Overview and the Screen tab: the state shows "Starting" or "Closing" meanwhile, with progress and without Start
+or Close, and the Mac's status is asked every 3 s besides its events. A start ends with `failed` only when the state
+changed since (a start after a failure first sees the old `failed`); the card then shows the Mac's error. After 5
+minutes (start) or 3 (close), counted only while the Mac answers, the cards say it didn't start or close in that time
+(`workspaceTimeout`, gone with the next start or close, or once the workspace gets there). A refusal ends it at once.
+The demo's mock moves the workspace the same way, a step every 2 s. Tests: `WorkspaceOperationTests`.
+
 **The tab bar** (Max, 2026-11-07: it was gone after a reload). The terminal hides it while it is shown and the Screen
 tab while its screen is in full screen (`.toolbar(.hidden, for: .tabBar)`). The Screen tab, kept alive behind the
 others by the TabView, started its screen by itself when the Mac came back or the workspace opened (its `onChange`
@@ -333,8 +345,9 @@ whole card it sat below the middle, Max 2026-11-09).
   ("Show the workspace", "Done"); the workspace connects on that tap.
 - A closed workspace: its card asks "Start and show" (`workspace.start`, then it connects once it runs); under the card
   Start or Close (`workspace.start`, `workspace.stop`, signed, with the overview's confirmation while an agent uses
-  it). The state as the overview reads it (mac.status, else the older status), polled every 15 s while the cards are
-  on screen.
+  it), under way until the Mac reports it done ("Starting and closing the workspace" above); a tap on the card while it
+  closes says to start it once it's closed. The state as the overview reads it (mac.status, else the older status),
+  polled every 15 s while the cards are on screen.
 - Failures stay as a banner above the cards until dismissed or the next tap. The Mac's login form is a sheet ("Save
   and connect" above the keyboard); the card's context menu has "Change login".
 - **Face ID: once per connect.** The Mac's login is read once per tap (Face ID, then the keychain item with that same
@@ -533,6 +546,11 @@ would still need the screen sharing login).
   workspace or Mac, nor on a device: high performance and the virtual display (no Mac here), rotation with a virtual
   display, the keyboard bar, pointer lock with a mouse, background and return, the pictures' file protection (the
   simulator keeps no protection classes).
+- From 2026-11-09, checked in the simulator only: the toolbar at the picture's top edge (and on its side, which the
+  simulator wasn't turned to), the picture lifting above the keyboard, the spinner on the cards, starting and closing
+  the workspace against the real Mac (its timing; a Close in the moment the VM itself is still starting may do nothing
+  on the Mac, `WorkspaceController.close()` returns unless the VM runs: the phone then says after 3 minutes that it
+  didn't close).
 - Local network denial is detected for pairing (NWConnection path); for SSH (NIO on Network.framework) it shows as
   "not reachable" with the hint about Tailscale and the local network setting.
 - aOS's Tailscale: not run against Tailscale's real coordination server (no account here) nor on a device: the

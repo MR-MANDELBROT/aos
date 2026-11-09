@@ -61,6 +61,8 @@ enum Demo {
         ScreenClient.useMemoryStore()
         ScreenPictures.shared = ScreenPictures(directory: nil)
         let server = MockCompanionServer()
+        // Starting and closing the workspace take a moment, as on the Mac.
+        server.update { $0.workspaceStep = .seconds(2) }
         // -AOSDemoSession needsLogin: Claude Code on the Mac waits for a sign-in (the Overview says what to do).
         // -AOSDemoDisplay off|none: the Mac's display asleep, or no screen (the lid closed, no monitor).
         if UserDefaults.standard.string(forKey: "AOSDemoSession") == "needsLogin" {
