@@ -113,6 +113,8 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
 
     /// Exit when nothing is held or running for this long; launchd starts the helper again with the next message.
     static let idleExitSeconds: TimeInterval = 120
+    /// An update with the lid closed: the new helper keeps the Mac awake at least this long without the app.
+    static let handoverSeconds: TimeInterval = 300
     /// Recovery steps at most this often (network care asks for them; this is the helper's own brake).
     static let recoveryIntervalSeconds: TimeInterval = 240
 
@@ -162,6 +164,21 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         let fm = FileManager.default
         try? fm.createDirectory(at: supportFolder, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o755])
         if fm.fileExists(atPath: holdMarker.path) {
+            // Handed over by the helper of the previous version (aOS was updated with the lid closed): hold on until
+            // the lease it carried, the app renews it from here.
+            if let data = fm.contents(atPath: holdMarker.path),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let handover = json["handover"] as? Double, Date(timeIntervalSince1970: handover) > Date(),
+               !CloupiPresence.detect(), sleepDisabled() == 1 {
+                holding = true
+                ownsHold = true
+                lastSleepDisabled = 1
+                leaseUntil = Date(timeIntervalSince1970: handover)
+                let marker = "{\"since\":\(Int(Date().timeIntervalSince1970)),\"pid\":\(getpid())}"
+                try? Data(marker.utf8).write(to: holdMarker)
+                log("took over the hold of the previous helper (lease until \(leaseUntil!))")
+                return cleanUpWiFiMarker()
+            }
             if CloupiPresence.detect() {
                 log("marker of an earlier hold found; Cloupi manages sleep now, pmset left alone")
             } else {
@@ -170,11 +187,26 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
             }
             try? fm.removeItem(at: holdMarker)
         }
+        cleanUpWiFiMarker()
+    }
+
+    private func cleanUpWiFiMarker() {
+        let fm = FileManager.default
         if fm.fileExists(atPath: wifiMarker.path) {
             let r = run("/usr/sbin/networksetup", ["-setairportpower", WiFiRadio.interfaceName, "on"])
             log("Wi-Fi was left off by an earlier run: switched on (\(r.ok ? "done" : "failed: \(r.output)"))")
             try? fm.removeItem(at: wifiMarker)
         }
+    }
+
+    /// aOS is being updated while this helper holds the Mac awake: disablesleep stays, the marker carries the lease
+    /// to the new helper (`cleanUpEarlierRun`). Should no helper start before the next boot, that start undoes it.
+    private func handOverHold(until: Date) {
+        let marker = "{\"since\":\(Int(Date().timeIntervalSince1970)),\"pid\":\(getpid()),\"handover\":\(until.timeIntervalSince1970)}"
+        try? Data(marker.utf8).write(to: holdMarker)
+        holding = false
+        ownsHold = false
+        log("handing the hold over to the updated helper (lease until \(until))")
     }
 
     /// The program file this helper started from (its absolute path; launchd passes a relative one): an update of aOS
@@ -201,7 +233,13 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         // aOS was updated: make way for the new helper (the app's next call starts it), unless something runs that
         // can't be handed over (a Bitwarden sign-in, the workspace's attached disk).
         if ticks % 6 == 0 && replaced && !busy && !vaultHost.hasRunningLogin && !custody.isAttached {
-            if holding { endHold(reason: "updated helper takes over", touchPmset: !CloupiPresence.detect()) }
+            // With the lid closed the Mac would fall asleep in the gap until the new helper runs (the app's next call
+            // starts it): the hold goes over to it through the marker, for the lease and at least 5 minutes.
+            if holding, ownsHold, let until = leaseUntil, until > Date(), !CloupiPresence.detect() {
+                handOverHold(until: max(until, Date().addingTimeInterval(Self.handoverSeconds)))
+            } else if holding {
+                endHold(reason: "updated helper takes over", touchPmset: !CloupiPresence.detect())
+            }
             log("the app was updated, making way for the new helper")
             // The tailnet node is handed over: the new helper starts it again (from tailnet.json) at its first call.
             stopTailnetForExit()
