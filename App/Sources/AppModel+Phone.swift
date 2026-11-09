@@ -32,6 +32,10 @@ extension AppModel: MacControls {
         return nil
     }
 
+    func updateRoutines(_ change: (inout [Routine]) -> Void) {
+        update { change(&$0.routines) }
+    }
+
     static func helperName(_ status: SMAppService.Status) -> String {
         switch status {
         case .enabled: return "enabled"
