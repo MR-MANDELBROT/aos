@@ -13,6 +13,18 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     public var sessionName: String = Brand.defaultSessionName
     /// Keep the Claude Code session running in the background (only once it was set up).
     public var sessionEnabled: Bool = true
+    /// The folder the session works in (empty: aOS's own session folder). Another folder brings its own Claude Code
+    /// settings and tools (its .claude and .mcp.json); aOS changes nothing there.
+    public var sessionFolder: String = ""
+    /// Claude Code's effort for the session (`--effort`): low, medium, high, xhigh or max; empty: Claude Code's own.
+    public var sessionEffort: String = ""
+    public static let sessionEffortChoices = ["", "low", "medium", "high", "xhigh", "max"]
+    /// Files with `KEY=VALUE` lines for the session's environment (values are never shown or logged).
+    public var sessionEnvFiles: [String] = []
+    /// Sent into the session after each start (empty: nothing).
+    public var sessionStartMessage: String = ""
+    /// Prompts aOS sends into the session on a schedule.
+    public var routines: [Routine] = []
     /// Keep the Mac awake while something must stay reachable: not at all, while the lid is open (idle sleep
     /// prevented), or also with the lid closed (aOS's background helper; other apps freeze meanwhile).
     /// Settings written before this existed carry `keepAwake` (true: while the lid is open).
@@ -86,6 +98,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case reachWay
         case stayAwakeMinBattery
         case leaveHotspot
+        case sessionFolder, sessionEffort, sessionEnvFiles, sessionStartMessage, routines
     }
 
     /// Keys of earlier versions, read once and written in their new form.
@@ -127,6 +140,22 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         stayAwakeMinBattery = min(max(try c.decodeIfPresent(Int.self, forKey: .stayAwakeMinBattery) ?? d.stayAwakeMinBattery,
                                       0), 90)
         leaveHotspot = try c.decodeIfPresent(Bool.self, forKey: .leaveHotspot) ?? d.leaveHotspot
+        sessionFolder = try c.decodeIfPresent(String.self, forKey: .sessionFolder) ?? d.sessionFolder
+        let effort = try c.decodeIfPresent(String.self, forKey: .sessionEffort) ?? d.sessionEffort
+        sessionEffort = Self.sessionEffortChoices.contains(effort) ? effort : d.sessionEffort
+        sessionEnvFiles = try c.decodeIfPresent([String].self, forKey: .sessionEnvFiles) ?? d.sessionEnvFiles
+        sessionStartMessage = try c.decodeIfPresent(String.self, forKey: .sessionStartMessage) ?? d.sessionStartMessage
+        routines = (try? c.decodeIfPresent([Routine].self, forKey: .routines)) ?? d.routines
+    }
+
+    /// The folder the session works in: `sessionFolder` if it exists, else aOS's own session folder.
+    public func sessionDirectory(_ paths: Paths) -> URL {
+        let path = (sessionFolder as NSString).expandingTildeInPath
+        var isDir: ObjCBool = false
+        guard !path.isEmpty, FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
+            return paths.session
+        }
+        return URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL
     }
 
     /// The folder new chats from the Claude app start in.

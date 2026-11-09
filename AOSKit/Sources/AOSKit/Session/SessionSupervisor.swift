@@ -31,12 +31,23 @@ public final class SessionSupervisor: @unchecked Sendable {
     private var quickExits = 0
     private var startedAt = Date()
     private var recentText = ""
-    public var log: (String) -> Void = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) }
+    /// Restarts in the last 30 minutes (two of them: the conversation starts fresh, it may be the trouble).
+    private var recentStarts: [Date] = []
+    /// The folder the running session works in.
+    private var folder: URL?
+    private var messenger: SessionMessenger
+    private var messageTimer: DispatchSourceTimer?
+    public var log: (String) -> Void = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) } {
+        didSet { messenger.log = log }
+    }
 
     public static let columns: UInt16 = 120
     public static let rows: UInt16 = 40
 
-    public init(paths: Paths) { self.paths = paths }
+    public init(paths: Paths) {
+        self.paths = paths
+        messenger = SessionMessenger(paths: paths)
+    }
 
     public var statusURL: URL { paths.run.appendingPathComponent("session.json") }
     public var socketURL: URL { paths.run.appendingPathComponent("session.sock") }
@@ -69,7 +80,62 @@ public final class SessionSupervisor: @unchecked Sendable {
     public func run() {
         queue.async {
             self.startViewerSocket()
+            self.startMessenger()
             self.launch()
+        }
+    }
+
+    /// Routines, reminders and notes: every 10 s what is due goes into the queue, and the head of it into the
+    /// session while Claude Code waits for input.
+    private func startMessenger() {
+        messenger.ready = { [weak self] in
+            guard let self, self.child > 0, self.status.state == .running else { return false }
+            return ClaudeRegistry.entry(pid: self.child)?.status == "idle"
+        }
+        messenger.type = { [weak self] data, delay in
+            guard let self else { return }
+            let write = { [weak self] in
+                guard let self, self.master >= 0 else { return }
+                _ = data.withUnsafeBytes { Darwin.write(self.master, $0.baseAddress, data.count) }
+            }
+            if delay > 0 { self.queue.asyncAfter(deadline: .now() + delay, execute: write) } else { write() }
+        }
+        let t = DispatchSource.makeTimerSource(queue: queue)
+        t.schedule(deadline: .now() + 5, repeating: 10, leeway: .seconds(2))
+        t.setEventHandler { [weak self] in self?.messenger.tick() }
+        t.resume()
+        messageTimer = t
+    }
+
+    /// The conversation the session continues (run/session-conversation.json): its own, in its folder; never just
+    /// the newest conversation of the folder, which may be one the user started there in the Claude app.
+    private struct Conversation: Codable {
+        var folder: String
+        var id: String
+    }
+    private var conversationURL: URL { paths.run.appendingPathComponent("session-conversation.json") }
+
+    private func savedConversation(in folder: URL) -> String? {
+        guard let data = FileManager.default.contents(atPath: conversationURL.path),
+              let c = try? JSONDecoder().decode(Conversation.self, from: data), c.folder == folder.path,
+              UUID(uuidString: c.id) != nil, ClaudeConversations.find(c.id) != nil else { return nil }
+        return c.id
+    }
+
+    private func forgetConversation() { try? FileManager.default.removeItem(at: conversationURL) }
+
+    /// Notes the conversation of the running process (from Claude Code's registry, once it wrote it).
+    private func learnConversation(pid: pid_t, folder: URL, attempt: Int = 0) {
+        guard child == pid else { return }
+        if let id = ClaudeRegistry.entry(pid: pid)?.sessionId, UUID(uuidString: id) != nil {
+            if let data = try? JSONEncoder().encode(Conversation(folder: folder.path, id: id)) {
+                try? data.write(to: conversationURL, options: .atomic)
+            }
+            return
+        }
+        guard attempt < 20 else { return }
+        queue.asyncAfter(deadline: .now() + 15) { [weak self] in
+            self?.learnConversation(pid: pid, folder: folder, attempt: attempt + 1)
         }
     }
 
@@ -84,6 +150,7 @@ public final class SessionSupervisor: @unchecked Sendable {
             queue.asyncAfter(deadline: .now() + 10) { [weak self] in self?.launch() }
             return
         }
+        let folder = settings.sessionDirectory(paths)
         guard let claude = ClaudeCode.executable() else {
             setStatus(.missingClaude, "Claude Code is not installed")
             queue.asyncAfter(deadline: .now() + 30) { self.launch() }
@@ -94,12 +161,27 @@ public final class SessionSupervisor: @unchecked Sendable {
             queue.asyncAfter(deadline: .now() + 15) { self.launch() }
             return
         }
-        var args = [claude.path, "--remote-control", settings.sessionName]
-        if ClaudeCode.hasConversation(in: paths.session) { args.insert("--continue", at: 1) }
-        spawn(args)
+        // Twice in 30 minutes: start a fresh conversation (the old one may be what keeps it from running).
+        recentStarts = recentStarts.filter { Date().timeIntervalSince($0) < 1800 }
+        if recentStarts.count >= 2, savedConversation(in: folder) != nil {
+            log("session: restarted twice within 30 minutes, starting a fresh conversation")
+            forgetConversation()
+            recentStarts = []
+        }
+        var args = [claude.path]
+        if let id = savedConversation(in: folder) {
+            args += ["--resume", id]
+        } else if folder == paths.session.standardizedFileURL, ClaudeCode.hasConversation(in: folder) {
+            // aOS's own folder has only the session's conversations
+            args.append("--continue")
+        }
+        args += ["--remote-control", settings.sessionName]
+        if !settings.sessionEffort.isEmpty { args += ["--effort", settings.sessionEffort] }
+        self.folder = folder
+        spawn(args, folder: folder, settings: settings)
     }
 
-    private func environment() -> [String] {
+    private func environment(_ settings: AgentSettings) -> [String] {
         var env = ProcessInfo.processInfo.environment
         for k in ["ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
                   "CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT"] {
@@ -111,15 +193,26 @@ public final class SessionSupervisor: @unchecked Sendable {
         env["CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS"] = "0"
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         env["PATH"] = "\(home)/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        // The user's environment files (names logged, never values)
+        for file in settings.sessionEnvFiles {
+            let path = (file as NSString).expandingTildeInPath
+            guard let text = try? String(contentsOfFile: path, encoding: .utf8) else {
+                log("session: environment file \(file) not readable")
+                continue
+            }
+            let values = EnvironmentFile.parse(text)
+            for (k, v) in values where !["PATH", "HOME", "TERM"].contains(k) { env[k] = v }
+            log("session: \(values.count) values from \((file as NSString).lastPathComponent)")
+        }
         return env.map { "\($0.key)=\($0.value)" }
     }
 
-    private func spawn(_ args: [String]) {
+    private func spawn(_ args: [String], folder: URL, settings: AgentSettings) {
         setStatus(status.restarts == 0 ? .starting : .restarting)
         // Everything the child needs is prepared before fork: no allocation after it.
         let cArgs = args.map { strdup($0) } + [nil]
-        let cEnv = environment().map { strdup($0) } + [nil]
-        let cwd = strdup(paths.session.path)
+        let cEnv = environment(settings).map { strdup($0) } + [nil]
+        let cwd = strdup(folder.path)
         defer {
             cArgs.forEach { free($0) }
             cEnv.forEach { free($0) }
@@ -148,6 +241,10 @@ public final class SessionSupervisor: @unchecked Sendable {
         startedAt = Date()
         recentText = ""
         setStatus(.starting)
+        recentStarts.append(Date())
+        messenger.sessionStarted()
+        queue.asyncAfter(deadline: .now() + 10) { [weak self] in self?.learnConversation(pid: pid, folder: folder) }
+        log("session: started in \(folder.path == paths.session.standardizedFileURL.path ? "aOS's folder" : folder.path)\(args.contains("--resume") ? ", continuing its conversation" : "")")
 
         let src = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
         src.setEventHandler { [weak self] in self?.readOutput() }
@@ -275,6 +372,21 @@ public final class SessionSupervisor: @unchecked Sendable {
         if data == Data("\u{1B}]aos;restart\u{07}".utf8) {
             quickExits = 0
             if child > 0 { kill(child, SIGTERM) } else { launch() }
+            return
+        }
+        // A fresh conversation: forget the session's one and restart
+        if data == Data("\u{1B}]aos;fresh\u{07}".utf8) {
+            log("session: a fresh conversation, as asked")
+            forgetConversation()
+            recentStarts = []
+            quickExits = 0
+            if child > 0 { kill(child, SIGTERM) } else { launch() }
+            return
+        }
+        // Run a routine now
+        if let text = String(data: data, encoding: .utf8), text.hasPrefix("\u{1B}]aos;run;"), text.hasSuffix("\u{07}") {
+            messenger.runNow(String(text.dropFirst(10).dropLast()))
+            messenger.tick()
             return
         }
         if master >= 0 { _ = data.withUnsafeBytes { write(master, $0.baseAddress, n) } }
