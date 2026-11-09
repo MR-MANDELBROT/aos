@@ -186,3 +186,58 @@ final class SessionMessengerTests: XCTestCase {
         XCTAssertEqual(RoutinesStatus.read(paths)?.recent.count, 2)
     }
 }
+
+final class CronSetTests: XCTestCase {
+    var cal: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "Europe/Berlin")!
+        return c
+    }()
+
+    func date(_ s: String) -> Date {
+        let f = DateFormatter()
+        f.calendar = cal
+        f.timeZone = cal.timeZone
+        f.dateFormat = "yyyy-MM-dd HH:mm"
+        return f.date(from: s)!
+    }
+
+    func testCloupisChecksAsOneRoutine() throws {
+        let times = [(10, 3), (12, 7), (14, 13), (16, 17), (18, 23)].map { (hour: $0.0, minute: $0.1) }
+        let text = CronSet.text(times: times, weekdays: Set(0...6))
+        let set = try XCTUnwrap(CronSet(text))
+        XCTAssertEqual(set.schedules.count, 5)
+        XCTAssertEqual(set.next(after: date("2026-11-09 12:30"), calendar: cal), date("2026-11-09 14:13"))
+        XCTAssertEqual(set.latest(atOrBefore: date("2026-11-09 17:00"), calendar: cal), date("2026-11-09 16:17"))
+        let simple = try XCTUnwrap(set.simple)
+        XCTAssertEqual(simple.times.map { "\($0.hour):\($0.minute)" }, ["10:3", "12:7", "14:13", "16:17", "18:23"])
+        XCTAssertEqual(simple.weekdays, Set(0...6))
+        // A routine with several times is due once, at the latest one missed
+        let r = Routine(id: "c", name: "Routine-Check", schedule: text, prompt: "Check")
+        let due = RoutinePlanner.due([r], lastRun: ["c": date("2026-11-09 09:00")], now: date("2026-11-09 13:00"), calendar: cal)
+        XCTAssertEqual(due.map(\.due), [date("2026-11-09 12:07")])
+    }
+
+    func testSameMinuteGoesTogether() {
+        XCTAssertEqual(CronSet.text(times: [(8, 0), (12, 0), (18, 30)].map { (hour: $0.0, minute: $0.1) }, weekdays: [1, 2, 3, 4, 5]),
+                       "0 8,12 * * 1,2,3,4,5; 30 18 * * 1,2,3,4,5")
+    }
+
+    func testEveryNHours() throws {
+        let text = CronSet.every(hours: 2, from: 10, to: 18, minute: 3, weekdays: Set(0...6))
+        XCTAssertEqual(text, "3 10-18/2 * * *")
+        let set = try XCTUnwrap(CronSet(text))
+        XCTAssertEqual(set.next(after: date("2026-11-09 10:03"), calendar: cal), date("2026-11-09 12:03"))
+        let i = try XCTUnwrap(set.interval)
+        XCTAssertEqual(i.hours, 2); XCTAssertEqual(i.from, 10); XCTAssertEqual(i.to, 18); XCTAssertEqual(i.minute, 3)
+        XCTAssertEqual(CronSet("0 * * * *")?.interval?.hours, 1)
+        XCTAssertNil(CronSet("0 6 * * *")?.interval)
+        XCTAssertNil(CronSet("0 6 * * *; 0 7 * * *")?.interval)
+    }
+
+    func testInvalidPartsMakeItInvalid() {
+        XCTAssertNil(CronSet("0 6 * * *; kaputt"))
+        XCTAssertNil(CronSet(" ; "))
+        XCTAssertEqual(CronSet("0 6 * * *;30  7 * * 1")?.text, "0 6 * * *; 30 7 * * 1")
+    }
+}
