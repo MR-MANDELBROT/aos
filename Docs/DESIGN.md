@@ -63,8 +63,27 @@ the keeper, when "keep conversations reachable" is on:
   Claude app, used Remote Control and were active within `keepHours` (48 h); pinned ones always; at most `keepMax`
   (6). Never: archived or scheduled ones of the desktop app (its records in
   `~/Library/Application Support/Claude/claude-code-sessions`), ones with Remote Control switched off, ones the user
-  excluded, aOS's own session folder, automation (`sdk-cli`). Terminal conversations only when pinned or with
-  `keepTerminal`: tools like Cloupi manage their own terminal sessions.
+  excluded, aOS's own session folder and, wherever it runs, its own session's conversation (by id, from
+  `run/session-conversation.json`; pinned or not), automation (`sdk-cli`). Terminal conversations only when pinned or
+  with `keepTerminal`: tools like Cloupi manage their own terminal sessions.
+- **Order** (the keeper, the Mac's list and the iPhone's chats use the same, `ClaudeConversations.order`): pinned
+  first, then by the person's last activity, newest first; the same moment by id. Until 2026-11-09 this was the
+  transcript's modification time, and that moved for reasons other than the person: every
+  `claude --resume … --remote-control` the keeper starts appends `bridge-session`, `cost-state`, `last-prompt` and a
+  meta `system/bridge_status` record (seen in real transcripts: one conversation last used on Oct 3 was still kept on
+  Nov 9, its file "changed" with every restart), and hooks, titles, compaction and automation write too. So the kept
+  ones stayed on top and renewed themselves, and the ones the person had just used fell below `keepMax`. Now
+  `lastActivity` is the time stamp of the person's last prompt (a `user` record that isn't a tool result, compaction
+  summary or meta record, with `origin.kind` `human` or, from older Claude Code, none; "[Request interrupted by user]"
+  counts) or of the last `assistant` record of a turn the person started (not one a task notification, a channel or
+  another agent started: `origin.kind` other than `human`; no API errors, no synthetic answers, no side chains).
+  Without one: the desktop app's `lastActivityAt`, else the oldest time stamp read (for a conversation only
+  automation used, when it began), else the file's time. The modification time only narrows down which transcripts are
+  read (activity within the window means a change within it); nothing is ordered or cut by it any more.
+  `TranscriptScan` reads backwards from the end in 1 MB windows until it meets the person's last prompt (at most
+  32 MB), skipping tool results without parsing them; `ConversationCache` keeps the result and later reads only what
+  was appended (transcripts only grow), after checking the inode and the 64 bytes before where it stopped (else it
+  reads anew; more than 4 MB appended: anew, backwards). A line still being written is read once it is complete.
 - **How**: `claude --resume <id> --remote-control <title>` in the start folder, through the user's login shell
   (`exec`, so PATH is like a new terminal and the pid stays Claude Code's), in a pseudo terminal whose output is
   drained; the desktop app's permission mode is carried over, except bypassing permissions.
@@ -75,8 +94,13 @@ the keeper, when "keep conversations reachable" is on:
   at start.
 - **Ending**: SIGHUP (what closing a terminal sends, Claude Code exits cleanly on it), SIGTERM after 5 s, SIGKILL after
   15 s. Quick exits back off from 10 s to 30 min.
+- **Restarting one** (from the iPhone's chats): the app sends `ESC ]aos;keeper-restart;<id> BEL` to aos-session's
+  socket; the keeper ends its copy like a closed terminal and starts it again at once (a conversation that kept exiting
+  gets its next try now). `run/keeper.json` says `"commands": ["restart"]`: an aos-session from before this (it keeps
+  running after an update until the Mac restarts) would take the command as typing, so the app sends it only then.
 - Status in `run/keeper.json`; the app's settings (Claude Code tab) list the conversations with their state, pin and
-  exclude.
+  exclude, and why one isn't kept (`SessionKeeper.reason`, the same rules as the selection). The iPhone's Overview
+  has the same list (Docs/COMPANION.md, "Chats").
 
 ## Staying awake, freezing and the hotspot
 

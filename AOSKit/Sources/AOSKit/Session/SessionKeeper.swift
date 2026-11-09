@@ -31,6 +31,21 @@ public struct KeeperStatus: Codable, Sendable, Equatable {
     public var enabled: Bool
     public var entries: [Entry]
     public var updated: Date
+    /// What the running keeper takes over aos-session's socket ("restart": one conversation, `SessionKeeper.restart`);
+    /// nil from a keeper before that.
+    public var commands: [String]?
+
+    /// The details the keeper writes (English, for the Mac's list); `Entry.note` says them as codes for the phone.
+    public enum Detail {
+        public static let inClaudeApp = "open in the Claude app"
+        public static let inTerminal = "open in a terminal or another tool"
+        public static let justElsewhere = "was just open elsewhere"
+        public static let remoteControlElsewhere = "Remote Control runs elsewhere"
+        public static let signIn = "Claude Code needs a sign-in"
+        public static let question = "Claude Code asks a question in its terminal"
+        public static let keepsExiting = "Claude Code keeps exiting"
+        public static let restarting = "restarting"
+    }
 
     public static func read(_ paths: Paths) -> KeeperStatus? {
         let decoder = JSONDecoder()
@@ -38,6 +53,69 @@ public struct KeeperStatus: Codable, Sendable, Equatable {
         guard let data = FileManager.default.contents(atPath: SessionKeeper.statusURL(paths).path) else { return nil }
         return try? decoder.decode(KeeperStatus.self, from: data)
     }
+}
+
+extension KeeperStatus {
+    /// What the phone's chats show changed (one started, ended, or is in another state): the app tells the phone at
+    /// once (the `chats` event) instead of waiting for its next look.
+    public static func chatsChanged(from old: KeeperStatus?, to new: KeeperStatus?) -> Bool {
+        func summary(_ s: KeeperStatus?) -> [String] {
+            guard let s, s.enabled else { return [] }
+            return s.entries.map { "\($0.id) \($0.state.rawValue) \($0.detail)" }.sorted()
+        }
+        return (old?.enabled ?? false) != (new?.enabled ?? false) || summary(old) != summary(new)
+    }
+}
+
+extension KeeperStatus.Entry {
+    /// The detail as a code the phone says in its own words: where it is open (`app`, `terminal`, `elsewhere`), what
+    /// it needs (`signIn`, `question`, `exiting`), or `restarting`; nil when the state says it all.
+    public var note: String? {
+        typealias D = KeeperStatus.Detail
+        switch state {
+        case .openElsewhere:
+            if detail == D.inClaudeApp { return "app" }
+            if detail == D.inTerminal { return "terminal" }
+            return "elsewhere"
+        case .needsAttention:
+            if detail == D.signIn { return "signIn" }
+            if detail == D.question { return "question" }
+            if detail.hasPrefix(D.keepsExiting) { return "exiting" }
+            return nil
+        case .starting:
+            return detail.hasPrefix(D.restarting) ? "restarting" : nil
+        default:
+            return nil
+        }
+    }
+}
+
+/// Why the keeper doesn't keep a conversation now (the lists say it next to it).
+public enum KeepReason: String, Codable, Sendable, Equatable, CaseIterable {
+    /// Keeping conversations reachable is off.
+    case off
+    /// The person chose never to keep it.
+    case skipped
+    /// Archived in the Claude app.
+    case archived
+    /// A scheduled task of the Claude app.
+    case scheduled
+    /// Remote Control is switched off for it in the Claude app.
+    case remoteControlOff
+    /// aOS's own Claude Code session (it runs under the supervisor).
+    case ownSession
+    /// Started by automation (`sdk-cli`).
+    case automation
+    /// Only pinned ones are kept.
+    case onlyPinned
+    /// Started in a terminal, and terminal ones aren't kept automatically.
+    case terminal
+    /// It never used Remote Control.
+    case noRemoteControl
+    /// Not used within `keepHours`.
+    case inactive
+    /// Kept ones used more recently fill `keepMax`.
+    case overLimit
 }
 
 /// Keeps Claude Code conversations reachable from the Claude app after the window or terminal that ran them is
@@ -78,6 +156,8 @@ public final class SessionKeeper: @unchecked Sendable {
         var notBefore = Date.distantPast
         var recent = ""
         var stopping = false
+        /// Ended to be started again at once (`restart`).
+        var restart = false
         init(id: String) { self.id = id }
     }
 
@@ -156,31 +236,51 @@ public final class SessionKeeper: @unchecked Sendable {
 
     // MARK: Deciding
 
-    /// The conversations to keep now, pinned ones first, then the most recent.
+    /// The conversations to keep now: pinned ones first, then the ones the person used last (the order of
+    /// `ClaudeConversations.order`), at most `keepMax`.
+    /// `exclude`: aOS's session folder; `ownConversation`: the conversation aOS's own session runs (`ownConversation(_:)`),
+    /// wherever its folder is. Neither is ever kept here.
     public static func select(_ conversations: [ClaudeConversation], settings s: AgentSettings,
-                       exclude folder: String) -> [(ClaudeConversation, pinned: Bool)] {
-        let skipped = Set(s.skippedConversations)
+                              exclude folder: String, ownConversation own: String? = nil,
+                              now: Date = Date()) -> [(ClaudeConversation, pinned: Bool)] {
         let pinned = Set(s.keptConversations)
-        func eligible(_ c: ClaudeConversation) -> Bool {
-            if skipped.contains(c.id) { return false }
-            if let d = c.desktop, d.archived || d.scheduled || d.remoteControlTurnedOff { return false }
-            // aOS's own session runs under the supervisor
-            if c.cwd == folder || c.cwd.hasPrefix(folder + "/") { return false }
-            return true
+        let wanted = ClaudeConversations.order(conversations, pinned: pinned)
+            .filter { blocker($0, settings: s, exclude: folder, ownConversation: own, now: now) == nil }
+        return wanted.prefix(s.keepMax).map { ($0, pinned.contains($0.id)) }
+    }
+
+    /// Why a conversation isn't kept, given the ones the keeper keeps now (`kept`, their ids); nil if it is.
+    public static func reason(_ c: ClaudeConversation, settings s: AgentSettings, exclude folder: String,
+                              ownConversation own: String? = nil, kept: Set<String>, now: Date = Date()) -> KeepReason? {
+        guard s.keepReachable else { return .off }
+        if let blocker = blocker(c, settings: s, exclude: folder, ownConversation: own, now: now) { return blocker }
+        return kept.contains(c.id) ? nil : .overLimit
+    }
+
+    /// What rules a conversation out, apart from the limit.
+    static func blocker(_ c: ClaudeConversation, settings s: AgentSettings, exclude folder: String,
+                        ownConversation own: String?, now: Date) -> KeepReason? {
+        if s.skippedConversations.contains(c.id) { return .skipped }
+        if let d = c.desktop {
+            if d.archived { return .archived }
+            if d.scheduled { return .scheduled }
+            if d.remoteControlTurnedOff { return .remoteControlOff }
         }
-        var out: [(ClaudeConversation, Bool)] = conversations.filter { pinned.contains($0.id) && eligible($0) }
-            .map { ($0, true) }
-        if s.keepAutomatic {
-            // Automatically only conversations started in the Claude app (or, if wanted, in a terminal); never ones
-            // started by automation (sdk) or by tools that manage their own sessions in a terminal.
-            let origins: Set<String> = s.keepTerminal ? ["claude-desktop", "cli"] : ["claude-desktop"]
-            let cutoff = Date().addingTimeInterval(-Double(s.keepHours) * 3600)
-            for c in conversations where !pinned.contains(c.id) && eligible(c) && c.usedRemoteControl
-                && origins.contains(c.startedIn) && c.lastActivity >= cutoff {
-                out.append((c, false))
-            }
-        }
-        return Array(out.prefix(s.keepMax))
+        // aOS's own session runs under the supervisor: in its folder, and by its id when it runs elsewhere (a folder
+        // the person chose, where their other conversations are too). Pinned or not.
+        if c.cwd == folder || c.cwd.hasPrefix(folder + "/") { return .ownSession }
+        if let own, c.id == own { return .ownSession }
+        if s.keptConversations.contains(c.id) { return nil }
+        guard s.keepAutomatic else { return .onlyPinned }
+        // Automatically only conversations started in the Claude app (or, if wanted, in a terminal); never ones
+        // started by automation (sdk) or by tools that manage their own sessions in a terminal.
+        if c.startedIn == "sdk-cli" { return .automation }
+        let origins: Set<String> = s.keepTerminal ? ["claude-desktop", "cli"] : ["claude-desktop"]
+        if !origins.contains(c.startedIn) { return .terminal }
+        if !c.usedRemoteControl { return .noRemoteControl }
+        // The person's own activity: what the keeper's processes write themselves doesn't keep a conversation young.
+        if c.lastActivity < now.addingTimeInterval(-Double(s.keepHours) * 3600) { return .inactive }
+        return nil
     }
 
     private func evaluate() {
@@ -194,11 +294,10 @@ public final class SessionKeeper: @unchecked Sendable {
             writeStatus(enabled: false)
             return
         }
-        var conversations = ClaudeConversations.recent(within: Double(max(s.keepHours, 1)) * 3600, cache: cache)
-        for id in s.keptConversations where !conversations.contains(where: { $0.id == id }) {
-            if let c = ClaudeConversations.find(id) { conversations.append(c) }
-        }
-        let wanted = Self.select(conversations, settings: s, exclude: paths.session.standardizedFileURL.path)
+        let conversations = ClaudeConversations.list(within: Double(max(s.keepHours, 1)) * 3600,
+                                                     pinned: s.keptConversations, limit: 60, cache: cache)
+        let wanted = Self.select(conversations, settings: s, exclude: paths.session.standardizedFileURL.path,
+                                 ownConversation: Self.ownConversation(paths))
         let wantedIds = Set(wanted.map(\.0.id))
         let live = ClaudeConversations.live()
 
@@ -231,7 +330,7 @@ public final class SessionKeeper: @unchecked Sendable {
                 continue
             }
             if let seen = lastForeign[c.id], Date().timeIntervalSince(seen) < Self.handBackDelay {
-                set(c, pinned, .openElsewhere, "was just open elsewhere")
+                set(c, pinned, .openElsewhere, KeeperStatus.Detail.justElsewhere)
                 continue
             }
             guard FileManager.default.fileExists(atPath: c.cwd) else {
@@ -250,8 +349,8 @@ public final class SessionKeeper: @unchecked Sendable {
 
     private func where_(_ entrypoint: String) -> String {
         switch entrypoint {
-        case "claude-desktop": return "open in the Claude app"
-        case "cli": return "open in a terminal or another tool"
+        case "claude-desktop": return KeeperStatus.Detail.inClaudeApp
+        case "cli": return KeeperStatus.Detail.inTerminal
         default: return "open in \(entrypoint)"
         }
     }
@@ -332,16 +431,16 @@ public final class SessionKeeper: @unchecked Sendable {
             log("keeper: \"\(e.title)\" has Remote Control elsewhere, ending the copy here")
             lastForeign[k.id] = Date()
             terminate(k)
-            e.state = .openElsewhere; e.detail = "Remote Control runs elsewhere"; e.since = Date()
+            e.state = .openElsewhere; e.detail = KeeperStatus.Detail.remoteControlElsewhere; e.since = Date()
         } else {
             // Only the latest sign counts (a Remote Control drop says "run /login" and then reconnects by itself).
             switch SessionOutput.classify(k.recent) {
             case .signIn:
-                guard e.detail != "Claude Code needs a sign-in" else { return }
-                e.state = .needsAttention; e.detail = "Claude Code needs a sign-in"; e.since = Date()
+                guard e.detail != KeeperStatus.Detail.signIn else { return }
+                e.state = .needsAttention; e.detail = KeeperStatus.Detail.signIn; e.since = Date()
             case .question:
-                guard e.detail != "Claude Code asks a question in its terminal" else { return }
-                e.state = .needsAttention; e.detail = "Claude Code asks a question in its terminal"; e.since = Date()
+                guard e.detail != KeeperStatus.Detail.question else { return }
+                e.state = .needsAttention; e.detail = KeeperStatus.Detail.question; e.since = Date()
             case .fine where e.state == .needsAttention:
                 e.state = .running; e.detail = ""; e.since = Date()
             default:
@@ -364,20 +463,54 @@ public final class SessionKeeper: @unchecked Sendable {
         k.stopping = false
         saveChildren()
         log("keeper: \(k.id) exited (status \(code)) after \(Int(lived)) s\(intended ? " as asked" : "")")
+        if intended && k.restart {
+            // Restarted on request (from the phone): it starts again right away.
+            k.restart = false
+            if var e = entries[k.id] {
+                e.state = .starting; e.detail = KeeperStatus.Detail.restarting; e.pid = nil; e.since = Date()
+                entries[k.id] = e
+            }
+            writeStatus(enabled: true)
+            queue.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.evaluate() }
+            return
+        }
         guard !intended else { return }
         k.quickExits = lived < 60 ? k.quickExits + 1 : 0
         let delay = [10.0, 30, 60, 300, 1800][min(k.quickExits, 4)]
         k.notBefore = Date().addingTimeInterval(delay)
         if var e = entries[k.id] {
             e.state = k.quickExits >= 3 ? .needsAttention : .starting
-            e.detail = k.quickExits >= 3 ? "Claude Code keeps exiting; next try in \(Int(delay / 60)) min"
-                : "restarting in \(Int(delay)) s"
+            e.detail = k.quickExits >= 3 ? "\(KeeperStatus.Detail.keepsExiting); next try in \(Int(delay / 60)) min"
+                : "\(KeeperStatus.Detail.restarting) in \(Int(delay)) s"
             e.pid = nil
             e.since = Date()
             entries[k.id] = e
         }
         writeStatus(enabled: true)
         queue.asyncAfter(deadline: .now() + delay + 0.5) { [weak self] in self?.evaluate() }
+    }
+
+    /// Starts a kept conversation's Claude Code again (the phone asks for it through aos-session's socket): its
+    /// process ends like a closed terminal and starts again at once, and one that kept exiting gets its next try now.
+    /// Nothing happens to a conversation the keeper doesn't keep.
+    public func restart(_ id: String) {
+        queue.async { [self] in
+            guard let k = kept[id], entries[id] != nil else {
+                log("keeper: restart of \(id) asked for, but it isn't kept")
+                return
+            }
+            k.quickExits = 0
+            k.notBefore = .distantPast
+            if k.pid > 0 {
+                guard !k.stopping else { return }
+                log("keeper: restarting \(id) as asked")
+                k.restart = true
+                terminate(k)
+            } else {
+                log("keeper: starting \(id) again now, as asked")
+                evaluate()
+            }
+        }
     }
 
     /// Ends a kept conversation like closing its terminal window would (SIGHUP, which Claude Code handles cleanly),
@@ -397,6 +530,26 @@ public final class SessionKeeper: @unchecked Sendable {
 
     // MARK: Status
 
+    static func ownConversationURL(_ paths: Paths) -> URL { paths.run.appendingPathComponent("session-conversation.json") }
+
+    /// The conversation aOS's own Claude Code session runs (run/session-conversation.json, `{"folder": …, "id": …}`,
+    /// written by the supervisor), or nil.
+    public static func ownConversation(_ paths: Paths) -> String? {
+        guard let data = FileManager.default.contents(atPath: ownConversationURL(paths).path),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let id = object["id"] as? String, !id.isEmpty else { return nil }
+        return id
+    }
+
+    /// Pinned first, then by the person's last activity (as `ClaudeConversations.order`).
+    static func ordered(_ entries: [KeeperStatus.Entry]) -> [KeeperStatus.Entry] {
+        entries.sorted { a, b in
+            if a.pinned != b.pinned { return a.pinned }
+            if a.lastActivity != b.lastActivity { return a.lastActivity > b.lastActivity }
+            return a.id < b.id
+        }
+    }
+
     private func set(_ c: ClaudeConversation, _ pinned: Bool, _ state: KeeperStatus.State, _ detail: String,
                      pid: pid_t? = nil) {
         let old = entries[c.id]
@@ -408,9 +561,8 @@ public final class SessionKeeper: @unchecked Sendable {
     }
 
     private func writeStatus(enabled: Bool) {
-        let status = KeeperStatus(enabled: enabled,
-                                  entries: entries.values.sorted { ($0.pinned ? 1 : 0, $0.lastActivity) > ($1.pinned ? 1 : 0, $1.lastActivity) },
-                                  updated: Date())
+        let status = KeeperStatus(enabled: enabled, entries: Self.ordered(Array(entries.values)), updated: Date(),
+                                  commands: ["restart"])
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

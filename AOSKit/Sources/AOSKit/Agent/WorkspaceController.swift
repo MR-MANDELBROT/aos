@@ -41,6 +41,10 @@ public final class WorkspaceController {
     public let phones: CompanionGate
     /// The phone's Overview: power and settings the app owns (Companion/CompanionControl.swift).
     public weak var macControls: MacControls?
+    /// What was read from Claude Code's transcripts, for the phone's chats and the Mac's settings.
+    public let conversationCache = ConversationCache()
+    /// Where the transcripts are (tests use their own folders).
+    public var conversationSources = ClaudeConversations.Sources.standard
 
     public init(paths: Paths, bitwarden: BitwardenVault? = nil, phoneKeys: PhoneKeyStore = KeychainPhoneKeys()) {
         self.paths = paths
