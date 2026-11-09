@@ -822,4 +822,8 @@ DE.update({
     "Mon to Fri at %@": "Mo bis Fr um %@",
     "Weekends at %@": "Am Wochenende um %@",
     "%@ at %@": "%1$@ um %2$@",
+    "Permissions": "Berechtigungen",
+    "Auto (Claude Code decides)": "Auto (Claude Code entscheidet)",
+    "Accept edits": "Änderungen annehmen",
+    "Plan only": "Nur planen",
 })

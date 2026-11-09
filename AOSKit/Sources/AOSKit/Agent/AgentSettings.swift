@@ -19,6 +19,10 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// Claude Code's effort for the session (`--effort`): low, medium, high, xhigh or max; empty: Claude Code's own.
     public var sessionEffort: String = ""
     public static let sessionEffortChoices = ["", "low", "medium", "high", "xhigh", "max"]
+    /// Claude Code's permission mode for the session (`--permission-mode`): auto, acceptEdits or plan; empty:
+    /// Claude Code's own (asks for what the folder's rules don't allow).
+    public var sessionPermissionMode: String = ""
+    public static let sessionPermissionModeChoices = ["", "auto", "acceptEdits", "plan"]
     /// Files with `KEY=VALUE` lines for the session's environment (values are never shown or logged).
     public var sessionEnvFiles: [String] = []
     /// Sent into the session after each start (empty: nothing).
@@ -98,7 +102,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case reachWay
         case stayAwakeMinBattery
         case leaveHotspot
-        case sessionFolder, sessionEffort, sessionEnvFiles, sessionStartMessage, routines
+        case sessionFolder, sessionEffort, sessionEnvFiles, sessionStartMessage, routines, sessionPermissionMode
     }
 
     /// Keys of earlier versions, read once and written in their new form.
@@ -143,6 +147,8 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         sessionFolder = try c.decodeIfPresent(String.self, forKey: .sessionFolder) ?? d.sessionFolder
         let effort = try c.decodeIfPresent(String.self, forKey: .sessionEffort) ?? d.sessionEffort
         sessionEffort = Self.sessionEffortChoices.contains(effort) ? effort : d.sessionEffort
+        let mode = try c.decodeIfPresent(String.self, forKey: .sessionPermissionMode) ?? d.sessionPermissionMode
+        sessionPermissionMode = Self.sessionPermissionModeChoices.contains(mode) ? mode : d.sessionPermissionMode
         sessionEnvFiles = try c.decodeIfPresent([String].self, forKey: .sessionEnvFiles) ?? d.sessionEnvFiles
         sessionStartMessage = try c.decodeIfPresent(String.self, forKey: .sessionStartMessage) ?? d.sessionStartMessage
         routines = (try? c.decodeIfPresent([Routine].self, forKey: .routines)) ?? d.routines
