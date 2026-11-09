@@ -412,6 +412,8 @@ enum CompanionEvent: Equatable, Sendable {
     /// `aos-companion` can't reach the Mac app (`unavailable`, it keeps trying), or can again.
     case mac(state: String, detail: String)
     case workspace(WorkspaceState)
+    /// A chat started, ended or changed its state on the Mac: the Overview reads the list again (`chats.list`).
+    case chats
     /// The Mac ended the event subscription (aOS restarted, or it ran out): the iPhone subscribes again, signed.
     case subscriptionEnded
 }
@@ -483,6 +485,8 @@ enum CompanionMessage: Equatable, Sendable {
         case "workspace":
             guard let state = object["state"]?.string else { return .ignored }
             return .event(.workspace(WorkspaceState(state)))
+        case "chats":
+            return .event(.chats)
         case "subscription":
             return object["state"]?.string == "ended" ? .event(.subscriptionEnded) : .ignored
         default:

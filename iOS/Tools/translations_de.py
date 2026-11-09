@@ -808,3 +808,81 @@ DE.update({
     'Show': 'Zeigen',
     'Your agent asks for help': 'Dein Agent bittet um Hilfe',
 })
+
+# The chats on the Overview (the Claude Code conversations aOS keeps reachable); "der Chat", so "er" and "ihn"
+DE.update({
+    'Chats': 'Chats',
+    'Chat': 'Chat',
+    "aOS's background process on the Mac doesn't keep chats reachable right now.":
+        'Der Hintergrundprozess von aOS auf dem Mac hält gerade keine Chats erreichbar.',
+    "aOS's background process on the Mac is older and can't restart a single chat yet. It can after the Mac restarts.":
+        'Der Hintergrundprozess von aOS auf dem Mac ist älter und kann einzelne Chats noch nicht neu starten. Nach einem Neustart des Macs geht das.',
+    "aOS doesn't run this chat on the Mac right now, so there is nothing to restart.":
+        'aOS führt diesen Chat gerade nicht auf dem Mac aus, es gibt also nichts neu zu starten.',
+    'Switch on “Keep conversations reachable” in aOS on the Mac (Settings > Claude Code), and aOS keeps your chats running there for the Claude app.':
+        'Schalte in aOS auf dem Mac „Unterhaltungen erreichbar halten“ ein (Einstellungen > Claude Code), dann hält aOS deine Chats dort für die Claude-App am Laufen.',
+    'No chats in the last days.': 'Keine Chats in den letzten Tagen.',
+    'Show Fewer': 'Weniger zeigen',
+    'Show All (%lld)': 'Alle zeigen (%lld)',
+    'Stop “%@”?': '„%@“ stoppen?',
+    'Restart “%@”?': '„%@“ neu starten?',
+    'Stop': 'Stoppen',
+    'Pin': 'Anheften',
+    'Unpin': 'Nicht mehr anheften',
+    'Pinned': 'Angeheftet',
+    'Keep Again': 'Wieder erreichbar halten',
+    "Don't Keep": 'Nicht erreichbar halten',
+    'Pin: Always Keep Reachable': 'Anheften: immer erreichbar halten',
+    'Shows the chat and what you can do with it': 'Zeigt den Chat und was du damit tun kannst',
+    "This chat isn't in the list any more.": 'Dieser Chat ist nicht mehr in der Liste.',
+    'Folder': 'Ordner',
+    'Started in': 'Gestartet in',
+    'Last used': 'Zuletzt benutzt',
+    'Always kept reachable': 'Immer erreichbar',
+    "Pinned chats stay reachable, also when you haven't used them for a while. Stop ends a chat on the Mac, and aOS doesn't keep it until you keep it again.":
+        'Angeheftete Chats bleiben erreichbar, auch wenn du sie länger nicht benutzt hast. „Stoppen“ beendet einen Chat auf dem Mac, und aOS hält ihn erst wieder erreichbar, wenn du das wieder einschaltest.',
+    'aOS on the Mac starts Claude Code for it again. The chat continues where it was; an answer it is writing right now stops.':
+        'aOS auf dem Mac startet Claude Code dafür neu. Der Chat geht weiter, wo er war; eine Antwort, die gerade entsteht, bricht ab.',
+    'aOS ends it on the Mac and doesn\'t keep it any more. Keep Again undoes that; the chat itself stays as it is.':
+        'aOS beendet ihn auf dem Mac und hält ihn nicht mehr erreichbar. „Wieder erreichbar halten“ macht das rückgängig; der Chat selbst bleibt, wie er ist.',
+    'Off on the Mac': 'Auf dem Mac aus',
+    'None is reachable in the Claude app right now': 'Gerade ist keiner in der Claude-App erreichbar',
+    'Reachable': 'Erreichbar',
+    'Open in the Claude app': 'In der Claude-App geöffnet',
+    'Open in a terminal': 'In einem Terminal geöffnet',
+    'Open elsewhere': 'Anderswo geöffnet',
+    'Needs a sign-in on the Mac': 'Braucht eine Anmeldung auf dem Mac',
+    'Asks something on the Mac': 'Fragt auf dem Mac etwas',
+    'Keeps stopping': 'Hört immer wieder auf',
+    'Needs you on the Mac': 'Braucht dich auf dem Mac',
+    'Its folder is gone': 'Sein Ordner fehlt',
+    'Stopped': 'Gestoppt',
+    'Archived in the Claude app': 'In der Claude-App archiviert',
+    'Scheduled task': 'Geplante Aufgabe',
+    'Remote Control turned off': 'Remote Control ausgeschaltet',
+    "aOS's own session": 'Eigene Sitzung von aOS',
+    'Started by automation': 'Von einer Automatisierung gestartet',
+    'Not pinned': 'Nicht angeheftet',
+    'From a terminal': 'Aus dem Terminal',
+    'Never used Remote Control': 'Nie mit Remote Control benutzt',
+    'Not used in the last %lld hours': 'In den letzten %lld Stunden nicht benutzt',
+    'Above the limit of %lld': 'Über der Grenze von %lld',
+    'Starting soon': 'Startet gleich',
+    'aOS runs it on the Mac, so you can continue it in the Claude app.':
+        'aOS führt ihn auf dem Mac aus, so kannst du ihn in der Claude-App fortsetzen.',
+    "It's open in the Claude app on the Mac. aOS takes it over a minute after the app lets it go.":
+        'Er ist in der Claude-App auf dem Mac geöffnet. aOS übernimmt ihn eine Minute, nachdem die App ihn freigibt.',
+    "It's open in a terminal or another tool on the Mac. aOS takes it over a minute after that ends.":
+        'Er ist auf dem Mac in einem Terminal oder einem anderen Werkzeug geöffnet. aOS übernimmt ihn eine Minute, nachdem das endet.',
+    'Claude Code on the Mac needs a sign-in. Run claude once in a terminal there and sign in.':
+        'Claude Code auf dem Mac braucht eine Anmeldung. Führ dort einmal claude in einem Terminal aus und melde dich an.',
+    'Claude Code keeps stopping. aOS tries again later; Restart tries now.':
+        'Claude Code hört immer wieder auf. aOS versucht es später wieder; „Neu starten“ versucht es jetzt.',
+    "You stopped it. aOS doesn't keep it until you keep it again.":
+        'Du hast ihn gestoppt. aOS hält ihn erst wieder erreichbar, wenn du das wieder einschaltest.',
+    'aOS keeps the chats you used last, at most %lld. Pin this one to keep it reachable anyway.':
+        'aOS hält die Chats erreichbar, die du zuletzt benutzt hast, höchstens %lld. Heft diesen an, damit er trotzdem erreichbar bleibt.',
+    'The Claude app': 'Die Claude-App',
+    'A terminal or a tool': 'Ein Terminal oder ein Werkzeug',
+    'Elsewhere': 'Anderswo',
+})

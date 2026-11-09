@@ -20,6 +20,12 @@ final class MockCompanionServer: @unchecked Sendable {
         var refuseCode: [String: String] = [:]
         /// What `mac.status` reports; the actions change it as the Mac would.
         var macStatus = MockCompanionServer.demoMacStatus
+        /// What `chats.list` reports (in the Mac's order: pinned first, then by last use); the chats ops change it.
+        var chats = MockCompanionServer.demoChats()
+        /// Keeping chats reachable is on (Settings > Claude Code on the Mac).
+        var chatsEnabled = true
+        /// The keeper on the Mac restarts single chats (an older one can't).
+        var chatsRestart = true
         /// The Mac is older and doesn't know the Overview's ops.
         var oldMac = false
         /// The phone the Mac knows: with it set, every request must be signed by that phone, as aOS on the Mac
@@ -141,6 +147,16 @@ final class MockCompanionServer: @unchecked Sendable {
         }
         var body: [String: JSONValue] = ["id": .number(Double(id)), "ok": .bool(true)]
         if let action = MacAction(rawValue: op), !state.oldMac {
+            if action.rawValue.hasPrefix("chats.") {
+                // As aOS on the Mac: the chat's id must be one, a restart only for one that runs there.
+                if let refusal = chatAction(action, id: object["text"]?.string) {
+                    var answer: [String: JSONValue] = ["id": .number(Double(id)), "ok": .bool(false),
+                                                       "error": .string(refusal.message)]
+                    if let code = refusal.code { answer["code"] = .string(code) }
+                    return Self.encode(answer)
+                }
+                body["chats"] = .object(chatsJSON())
+            }
             body["status"] = .object(macAction(action, value: object["text"]?.string))
             if action == .sleep {
                 body["sleeping"] = .bool(true)
@@ -252,12 +268,109 @@ final class MockCompanionServer: @unchecked Sendable {
                 set("display", "state", .string("on"))
             case .batteryLimit:
                 if let value, let p = Int(value) { set("awake", "batteryLimit", .number(Double(p))) }
+            case .chatsList, .chatsPin, .chatsUnpin, .chatsSkip, .chatsUnskip, .chatsRestart:
+                set("kept", "running", .number(Double(state.chats.filter { $0.state == "running" }.count)))
             case .status, .sleep:
                 break
             }
             state.macStatus = status
             return status
         }
+    }
+
+    // MARK: Chats
+
+    /// Chats in all their states: pinned and running, open in the Claude app, running, waiting for a sign-in,
+    /// stopped from the phone, from a terminal, not used for days.
+    static func demoChats(now: Date = Date()) -> [ChatList.Chat] {
+        func ago(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
+        return ordered([
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e01", title: "aOS: Chats auf dem iPhone", folder: "~/Developer/annex",
+                  origin: "app", activity: ago(4), pinned: true, state: "running", since: ago(180)),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e02", title: "Bachelorarbeit: Gliederung", folder: "~/Uni/Bachelorarbeit",
+                  origin: "app", activity: ago(2), state: "openElsewhere", detail: "open in the Claude app", note: "app",
+                  since: ago(2)),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e03", title: "Rechnungen vom Oktober sortieren",
+                  folder: "~/Documents/Finanzen", origin: "app", activity: ago(35), state: "running", since: ago(30)),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e04", title: "Website: QR-Code-Abschnitt", folder: "~/Developer/marquart.dev",
+                  origin: "app", activity: ago(190), state: "needsAttention", detail: "Claude Code needs a sign-in",
+                  note: "signIn", since: ago(20)),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e05", title: "Morgenbriefing", folder: "~/cloupi", origin: "app",
+                  activity: ago(300), skipped: true, reason: "skipped"),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e06", title: "Tailscale auf dem iPhone testen", folder: "~/Developer/annex",
+                  origin: "terminal", activity: ago(26 * 60), reason: "terminal"),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e07", title: "Umzugskartons zählen", folder: "~", origin: "app",
+                  activity: ago(4 * 24 * 60), reason: "inactive"),
+        ])
+    }
+
+    /// The Mac's order: pinned first, then by last use.
+    static func ordered(_ chats: [ChatList.Chat]) -> [ChatList.Chat] {
+        chats.sorted { a, b in
+            if a.pinned != b.pinned { return a.pinned }
+            if a.activity != b.activity { return (a.activity ?? .distantPast) > (b.activity ?? .distantPast) }
+            return a.id < b.id
+        }
+    }
+
+    /// What the Mac does for a chats op, or why it refuses (with the Mac's code, if it has one).
+    private func chatAction(_ action: MacAction, id: String?) -> (code: String?, message: String)? {
+        lock.withLock {
+            guard action != .chatsList else { return nil }
+            guard let id, let index = state.chats.firstIndex(where: { $0.id == id }) else {
+                return (nil, "Not a conversation: \(id ?? "")")
+            }
+            var c = state.chats[index]
+            switch action {
+            case .chatsPin:
+                c.pinned = true
+                c.skipped = false
+                if c.state == nil { c.state = "starting"; c.reason = nil; c.since = Date() }
+            case .chatsUnpin:
+                c.pinned = false
+            case .chatsSkip:
+                c.skipped = true
+                c.pinned = false
+                c.state = nil; c.detail = nil; c.note = nil; c.reason = "skipped"
+            case .chatsUnskip:
+                c.skipped = false
+                c.reason = c.origin == "terminal" ? "terminal" : "overLimit"
+            case .chatsRestart:
+                guard state.chatsRestart else {
+                    return ("keeper-old", "aOS's background process on the Mac is from an older version and can't restart a single conversation. It can after the Mac restarts.")
+                }
+                guard ["running", "starting", "needsAttention", "failed"].contains(c.state ?? "") else {
+                    return ("not-kept", "aOS doesn't run this conversation right now, so there is nothing to restart.")
+                }
+                c.state = "starting"; c.detail = "restarting"; c.note = "restarting"; c.since = Date()
+            default:
+                break
+            }
+            state.chats[index] = c
+            state.chats = Self.ordered(state.chats)
+            return nil
+        }
+    }
+
+    private func chatsJSON() -> [String: JSONValue] { lock.withLock { Self.chatsJSON(state) } }
+
+    static func chatsJSON(_ state: State) -> [String: JSONValue] {
+        let list: [JSONValue] = state.chats.map { c in
+            var o: [String: JSONValue] = ["id": .string(c.id), "title": .string(c.title), "folder": .string(c.folder),
+                                          "pinned": .bool(c.pinned), "skipped": .bool(c.skipped)]
+            if let origin = c.origin { o["origin"] = .string(origin) }
+            if let activity = c.activity { o["activity"] = .string(ISO8601.format(activity)) }
+            if let s = c.state { o["state"] = .string(s) }
+            if let detail = c.detail { o["detail"] = .string(detail) }
+            if let note = c.note { o["note"] = .string(note) }
+            if let since = c.since { o["since"] = .string(ISO8601.format(since)) }
+            if let reason = c.reason { o["reason"] = .string(reason) }
+            return .object(o)
+        }
+        return ["enabled": .bool(state.chatsEnabled), "automatic": .bool(true), "terminal": .bool(false),
+                "hours": .number(48), "max": .number(6),
+                "running": .number(Double(state.chats.filter { $0.state == "running" }.count)),
+                "restart": .bool(state.chatsRestart), "list": .array(list)]
     }
 
     // MARK: Signatures (as aOS on the Mac checks them)
@@ -368,6 +481,8 @@ final class MockCompanionServer: @unchecked Sendable {
             return encode(["event": .string("mac"), "state": .string(state), "detail": .string(detail)])
         case .workspace(let state):
             return encode(["event": .string("workspace"), "state": .string(raw(state))])
+        case .chats:
+            return encode(["event": .string("chats")])
         case .subscriptionEnded:
             return encode(["event": .string("subscription"), "state": .string("ended")])
         }
