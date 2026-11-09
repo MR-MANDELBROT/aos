@@ -52,6 +52,37 @@ Claude app (phone) ──Remote Control──▶ claude (pty) ◀── aos-sess
 - **aos-tailnet** (Go, in Contents/MacOS) is aOS's own Tailscale node; aos-powerd runs it as the hidden user
   `_aostailnet` when the person chose "aOS sets up Tailscale" (see "Reaching the Mac on the go").
 
+## The session as a persistent agent (routines, reminders, notes)
+
+Since build 17 aOS's own session can stand in for a persistent agent such as Cloupi's (Settings > Claude Code; the
+iPhone shows and edits the routines under Settings > Routines and the next one in the Overview):
+
+- **Folder, effort, permissions, environment**: `sessionFolder` (empty: aOS's own folder; another folder brings its own
+  `.claude` and `.mcp.json`, aOS changes nothing there), `sessionEffort` (`--effort`), `sessionPermissionMode`
+  (`--permission-mode` auto, acceptEdits or plan), `sessionEnvFiles` (`KEY=VALUE` lines, `export` and quotes
+  allowed; names logged, values never), `sessionStartMessage` (sent after each start).
+- **Its own conversation**: after a start aOS reads Claude Code's registry (`~/.claude/sessions/<pid>.json`) and
+  keeps the conversation id in `run/session-conversation.json` (with the folder); the next start resumes exactly that
+  one (`--resume`), never just the newest one in the folder (the person may have started one there in the Claude
+  app). Two restarts within 30 minutes start fresh; so does "Start Fresh" (socket command `ESC ] aos;fresh BEL`).
+- **Routines** (`AgentSettings.routines`: name, cron with five fields in local time, prompt, on/off): `SessionMessenger`
+  checks every 10 s; a routine missed while the Mac slept comes up to 6 hours late, only its latest time; a new or
+  changed routine starts from now. "Run Now" is `ESC ] aos;run;<id> BEL` (the iPhone: `companion.routines.run`).
+- **Inbox** (`~/Library/Application Support/aOS/Inbox/*.json`, 0700): other programs leave `{"text", "at"?,
+  "source"?}` (temporary name with a leading dot, then rename). With `at`: a reminder, delivered at its time, dropped
+  more than 30 minutes late; without: a note, delivered as soon as possible. Unreadable files move to `Inbox/Invalid`.
+- **Delivery**: a queue in `run/routines-state.json` (survives restarts); its head is typed into the session's
+  terminal as one bracketed paste plus Enter, only while Claude Code's registry says `idle` (not `busy`, not `waiting`,
+  which covers permission and question dialogs). Without a reaction after 10 s, Enter once more. Each message starts
+  with a header line: `[aOS routine "<name>", scheduled <time>]` (`, delivered late …` after sleep), `[aOS reminder
+  for <time> from <source>]`, `[aOS note from <source>]`, `[aOS: the session just started]`.
+- **Status** for the app and the iPhone: `run/routines.json` (next times, reminders waiting, queued, recently sent).
+
+Cloupi (2026-11-09): folder `~/cloupi`, effort max, mode auto, environment from `~/cloupi/config/aos-session.env` and
+`~/cloupi/state/private/cloupi.env`, its nine routines from `config/crons.json`; its one-shots and notices reach the
+inbox through `~/cloupi/mac/bin/aos-bruecke.mjs` (LaunchAgent `de.cloupi.aos-bruecke`, every minute). The old agent
+(`de.cloupi.agent`, Cloupi Agent.app) is unloaded. Apple Mail's automation permission belongs to `aos-session` now.
+
 ## Keeping conversations reachable (SessionKeeper)
 
 The Claude desktop app runs a local Code session only while it works on it; once its process ends, the session goes
@@ -134,6 +165,17 @@ charge, thermal state, external screens, whether Cloupi is on the Mac, and wheth
   aOS holds no assertion and freezes nothing, the helper refuses and never touches pmset or Wi-Fi, and the settings
   say "Another service takes care of this" (the user sees no product name). aOS never stops, changes or reads that
   service.
+
+**Leaving the hotspot** (`AgentSettings.leaveHotspot`, on by default; lid open or closed): macOS never leaves a network
+it is connected to for a better one. While the Mac has an iPhone hotspot address (172.20.10.x), aOS looks every 2
+minutes by name for the known networks that aren't hotspots (macOS's order, first 12), takes the first one found with
+at least -75 dBm and joins it through the helper; the helper counts the join only once the address is outside the
+hotspot. A failed join rests like in network care.
+
+**Updating aOS with the lid closed**: the helper exits when its program file is replaced. While it holds the Mac with
+a valid lease it hands the hold over instead of releasing it: the marker gets `handover` (the lease, at least 5
+minutes ahead), disablesleep stays, and the new helper, started by the new app's first call, takes the hold over
+(`cleanUpEarlierRun`). Before that change the Mac fell asleep in the gap (2026-11-09).
 
 **The iPhone hotspot.** The question (Settings > General > iPhone hotspot; in the setup under "Stay awake with the
 lid closed") is "When needed: you switch it on on the iPhone" (recommended, also when unanswered) or "Connect
