@@ -20,6 +20,8 @@ public protocol MacControls: AnyObject {
     func setBatteryLimit(_ percent: Int) -> MacControlRefusal?
     /// Turns the display off or wakes it (`MacDisplayStatus.set(on:)` unless the app does it itself).
     func setDisplay(on: Bool) async
+    /// Pins, unpins, skips or allows a Claude Code conversation (the app owns the settings; the keeper follows them).
+    func changeConversation(_ id: String, _ change: ConversationChange) -> MacControlRefusal?
 }
 
 extension MacControls {
@@ -71,6 +73,9 @@ public struct MacControlRefusal: Error, Equatable, Sendable {
     public static let holdNotReleased = MacControlRefusal("sleep-held", "\(Brand.name)'s helper didn't let go of the Mac in time. Try again in a moment.")
     public static let notSetUp = MacControlRefusal("not-set-up", "The workspace isn't set up yet. Finish the setup in \(Brand.name) on the Mac.")
     public static let noSession = MacControlRefusal("no-session", "\(Brand.name)'s background process isn't running, so there is no Claude Code session to restart.")
+    public static let noKeeper = MacControlRefusal("no-keeper", "\(Brand.name)'s background process doesn't keep conversations reachable right now.")
+    public static let keeperTooOld = MacControlRefusal("keeper-old", "\(Brand.name)'s background process on the Mac is from an older version and can't restart a single conversation. It can after the Mac restarts.")
+    public static let notKept = MacControlRefusal("not-kept", "\(Brand.name) doesn't run this conversation right now, so there is nothing to restart.")
 }
 
 public enum MacSleepResult: Equatable, Sendable {
@@ -201,9 +206,17 @@ public enum CompanionControl {
     public static let workspaceStop = "companion.workspace.stop"
     public static let bitwardenLock = "companion.bitwarden.lock"
     public static let sessionRestart = "companion.session.restart"
+    /// The chats (CompanionChats.swift): the list, and pin, unpin, skip, unskip, restart one (its id in `text`).
+    public static let chatsList = "companion.chats.list"
+    public static let chatsPin = "companion.chats.pin"
+    public static let chatsUnpin = "companion.chats.unpin"
+    public static let chatsSkip = "companion.chats.skip"
+    public static let chatsUnskip = "companion.chats.unskip"
+    public static let chatsRestart = "companion.chats.restart"
+    public static let chatOps: Set<String> = [chatsList, chatsPin, chatsUnpin, chatsSkip, chatsUnskip, chatsRestart]
 
-    public static let ops: Set<String> = [status, sleep, displayOff, displayOn, stayAwake, batteryLimit, workspaceStart, workspaceStop,
-                                          bitwardenLock, sessionRestart]
+    public static let ops: Set<String> = Set([status, sleep, displayOff, displayOn, stayAwake, batteryLimit, workspaceStart,
+                                              workspaceStop, bitwardenLock, sessionRestart]).union(chatOps)
 
     /// What this Mac offers the phone beyond the first version (`hello` lists it): these ops and the terminal
     /// sessions (`aos-companion term`).
@@ -294,6 +307,9 @@ extension WorkspaceController {
         switch r.op {
         case CompanionControl.status:
             return done()
+
+        case _ where CompanionControl.chatOps.contains(r.op):
+            return await handleChats(r, from: from)
 
         case CompanionControl.sleep:
             guard let controls = macControls else { return .failure(r.id, "\(Brand.name) can't do that right now.") }

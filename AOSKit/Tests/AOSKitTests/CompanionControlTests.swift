@@ -32,6 +32,12 @@ final class CompanionControlTests: XCTestCase {
         func setDisplay(on: Bool) async { displays.append(on) }
         var batteryLimit = 10
         func setBatteryLimit(_ percent: Int) -> MacControlRefusal? { batteryLimit = percent; return nil }
+        /// The conversation changes, as the app would make them in its settings.
+        var changes: [(String, ConversationChange)] = []
+        func changeConversation(_ id: String, _ change: ConversationChange) -> MacControlRefusal? {
+            changes.append((id, change))
+            return nil
+        }
     }
 
     final class LogBox: @unchecked Sendable { var lines: [String] = [] }
@@ -68,12 +74,15 @@ final class CompanionControlTests: XCTestCase {
     func testEveryOpNeedsTheSignature() async throws {
         let (c, controls, _, _) = try controller()
         for op in CompanionControl.ops {
-            let unsigned = await c.handle(request(op, text: op == CompanionControl.stayAwake ? "off" : nil))
+            let text = op == CompanionControl.stayAwake ? "off"
+                : CompanionControl.chatOps.contains(op) ? "5f0c1c2e-8b1d-4d0e-9a51-0b8f6f2f7a10" : nil
+            let unsigned = await c.handle(request(op, text: text))
             XCTAssertFalse(unsigned.ok, op)
             XCTAssertEqual(unsigned.code, "pair-again", op)
         }
         XCTAssertEqual(controls.sleeps, 0)
         XCTAssertNil(controls.stayAwake)
+        XCTAssertTrue(controls.changes.isEmpty)
         // A changed parameter breaks the signature: the text is in the signed data.
         var r = phone.sign(request(CompanionControl.stayAwake, text: "lidOpen"))
         r.text = "off"
@@ -199,6 +208,140 @@ final class CompanionControlTests: XCTestCase {
         XCTAssertEqual(String(decoding: box.bytes, as: UTF8.self), "\u{1B}]aos;restart\u{07}")
     }
 
+    // MARK: Chats
+
+    /// Two transcripts in folders of the test's own (never the real ~/.claude): one used an hour ago, one yesterday.
+    @MainActor
+    func chatsController() throws -> (WorkspaceController, FakeControls, LogBox, Paths, recent: String, older: String) {
+        let (c, controls, log, paths) = try controller()
+        let projects = paths.root.appendingPathComponent("projects/-Users-x-project")
+        try FileManager.default.createDirectory(at: projects, withIntermediateDirectories: true)
+        c.conversationSources = ClaudeConversations.Sources(projects: paths.root.appendingPathComponent("projects"),
+                                                            desktop: paths.root.appendingPathComponent("desktop"))
+        var recent = Transcript(in: projects)
+        recent.cwd = FileManager.default.homeDirectoryForCurrentUser.path + "/Developer/annex"
+        recent.prompt(Date().addingTimeInterval(-3600))
+        recent.reply(Date().addingTimeInterval(-3500))
+        recent.keeperStart(Date().addingTimeInterval(-60))
+        recent.title("Rechnungen")
+        try recent.write()
+        var older = Transcript(in: projects, entrypoint: "cli")
+        older.prompt(Date().addingTimeInterval(-26 * 3600))
+        try older.write()
+        return (c, controls, log, paths, recent.id, older.id)
+    }
+
+    func writeKeeper(_ paths: Paths, _ entries: [KeeperStatus.Entry], commands: [String]? = ["restart"]) throws {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let status = KeeperStatus(enabled: true, entries: entries, updated: Date(), commands: commands)
+        try encoder.encode(status).write(to: SessionKeeper.statusURL(paths))
+    }
+
+    func entry(_ id: String, _ state: KeeperStatus.State, detail: String = "") -> KeeperStatus.Entry {
+        KeeperStatus.Entry(id: id, title: "Rechnungen", cwd: "/", pinned: false, state: state, detail: detail, pid: 42,
+                           since: Date(), lastActivity: Date())
+    }
+
+    @MainActor
+    func testTheChatsAsThePhoneSeesThem() async throws {
+        let (c, _, _, paths, recent, older) = try chatsController()
+        var s = c.settings
+        s.keepReachable = true
+        s.skippedConversations = [older]
+        try c.updateSettings(s)
+        try writeKeeper(paths, [entry(recent, .openElsewhere, detail: KeeperStatus.Detail.inClaudeApp)])
+        let response = await c.handle(phone.sign(request(CompanionControl.chatsList)))
+        XCTAssertTrue(response.ok, response.text)
+        let body = try object(response)
+        XCTAssertNotNil(body["status"] as? [String: Any], "every answer carries the status")
+        let chats = try XCTUnwrap(body["chats"] as? [String: Any])
+        XCTAssertEqual(chats["enabled"] as? Bool, true)
+        XCTAssertEqual(chats["restart"] as? Bool, true)
+        let list = try XCTUnwrap(chats["list"] as? [[String: Any]])
+        XCTAssertEqual(list.map { $0["id"] as? String }, [recent, older], "the person's last use first")
+        XCTAssertEqual(list[0]["title"] as? String, "Rechnungen")
+        XCTAssertEqual(list[0]["folder"] as? String, "~/Developer/annex")
+        XCTAssertEqual(list[0]["origin"] as? String, "app")
+        XCTAssertEqual(list[0]["state"] as? String, "openElsewhere")
+        XCTAssertEqual(list[0]["note"] as? String, "app")
+        XCTAssertNil(list[0]["reason"])
+        let activity = try XCTUnwrap(ISO8601DateFormatter().date(from: list[0]["activity"] as? String ?? ""))
+        XCTAssertEqual(activity.timeIntervalSinceNow, -3500, accuracy: 2, "the answer, not the keeper's start")
+        XCTAssertEqual(list[1]["origin"] as? String, "terminal")
+        XCTAssertEqual(list[1]["skipped"] as? Bool, true)
+        XCTAssertEqual(list[1]["reason"] as? String, "skipped")
+        XCTAssertNil(list[1]["state"])
+    }
+
+    @MainActor
+    func testChangingAChatGoesThroughTheApp() async throws {
+        let (c, controls, log, _, recent, _) = try chatsController()
+        for (op, change) in [(CompanionControl.chatsPin, ConversationChange.pin), (CompanionControl.chatsUnpin, .unpin),
+                             (CompanionControl.chatsSkip, .skip), (CompanionControl.chatsUnskip, .unskip)] {
+            let response = await c.handle(phone.sign(request(op, text: recent)))
+            XCTAssertTrue(response.ok, response.text)
+            XCTAssertNotNil(try object(response)["chats"] as? [String: Any])
+            XCTAssertEqual(controls.changes.last?.0, recent)
+            XCTAssertEqual(controls.changes.last?.1, change)
+        }
+        XCTAssertTrue(log.lines.contains { $0.contains("pin") })
+        let nonsense = await c.handle(phone.sign(request(CompanionControl.chatsPin, text: "../settings.json")))
+        XCTAssertFalse(nonsense.ok)
+        XCTAssertEqual(controls.changes.count, 4)
+        // The id is signed: another one breaks the signature
+        var r = phone.sign(request(CompanionControl.chatsSkip, text: recent))
+        r.text = "5f0c1c2e-8b1d-4d0e-9a51-0b8f6f2f7a10"
+        let tampered = await c.handle(r)
+        XCTAssertEqual(tampered.code, "invalid")
+        XCTAssertEqual(controls.changes.count, 4)
+    }
+
+    @MainActor
+    func testRestartingAChatTellsTheKeeper() async throws {
+        let (c, _, log, paths, recent, older) = try chatsController()
+        var s = c.settings
+        s.keepReachable = true
+        try c.updateSettings(s)
+        let restart = { (id: String) in await c.handle(self.phone.sign(self.request(CompanionControl.chatsRestart, text: id))) }
+        var answer = await restart(recent)
+        XCTAssertEqual(answer.code, "no-keeper", "no keeper status")
+        try writeKeeper(paths, [entry(recent, .running), entry(older, .openElsewhere)], commands: nil)
+        answer = await restart(recent)
+        XCTAssertEqual(answer.code, "keeper-old", "a keeper from before can't")
+        try writeKeeper(paths, [entry(recent, .running), entry(older, .openElsewhere)])
+        answer = await restart(older)
+        XCTAssertEqual(answer.code, "not-kept", "open elsewhere: nothing of aOS's runs")
+        answer = await restart(recent)
+        XCTAssertEqual(answer.code, "no-keeper", "aos-session's socket isn't there")
+
+        // aos-session's socket: the keeper's command arrives there.
+        let path = paths.run.appendingPathComponent("session.sock").path
+        let listener = socket(AF_UNIX, SOCK_STREAM, 0)
+        var addr = try TermSocket.address(path)
+        _ = withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { Darwin.bind(listener, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
+        }
+        XCTAssertEqual(Darwin.listen(listener, 1), 0)
+        defer { close(listener); unlink(path) }
+        let received = expectation(description: "keeper command")
+        final class Box: @unchecked Sendable { var bytes: [UInt8] = [] }
+        let box = Box()
+        Thread.detachNewThread {
+            let fd = accept(listener, nil, nil)
+            var buffer = [UInt8](repeating: 0, count: 128)
+            let n = read(fd, &buffer, buffer.count)
+            if n > 0 { box.bytes = Array(buffer[0..<n]) }
+            close(fd)
+            received.fulfill()
+        }
+        answer = await restart(recent)
+        XCTAssertTrue(answer.ok, answer.text)
+        await fulfillment(of: [received], timeout: 5)
+        XCTAssertEqual(SessionSupervisor.keeperRestart(in: Data(box.bytes)), recent)
+        XCTAssertTrue(log.lines.contains { $0.contains("restarts the kept conversation") })
+    }
+
     @MainActor
     func testHelloListsWhatThisMacOffers() async throws {
         let (c, _, _, _) = try controller()
@@ -206,6 +349,8 @@ final class CompanionControlTests: XCTestCase {
         let features = try XCTUnwrap(try object(hello)["features"] as? [String])
         XCTAssertTrue(features.contains("mac.sleep"))
         XCTAssertTrue(features.contains("term"))
+        XCTAssertTrue(features.contains("chats.list"))
+        XCTAssertTrue(features.contains("chats.restart"))
         XCTAssertFalse(features.contains { $0.hasPrefix("companion.") })
     }
 

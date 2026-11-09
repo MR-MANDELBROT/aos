@@ -32,6 +32,9 @@ public final class SessionSupervisor: @unchecked Sendable {
     private var startedAt = Date()
     private var recentText = ""
     public var log: (String) -> Void = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) }
+    /// A kept conversation (its id) is to be restarted: the socket's `keeperRestart` command, for the keeper in the
+    /// same process.
+    public var onKeeperRestart: ((String) -> Void)?
 
     public static let columns: UInt16 = 120
     public static let rows: UInt16 = 40
@@ -277,6 +280,10 @@ public final class SessionSupervisor: @unchecked Sendable {
             if child > 0 { kill(child, SIGTERM) } else { launch() }
             return
         }
+        if let id = Self.keeperRestart(in: data) {
+            onKeeperRestart?(id)
+            return
+        }
         if master >= 0 { _ = data.withUnsafeBytes { write(master, $0.baseAddress, n) } }
         if status.state == .needsAttention || status.state == .needsLogin {
             // The user answered in the app; give Claude Code a moment, then assume it runs.
@@ -286,6 +293,19 @@ public final class SessionSupervisor: @unchecked Sendable {
                 self.setStatus(.running)
             }
         }
+    }
+
+    /// The command that restarts one kept conversation (instead of terminal input, like the restart command).
+    public static func keeperRestartCommand(_ id: String) -> Data {
+        Data("\u{1B}]aos;keeper-restart;\(id)\u{07}".utf8)
+    }
+
+    /// The conversation id of a keeper restart command (only a real id: anything else is no command).
+    public static func keeperRestart(in data: Data) -> String? {
+        let prefix = Data("\u{1B}]aos;keeper-restart;".utf8)
+        guard data.count > prefix.count + 1, data.starts(with: prefix), data.last == 0x07 else { return nil }
+        let id = String(decoding: data.dropFirst(prefix.count).dropLast(), as: UTF8.self)
+        return UUID(uuidString: id) != nil ? id : nil
     }
 
     /// Ends the session (SIGTERM, then SIGKILL).

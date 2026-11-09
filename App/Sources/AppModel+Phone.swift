@@ -32,6 +32,18 @@ extension AppModel: MacControls {
         return nil
     }
 
+    /// The chats on the phone: the same as pin and skip in Settings > Claude Code (the keeper follows the settings).
+    func changeConversation(_ id: String, _ change: ConversationChange) -> MacControlRefusal? {
+        switch change {
+        case .pin: pin(id, true)
+        case .unpin: pin(id, false)
+        case .skip: skip(id)
+        case .unskip: unskip(id)
+        }
+        loadConversations()
+        return nil
+    }
+
     static func helperName(_ status: SMAppService.Status) -> String {
         switch status {
         case .enabled: return "enabled"
