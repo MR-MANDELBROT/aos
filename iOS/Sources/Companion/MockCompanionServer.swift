@@ -20,12 +20,18 @@ final class MockCompanionServer: @unchecked Sendable {
         var refuseCode: [String: String] = [:]
         /// What `mac.status` reports; the actions change it as the Mac would.
         var macStatus = MockCompanionServer.demoMacStatus
-        /// What `chats.list` reports (in the Mac's order: pinned first, then by last use); the chats ops change it.
+        /// What `chats.list` reports (in the Mac's order: reachable first, then pinned, then by last use); the chats ops
+        /// change it.
         var chats = MockCompanionServer.demoChats()
         /// Keeping chats reachable is on (Settings > Claude Code on the Mac).
         var chatsEnabled = true
         /// The keeper on the Mac restarts single chats (an older one can't).
         var chatsRestart = true
+        /// The Mac knows `chats.start`, `chats.stop` and `chats.delete` (one from before them only pins and skips).
+        var chatsStartStop = true
+        /// As the keeper on the Mac: a chat started from here (or restarted) runs after this time, with a `chats` event.
+        /// Nil: it stays `starting`.
+        var chatsStep: Duration?
         /// The Mac is older and doesn't know the Overview's ops.
         var oldMac = false
         /// As aOS on the Mac: `workspace.start` and `workspace.stop` answer with the state before, then the workspace
@@ -150,7 +156,8 @@ final class MockCompanionServer: @unchecked Sendable {
             return Self.encode(refusal)
         }
         var body: [String: JSONValue] = ["id": .number(Double(id)), "ok": .bool(true)]
-        if let action = MacAction(rawValue: op), !state.oldMac {
+        if let action = MacAction(rawValue: op), !state.oldMac,
+           state.chatsStartStop || !Self.startStopOps.contains(action) {
             if action.rawValue.hasPrefix("chats.") {
                 // As aOS on the Mac: the chat's id must be one, a restart only for one that runs there.
                 if let refusal = chatAction(action, id: object["text"]?.string) {
@@ -173,7 +180,8 @@ final class MockCompanionServer: @unchecked Sendable {
             body["mac"] = .string(state.macName)
             body["aos"] = .string(state.aosVersion)
             if !state.oldMac {
-                body["features"] = .array((MacAction.allCases.map(\.rawValue) + ["term"]).map { .string($0) })
+                let actions = MacAction.allCases.filter { state.chatsStartStop || !Self.startStopOps.contains($0) }
+                body["features"] = .array((actions.map(\.rawValue) + ["term"]).map { .string($0) })
             }
         case "status":
             var workspace: [String: JSONValue] = ["state": .string(state.workspace.state.name),
@@ -311,7 +319,8 @@ final class MockCompanionServer: @unchecked Sendable {
                 var r = status["routines"]?.object ?? [:]
                 r["items"] = .array((r["items"]?.array ?? []).filter { $0.object?["id"]?.string != value })
                 status["routines"] = .object(r)
-            case .chatsList, .chatsPin, .chatsUnpin, .chatsSkip, .chatsUnskip, .chatsRestart:
+            case .chatsList, .chatsPin, .chatsUnpin, .chatsSkip, .chatsUnskip, .chatsRestart, .chatsStart, .chatsStop,
+                 .chatsDelete:
                 set("kept", "running", .number(Double(state.chats.filter { $0.state == "running" }.count)))
             case .status, .sleep, .routineRun:
                 break
@@ -323,8 +332,8 @@ final class MockCompanionServer: @unchecked Sendable {
 
     // MARK: Chats
 
-    /// Chats in all their states: pinned and running, open in the Claude app, running, waiting for a sign-in,
-    /// stopped from the phone, from a terminal, not used for days.
+    /// Chats in all their states: pinned and running, open in the Claude app, running, waiting for a sign-in, failed,
+    /// stopped from the phone, from a terminal, above the limit, not used for days, archived in the Claude app.
     static func demoChats(now: Date = Date()) -> [ChatList.Chat] {
         func ago(_ minutes: Double) -> Date { now.addingTimeInterval(-minutes * 60) }
         return ordered([
@@ -338,40 +347,60 @@ final class MockCompanionServer: @unchecked Sendable {
             .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e04", title: "Website: QR-Code-Abschnitt", folder: "~/Developer/marquart.dev",
                   origin: "app", activity: ago(190), state: "needsAttention", detail: "Claude Code needs a sign-in",
                   note: "signIn", since: ago(20)),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e08", title: "Steuererklärung 2025 vorbereiten",
+                  folder: "~/Documents/Steuern", origin: "app", activity: ago(9 * 60), pinned: true, state: "failed",
+                  detail: "Claude Code ended", since: ago(15)),
             .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e05", title: "Morgenbriefing", folder: "~/cloupi", origin: "app",
                   activity: ago(300), skipped: true, reason: "skipped"),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e09", title: "Fotos nach Datum ordnen", folder: "~/Pictures",
+                  origin: "app", activity: ago(14 * 60), reason: "overLimit"),
             .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e06", title: "Tailscale auf dem iPhone testen", folder: "~/Developer/annex",
                   origin: "terminal", activity: ago(26 * 60), reason: "terminal"),
             .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e07", title: "Umzugskartons zählen", folder: "~", origin: "app",
                   activity: ago(4 * 24 * 60), reason: "inactive"),
+            .init(id: "6f1d6a0e-2b7c-4d8a-9c3e-1a2b3c4d5e0a", title: "Urlaub in Lissabon planen", folder: "~/Documents/Reisen",
+                  origin: "app", activity: ago(5 * 24 * 60), reason: "archived"),
         ])
     }
 
-    /// The Mac's order: pinned first, then by last use.
+    /// The Mac's order: reachable ones first (running, starting, open elsewhere), then pinned ones, then by the
+    /// person's last activity.
     static func ordered(_ chats: [ChatList.Chat]) -> [ChatList.Chat] {
         chats.sorted { a, b in
+            if a.isReachable != b.isReachable { return a.isReachable }
             if a.pinned != b.pinned { return a.pinned }
             if a.activity != b.activity { return (a.activity ?? .distantPast) > (b.activity ?? .distantPast) }
             return a.id < b.id
         }
     }
 
+    /// The ops a Mac from before them doesn't know (`chatsStartStop`).
+    static let startStopOps: Set<MacAction> = [.chatsStart, .chatsStop, .chatsDelete]
+
     /// What the Mac does for a chats op, or why it refuses (with the Mac's code, if it has one).
     private func chatAction(_ action: MacAction, id: String?) -> (code: String?, message: String)? {
-        lock.withLock {
-            guard action != .chatsList else { return nil }
+        let result: (refusal: (code: String?, message: String)?, starts: String?) = lock.withLock {
+            guard action != .chatsList else { return (nil, nil) }
             guard let id, let index = state.chats.firstIndex(where: { $0.id == id }) else {
-                return (nil, "Not a conversation: \(id ?? "")")
+                // As aOS on the Mac: a delete names what it doesn't know, the other ops refuse anything but a chat
+                return action == .chatsDelete ? (("not-found", "No such conversation."), nil)
+                                              : ((nil, "Not a conversation: \(id ?? "")"), nil)
             }
             var c = state.chats[index]
+            var starts: String?
             switch action {
-            case .chatsPin:
+            case .chatsPin, .chatsStart:
+                // Pinned, not skipped; the keeper starts it (a start at once)
                 c.pinned = true
                 c.skipped = false
-                if c.state == nil { c.state = "starting"; c.reason = nil; c.since = Date() }
+                if !c.isReachable {
+                    c.state = "starting"; c.detail = nil; c.note = nil; c.reason = nil; c.since = Date()
+                    starts = c.id
+                }
             case .chatsUnpin:
                 c.pinned = false
-            case .chatsSkip:
+            case .chatsSkip, .chatsStop:
+                // Unpinned and skipped; the keeper ends its copy
                 c.skipped = true
                 c.pinned = false
                 c.state = nil; c.detail = nil; c.note = nil; c.reason = "skipped"
@@ -380,18 +409,47 @@ final class MockCompanionServer: @unchecked Sendable {
                 c.reason = c.origin == "terminal" ? "terminal" : "overLimit"
             case .chatsRestart:
                 guard state.chatsRestart else {
-                    return ("keeper-old", "aOS's background process on the Mac is from an older version and can't restart a single conversation. It can after the Mac restarts.")
+                    return (("keeper-old", "aOS's background process on the Mac is from an older version and can't restart a single conversation. It can after the Mac restarts."), nil)
                 }
                 guard ["running", "starting", "needsAttention", "failed"].contains(c.state ?? "") else {
-                    return ("not-kept", "aOS doesn't run this conversation right now, so there is nothing to restart.")
+                    return (("not-kept", "aOS doesn't run this conversation right now, so there is nothing to restart."), nil)
                 }
                 c.state = "starting"; c.detail = "restarting"; c.note = "restarting"; c.since = Date()
+                starts = c.id
+            case .chatsDelete:
+                // Not while it runs or is open somewhere; else its transcript goes to the Trash and aOS forgets it
+                guard c.isIdle else {
+                    return (("chat-running", "The conversation is running or open. Stop it first, or close it in the Claude app."), nil)
+                }
+                state.chats.remove(at: index)
+                return (nil, nil)
             default:
                 break
             }
             state.chats[index] = c
             state.chats = Self.ordered(state.chats)
-            return nil
+            return (nil, starts)
+        }
+        if let id = result.starts { keeperStarts(id) }
+        return result.refusal
+    }
+
+    /// As the keeper on the Mac: the chat runs a moment later, with a `chats` event (`chatsStep`).
+    private func keeperStarts(_ id: String) {
+        guard let step = lock.withLock({ state.chatsStep }) else { return }
+        Task {
+            try? await Task.sleep(for: step)
+            let changed: Bool = lock.withLock {
+                guard let index = state.chats.firstIndex(where: { $0.id == id }), state.chats[index].state == "starting"
+                else { return false }
+                state.chats[index].state = "running"
+                state.chats[index].detail = nil
+                state.chats[index].note = nil
+                state.chats[index].since = Date()
+                state.chats = Self.ordered(state.chats)
+                return true
+            }
+            if changed { emit(.chats) }
         }
     }
 

@@ -862,29 +862,17 @@ DE.update({
     'Switch on “Keep conversations reachable” in aOS on the Mac (Settings > Claude Code), and aOS keeps your chats running there for the Claude app.':
         'Schalte in aOS auf dem Mac „Unterhaltungen erreichbar halten“ ein (Einstellungen > Claude Code), dann hält aOS deine Chats dort für die Claude-App am Laufen.',
     'No chats in the last days.': 'Keine Chats in den letzten Tagen.',
-    'Show Fewer': 'Weniger zeigen',
-    'Show All (%lld)': 'Alle zeigen (%lld)',
     'Stop “%@”?': '„%@“ stoppen?',
     'Restart “%@”?': '„%@“ neu starten?',
     'Stop': 'Stoppen',
-    'Pin': 'Anheften',
-    'Unpin': 'Nicht mehr anheften',
     'Pinned': 'Angeheftet',
-    'Keep Again': 'Wieder erreichbar halten',
-    "Don't Keep": 'Nicht erreichbar halten',
-    'Pin: Always Keep Reachable': 'Anheften: immer erreichbar halten',
-    'Shows the chat and what you can do with it': 'Zeigt den Chat und was du damit tun kannst',
     "This chat isn't in the list any more.": 'Dieser Chat ist nicht mehr in der Liste.',
     'Folder': 'Ordner',
     'Started in': 'Gestartet in',
     'Last used': 'Zuletzt benutzt',
     'Always kept reachable': 'Immer erreichbar',
-    "Pinned chats stay reachable, also when you haven't used them for a while. Stop ends a chat on the Mac, and aOS doesn't keep it until you keep it again.":
-        'Angeheftete Chats bleiben erreichbar, auch wenn du sie länger nicht benutzt hast. „Stoppen“ beendet einen Chat auf dem Mac, und aOS hält ihn erst wieder erreichbar, wenn du das wieder einschaltest.',
     'aOS on the Mac starts Claude Code for it again. The chat continues where it was; an answer it is writing right now stops.':
         'aOS auf dem Mac startet Claude Code dafür neu. Der Chat geht weiter, wo er war; eine Antwort, die gerade entsteht, bricht ab.',
-    'aOS ends it on the Mac and doesn\'t keep it any more. Keep Again undoes that; the chat itself stays as it is.':
-        'aOS beendet ihn auf dem Mac und hält ihn nicht mehr erreichbar. „Wieder erreichbar halten“ macht das rückgängig; der Chat selbst bleibt, wie er ist.',
     'Off on the Mac': 'Auf dem Mac aus',
     'None is reachable in the Claude app right now': 'Gerade ist keiner in der Claude-App erreichbar',
     'Reachable': 'Erreichbar',
@@ -918,10 +906,6 @@ DE.update({
         'Claude Code auf dem Mac braucht eine Anmeldung. Führ dort einmal claude in einem Terminal aus und melde dich an.',
     'Claude Code keeps stopping. aOS tries again later; Restart tries now.':
         'Claude Code hört immer wieder auf. aOS versucht es später wieder; „Neu starten“ versucht es jetzt.',
-    "You stopped it. aOS doesn't keep it until you keep it again.":
-        'Du hast ihn gestoppt. aOS hält ihn erst wieder erreichbar, wenn du das wieder einschaltest.',
-    'aOS keeps the chats you used last, at most %lld. Pin this one to keep it reachable anyway.':
-        'aOS hält die Chats erreichbar, die du zuletzt benutzt hast, höchstens %lld. Heft diesen an, damit er trotzdem erreichbar bleibt.',
     'The Claude app': 'Die Claude-App',
     'A terminal or a tool': 'Ein Terminal oder ein Werkzeug',
     'Elsewhere': 'Anderswo',
@@ -941,4 +925,34 @@ DE.update({
     "Weekends": "Am Wochenende",
     "Every hour from %@ to %@": "Stündlich von %1$@ bis %2$@",
     "Every %lld hours from %@ to %@": "Alle %1$lld Stunden von %2$@ bis %3$@",
+})
+
+# The chats on a page of their own (2026-11-09): Start, Stop, Delete; the Overview's Chats row
+DE.update({
+    'Stop it first, or close it in the Claude app.': 'Stoppe ihn zuerst oder schließ ihn in der Claude-App.',
+    "This chat isn't on the Mac any more.": 'Diesen Chat gibt es auf dem Mac nicht mehr.',
+    'Delete “%@”?': '„%@“ löschen?',
+    'Keeping chats reachable is off on the Mac': 'Chats erreichbar halten ist auf dem Mac aus',
+    'None reachable in the Claude app right now': 'Gerade keiner in der Claude-App erreichbar',
+    '1 reachable in the Claude app': '1 in der Claude-App erreichbar',
+    '%lld reachable in the Claude app': '%lld in der Claude-App erreichbar',
+    'New chats from the Claude app are off': 'Neue Chats aus der Claude-App sind aus',
+    'New chats from the Claude app are on': 'Neue Chats aus der Claude-App sind an',
+    'New chats need a sign-in to Claude Code on the Mac': 'Neue Chats brauchen eine Anmeldung bei Claude Code auf dem Mac',
+    'New chats wait for you on the Mac (trust the folder)': 'Neue Chats warten auf dem Mac auf dich (Ordner vertrauen)',
+    'New chats wait for the network': 'Neue Chats warten auf das Netzwerk',
+    'New chats are starting': 'Neue Chats starten gerade',
+    "You stopped it. aOS doesn't keep it until you start it again.":
+        'Du hast ihn gestoppt. aOS hält ihn erst wieder erreichbar, wenn du ihn wieder startest.',
+    'aOS keeps the chats you used last, at most %lld. Start this one to keep it reachable anyway.':
+        'aOS hält die Chats erreichbar, die du zuletzt benutzt hast, höchstens %lld. Starte diesen, damit er trotzdem erreichbar bleibt.',
+    'Claude app': 'Claude-App',
+    "aOS ends it on the Mac and doesn't keep it reachable until you start it again. The conversation itself stays as it is.":
+        'aOS beendet ihn auf dem Mac und hält ihn erst wieder erreichbar, wenn du ihn wieder startest. Die Unterhaltung selbst bleibt, wie sie ist.',
+    "The conversation goes to the Mac's Trash and disappears from aOS. The Claude app may keep showing a conversation the desktop app started until it reloads.":
+        'Die Unterhaltung kommt in den Papierkorb des Macs und verschwindet aus aOS. Eine Unterhaltung, die die Desktop-App gestartet hat, zeigt die Claude-App womöglich noch, bis sie neu lädt.',
+    "Start keeps a chat reachable in the Claude app, also when you haven't used it for a while. Stop ends it on the Mac until you start it again. Delete moves the conversation to the Mac's Trash.":
+        '„Starten“ hält einen Chat in der Claude-App erreichbar, auch wenn du ihn länger nicht benutzt hast. „Stoppen“ beendet ihn auf dem Mac, bis du ihn wieder startest. „Löschen“ legt die Unterhaltung in den Papierkorb des Macs.',
+    "Start keeps a chat reachable in the Claude app, also when you haven't used it for a while. Stop ends it on the Mac until you start it again.":
+        '„Starten“ hält einen Chat in der Claude-App erreichbar, auch wenn du ihn länger nicht benutzt hast. „Stoppen“ beendet ihn auf dem Mac, bis du ihn wieder startest.',
 })
