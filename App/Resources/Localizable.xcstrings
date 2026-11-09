@@ -4552,6 +4552,7 @@
       }
     },
     "Pinned ones on top, then the ones you wrote in or got an answer in last." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6228,6 +6229,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das Master-Passwort stimmt nicht."
+          }
+        }
+      }
+    },
+    "The ones reachable in the Claude app now on top, then pinned ones, then the ones you wrote in or got an answer in last. aOS's own session isn't listed here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oben die gerade in der Claude-App erreichbaren, dann angeheftete, dann die, in denen du zuletzt geschrieben oder eine Antwort bekommen hast. Die eigene Sitzung von aOS steht nicht hier."
           }
         }
       }

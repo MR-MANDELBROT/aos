@@ -287,7 +287,10 @@ public final class SessionKeeper: @unchecked Sendable {
         guard !evaluating else { return }
         evaluating = true
         defer { evaluating = false }
-        let s = settings(paths)
+        var s = settings(paths)
+        // Pins and skips of an older version count for the version the desktop app continues now.
+        s.keptConversations = ClaudeConversations.currentIDs(s.keptConversations, cache: cache)
+        s.skippedConversations = ClaudeConversations.currentIDs(s.skippedConversations, cache: cache)
         guard s.keepReachable else {
             for k in kept.values { terminate(k) }
             entries = [:]

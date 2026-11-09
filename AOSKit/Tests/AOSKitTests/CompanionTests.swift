@@ -335,11 +335,11 @@ final class KeeperTests: XCTestCase {
         XCTAssertNil(SessionKeeper.ownConversation(paths))
         try Data(#"{"folder":"/Users/x/cloupi","id":"own-session"}"#.utf8).write(to: SessionKeeper.ownConversationURL(paths))
         XCTAssertEqual(SessionKeeper.ownConversation(paths), "own-session")
-        // The phone's list says why
+        // The phone's list leaves it out (Max, 2026-11-09: aOS's own session doesn't belong among the chats)
         let chats = CompanionChats.json([own, neighbour], keeper: nil, settings: s, exclude: "/aOS/Session",
                                         ownConversation: SessionKeeper.ownConversation(paths))
         let list = try XCTUnwrap(chats["list"] as? [[String: Any]])
-        XCTAssertEqual(list.first { $0["id"] as? String == "own-session" }?["reason"] as? String, "ownSession")
+        XCTAssertNil(list.first { $0["id"] as? String == "own-session" })
         XCTAssertNil(list.first { $0["id"] as? String == "neighbour" }?["reason"])
     }
 

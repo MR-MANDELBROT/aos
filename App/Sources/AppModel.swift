@@ -39,6 +39,8 @@ final class AppModel: ObservableObject {
     @Published var sessionAgentStatus: SMAppService.Status = .notRegistered
     /// What the session keeper does (run/keeper.json, written by aos-session).
     @Published var keeper: KeeperStatus?
+    /// Conversations a Claude Code process has open now (the desktop app, a terminal, the keeper).
+    @Published var liveConversations: Set<String> = []
     /// What the session's routines do next and what was sent (run/routines.json, written by aos-session).
     @Published var routines: RoutinesStatus?
     @Published var remote: RemoteServerStatus?
@@ -455,7 +457,18 @@ final class AppModel: ObservableObject {
         let cache = conversationCache
         Task.detached(priority: .utility) {
             let list = ClaudeConversations.shown(settings: s, cache: cache)
-            await MainActor.run { if AppModel.shared.conversations != list { AppModel.shared.conversations = list } }
+            let live = Set(ClaudeConversations.live().map(\.sessionId))
+            // Pins and skips of an older version of a conversation go over to the version the desktop app continues.
+            let kept = ClaudeConversations.currentIDs(s.keptConversations, cache: cache)
+            let skipped = ClaudeConversations.currentIDs(s.skippedConversations, cache: cache)
+            await MainActor.run {
+                let model = AppModel.shared
+                if model.conversations != list { model.conversations = list }
+                if model.liveConversations != live { model.liveConversations = live }
+                if kept != model.settings.keptConversations || skipped != model.settings.skippedConversations {
+                    model.update { $0.keptConversations = kept; $0.skippedConversations = skipped }
+                }
+            }
         }
     }
 

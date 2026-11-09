@@ -77,6 +77,8 @@ public struct MacControlRefusal: Error, Equatable, Sendable {
     public static let noSession = MacControlRefusal("no-session", "\(Brand.name)'s background process isn't running, so there is no Claude Code session to restart.")
     public static let noKeeper = MacControlRefusal("no-keeper", "\(Brand.name)'s background process doesn't keep conversations reachable right now.")
     public static let keeperTooOld = MacControlRefusal("keeper-old", "\(Brand.name)'s background process on the Mac is from an older version and can't restart a single conversation. It can after the Mac restarts.")
+    public static let chatRunning = MacControlRefusal("chat-running", "This conversation runs or is open somewhere. Stop it first, or close it in the Claude app.")
+    public static let chatNotFound = MacControlRefusal("not-found", "\(Brand.name) doesn't find this conversation on the Mac.")
     public static let notKept = MacControlRefusal("not-kept", "\(Brand.name) doesn't run this conversation right now, so there is nothing to restart.")
 }
 
@@ -231,7 +233,12 @@ public enum CompanionControl {
     public static let chatsSkip = "companion.chats.skip"
     public static let chatsUnskip = "companion.chats.unskip"
     public static let chatsRestart = "companion.chats.restart"
-    public static let chatOps: Set<String> = [chatsList, chatsPin, chatsUnpin, chatsSkip, chatsUnskip, chatsRestart]
+    /// Start it now (pins it, the keeper starts it), stop it (never keep it), delete it (its transcript to the Trash).
+    public static let chatsStart = "companion.chats.start"
+    public static let chatsStop = "companion.chats.stop"
+    public static let chatsDelete = "companion.chats.delete"
+    public static let chatOps: Set<String> = [chatsList, chatsPin, chatsUnpin, chatsSkip, chatsUnskip, chatsRestart,
+                                              chatsStart, chatsStop, chatsDelete]
 
     public static let ops: Set<String> = Set([status, sleep, displayOff, displayOn, stayAwake, batteryLimit, workspaceStart,
                                               workspaceStop, bitwardenLock, sessionRestart, routineSet, routineDelete,

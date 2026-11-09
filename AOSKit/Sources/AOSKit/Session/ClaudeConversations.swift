@@ -21,6 +21,13 @@ public struct ClaudeConversation: Codable, Sendable, Identifiable, Equatable {
     /// orders nothing.
     public var modified: Date?
 
+    /// An older version of a conversation the Claude desktop app continues under another session id now: starting or
+    /// keeping it would resume the old state, so lists leave it out (the current one is listed instead).
+    public var isOlderVersion: Bool {
+        guard let current = desktop?.current, !current.isEmpty else { return false }
+        return current != id
+    }
+
     public struct DesktopInfo: Codable, Sendable, Equatable {
         public var archived: Bool
         public var scheduled: Bool
@@ -29,6 +36,9 @@ public struct ClaudeConversation: Codable, Sendable, Identifiable, Equatable {
         public var title: String?
         /// The desktop app's own record of the last activity (`lastActivityAt`): only while it ran the conversation.
         public var lastActivity: Date?
+        /// The Claude Code session the desktop app continues the conversation in now (`cliSessionId`); its earlier
+        /// ones (`priorCliSessionIds`) are older versions of the same conversation.
+        public var current: String? = nil
     }
 }
 
@@ -97,13 +107,18 @@ public enum ClaudeConversations {
     /// automation (`sdk-cli`).
     public static func list(within: TimeInterval, pinned: [String], limit: Int, cache: ConversationCache? = nil,
                             sources: Sources = .standard) -> [ClaudeConversation] {
-        var all = recent(within: within, limit: .max, cache: cache, sources: sources).filter { $0.startedIn != "sdk-cli" }
+        let desktopNow = desktopRecords(in: sources.desktop, cache: cache)
+        // An older version of a conversation the desktop app continues in another session: only the current one.
+        let pinned = pinned.map { currentID($0, desktop: desktopNow) }
+        var all = recent(within: within, limit: .max, cache: cache, sources: sources)
+            .filter { $0.startedIn != "sdk-cli" && !$0.isOlderVersion }
         let have = Set(all.map(\.id))
         let missing = pinned.filter { !have.contains($0) }
         if !missing.isEmpty {
             let desktop = desktopRecords(in: sources.desktop, cache: cache)
             for id in missing {
-                if let c = find(id, desktop: desktop, cache: cache, sources: sources), c.startedIn != "sdk-cli" { all.append(c) }
+                if let c = find(id, desktop: desktop, cache: cache, sources: sources), c.startedIn != "sdk-cli",
+                   !c.isOlderVersion { all.append(c) }
             }
         }
         let pinnedSet = Set(pinned)
@@ -113,6 +128,20 @@ public enum ClaudeConversations {
             others += 1
             return others <= limit
         }
+    }
+
+    /// The id the desktop app continues a conversation under now (the id itself when it has no newer one).
+    public static func currentID(_ id: String, desktop: [String: ClaudeConversation.DesktopInfo]) -> String {
+        guard let current = desktop[id]?.current, !current.isEmpty else { return id }
+        return current
+    }
+
+    /// Ids of older versions mapped to the current ones (pinned and skipped ids in the settings).
+    public static func currentIDs(_ ids: [String], cache: ConversationCache? = nil, sources: Sources = .standard) -> [String] {
+        let desktop = desktopRecords(in: sources.desktop, cache: cache)
+        var out: [String] = []
+        for id in ids.map({ currentID($0, desktop: desktop) }) where !out.contains(id) { out.append(id) }
+        return out
     }
 
     /// What the settings list, on the Mac and on the iPhone: the last week (or `keepHours`, if longer) and the pinned
@@ -150,6 +179,21 @@ public enum ClaudeConversations {
             }
         }
         return nil
+    }
+
+    /// The transcript files of a conversation (its .jsonl and the folder of the same name with its subagents and tool
+    /// output), wherever they are under ~/.claude/projects.
+    public static func files(of id: String, sources: Sources = .standard) -> [URL] {
+        guard UUID(uuidString: id) != nil else { return [] }
+        var out: [URL] = []
+        for folder in contents(of: sources.projects) {
+            let file = folder.appendingPathComponent("\(id).jsonl")
+            if FileManager.default.fileExists(atPath: file.path) { out.append(file) }
+            let dir = folder.appendingPathComponent(id, isDirectory: true)
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: dir.path, isDirectory: &isDir), isDir.boolValue { out.append(dir) }
+        }
+        return out
     }
 
     static func contents(of folder: URL) -> [URL] {
@@ -210,7 +254,8 @@ public enum ClaudeConversations {
                 permissionMode: obj["permissionMode"] as? String,
                 remoteControlTurnedOff: (obj["remoteControlUserEnabled"] as? Bool) == false,
                 title: obj["title"] as? String,
-                lastActivity: (obj["lastActivityAt"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue / 1000) })
+                lastActivity: (obj["lastActivityAt"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue / 1000) },
+                current: obj["cliSessionId"] as? String)
             var ids = (obj["priorCliSessionIds"] as? [String]) ?? []
             if let id = obj["cliSessionId"] as? String { ids.append(id) }
             for id in ids { out[id] = info }
@@ -479,6 +524,9 @@ struct TranscriptScan: Sendable, Equatable {
             || obj["toolUseResult"] != nil { return nil }
         if let blocks = message?["content"] as? [Any],
            blocks.contains(where: { ($0 as? [String: Any])?["type"] as? String == "tool_result" }) { return nil }
+        // What aOS typed into its session (routines, reminders, notes, the start message): automation, though Claude
+        // Code records it like a typed prompt.
+        if isFromAOS(message?["content"]) { return .automation }
         // Newer Claude Code says who wrote a prompt: "human", or automation ("task-notification", "channel", "peer").
         if let origin = obj["origin"] as? [String: Any], let kind = origin["kind"] as? String {
             return kind == "human" ? .person(date) : .automation
@@ -487,6 +535,17 @@ struct TranscriptScan: Sendable, Equatable {
         // "[Request interrupted by user]").
         if obj["isMeta"] as? Bool == true { return nil }
         return .person(date)
+    }
+
+    /// A prompt that starts with the header line aOS puts in front of what it sends (`SessionDelivery.message`).
+    static func isFromAOS(_ content: Any?) -> Bool {
+        var text: String?
+        if let s = content as? String { text = s }
+        else if let blocks = content as? [Any] {
+            text = blocks.lazy.compactMap { ($0 as? [String: Any]).flatMap { $0["type"] as? String == "text" ? $0["text"] as? String : nil } }.first
+        }
+        guard let t = text?.trimmingCharacters(in: .whitespacesAndNewlines) else { return false }
+        return ["[aOS routine ", "[aOS reminder ", "[aOS note", "[aOS: the session"].contains { t.hasPrefix($0) }
     }
 
     private static let fractional = Date.ISO8601FormatStyle(includingFractionalSeconds: true)
