@@ -8,10 +8,10 @@ import UniformTypeIdentifiers
 
 /// Sample data for screenshots and UI work: start the app with `-AOSDemo YES` (debug builds only).
 /// `-AOSDemoTab overview|terminal|screen` picks the tab, `-AOSDemoSheet signin|signin-code|signin-none|signin-locked|
-/// signin-off|approval|help|pairing|settings|lock|requests|chat` opens a request or sheet (`chat`: a chat's page, with
-/// `-AOSDemoScroll bottom` to see the Chats card under it; `-AOSDemoChats off|old` below). Nothing here touches the keychain
-/// or the network; the Screen tab's pictures come from a screen sharing server in the app (`DemoScreenServer`), shown
-/// with the real screen client.
+/// signin-off|approval|help|pairing|settings|lock|requests|chats|chat` opens a request, sheet or page (`chats`: the Chats
+/// page, `chat`: a chat's page on it; `-AOSDemoChats off|old|older` below). Nothing here touches the keychain or the
+/// network; the Screen tab's pictures come from a screen sharing server in the app (`DemoScreenServer`), shown with the
+/// real screen client.
 enum Demo {
     static var isRequested: Bool { UserDefaults.standard.bool(forKey: "AOSDemo") }
     static var tab: String? { UserDefaults.standard.string(forKey: "AOSDemoTab") }
@@ -21,6 +21,8 @@ enum Demo {
     /// `-AOSDemoScreen workspace|mac|mac-login|mac-login-keyboard`: the Screen tab on the workspace's screen, the
     /// Mac's, its login form, the form with the keyboard up (without it: the cards).
     static var screen: String? { UserDefaults.standard.string(forKey: "AOSDemoScreen") }
+    /// `-AOSDemoConnecting YES`: the Screen tab's cards show their spinner, as while a screen connects.
+    static var connecting: Bool { UserDefaults.standard.bool(forKey: "AOSDemoConnecting") }
     /// `-AOSDemoScroll bottom`: the Overview starts scrolled to its end (screenshots of the lower cards).
     static var scrollToBottom: Bool { UserDefaults.standard.string(forKey: "AOSDemoScroll") == "bottom" }
     /// `-AOSScreenDirect HOST:PORT`: the workspace screen connects straight to a screen sharing server (the
@@ -62,8 +64,11 @@ enum Demo {
         ScreenClient.useMemoryStore()
         ScreenPictures.shared = ScreenPictures(directory: nil)
         let server = MockCompanionServer()
-        // Starting and closing the workspace take a moment, as on the Mac.
-        server.update { $0.workspaceStep = .seconds(2) }
+        // Starting and closing the workspace take a moment, as on the Mac; so does a chat that starts.
+        server.update {
+            $0.workspaceStep = .seconds(2)
+            $0.chatsStep = .seconds(2)
+        }
         // -AOSDemoSession needsLogin: Claude Code on the Mac waits for a sign-in (the Overview says what to do).
         // -AOSDemoDisplay off|none: the Mac's display asleep, or no screen (the lid closed, no monitor).
         if UserDefaults.standard.string(forKey: "AOSDemoSession") == "needsLogin" {
@@ -72,13 +77,37 @@ enum Demo {
         if let display = UserDefaults.standard.string(forKey: "AOSDemoDisplay") {
             server.update { $0.macStatus["display"] = .object(["state": .string(display), "external": .number(0)]) }
         }
-        // -AOSDemoChats off|old: keeping chats reachable is off on the Mac, or its keeper can't restart single chats.
+        // -AOSDemoChats off|old|older: keeping chats reachable is off on the Mac; its keeper can't restart single chats;
+        // the Mac is from before chats.start, chats.stop and chats.delete (Start pins, Stop skips, no Delete).
         switch UserDefaults.standard.string(forKey: "AOSDemoChats") {
         case "off": server.update { $0.chatsEnabled = false }
         case "old": server.update { $0.chatsRestart = false }
+        case "older": server.update { $0.chatsStartStop = false }
         default: break
         }
+        // -AOSDemoWorkspace starting|closing: a start (of a closed workspace) or a close from here under way, with a Mac
+        // that takes a minute per step (the Start or Close button with its spinner).
+        let workspaceOperation = UserDefaults.standard.string(forKey: "AOSDemoWorkspace")
+        if let workspaceOperation {
+            server.update {
+                $0.workspaceStep = .seconds(60)
+                if workspaceOperation == "starting" {
+                    $0.workspace.state = WorkspaceState("stopped")
+                    $0.macStatus["workspace"] = .object(["state": .string("stopped"), "setupComplete": .bool(true)])
+                }
+            }
+        }
         connection.startDemo(server)
+        if let workspaceOperation {
+            Task {
+                for _ in 0..<100 where connection.companionState != .ready {
+                    try? await Task.sleep(for: .milliseconds(100))
+                }
+                await connection.refreshMacStatus()
+                try? await Task.sleep(for: .milliseconds(500))
+                try? await connection.perform(workspaceOperation == "starting" ? .workspaceStart : .workspaceStop)
+            }
+        }
         // -AOSDemoSleeping YES: put to sleep from here a moment ago.
         if UserDefaults.standard.bool(forKey: "AOSDemoSleeping") { connection.macGoesToSleep(after: 0) }
         switch tab {

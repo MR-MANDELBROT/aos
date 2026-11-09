@@ -159,7 +159,7 @@ struct ScreenTab: View {
                            enclosureColor: record?.enclosureColor ?? "", thumbnail: id.flatMap(picture),
                            availability: workspaceAvailability)
                     .overlay(alignment: .top) {
-                        if session.phase == .preparing || session.phase == .paused { Connecting() }
+                        if session.phase == .preparing || session.phase == .paused || demoConnecting { Connecting() }
                     }
             }
             .buttonStyle(.plain)
@@ -179,7 +179,7 @@ struct ScreenTab: View {
                            enclosureColor: record?.enclosureColor ?? "", thumbnail: id.flatMap(picture),
                            availability: macAvailability)
                     .overlay(alignment: .top) {
-                        if session.phase == .preparing || session.phase == .paused { Connecting() }
+                        if session.phase == .preparing || session.phase == .paused || demoConnecting { Connecting() }
                     }
             }
             .buttonStyle(.plain)
@@ -208,6 +208,15 @@ struct ScreenTab: View {
     }
 
     private func picture(_ id: UUID) -> Data? { ScreenPictures.shared.picture(for: id) }
+
+    /// The demo's `-AOSDemoConnecting YES`: both cards show the spinner (for looking at it).
+    private var demoConnecting: Bool {
+        #if DEBUG
+        return model.isDemo && Demo.connecting
+        #else
+        return false
+        #endif
+    }
 
     // MARK: The workspace's state
 
@@ -283,25 +292,33 @@ struct ScreenTab: View {
 
     @ViewBuilder private var workspaceActions: some View {
         let ready = model.connection?.companionState == .ready && model.connection?.macStatusUnsupported == false
-        // A start or close from here is under way until the Mac reports it done: the progress shows meanwhile.
-        let underWay = ready && model.connection?.workspaceOperation != nil
+        // A start or close from here is under way until the Mac reports it done: its button stays where it is,
+        // disabled, with a spinner for its symbol (as on the overview; nothing moves or resizes meanwhile).
+        let operation = ready ? model.connection?.workspaceOperation : nil
+        let starting = actions.running == .workspaceStart || operation?.kind == .start
+        let closing = actions.running == .workspaceStop || operation?.kind == .stop
         HStack(spacing: 10) {
-            if ready, !underWay, let state = workspaceState {
-                if state == "stopped" || state == "failed" {
-                    Button { startWorkspace(showing: false) } label: { Label("Start", systemImage: "play.fill") }
-                        .disabled(model.connection?.macStatus?.workspace?.setupComplete == false)
-                } else if state == "open" || state == "running" || state == "starting" {
+            if ready, let state = workspaceState {
+                if starting || (!closing && (state == "stopped" || state == "failed")) {
+                    Button { startWorkspace(showing: false) } label: {
+                        WorkspaceButtonLabel(title: String(localized: "Start"), systemImage: "play.fill", busy: starting,
+                                             busyText: String(localized: "Starting"))
+                    }
+                    .disabled(model.connection?.macStatus?.workspace?.setupComplete == false)
+                } else if closing || state == "open" || state == "running" || state == "starting" {
                     Button {
                         if state == "open" { confirmClose = true } else { stopWorkspace() }
                     } label: {
-                        Label("Close", systemImage: "stop.fill")
+                        WorkspaceButtonLabel(title: String(localized: "Close"), systemImage: "stop.fill", busy: closing,
+                                             busyText: String(localized: "Closing"))
                     }
                 }
             }
-            if actions.running != nil || showsWhenRunning || underWay { ProgressView().controlSize(.small) }
+            // Waiting to show a workspace that someone else is starting (no start from here)
+            if showsWhenRunning, !starting, !closing { ProgressView().controlSize(.small) }
         }
         .buttonStyle(.glass)
-        .disabled(actions.running != nil)
+        .disabled(actions.running != nil || operation != nil)
         if let problem = actions.problem ?? workspaceProblem {
             Label(problem, systemImage: "exclamationmark.triangle")
                 .font(.footnote)
@@ -473,15 +490,20 @@ struct ScreenTab: View {
 
 /// Connecting: in the middle of the card's picture (the card's top, in the picture's 16:10 shape), not of the whole
 /// card with the name and the line below it. Put it over the card with `.overlay(alignment: .top)`.
+/// The spinner is the system's spinner symbol in a fixed square, so it sits exactly in the middle of its glass circle.
+/// A large ProgressView drew its spinner (35 pt) at the top left of its frame (37 pt), so with padding around it, it sat
+/// a point up and to the left of the circle's middle (measured in the simulator, Max saw it on his iPhone 2026-11-09).
 private struct Connecting: View {
     var body: some View {
         Color.clear
             .aspectRatio(ScreenCard.aspectRatio, contentMode: .fit)
             .overlay {
-                ProgressView()
-                    .controlSize(.large)
-                    .padding(18)
+                SpinnerSymbol()
+                    .font(.system(size: 34, weight: .semibold))
+                    .foregroundStyle(.tint)
+                    .frame(width: 73, height: 73)
                     .glassEffect(in: Circle())
+                    .accessibilityLabel(Text("Connecting …"))
             }
     }
 }

@@ -433,6 +433,16 @@
         }
       }
     },
+    "%lld reachable in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
     "%lld:%@ left" : {
       "localizations" : {
         "de" : {
@@ -485,6 +495,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 Nachricht wartet, bis die Sitzung frei ist"
+          }
+        }
+      }
+    },
+    "1 reachable in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 in der Claude-App erreichbar"
           }
         }
       }
@@ -925,11 +945,22 @@
       }
     },
     "aOS ends it on the Mac and doesn't keep it any more. Keep Again undoes that; the chat itself stays as it is." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS beendet ihn auf dem Mac und hält ihn nicht mehr erreichbar. „Wieder erreichbar halten“ macht das rückgängig; der Chat selbst bleibt, wie er ist."
+          }
+        }
+      }
+    },
+    "aOS ends it on the Mac and doesn't keep it reachable until you start it again. The conversation itself stays as it is." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS beendet ihn auf dem Mac und hält ihn erst wieder erreichbar, wenn du ihn wieder startest. Die Unterhaltung selbst bleibt, wie sie ist."
           }
         }
       }
@@ -975,11 +1006,22 @@
       }
     },
     "aOS keeps the chats you used last, at most %lld. Pin this one to keep it reachable anyway." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS hält die Chats erreichbar, die du zuletzt benutzt hast, höchstens %lld. Heft diesen an, damit er trotzdem erreichbar bleibt."
+          }
+        }
+      }
+    },
+    "aOS keeps the chats you used last, at most %lld. Start this one to keep it reachable anyway." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS hält die Chats erreichbar, die du zuletzt benutzt hast, höchstens %lld. Starte diesen, damit er trotzdem erreichbar bleibt."
           }
         }
       }
@@ -1870,6 +1912,16 @@
         }
       }
     },
+    "Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude-App"
+          }
+        }
+      }
+    },
     "Claude Code asks something on the Mac" : {
       "localizations" : {
         "de" : {
@@ -2682,6 +2734,16 @@
         }
       }
     },
+    "Delete “%@”?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ löschen?"
+          }
+        }
+      }
+    },
     "Delete Forward" : {
       "localizations" : {
         "de" : {
@@ -2916,6 +2978,7 @@
       }
     },
     "Don't Keep" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3985,6 +4048,7 @@
       }
     },
     "Keep Again" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4020,6 +4084,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diesen Mac wach halten"
+          }
+        }
+      }
+    },
+    "Keeping chats reachable is off on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chats erreichbar halten ist auf dem Mac aus"
           }
         }
       }
@@ -4690,12 +4764,72 @@
         }
       }
     },
+    "New chats are starting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats starten gerade"
+          }
+        }
+      }
+    },
     "New chats from the Claude app" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neue Chats aus der Claude-App"
+          }
+        }
+      }
+    },
+    "New chats from the Claude app are off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats aus der Claude-App sind aus"
+          }
+        }
+      }
+    },
+    "New chats from the Claude app are on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats aus der Claude-App sind an"
+          }
+        }
+      }
+    },
+    "New chats need a sign-in to Claude Code on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats brauchen eine Anmeldung bei Claude Code auf dem Mac"
+          }
+        }
+      }
+    },
+    "New chats wait for the network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats warten auf das Netzwerk"
+          }
+        }
+      }
+    },
+    "New chats wait for you on the Mac (trust the folder)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Chats warten auf dem Mac auf dich (Ordner vertrauen)"
           }
         }
       }
@@ -5010,6 +5144,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gerade ist keiner in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
+    "None reachable in the Claude app right now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerade keiner in der Claude-App erreichbar"
           }
         }
       }
@@ -6041,6 +6185,7 @@
       }
     },
     "Pin" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6051,6 +6196,7 @@
       }
     },
     "Pin: Always Keep Reachable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6103,6 +6249,7 @@
       }
     },
     "Pinned chats stay reachable, also when you haven't used them for a while. Stop ends a chat on the Mac, and aOS doesn't keep it until you keep it again." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7156,6 +7303,7 @@
       }
     },
     "Show All (%lld)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7166,6 +7314,7 @@
       }
     },
     "Show Fewer" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7282,6 +7431,7 @@
       }
     },
     "Shows the chat and what you can do with it" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7653,6 +7803,26 @@
         }
       }
     },
+    "Start keeps a chat reachable in the Claude app, also when you haven't used it for a while. Stop ends it on the Mac until you start it again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Starten“ hält einen Chat in der Claude-App erreichbar, auch wenn du ihn länger nicht benutzt hast. „Stoppen“ beendet ihn auf dem Mac, bis du ihn wieder startest."
+          }
+        }
+      }
+    },
+    "Start keeps a chat reachable in the Claude app, also when you haven't used it for a while. Stop ends it on the Mac until you start it again. Delete moves the conversation to the Mac's Trash." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Starten“ hält einen Chat in der Claude-App erreichbar, auch wenn du ihn länger nicht benutzt hast. „Stoppen“ beendet ihn auf dem Mac, bis du ihn wieder startest. „Löschen“ legt die Unterhaltung in den Papierkorb des Macs."
+          }
+        }
+      }
+    },
     "Start message" : {
       "localizations" : {
         "de" : {
@@ -7770,6 +7940,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "„%@“ stoppen?"
+          }
+        }
+      }
+    },
+    "Stop it first, or close it in the Claude app." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppe ihn zuerst oder schließ ihn in der Claude-App."
           }
         }
       }
@@ -8192,6 +8372,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Verbindung zum Mac ist beendet."
+          }
+        }
+      }
+    },
+    "The conversation goes to the Mac's Trash and disappears from aOS. The Claude app may keep showing a conversation the desktop app started until it reloads." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Unterhaltung kommt in den Papierkorb des Macs und verschwindet aus aOS. Eine Unterhaltung, die die Desktop-App gestartet hat, zeigt die Claude-App womöglich noch, bis sie neu lädt."
           }
         }
       }
@@ -9056,6 +9246,16 @@
         }
       }
     },
+    "This chat isn't on the Mac any more." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Chat gibt es auf dem Mac nicht mehr."
+          }
+        }
+      }
+    },
     "This code is from a newer aOS. Update the app on this iPhone." : {
       "localizations" : {
         "de" : {
@@ -9664,6 +9864,7 @@
       }
     },
     "Unpin" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -10139,11 +10340,22 @@
       }
     },
     "You stopped it. aOS doesn't keep it until you keep it again." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Du hast ihn gestoppt. aOS hält ihn erst wieder erreichbar, wenn du das wieder einschaltest."
+          }
+        }
+      }
+    },
+    "You stopped it. aOS doesn't keep it until you start it again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast ihn gestoppt. aOS hält ihn erst wieder erreichbar, wenn du ihn wieder startest."
           }
         }
       }

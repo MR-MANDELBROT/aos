@@ -27,6 +27,12 @@ enum MacAction: String, Sendable, CaseIterable {
     case chatsSkip = "chats.skip"
     case chatsUnskip = "chats.unskip"
     case chatsRestart = "chats.restart"
+    /// Start one now: the Mac pins it and clears its skip, the keeper starts it at once (a Mac without it: pin).
+    case chatsStart = "chats.start"
+    /// Stop one: the Mac unpins and skips it, the keeper ends its copy (a Mac without it: skip).
+    case chatsStop = "chats.stop"
+    /// Delete one: its transcript goes to the Mac's Trash, aOS forgets it (refused while it runs or is open).
+    case chatsDelete = "chats.delete"
 
     /// Changes a chat (the list answers with the new one, the keeper on the Mac follows a moment later).
     var changesChat: Bool { rawValue.hasPrefix("chats.") && self != .chatsList }
@@ -270,6 +276,8 @@ struct MacRefusal: Error, Equatable, Sendable {
         case "no-keeper": String(localized: "aOS's background process on the Mac doesn't keep chats reachable right now.")
         case "keeper-old": String(localized: "aOS's background process on the Mac is older and can't restart a single chat yet. It can after the Mac restarts.")
         case "not-kept": String(localized: "aOS doesn't run this chat on the Mac right now, so there is nothing to restart.")
+        case "chat-running": String(localized: "Stop it first, or close it in the Claude app.")
+        case "not-found": String(localized: "This chat isn't on the Mac any more.")
         default: message.isEmpty ? String(localized: "aOS on the Mac said no.") : message
         }
     }
