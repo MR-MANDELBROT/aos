@@ -8779,6 +8779,26 @@
         }
       }
     },
+    "The workspace didn't close within 3 minutes. Look at aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist nach 3 Minuten noch nicht geschlossen. Sieh in aOS auf dem Mac nach."
+          }
+        }
+      }
+    },
+    "The workspace didn't start within 5 minutes. Look at aOS on the Mac." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist nach 5 Minuten noch nicht gestartet. Sieh in aOS auf dem Mac nach."
+          }
+        }
+      }
+    },
     "The workspace in the iPhone's shape" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8806,6 +8826,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz ist geschlossen"
+          }
+        }
+      }
+    },
+    "The workspace is closing. Start it again once it's closed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz wird gerade geschlossen. Starte ihn wieder, sobald er zu ist."
           }
         }
       }

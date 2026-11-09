@@ -53,6 +53,8 @@ final class RemoteScreenUIView: UIView, RemoteScreen {
     private var viewportCenter: CGPoint?
     private var keyboardLift: CGFloat = 0
     private var keyboardTop: CGFloat?
+    /// aOS: where the keyboard is (screen coordinates), from UIKit's keyboard notifications.
+    private var keyboardFrame: CGRect?
 
     private var metalLayer: CAMetalLayer { layer as! CAMetalLayer }
 
@@ -68,19 +70,14 @@ final class RemoteScreenUIView: UIView, RemoteScreen {
             proxy.screen = self
             addSubview(proxy)
         }
-        if #available(iOS 17, *) {
-            keyboardLayoutGuide.usesBottomSafeArea = false
-        }
-        let keyboardTracker = UIView()
-        keyboardTracker.isHidden = true
-        keyboardTracker.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(keyboardTracker)
-        NSLayoutConstraint.activate([
-            keyboardTracker.leadingAnchor.constraint(equalTo: leadingAnchor),
-            keyboardTracker.widthAnchor.constraint(equalToConstant: 1),
-            keyboardTracker.heightAnchor.constraint(equalToConstant: 1),
-            keyboardTracker.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
-        ])
+        // aOS: the keyboard's frame from its notifications instead of this view's keyboardLayoutGuide. In aOS's Screen
+        // tab (a TabView, a NavigationStack, the session view inside) the guide stayed at the bottom while the keyboard
+        // was up (iOS 27.2 simulator: the keyboard at y 475, the guide at 874), so the picture never lifted above it.
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(keyboardWillChangeFrame(_:)), name: UIResponder.keyboardWillChangeFrameNotification,
+            object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
         addSubview(pressIndicator)
         isAccessibilityElement = true
         accessibilityLabel = String(localized: "Screen of \(controller.title)")
@@ -222,10 +219,22 @@ final class RemoteScreenUIView: UIView, RemoteScreen {
     }
 
     private var coveredKeyboardTop: CGFloat? {
-        guard keyInput.isFirstResponder else { return nil }
-        let top = keyboardLayoutGuide.layoutFrame.minY
+        // aOS: from the keyboard's notifications (see init).
+        guard keyInput.isFirstResponder, let keyboardFrame, let screen = window?.windowScene?.screen else { return nil }
+        let top = convert(keyboardFrame, from: screen.coordinateSpace).minY
         let area = fitArea
         return top > area.minY && top < area.maxY ? top : nil
+    }
+
+    // aOS: the keyboard moves (shows, hides, changes its height): layoutSubviews lifts the picture above it.
+    @objc private func keyboardWillChangeFrame(_ notification: Notification) {
+        keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
+        setNeedsLayout()
+    }
+
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        keyboardFrame = nil
+        setNeedsLayout()
     }
 
     private func liftAboveKeyboard() {

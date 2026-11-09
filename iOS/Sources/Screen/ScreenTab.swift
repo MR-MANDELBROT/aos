@@ -25,10 +25,13 @@ struct ScreenTab: View {
         NavigationStack {
             Group {
                 if let session = shown, let client = session.client {
+                    // In the safe area, as in Open Screen Sharing: its session view spreads the picture's view over
+                    // the whole screen itself (the picture starts below the top safe area upright) and keeps its
+                    // toolbar in the safe area, at the picture's top edge. Ignoring the safe area here as well put the
+                    // toolbar behind the Dynamic Island and its open bar over the Mac's menu bar.
                     ScreenClientView(session: client) { [weak client] in
                         if let client { session.closed(client) }
                     }
-                    .ignoresSafeArea()
                     .overlay(alignment: .top) {
                         helpBanner(over: session.target, toolbarOpen: client.isToolbarVisible, barBottom: client.toolbarBarBottom)
                     }
@@ -91,6 +94,10 @@ struct ScreenTab: View {
             showsWhenRunning = false
             connect(.workspace)
         }
+        // "Start and show" whose start ended without the workspace running (it failed, or took too long)
+        .onChange(of: model.connection?.workspaceOperation == nil) { _, ended in
+            if ended, !workspaceViewable { showsWhenRunning = false }
+        }
         .onChange(of: model.activeHelp, initial: true) { _, _ in focusOnHelp() }
         .onChange(of: shown?.client?.hasPicture) { _, _ in focusOnHelp() }
         .onDisappear {
@@ -151,7 +158,9 @@ struct ScreenTab: View {
                 ScreenCard(name: String(localized: "Workspace"), detail: workspaceText, model: record?.model ?? "",
                            enclosureColor: record?.enclosureColor ?? "", thumbnail: id.flatMap(picture),
                            availability: workspaceAvailability)
-                    .overlay { if session.phase == .preparing || session.phase == .paused { Connecting() } }
+                    .overlay(alignment: .top) {
+                        if session.phase == .preparing || session.phase == .paused { Connecting() }
+                    }
             }
             .buttonStyle(.plain)
             .hoverEffectDisabled()
@@ -169,7 +178,9 @@ struct ScreenTab: View {
                 ScreenCard(name: model.activeMac?.name ?? "Mac", detail: macText(record), model: record?.model ?? "",
                            enclosureColor: record?.enclosureColor ?? "", thumbnail: id.flatMap(picture),
                            availability: macAvailability)
-                    .overlay { if session.phase == .preparing || session.phase == .paused { Connecting() } }
+                    .overlay(alignment: .top) {
+                        if session.phase == .preparing || session.phase == .paused { Connecting() }
+                    }
             }
             .buttonStyle(.plain)
             .hoverEffectDisabled()
@@ -200,19 +211,11 @@ struct ScreenTab: View {
 
     // MARK: The workspace's state
 
-    /// The state as the Mac reports it: mac.status if this Mac knows it, else the older status (as the overview).
+    /// The state as the Mac reports it (mac.status if this Mac knows it, else the older status), "starting" or
+    /// "closing" while a start or close from here is under way (as the overview).
     private var workspaceState: String? {
         guard let connection = model.connection, connection.companionState == .ready else { return nil }
-        if let state = connection.macStatus?.workspace?.state { return state }
-        switch connection.workspace?.state {
-        case .open?: return "open"
-        case .running?: return "running"
-        case .starting?: return "starting"
-        case .closing?: return "closing"
-        case .stopped?: return "stopped"
-        case .other(let raw)?: return raw
-        case nil: return nil
-        }
+        return connection.workspaceState
     }
 
     private var workspaceViewable: Bool {
@@ -280,8 +283,10 @@ struct ScreenTab: View {
 
     @ViewBuilder private var workspaceActions: some View {
         let ready = model.connection?.companionState == .ready && model.connection?.macStatusUnsupported == false
+        // A start or close from here is under way until the Mac reports it done: the progress shows meanwhile.
+        let underWay = ready && model.connection?.workspaceOperation != nil
         HStack(spacing: 10) {
-            if ready, let state = workspaceState {
+            if ready, !underWay, let state = workspaceState {
                 if state == "stopped" || state == "failed" {
                     Button { startWorkspace(showing: false) } label: { Label("Start", systemImage: "play.fill") }
                         .disabled(model.connection?.macStatus?.workspace?.setupComplete == false)
@@ -293,16 +298,26 @@ struct ScreenTab: View {
                     }
                 }
             }
-            if actions.running != nil || showsWhenRunning { ProgressView().controlSize(.small) }
+            if actions.running != nil || showsWhenRunning || underWay { ProgressView().controlSize(.small) }
         }
         .buttonStyle(.glass)
         .disabled(actions.running != nil)
-        if let problem = actions.problem {
+        if let problem = actions.problem ?? workspaceProblem {
             Label(problem, systemImage: "exclamationmark.triangle")
                 .font(.footnote)
                 .foregroundStyle(.orange)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// It took too long, or didn't start (what the Mac said).
+    private var workspaceProblem: String? {
+        guard let connection = model.connection, connection.companionState == .ready else { return nil }
+        if let timeout = connection.workspaceTimeout { return timeout.timeoutText }
+        guard workspaceState == "failed", let error = connection.macStatus?.workspace?.error, !error.isEmpty else {
+            return nil
+        }
+        return error
     }
 
     private func startWorkspace(showing: Bool) {
@@ -330,6 +345,8 @@ struct ScreenTab: View {
                 notice = String(localized: "The workspace isn't set up yet. Finish the setup in aOS on the Mac.")
             } else if workspaceState == "starting" {
                 showsWhenRunning = true
+            } else if workspaceState == "closing" {
+                notice = String(localized: "The workspace is closing. Start it again once it's closed.")
             } else {
                 confirmStart = true
             }
@@ -454,13 +471,18 @@ struct ScreenTab: View {
     }
 }
 
-/// Connecting: over the card's picture.
+/// Connecting: in the middle of the card's picture (the card's top, in the picture's 16:10 shape), not of the whole
+/// card with the name and the line below it. Put it over the card with `.overlay(alignment: .top)`.
 private struct Connecting: View {
     var body: some View {
-        ProgressView()
-            .controlSize(.large)
-            .padding(18)
-            .glassEffect(in: Circle())
+        Color.clear
+            .aspectRatio(ScreenCard.aspectRatio, contentMode: .fit)
+            .overlay {
+                ProgressView()
+                    .controlSize(.large)
+                    .padding(18)
+                    .glassEffect(in: Circle())
+            }
     }
 }
 

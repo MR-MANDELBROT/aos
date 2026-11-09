@@ -519,6 +519,13 @@ public final class WorkspaceController {
         lease = nil
         await rfb?.disconnect()
         rfb = nil
+        // Asked to close while it is still starting (the iPhone's Close): wait until it runs, then close it, instead
+        // of doing nothing and leaving it running.
+        var waited = 0
+        while host.phase == .starting, waited < 180 {
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            waited += 1
+        }
         guard host.isRunning else { return "Workspace closed." }
         if settings.expireSignIns, let ip = try? host.guestAddress() {
             log("shutting the workspace down (sign-ins expire)")

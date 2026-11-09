@@ -34,7 +34,9 @@ final class MacConnection {
     private(set) var state: State = .idle
     private(set) var companionState: CompanionState = .notStarted
     private(set) var hello: HelloResult?
-    private(set) var workspace: WorkspaceStatus?
+    private(set) var workspace: WorkspaceStatus? {
+        didSet { updateWorkspaceOperation() }
+    }
     /// Set while `aos-companion` can't reach the aOS app on the Mac (it keeps trying): what it said.
     private(set) var macAppProblem: String?
     private(set) var ssh: SSHConnection?
@@ -175,7 +177,9 @@ final class MacConnection {
     // MARK: The Overview (the Mac and aOS)
 
     /// The Mac's battery, lid, staying awake, workspace, Claude Code and Bitwarden, as `mac.status` reported it.
-    private(set) var macStatus: MacStatus?
+    private(set) var macStatus: MacStatus? {
+        didSet { updateWorkspaceOperation() }
+    }
     /// aOS on the Mac is older and doesn't know these ops.
     var macStatusUnsupported: Bool {
         guard let hello, companionState == .ready else { return false }
@@ -187,13 +191,27 @@ final class MacConnection {
         if let result = try? await companion.mac(.status), let status = result.status { macStatus = status }
     }
 
-    /// An action of the Overview (signed like every request). The status that comes back is shown at once.
+    /// An action of the Overview (signed like every request). The status that comes back is shown at once. Starting
+    /// and closing the workspace stay under way until the Mac reports it done (`workspaceOperation`).
     @discardableResult
     func perform(_ action: MacAction, value: String? = nil) async throws -> MacActionResult {
         guard let companion, companionState == .ready else { throw CompanionError.closed }
-        let result = try await companion.mac(action, value: value)
+        let operation = WorkspaceOperation(action, from: reportedWorkspaceState)
+        if let operation {
+            workspaceTimeout = nil
+            workspaceOperation = operation
+        }
+        let result: MacActionResult
+        do {
+            result = try await companion.mac(action, value: value)
+        } catch {
+            // Refused or no answer: nothing under way (the card says what went wrong).
+            if let operation, workspaceOperation?.since == operation.since { workspaceOperation = nil }
+            throw error
+        }
         if let status = result.status { macStatus = status }
         if let chats = result.chats { self.chats = chats }
+        if operation != nil, workspaceOperation != nil { watchWorkspaceOperation() }
         if action == .sleep, let after = result.sleepsIn { macGoesToSleep(after: after) }
         if action.changesChat {
             // The answer has the new choice; aOS's keeper on the Mac starts or ends the chat a moment later.
@@ -222,6 +240,63 @@ final class MacConnection {
         guard let result = try? await companion.mac(.chatsList) else { return }
         if let chats = result.chats { self.chats = chats }
         if let status = result.status { macStatus = status }
+    }
+
+    // MARK: Starting and closing the workspace
+
+    /// A start or close of the workspace from this iPhone that the Mac hasn't finished yet. aOS on the Mac answers at
+    /// once, with the state before, and starts or closes the workspace afterwards; meanwhile the Overview and the
+    /// Screen tab show it under way and offer neither again.
+    private(set) var workspaceOperation: WorkspaceOperation?
+    /// The last start or close took too long (until the next one, or until the workspace gets there after all).
+    private(set) var workspaceTimeout: WorkspaceOperation?
+    @ObservationIgnored private var operationWatch: Task<Void, Never>?
+
+    /// The workspace's state as the Mac reports it: mac.status if this Mac knows it, else the older status; nil before
+    /// either answered.
+    var reportedWorkspaceState: String? {
+        macStatus?.workspace?.state ?? workspace?.state.name
+    }
+
+    /// The workspace's state to show: as reported, or "starting" or "closing" while a start or close from here is under
+    /// way (so the cards don't jump back to the state before while the Mac is still at it).
+    var workspaceState: String? {
+        workspaceOperation?.shownState ?? reportedWorkspaceState
+    }
+
+    /// After every new state: whether the start or close under way is done, failed (the state says so) or took too
+    /// long.
+    private func updateWorkspaceOperation(now: Date = Date()) {
+        let state = reportedWorkspaceState
+        if let timeout = workspaceTimeout, timeout.arrived(at: state) { workspaceTimeout = nil }
+        guard var operation = workspaceOperation else { return }
+        switch operation.observe(state, at: now) {
+        case .underWay:
+            if operation != workspaceOperation { workspaceOperation = operation }
+            return
+        case .done, .failed:
+            workspaceOperation = nil
+        case .timedOut:
+            // Only from what the Mac says: not while it can't be asked (it may be done by the time it answers).
+            guard companionState == .ready else { return }
+            workspaceOperation = nil
+            workspaceTimeout = operation
+        }
+        operationWatch?.cancel()
+        operationWatch = nil
+    }
+
+    /// Asks for the Mac's status every 3 s while a start or close is under way (its events say so too, when they come).
+    private func watchWorkspaceOperation() {
+        operationWatch?.cancel()
+        operationWatch = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(3))
+                guard let self, !Task.isCancelled, self.workspaceOperation != nil else { return }
+                await self.refreshMacStatus()
+                self.updateWorkspaceOperation()
+            }
+        }
     }
 
     /// Since when the Mac sleeps: it was put to sleep from here and hasn't answered since (nil again once it does).
