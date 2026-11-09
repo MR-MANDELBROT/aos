@@ -226,8 +226,8 @@ final class FreezePlannerTests: XCTestCase {
             RunningAppInfo(pid: 400, bundleID: "com.example.Editor", name: "Editor", regular: true),
             RunningAppInfo(pid: 500, bundleID: "com.anthropic.claudefordesktop", name: "Claude", regular: true),
             RunningAppInfo(pid: 600, bundleID: "com.dwarvesv.minimalbar", name: "Hidden Bar", regular: false),
-            RunningAppInfo(pid: 700, bundleID: "com.apple.mail", name: "Mail", regular: true),
-            RunningAppInfo(pid: 800, bundleID: "com.apple.Notes", name: "Notes", regular: true),
+            RunningAppInfo(pid: 700, bundleID: "com.apple.Maps", name: "Maps", regular: true),
+            RunningAppInfo(pid: 800, bundleID: "com.apple.TextEdit", name: "TextEdit", regular: true),
             RunningAppInfo(pid: 900, bundleID: "com.apple.Preview", name: "Preview", regular: true),
         ]
     }
@@ -242,7 +242,7 @@ final class FreezePlannerTests: XCTestCase {
         XCTAssertEqual(result["com.apple.Safari"], [100, 102])
         XCTAssertEqual(result["com.apple.Music"], [200])
         // A root process inside the app's tree isn't the user's: not touched
-        XCTAssertEqual(result["com.apple.mail"], [700])
+        XCTAssertEqual(result["com.apple.Maps"], [700])
         // A similar name isn't an agent
         XCTAssertEqual(result["com.apple.Preview"], [900, 901])
     }
@@ -254,7 +254,7 @@ final class FreezePlannerTests: XCTestCase {
         XCTAssertNil(result["com.apple.Terminal"], "terminals stay awake")
         XCTAssertNil(result["com.example.Editor"], "an agent (aos-mcp) runs inside")
         XCTAssertNil(result["com.dwarvesv.minimalbar"], "only apps with a Dock icon freeze")
-        XCTAssertNil(result["com.apple.Notes"], "already stopped by someone else")
+        XCTAssertNil(result["com.apple.TextEdit"], "already stopped by someone else")
     }
 
     func testClaudeInsideAnyAppKeepsItAwake() {
