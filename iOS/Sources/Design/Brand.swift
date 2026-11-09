@@ -42,6 +42,16 @@ struct HeroSymbol: View {
     }
 }
 
+/// The system's spinner as a symbol, sized by the font like any symbol and drawn exactly in the middle of its frame
+/// (a ProgressView on iOS 26 and 27 draws its spinner at the top left of a frame a little larger than the spinner, so
+/// it looks off center in a circle or in a symbol's place).
+struct SpinnerSymbol: View {
+    var body: some View {
+        Image(systemName: "progress.indicator")
+            .symbolEffect(.variableColor.iterative.dimInactiveLayers.nonReversing, options: .repeating)
+    }
+}
+
 /// A small colored status dot.
 struct StatusDot: View {
     let color: Color

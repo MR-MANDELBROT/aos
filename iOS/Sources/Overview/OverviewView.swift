@@ -1,12 +1,23 @@
 import SwiftUI
 
+/// The pages the Overview pushes by value: the chats and a chat's page (the routines are pushed by their link).
+enum OverviewPage: Hashable {
+    case chats
+    case chat(String)
+}
+
 struct OverviewView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
     @State private var showSettings = false
+    @State private var path: [OverviewPage] = []
+    /// The chats' actions, shared by the Chats page and a chat's page.
+    @State private var chatActions = ActionState()
+    /// The demo opened the chats once (not again when coming back).
+    @State private var demoChatsOpened = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 16) {
                     if let connection = model.connection {
@@ -16,12 +27,9 @@ struct OverviewView: View {
                         }
                         WorkspaceCard(connection: connection)
                         // What aOS on the Mac does now: not while the Mac sleeps or doesn't answer (it would be old).
+                        // Its Chats row opens the chats aOS keeps reachable.
                         if connection.macStatus != nil, connection.companionState == .ready, connection.sleepingSince == nil {
                             AOSCard(connection: connection)
-                            // The Claude Code chats aOS keeps reachable, with what can be done with each.
-                            if connection.chatsSupported, let chats = connection.chats {
-                                ChatsCard(connection: connection, list: chats)
-                            }
                         }
                         PromiseCard()
                     } else {
@@ -54,14 +62,39 @@ struct OverviewView: View {
                     try? await Task.sleep(for: .seconds(15))
                 }
             }
+            .navigationDestination(for: OverviewPage.self) { page in
+                switch page {
+                case .chats: ChatsPage(actions: chatActions)
+                case .chat(let id): ChatPage(id: id, actions: chatActions)
+                }
+            }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .onAppear {
                 #if DEBUG
                 if model.isDemo, Demo.sheet == "settings" { showSettings = true }
+                if model.isDemo, Demo.sheet == "chats" || Demo.sheet == "chat", !demoChatsOpened { openDemoChats() }
                 #endif
             }
         }
     }
+
+    #if DEBUG
+    /// `-AOSDemoSheet chats`: the Chats page; `chat`: the page of the chat that needs something (else the first).
+    private func openDemoChats() {
+        demoChatsOpened = true
+        Task {
+            for _ in 0..<150 where model.connection?.chats == nil {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            guard let chats = model.connection?.chats?.chats else { return }
+            var pages: [OverviewPage] = [.chats]
+            if Demo.sheet == "chat", let chat = chats.first(where: { $0.state == "needsAttention" }) ?? chats.first {
+                pages.append(.chat(chat.id))
+            }
+            path = pages
+        }
+    }
+    #endif
 
     private struct StatusPoll: Hashable {
         var ready: Bool
@@ -117,13 +150,19 @@ extension OverviewRow where Accessory == EmptyView {
 @MainActor @Observable
 final class ActionState {
     private(set) var running: MacAction?
+    /// The value the running action was sent with (a chat's id, for example).
+    private(set) var value: String?
     private(set) var problem: String?
     private var clear: Task<Void, Never>?
+
+    /// An action runs for this value (a chat's row shows it).
+    func isRunning(for value: String) -> Bool { running != nil && self.value == value }
 
     func run(_ action: MacAction, value: String? = nil, on connection: MacConnection,
              then done: ((MacActionResult) -> Void)? = nil) {
         guard running == nil else { return }
         running = action
+        self.value = value
         problem = nil
         Task {
             do {
@@ -135,6 +174,7 @@ final class ActionState {
                 show(error.localizedDescription)
             }
             running = nil
+            self.value = nil
         }
     }
 
@@ -618,7 +658,9 @@ struct WorkspaceCard: View {
         GlassCard {
             VStack(alignment: .leading, spacing: 12) {
                 OverviewRow(symbol: symbol, title: String(localized: "Workspace"), detail: stateText)
-                if live, let workspace = connection.workspace, workspace.state == .open || workspace.state == .starting {
+                // Its purpose stays while a close from here is under way (the card doesn't shrink before it's closed).
+                if live, let workspace = connection.workspace,
+                   workspace.state == .open || workspace.state == .starting || connection.workspaceOperation?.kind == .stop {
                     if !workspace.purpose.isEmpty {
                         Text("\u{201E}\(workspace.purpose)\u{201C}").font(.callout).italic()
                             .padding(.leading, OverviewRow<EmptyView>.iconWidth + 12)
@@ -671,8 +713,15 @@ struct WorkspaceCard: View {
 
     @ViewBuilder private var buttons: some View {
         let ready = connection.companionState == .ready
+        // A start or close from here, until the Mac reports it done: its button stays where it is, disabled, with a
+        // spinner for its symbol, and the buttons beside it stay too (nothing moves or resizes meanwhile).
+        let operation = connection.workspaceOperation
+        let starting = actions.running == .workspaceStart || operation?.kind == .start
+        let closing = actions.running == .workspaceStop || operation?.kind == .stop
+        let viewable = state == "open" || state == "running"
+            || (closing && ["open", "running"].contains(operation?.from ?? ""))
         HStack(spacing: 10) {
-            if state == "open" || state == "running" {
+            if viewable {
                 Button {
                     model.screenTarget = .workspace
                     model.tab = .screen
@@ -680,27 +729,27 @@ struct WorkspaceCard: View {
                     Label("Show the screen", systemImage: "display")
                 }
             }
-            // Not while a start or close from here is under way: until the Mac reports it done, the progress shows.
-            if connection.macStatus != nil, ready, connection.workspaceOperation == nil {
-                if state == "stopped" || state == "failed" {
+            if connection.macStatus != nil, ready {
+                if starting || (!closing && (state == "stopped" || state == "failed")) {
                     Button {
                         actions.run(.workspaceStart, on: connection)
                     } label: {
-                        Label("Start", systemImage: "play.fill")
+                        WorkspaceButtonLabel(title: String(localized: "Start"), systemImage: "play.fill", busy: starting,
+                                             busyText: String(localized: "Starting"))
                     }
                     .disabled(connection.macStatus?.workspace?.setupComplete == false)
-                } else if state == "open" || state == "running" || state == "starting" {
+                } else if closing || state == "open" || state == "running" || state == "starting" {
                     Button {
                         if state == "open" { confirmClose = true } else { actions.run(.workspaceStop, on: connection) }
                     } label: {
-                        Label("Close", systemImage: "stop.fill")
+                        WorkspaceButtonLabel(title: String(localized: "Close"), systemImage: "stop.fill", busy: closing,
+                                             busyText: String(localized: "Closing"))
                     }
                 }
             }
-            if actions.running != nil || connection.workspaceOperation != nil { ProgressView().controlSize(.small) }
         }
         .buttonStyle(.glass)
-        .disabled(actions.running != nil)
+        .disabled(actions.running != nil || operation != nil)
     }
 
     /// The states the Mac reports for sessions, in words; unknown ones as they come.
@@ -745,10 +794,36 @@ struct WorkspaceCard: View {
     }
 }
 
+/// The label of Start or Close of the workspace (the Overview and the Screen tab): while it is under way, the spinner
+/// symbol in the symbol's place and font; the symbol stays, hidden, under it and keeps the size, so the button doesn't
+/// change (Max, 2026-11-09: a small progress beside the buttons, and the card shrank and jumped).
+struct WorkspaceButtonLabel: View {
+    let title: String
+    let systemImage: String
+    var busy = false
+    /// What VoiceOver says while it is under way ("Starting", "Closing").
+    var busyText: String?
+
+    var body: some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: systemImage)
+                .opacity(busy ? 0 : 1)
+                .overlay {
+                    // In the tint: the button is disabled meanwhile, its spinner shouldn't look so
+                    if busy { SpinnerSymbol().foregroundStyle(.tint) }
+                }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(busy ? busyText ?? title : title))
+    }
+}
+
 // MARK: - aOS
 
-/// aOS on the Mac: its Claude Code session, new chats from the Claude app, kept conversations (an older Mac; a newer
-/// one has the Chats card), Bitwarden.
+/// aOS on the Mac: its Claude Code session, its routines, the chats (a row that opens their page, with new chats from
+/// the Claude app; an older Mac: new chats and the count of kept conversations), Bitwarden.
 struct AOSCard: View {
     @Environment(AppModel.self) private var model
     let connection: MacConnection
@@ -788,15 +863,28 @@ struct AOSCard: View {
                 if sessionSignIn {
                     SignInHelp { model.openNewTerminal() }
                 }
-                if let chats = connection.macStatus?.newChats {
+                let newChats = connection.macStatus?.newChats
+                let newChatsSignIn = newChats.map { $0.enabled && $0.state == "needsLogin" } ?? false
+                if connection.chatsSupported {
+                    // The chats on a page of their own: how many are reachable, whether new chats are on.
+                    NavigationLink(value: OverviewPage.chats) {
+                        OverviewRow(symbol: "bubble.left.and.bubble.right", title: String(localized: "Chats"),
+                                    detail: ChatsText.overview(connection.chats, newChats: newChats,
+                                                               kept: connection.macStatus?.kept),
+                                    detailTint: newChatsSignIn ? .orange : .secondary) {
+                            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else if let newChats {
                     OverviewRow(symbol: "plus.bubble", title: String(localized: "New chats from the Claude app"),
-                                detail: Self.chatsText(chats),
-                                detailTint: chats.enabled && chats.state == "needsLogin" ? .orange : .secondary)
+                                detail: Self.chatsText(newChats), detailTint: newChatsSignIn ? .orange : .secondary)
                 }
                 if !sessionSignIn, Self.needsSignIn(connection.macStatus) {
                     SignInHelp { model.openNewTerminal() }
                 }
-                // A Mac with the chats shows them in their own card (with this count); an older one only counts.
+                // A Mac with the chats has them on their page (the Chats row counts them); an older one only counts.
                 if let kept = connection.macStatus?.kept, !connection.chatsSupported {
                     OverviewRow(symbol: "bubble.left.and.bubble.right", title: String(localized: "Kept conversations"),
                                 detail: kept == 1 ? String(localized: "1 is reachable in the Claude app")
@@ -881,7 +969,7 @@ struct AOSCard: View {
 }
 
 /// What to do when Claude Code on the Mac needs a sign-in: `claude` once in a terminal there, from here too.
-private struct SignInHelp: View {
+struct SignInHelp: View {
     let openTerminal: () -> Void
 
     var body: some View {
