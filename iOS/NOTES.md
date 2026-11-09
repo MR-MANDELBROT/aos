@@ -39,7 +39,8 @@ iOS/
 
 Run the tests: `iOS/Tools/test.sh`. Run the app with sample data: `iOS/Tools/sim.sh -AOSDemo YES` (debug builds
 only; `-AOSDemoTab screen`, `-AOSDemoScreen mac|mac-login|mac-login-keyboard`,
-`-AOSDemoSheet signin|signin-code|signin-locked|signin-off|help|pairing|settings|lock|...`, see `Sources/App/Demo.swift`).
+`-AOSDemoSheet signin|signin-code|signin-locked|signin-off|help|pairing|settings|lock|chats|chat|...`,
+`-AOSDemoWorkspace starting|closing`, `-AOSDemoConnecting YES`, see `Sources/App/Demo.swift`).
 Screenshots of every screen, light and dark: `iOS/Tools/screenshots.sh de` (or `en`), into `build/ios-screenshots`.
 Strings: write English in code, German in `Tools/translations_de.py`, then `iOS/Tools/localize.sh`; it refuses
 nothing but reports missing German, mismatched format specifiers and dashes used as punctuation. The screen client's
@@ -243,11 +244,27 @@ works ends "sleeping". The aOS card isn't shown while the Mac sleeps or aOS does
 workspace card then says "No news from the Mac", without its purpose and buttons (a closed connection sets the
 companion back to not started, so nothing reads as ready any more).
 Workspace card: Start (closed),
-Close (asks first while an agent has it), Show the screen. aOS card: Claude Code session (Restart, asks first), new
-chats from the Claude app, kept conversations, Bitwarden (Lock). When Claude Code on the Mac needs a sign-in (the
+Close (asks first while an agent has it), Show the screen. aOS card: Claude Code session (Restart, asks first),
+Routines (a page), Chats (a page, below), Bitwarden (Lock). When Claude Code on the Mac needs a sign-in (the
 session or new chats say `needsLogin`), the card says what to do: run `claude` once in a terminal on the Mac and sign
 in; "Open Terminal" opens the Terminal tab in a new session on the Mac to do it from here. An older Mac without these
-ops: the card says to update aOS. All rows share one 30 pt icon column (`OverviewRow`); `FactRow` centers its symbol in the same column on
+ops: the card says to update aOS.
+
+**Chats** (Max, 2026-11-09: a page, not a card; `Overview/ChatsPage.swift`, `Core/Chats.swift`). The aOS card's row
+"Chats" says how many are reachable in the Claude app (running, starting or open elsewhere, counted in the list) and
+whether new chats from the Claude app are on (orange, with the sign-in help under it, when they need a sign-in); it
+pushes the Chats page (`OverviewPage`, the Overview's navigation path). The page: "New chats from the Claude app" on
+top (the old row, with Open Terminal when it needs a sign-in), then every chat in the Mac's order (reachable first,
+then pinned, then by the person's last activity; the phone doesn't sort): title, the pin with the last use, the state,
+folder and where it was started. Per chat (`ChatOffer`): Start while it isn't reachable (`chats.start`, the Mac pins it
+and the keeper starts it at once; a Mac without it: `chats.pin`, which clears the skip there too), Stop while aOS keeps
+it or runs it (`chats.stop`, unpin and skip; else `chats.skip`), Restart for running ones (or one that needs something
+or failed), Delete while nothing runs it and it isn't open (`chats.delete`, only when hello lists it; the conversation
+goes to the Mac's Trash; refused with `chat-running` or `not-found`). Swipe actions (Start or Restart from the leading
+edge, Stop and Delete from the trailing one), the context menu and the chat's page (pushed) have them; Stop, Restart
+and Delete ask first, Start doesn't. The list every 15 s while the page is on screen and on the Mac's `chats` event, and
+2 and 7 s after an action. A Mac without `chats.list`: the old rows (new chats, the count of kept conversations).
+Demo: `-AOSDemoSheet chats|chat`, `-AOSDemoChats off|old|older`; the mock's keeper runs a started chat 2 s later. All rows share one 30 pt icon column (`OverviewRow`); `FactRow` centers its symbol in the same column on
 the first line's baseline (the eye was wider than the others and pushed its text out of line).
 
 Note for the screen tab: a workspace started from the phone reports `running` (no agent lease), not `open`.
@@ -263,6 +280,10 @@ changed since (a start after a failure first sees the old `failed`); the card th
 minutes (start) or 3 (close), counted only while the Mac answers, the cards say it didn't start or close in that time
 (`workspaceTimeout`, gone with the next start or close, or once the workspace gets there). A refusal ends it at once.
 The demo's mock moves the workspace the same way, a step every 2 s. Tests: `WorkspaceOperationTests`.
+While it is under way (Max, 2026-11-09: the progress beside the buttons was too small, and the card shrank and jumped
+when Start or Close went away) the button stays where it is, disabled, and its symbol becomes the spinner
+(`WorkspaceButtonLabel`: the spinner symbol over the hidden play or stop symbol, so nothing resizes); during a close
+"Show the screen" stays beside it, disabled. Demo: `-AOSDemoWorkspace starting|closing` (a Mac that takes a minute).
 
 **The tab bar** (Max, 2026-11-07: it was gone after a reload). The terminal hides it while it is shown and the Screen
 tab while its screen is in full screen (`.toolbar(.hidden, for: .tabBar)`). The Screen tab, kept alive behind the
@@ -338,7 +359,10 @@ is aOS's interface (`ScreenClientSession`, `ScreenClientView`, `ScreenCard`, `Sc
 (the Mac: connected; the workspace: connected and `open` or `running`), the name and one line (the workspace's state;
 the Mac's "Last connected ..."). One column on an iPhone held upright, two otherwise. While a screen connects, a spinner
 sits in the middle of its card's picture (an overlay in the picture's 16:10 shape at the card's top; centered on the
-whole card it sat below the middle, Max 2026-11-09).
+whole card it sat below the middle, Max 2026-11-09). The spinner is the symbol `progress.indicator` (`SpinnerSymbol`)
+in a fixed 73 pt glass circle: a large ProgressView draws its 35 pt spinner at the top left of its 37 pt frame, so with
+padding it sat a point up and to the left of the circle's middle (Max saw it; measured in the simulator: 3 px at 3x,
+0 px with the symbol). `-AOSDemoConnecting YES` shows the spinner on both cards.
 - **Nothing connects by itself**: a tap on a card connects that screen (the other one lets go). Taps elsewhere count
   too: the overview's "Show the screen" and a help request opened in the overview set `screenTarget`, which asks the
   tab once (`screenRequest`). A help request that arrives while the app is open only opens the tab, with a banner
@@ -551,6 +575,9 @@ would still need the screen sharing login).
   the workspace against the real Mac (its timing; a Close in the moment the VM itself is still starting may do nothing
   on the Mac, `WorkspaceController.close()` returns unless the VM runs: the phone then says after 3 minutes that it
   didn't close).
+- The Chats page (2026-11-09): its look, the chat's page and the busy workspace buttons were checked in the simulator's
+  demo, the actions against the mock in tests; the swipe actions, the context menu and the questions weren't tried by
+  touch, nor against the real Mac's `chats.start`, `chats.stop` and `chats.delete`.
 - Local network denial is detected for pairing (NWConnection path); for SSH (NIO on Network.framework) it shows as
   "not reachable" with the hint about Tailscale and the local network setting.
 - aOS's Tailscale: not run against Tailscale's real coordination server (no account here) nor on a device: the
