@@ -286,9 +286,12 @@ with `error` (English) and `code`, which the phone says in its own words.
 ### Chats (since 2026-11-09)
 
 The Claude Code conversations aOS keeps reachable for the Claude app (Docs/DESIGN.md, "Keeping conversations
-reachable"), as the Mac's settings list them: the last week (or `keepHours`, if longer) and the pinned ones, pinned
-first, then by the person's last activity, at most 40 besides the pinned ones, no automation (`sdk-cli`). AOSKit
-`CompanionChats`; on the iPhone the Overview's Chats card (iOS/Sources/Overview/ChatsCard.swift).
+reachable"), as the Mac's settings list them: the last week (or `keepHours`, if longer) and the pinned ones, at most 40
+besides the pinned ones, no automation (`sdk-cli`), no older versions of a conversation the desktop app continues under
+another session id (`priorCliSessionIds`), and not aOS's own session. Order (`ChatListing`, the same on the Mac): the
+ones reachable now first (kept running or starting, or open in the Claude app or a terminal), then pinned, then by the
+person's last activity (what aOS types into its own session doesn't count). AOSKit `CompanionChats`; on the iPhone the
+Chats page behind the AOS card's "Chats" row (iOS/Sources/Overview/ChatsPage.swift).
 
 - `{"id":11,"op":"chats.list"}` -> `{"id":11,"ok":true,"chats":{...},"status":{...}}` with
   `{"enabled":true,"automatic":true,"terminal":false,"hours":48,"max":6,"running":2,"restart":true,"list":[...]}`
@@ -305,12 +308,17 @@ first, then by the person's last activity, at most 40 besides the pinned ones, n
   `MacControls.changeConversation`, which the app implements as its settings' pin and skip; the keeper follows the
   settings within a second. The answer has the new list (the new choice; the keeper's state a moment later, so the
   phone reads it again after 2 and 7 s).
+- `chats.start` (pin it: the keeper starts it at once, it appears in the Claude app through Remote Control),
+  `chats.stop` (unpin and skip: the keeper ends it), `chats.delete` (its transcript and its folder go to the Trash and
+  its pin or skip is forgotten; `chat-running` while it is kept or a process has it open, `not-found` without a
+  transcript). The phone falls back to `chats.pin` and `chats.skip`, and offers no delete, when `hello` doesn't list them.
+  A chat a Claude Code process has open but the keeper doesn't keep is listed with `"state":"openElsewhere"`.
 - `chats.restart` (text: the id): the keeper starts its copy again (`no-keeper` when it doesn't run or keeping is off,
   `keeper-old` when aos-session is from before this, `not-kept` when the keeper has no running copy of it).
 - The event `{"event":"chats"}`: a chat started, ended or changed its state on the Mac (the app sees it in
   run/keeper.json); the phone reads the list again.
 
-The phone shows the card when `hello` lists `chats.list`; with an older Mac it keeps the AOS card's count of kept
+The phone shows the page when `hello` lists `chats.list`; with an older Mac it keeps the AOS card's count of kept
 conversations (`kept` in `mac.status`). An older phone ignores the event and the ops it doesn't know.
 
 ## Terminal sessions
