@@ -44,7 +44,8 @@ final class AppModel: ObservableObject {
     @Published var remote: RemoteServerStatus?
     /// Recent Claude Code conversations, for the settings (filled while the settings show them).
     @Published var conversations: [ClaudeConversation] = []
-    let conversationCache = ConversationCache()
+    /// Shared with the phone's chats (the workspace controller answers them).
+    var conversationCache: ConversationCache { workspace.conversationCache }
 
     // iPhone (see AppModel+Companion.swift)
     @Published var signIns: [CompanionEvent] = []
@@ -351,7 +352,11 @@ final class AppModel: ObservableObject {
         changed(\.status, workspace.status())
         changed(\.session, SessionStatus.read(paths))
         let k = KeeperStatus.read(paths)
-        if k?.enabled != keeper?.enabled || k?.entries != keeper?.entries { keeper = k }
+        if k?.enabled != keeper?.enabled || k?.entries != keeper?.entries {
+            // The phone's chats follow at once (it reads the list again).
+            if KeeperStatus.chatsChanged(from: keeper, to: k) { workspace.companion.post(CompanionEvent(event: "chats")) }
+            keeper = k
+        }
         changed(\.remote, RemoteServerStatus.read(paths))
         let r = RoutinesStatus.read(paths)
         if r?.next != routines?.next || r?.reminders != routines?.reminders || r?.queued != routines?.queued
@@ -444,12 +449,12 @@ final class AppModel: ObservableObject {
 
     // MARK: Reachable conversations
 
+    /// The list the settings show, in the keeper's order (the phone's chats are the same list).
     func loadConversations() {
-        let hours = Double(max(settings.keepHours, 24 * 7))
+        let s = settings
         let cache = conversationCache
         Task.detached(priority: .utility) {
-            let list = ClaudeConversations.recent(within: hours * 3600, limit: 40, cache: cache)
-                .filter { $0.startedIn != "sdk-cli" }
+            let list = ClaudeConversations.shown(settings: s, cache: cache)
             await MainActor.run { if AppModel.shared.conversations != list { AppModel.shared.conversations = list } }
         }
     }

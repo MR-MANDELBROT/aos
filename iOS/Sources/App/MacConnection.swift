@@ -193,8 +193,35 @@ final class MacConnection {
         guard let companion, companionState == .ready else { throw CompanionError.closed }
         let result = try await companion.mac(action, value: value)
         if let status = result.status { macStatus = status }
+        if let chats = result.chats { self.chats = chats }
         if action == .sleep, let after = result.sleepsIn { macGoesToSleep(after: after) }
+        if action.changesChat {
+            // The answer has the new choice; aOS's keeper on the Mac starts or ends the chat a moment later.
+            Task { [weak self] in
+                for pause in [2.0, 5.0] {
+                    try? await Task.sleep(for: .seconds(pause))
+                    await self?.refreshChats()
+                }
+            }
+        }
         return result
+    }
+
+    // MARK: Chats (the Claude Code conversations aOS keeps reachable)
+
+    /// The chats as `chats.list` reported them last; nil before, and from a Mac that doesn't have them.
+    private(set) var chats: ChatList?
+
+    /// aOS on the Mac lists its chats (an older one only counts the kept ones in `mac.status`).
+    var chatsSupported: Bool {
+        companionState == .ready && hello?.features.contains(MacAction.chatsList.rawValue) == true
+    }
+
+    func refreshChats() async {
+        guard let companion, chatsSupported else { return }
+        guard let result = try? await companion.mac(.chatsList) else { return }
+        if let chats = result.chats { self.chats = chats }
+        if let status = result.status { macStatus = status }
     }
 
     /// Since when the Mac sleeps: it was put to sleep from here and hasn't answered since (nil again once it does).
@@ -350,6 +377,9 @@ final class MacConnection {
                 await refreshStatus()
                 await refreshMacStatus()
             }
+        case .chats:
+            // A chat started or ended on the Mac: the list now, not at the next poll.
+            Task { await refreshChats() }
         case .mac(let state, let detail):
             macAppProblem = state == "unavailable" ? detail : nil
         case .subscriptionEnded:

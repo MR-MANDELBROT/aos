@@ -18,6 +18,10 @@ struct OverviewView: View {
                         // What aOS on the Mac does now: not while the Mac sleeps or doesn't answer (it would be old).
                         if connection.macStatus != nil, connection.companionState == .ready, connection.sleepingSince == nil {
                             AOSCard(connection: connection)
+                            // The Claude Code chats aOS keeps reachable, with what can be done with each.
+                            if connection.chatsSupported, let chats = connection.chats {
+                                ChatsCard(connection: connection, list: chats)
+                            }
                         }
                         PromiseCard()
                     } else {
@@ -39,12 +43,14 @@ struct OverviewView: View {
                 model.connection?.retryNow()
                 await model.connection?.refreshStatus()
                 await model.connection?.refreshMacStatus()
+                await model.connection?.refreshChats()
             }
-            // The Mac's status while the Overview is on screen: now and every 15 s.
+            // The Mac's status and the chats while the Overview is on screen: now and every 15 s.
             .task(id: StatusPoll(ready: model.connection?.companionState == .ready, active: scenePhase == .active)) {
                 guard scenePhase == .active else { return }
                 while !Task.isCancelled {
                     await model.connection?.refreshMacStatus()
+                    await model.connection?.refreshChats()
                     try? await Task.sleep(for: .seconds(15))
                 }
             }
@@ -142,7 +148,7 @@ final class ActionState {
     }
 }
 
-private struct ProblemLine: View {
+struct ProblemLine: View {
     let text: String?
 
     var body: some View {
@@ -748,7 +754,8 @@ struct WorkspaceCard: View {
 
 // MARK: - aOS
 
-/// aOS on the Mac: its Claude Code session, new chats from the Claude app, kept conversations, Bitwarden.
+/// aOS on the Mac: its Claude Code session, new chats from the Claude app, kept conversations (an older Mac; a newer
+/// one has the Chats card), Bitwarden.
 struct AOSCard: View {
     @Environment(AppModel.self) private var model
     let connection: MacConnection
@@ -796,7 +803,8 @@ struct AOSCard: View {
                 if !sessionSignIn, Self.needsSignIn(connection.macStatus) {
                     SignInHelp { model.openNewTerminal() }
                 }
-                if let kept = connection.macStatus?.kept {
+                // A Mac with the chats shows them in their own card (with this count); an older one only counts.
+                if let kept = connection.macStatus?.kept, !connection.chatsSupported {
                     OverviewRow(symbol: "bubble.left.and.bubble.right", title: String(localized: "Kept conversations"),
                                 detail: kept == 1 ? String(localized: "1 is reachable in the Claude app")
                                                   : String(localized: "\(kept) are reachable in the Claude app"))

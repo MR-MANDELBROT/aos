@@ -358,7 +358,7 @@ final class AppModel {
         case .helpClosed(let id):
             helpRequests.removeAll { $0.id == id }
             if activeHelp?.id == id { activeHelp = helpRequests.last }
-        case .workspace, .mac, .subscriptionEnded:
+        case .workspace, .mac, .chats, .subscriptionEnded:
             break
         }
     }

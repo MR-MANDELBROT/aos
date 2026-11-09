@@ -344,15 +344,19 @@ func runCommand() async {
             // keeper plan: what the session keeper would keep now (with the current settings, or --all as if on)
             var settings = AgentSettings.load(paths)
             if args.contains("--all") { settings.keepReachable = true }
-            let recent = ClaudeConversations.recent(within: Double(settings.keepHours) * 3600)
+            let recent = ClaudeConversations.list(within: Double(settings.keepHours) * 3600,
+                                                  pinned: settings.keptConversations, limit: 60)
             let live = ClaudeConversations.live()
-            print("conversations in the last \(settings.keepHours) h: \(recent.count), live processes: \(live.count)")
+            print("conversations used in the last \(settings.keepHours) h (and pinned ones): \(recent.count), live processes: \(live.count)")
+            let iso = ISO8601DateFormatter()
             for c in recent {
                 let d = c.desktop.map { "desktop(archived:\($0.archived) scheduled:\($0.scheduled) mode:\($0.permissionMode ?? "-") rcOff:\($0.remoteControlTurnedOff))" } ?? "cli"
                 let running = live.filter { $0.sessionId == c.id }.map { "\($0.entrypoint):\($0.pid)" }.joined(separator: ",")
-                print("  \(c.id.prefix(8)) rc:\(c.usedRemoteControl ? "y" : "n") \(d) \(running.isEmpty ? "" : "LIVE \(running) ")\"\(c.title.prefix(50))\" \(c.cwd)")
+                let times = "used \(iso.string(from: c.lastActivity)) changed \(c.modified.map(iso.string(from:)) ?? "-")"
+                print("  \(c.id.prefix(8)) rc:\(c.usedRemoteControl ? "y" : "n") \(times) \(d) \(running.isEmpty ? "" : "LIVE \(running) ")\"\(c.title.prefix(50))\" \(c.cwd)")
             }
-            let chosen = SessionKeeper.select(recent, settings: settings, exclude: paths.session.standardizedFileURL.path)
+            let chosen = SessionKeeper.select(recent, settings: settings, exclude: paths.session.standardizedFileURL.path,
+                                              ownConversation: SessionKeeper.ownConversation(paths))
             print("would keep (max \(settings.keepMax)):")
             for (c, pinned) in chosen { print("  \(pinned ? "pinned" : "auto  ") \(c.id.prefix(8)) \"\(c.title.prefix(60))\"") }
             guard args.contains("--run") else { exit(0) }

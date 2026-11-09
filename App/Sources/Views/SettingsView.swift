@@ -312,13 +312,18 @@ struct ReachableSettings: View {
                     if model.conversations.isEmpty {
                         Text("No conversations in the last days.").foregroundStyle(.secondary)
                     }
-                    ForEach(sortedConversations) { c in
-                        ConversationRow(conversation: c, entry: model.keeper?.entries.first { $0.id == c.id })
+                    // In the keeper's order (pinned first, then by your last use), so the top ones are the kept ones.
+                    let own = SessionKeeper.ownConversation(model.paths)
+                    let wanted = keptNow(own)
+                    ForEach(model.conversations) { c in
+                        ConversationRow(conversation: c, entry: model.keeper?.entries.first { $0.id == c.id },
+                                        reason: SessionKeeper.reason(c, settings: model.settings, exclude: ownFolder,
+                                                                     ownConversation: own, kept: wanted))
                     }
                 } header: {
                     Text("Conversations")
                 } footer: {
-                    Text("Newest activity first; pinned ones on top.").font(.caption).foregroundStyle(.secondary)
+                    Text("Pinned ones on top, then the ones you wrote in or got an answer in last.").font(.caption).foregroundStyle(.secondary)
                 }
             }
 
@@ -332,10 +337,14 @@ struct ReachableSettings: View {
         .onReceive(timer) { _ in if model.settings.keepReachable { model.loadConversations() } }
     }
 
-    /// Pinned ones first, then by the newest activity (the order they come in).
-    var sortedConversations: [ClaudeConversation] {
-        let pinned = Set(model.settings.keptConversations)
-        return model.conversations.filter { pinned.contains($0.id) } + model.conversations.filter { !pinned.contains($0.id) }
+    /// aOS's own session folder: never kept (it runs under the supervisor).
+    var ownFolder: String { model.paths.session.standardizedFileURL.path }
+
+    /// What the keeper keeps by its rules (the same selection it makes; it may not have looked yet). `own`: the
+    /// conversation of aOS's own session, never kept.
+    func keptNow(_ own: String?) -> Set<String> {
+        Set(SessionKeeper.select(model.conversations, settings: model.settings, exclude: ownFolder, ownConversation: own)
+            .map(\.0.id))
     }
 
     enum KeepChoice: Hashable { case pinned, app, appAndTerminal }
@@ -431,6 +440,8 @@ struct ConversationRow: View {
     @EnvironmentObject var model: AppModel
     let conversation: ClaudeConversation
     let entry: KeeperStatus.Entry?
+    /// Why the keeper doesn't keep it (nil: it does).
+    let reason: KeepReason?
 
     var pinned: Bool { model.settings.keptConversations.contains(conversation.id) }
     var skipped: Bool { model.settings.skippedConversations.contains(conversation.id) }
@@ -497,19 +508,22 @@ struct ConversationRow: View {
             }
         }
         let s = model.settings
-        if skipped { return String(localized: "Never kept") }
-        if let d = conversation.desktop {
-            if d.archived { return String(localized: "Archived in the Claude app") }
-            if d.scheduled { return String(localized: "Scheduled task") }
-            if d.remoteControlTurnedOff { return String(localized: "Remote Control turned off") }
+        switch reason {
+        case .skipped: return String(localized: "Never kept")
+        case .archived: return String(localized: "Archived in the Claude app")
+        case .scheduled: return String(localized: "Scheduled task")
+        case .remoteControlOff: return String(localized: "Remote Control turned off")
+        case .ownSession: return String(localized: "\(Brand.name)'s own session")
+        case .automation: return String(localized: "Started by automation")
+        case .onlyPinned: return String(localized: "Not pinned")
+        case .terminal: return String(localized: "From a terminal")
+        case .noRemoteControl: return String(localized: "Never used Remote Control")
+        case .inactive: return String(localized: "Inactive for longer than \(s.keepHours) hours")
+        case .overLimit: return String(localized: "Above the limit of \(s.keepMax)")
+        case .off: return String(localized: "Off")
+        // Kept by the rules, but the background process hasn't started it yet.
+        case nil: return String(localized: "Starting soon")
         }
-        if !s.keepAutomatic { return String(localized: "Not pinned") }
-        if conversation.startedIn != "claude-desktop" && !s.keepTerminal { return String(localized: "From a terminal") }
-        if !conversation.usedRemoteControl { return String(localized: "Never used Remote Control") }
-        if conversation.lastActivity < Date().addingTimeInterval(-Double(s.keepHours) * 3600) {
-            return String(localized: "Inactive for longer than \(s.keepHours) hours")
-        }
-        return String(localized: "Above the limit of \(s.keepMax)")
     }
 }
 

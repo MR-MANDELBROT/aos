@@ -510,6 +510,16 @@
         }
       }
     },
+    "A terminal or a tool" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Terminal oder ein Werkzeug"
+          }
+        }
+      }
+    },
     "About" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -517,6 +527,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Info"
+          }
+        }
+      }
+    },
+    "Above the limit of %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über der Grenze von %lld"
           }
         }
       }
@@ -773,6 +793,16 @@
         }
       }
     },
+    "Always kept reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immer erreichbar"
+          }
+        }
+      }
+    },
     "Another Device Is Using High Performance on “%@”" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -864,6 +894,26 @@
         }
       }
     },
+    "aOS doesn't run this chat on the Mac right now, so there is nothing to restart." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS führt diesen Chat gerade nicht auf dem Mac aus, es gibt also nichts neu zu starten."
+          }
+        }
+      }
+    },
+    "aOS ends it on the Mac and doesn't keep it any more. Keep Again undoes that; the chat itself stays as it is." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS beendet ihn auf dem Mac und hält ihn nicht mehr erreichbar. „Wieder erreichbar halten“ macht das rückgängig; der Chat selbst bleibt, wie er ist."
+          }
+        }
+      }
+    },
     "aOS is locked" : {
       "localizations" : {
         "de" : {
@@ -900,6 +950,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS ist auf dem Mac nicht mehr dort, wo es gekoppelt wurde: Dieses Terminal endet mit der Verbindung."
+          }
+        }
+      }
+    },
+    "aOS keeps the chats you used last, at most %lld. Pin this one to keep it reachable anyway." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS hält die Chats erreichbar, die du zuletzt benutzt hast, höchstens %lld. Heft diesen an, damit er trotzdem erreichbar bleibt."
           }
         }
       }
@@ -1055,6 +1115,16 @@
         }
       }
     },
+    "aOS on the Mac starts Claude Code for it again. The chat continues where it was; an answer it is writing right now stops." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf dem Mac startet Claude Code dafür neu. Der Chat geht weiter, wo er war; eine Antwort, die gerade entsteht, bricht ab."
+          }
+        }
+      }
+    },
     "aOS on the Mac stopped answering." : {
       "localizations" : {
         "de" : {
@@ -1106,6 +1176,16 @@
         }
       }
     },
+    "aOS runs it on the Mac, so you can continue it in the Claude app." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS führt ihn auf dem Mac aus, so kannst du ihn in der Claude-App fortsetzen."
+          }
+        }
+      }
+    },
     "aOS sends a routine into its session on the Mac when it is due and Claude Code isn't busy. If the Mac was asleep, it comes up to 6 hours later." : {
       "localizations" : {
         "de" : {
@@ -1126,6 +1206,26 @@
         }
       }
     },
+    "aOS's background process on the Mac doesn't keep chats reachable right now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrundprozess von aOS auf dem Mac hält gerade keine Chats erreichbar."
+          }
+        }
+      }
+    },
+    "aOS's background process on the Mac is older and can't restart a single chat yet. It can after the Mac restarts." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Hintergrundprozess von aOS auf dem Mac ist älter und kann einzelne Chats noch nicht neu starten. Nach einem Neustart des Macs geht das."
+          }
+        }
+      }
+    },
     "aOS's helper didn't let go of the Mac in time. Try again in a moment." : {
       "localizations" : {
         "de" : {
@@ -1142,6 +1242,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Hintergrunddienst von aOS ist auf dem Mac noch nicht eingerichtet."
+          }
+        }
+      }
+    },
+    "aOS's own session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigene Sitzung von aOS"
           }
         }
       }
@@ -1292,6 +1402,16 @@
         }
       }
     },
+    "Archived in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Claude-App archiviert"
+          }
+        }
+      }
+    },
     "Arrow keys" : {
       "localizations" : {
         "de" : {
@@ -1340,6 +1460,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Frage den Mac"
+          }
+        }
+      }
+    },
+    "Asks something on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt auf dem Mac etwas"
           }
         }
       }
@@ -1649,6 +1779,26 @@
         }
       }
     },
+    "Chat" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat"
+          }
+        }
+      }
+    },
+    "Chats" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chats"
+          }
+        }
+      }
+    },
     "Check that this is the key of your computer. On it, run:" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1696,6 +1846,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claude Code ist auf dem Mac nicht installiert"
+          }
+        }
+      }
+    },
+    "Claude Code keeps stopping. aOS tries again later; Restart tries now." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code hört immer wieder auf. aOS versucht es später wieder; „Neu starten“ versucht es jetzt."
+          }
+        }
+      }
+    },
+    "Claude Code on the Mac needs a sign-in. Run claude once in a terminal there and sign in." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Code auf dem Mac braucht eine Anmeldung. Führ dort einmal claude in einem Terminal aus und melde dich an."
           }
         }
       }
@@ -2694,6 +2864,16 @@
         }
       }
     },
+    "Don't Keep" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht erreichbar halten"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "de" : {
@@ -2824,6 +3004,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bearbeiten"
+          }
+        }
+      }
+    },
+    "Elsewhere" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anderswo"
           }
         }
       }
@@ -3068,6 +3258,16 @@
         }
       }
     },
+    "Folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner"
+          }
+        }
+      }
+    },
     "For %lld minutes" : {
       "localizations" : {
         "de" : {
@@ -3127,6 +3327,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vier Tasten"
+          }
+        }
+      }
+    },
+    "From a terminal" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus dem Terminal"
           }
         }
       }
@@ -3599,6 +3809,26 @@
         }
       }
     },
+    "It's open in a terminal or another tool on the Mac. aOS takes it over a minute after that ends." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er ist auf dem Mac in einem Terminal oder einem anderen Werkzeug geöffnet. aOS übernimmt ihn eine Minute, nachdem das endet."
+          }
+        }
+      }
+    },
+    "It's open in the Claude app on the Mac. aOS takes it over a minute after the app lets it go." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er ist in der Claude-App auf dem Mac geöffnet. aOS übernimmt ihn eine Minute, nachdem die App ihn freigibt."
+          }
+        }
+      }
+    },
     "Item" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3606,6 +3836,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objekt"
+          }
+        }
+      }
+    },
+    "Its folder is gone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein Ordner fehlt"
+          }
+        }
+      }
+    },
+    "Keep Again" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wieder erreichbar halten"
           }
         }
       }
@@ -3636,6 +3886,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diesen Mac wach halten"
+          }
+        }
+      }
+    },
+    "Keeps stopping" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hört immer wieder auf"
           }
         }
       }
@@ -3846,6 +4106,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "zuletzt gesehen %@"
+          }
+        }
+      }
+    },
+    "Last used" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt benutzt"
           }
         }
       }
@@ -4215,6 +4485,16 @@
         }
       }
     },
+    "Needs a sign-in on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht eine Anmeldung auf dem Mac"
+          }
+        }
+      }
+    },
     "Needs a sign-in to Claude Code on the Mac" : {
       "localizations" : {
         "de" : {
@@ -4235,12 +4515,32 @@
         }
       }
     },
+    "Needs you on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht dich auf dem Mac"
+          }
+        }
+      }
+    },
     "Needs your attention" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Braucht dich"
+          }
+        }
+      }
+    },
+    "Never used Remote Control" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie mit Remote Control benutzt"
           }
         }
       }
@@ -4351,6 +4651,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Adresse zum Probieren."
+          }
+        }
+      }
+    },
+    "No chats in the last days." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Chats in den letzten Tagen."
           }
         }
       }
@@ -4549,6 +4859,16 @@
         }
       }
     },
+    "None is reachable in the Claude app right now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerade ist keiner in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
     "Normal temperature" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4682,6 +5002,16 @@
         }
       }
     },
+    "Not pinned" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht angeheftet"
+          }
+        }
+      }
+    },
     "Not reachable right now" : {
       "localizations" : {
         "de" : {
@@ -4738,6 +5068,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht angemeldet"
+          }
+        }
+      }
+    },
+    "Not used in the last %lld hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In den letzten %lld Stunden nicht benutzt"
           }
         }
       }
@@ -4825,6 +5165,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In den Einstellungen von aOS aus"
+          }
+        }
+      }
+    },
+    "Off on the Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf dem Mac aus"
           }
         }
       }
@@ -5033,6 +5383,16 @@
         }
       }
     },
+    "Open elsewhere" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anderswo geöffnet"
+          }
+        }
+      }
+    },
     "Open for your agent" : {
       "localizations" : {
         "de" : {
@@ -5065,12 +5425,32 @@
         }
       }
     },
+    "Open in a terminal" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In einem Terminal geöffnet"
+          }
+        }
+      }
+    },
     "Open in a terminal on the Mac" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "In einem Terminal auf dem Mac offen"
+          }
+        }
+      }
+    },
+    "Open in the Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Claude-App geöffnet"
           }
         }
       }
@@ -5515,6 +5895,26 @@
         }
       }
     },
+    "Pin" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anheften"
+          }
+        }
+      }
+    },
+    "Pin: Always Keep Reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anheften: immer erreichbar halten"
+          }
+        }
+      }
+    },
     "Pinch: zoom, moving the fingers moves the picture. Three fingers: move the zoomed picture" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5537,12 +5937,32 @@
         }
       }
     },
+    "Pinned" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angeheftet"
+          }
+        }
+      }
+    },
     "Pinned at pairing. If the Mac answers with another key, the app stops and tells you." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beim Koppeln festgelegt. Antwortet der Mac mit einem anderen Schlüssel, hält die App an und sagt es dir."
+          }
+        }
+      }
+    },
+    "Pinned chats stay reachable, also when you haven't used them for a while. Stop ends a chat on the Mac, and aOS doesn't keep it until you keep it again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angeheftete Chats bleiben erreichbar, auch wenn du sie länger nicht benutzt hast. „Stoppen“ beendet einen Chat auf dem Mac, und aOS hält ihn erst wieder erreichbar, wenn du das wieder einschaltest."
           }
         }
       }
@@ -5716,6 +6136,16 @@
         }
       }
     },
+    "Reachable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erreichbar"
+          }
+        }
+      }
+    },
     "Ready: the Mac stays awake when the lid closes." : {
       "localizations" : {
         "de" : {
@@ -5832,6 +6262,16 @@
         }
       }
     },
+    "Remote Control turned off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Control ausgeschaltet"
+          }
+        }
+      }
+    },
     "Remote screen" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5937,6 +6377,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neu starten"
+          }
+        }
+      }
+    },
+    "Restart “%@”?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ neu starten?"
           }
         }
       }
@@ -6153,6 +6603,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anderen Code scannen"
+          }
+        }
+      }
+    },
+    "Scheduled task" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geplante Aufgabe"
           }
         }
       }
@@ -6540,6 +7000,26 @@
         }
       }
     },
+    "Show All (%lld)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle zeigen (%lld)"
+          }
+        }
+      }
+    },
+    "Show Fewer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weniger zeigen"
+          }
+        }
+      }
+    },
     "Show Keyboard" : {
       "localizations" : {
         "de" : {
@@ -6642,6 +7122,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Symbolleiste ein-/ausblenden"
+          }
+        }
+      }
+    },
+    "Shows the chat and what you can do with it" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt den Chat und was du damit tun kannst"
           }
         }
       }
@@ -7028,6 +7518,26 @@
         }
       }
     },
+    "Started by automation" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von einer Automatisierung gestartet"
+          }
+        }
+      }
+    },
+    "Started in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestartet in"
+          }
+        }
+      }
+    },
     "Starting" : {
       "localizations" : {
         "de" : {
@@ -7045,6 +7555,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hochleistungsmodus wird gestartet …"
+          }
+        }
+      }
+    },
+    "Starting soon" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet gleich"
           }
         }
       }
@@ -7075,6 +7595,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bleib mit dem Mac deines Agents in Verbindung, wo immer du bist."
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppen"
+          }
+        }
+      }
+    },
+    "Stop “%@”?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ stoppen?"
           }
         }
       }
@@ -7116,6 +7656,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "App wechseln"
+          }
+        }
+      }
+    },
+    "Switch on “Keep conversations reachable” in aOS on the Mac (Settings > Claude Code), and aOS keeps your chats running there for the Claude app." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte in aOS auf dem Mac „Unterhaltungen erreichbar halten“ ein (Einstellungen > Claude Code), dann hält aOS deine Chats dort für die Claude-App am Laufen."
           }
         }
       }
@@ -7447,6 +7997,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "die Prüfung über SSH ist gescheitert: %@"
+          }
+        }
+      }
+    },
+    "The Claude app" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Claude-App"
           }
         }
       }
@@ -8301,6 +8861,16 @@
         }
       }
     },
+    "This chat isn't in the list any more." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Chat ist nicht mehr in der Liste."
+          }
+        }
+      }
+    },
     "This code is from a newer aOS. Update the app on this iPhone." : {
       "localizations" : {
         "de" : {
@@ -8908,6 +9478,16 @@
         }
       }
     },
+    "Unpin" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht mehr anheften"
+          }
+        }
+      }
+    },
     "Until the battery is almost empty (2 percent)." : {
       "localizations" : {
         "de" : {
@@ -9348,6 +9928,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eigener Bildschirm kann nicht gesteuert werden"
+          }
+        }
+      }
+    },
+    "You stopped it. aOS doesn't keep it until you keep it again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du hast ihn gestoppt. aOS hält ihn erst wieder erreichbar, wenn du das wieder einschaltest."
           }
         }
       }
