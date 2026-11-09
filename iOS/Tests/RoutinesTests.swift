@@ -34,15 +34,27 @@ struct RoutinesTests {
     }
 
     @Test func simpleSchedules() {
-        #expect(RoutineSchedule.simple("0 6 * * *") == .init(hour: 6, minute: 0, weekdays: Set(0...6)))
-        #expect(RoutineSchedule.simple("30 17 * * 0") == .init(hour: 17, minute: 30, weekdays: [0]))
+        #expect(RoutineSchedule.simple("0 6 * * *") == .init(times: [.init(hour: 6, minute: 0)], weekdays: Set(0...6)))
+        #expect(RoutineSchedule.simple("30 17 * * 0")?.weekdays == [0])
         #expect(RoutineSchedule.simple("0 8 * * 1-5")?.weekdays == Set(1...5))
         #expect(RoutineSchedule.simple("0 8 * * 7")?.weekdays == [0])
         #expect(RoutineSchedule.simple("*/15 8 * * *") == nil)
         #expect(RoutineSchedule.simple("0 8 1 * *") == nil)
+        // Cloupi's checks as one routine
+        let checks = "3 10 * * *; 7 12 * * *; 13 14 * * *; 17 16 * * *; 23 18 * * *"
+        #expect(RoutineSchedule.simple(checks)?.times.map(\.hour) == [10, 12, 14, 16, 18])
+        #expect(RoutineSchedule.cron(times: [(10, 3), (12, 7)], weekdays: Set(0...6)) == "3 10 * * *; 7 12 * * *")
+        #expect(RoutineSchedule.cron(times: [(8, 0), (12, 0)], weekdays: [1, 2]) == "0 8,12 * * 1,2")
         #expect(RoutineSchedule.cron(hour: 17, minute: 30, weekdays: [0]) == "30 17 * * 0")
-        #expect(RoutineSchedule.cron(hour: 6, minute: 0, weekdays: Set(0...6)) == "0 6 * * *")
         #expect(RoutineSchedule.looksValid("*/15 8-18 * * 1-5"))
+        #expect(RoutineSchedule.looksValid(checks))
         #expect(!RoutineSchedule.looksValid("jeden Tag"))
+    }
+
+    @Test func everyFewHours() {
+        #expect(RoutineSchedule.every(hours: 2, from: 10, to: 18, minute: 3, weekdays: Set(0...6)) == "3 10-18/2 * * *")
+        #expect(RoutineSchedule.interval("3 10-18/2 * * *") == .init(hours: 2, from: 10, to: 18, minute: 3, weekdays: Set(0...6)))
+        #expect(RoutineSchedule.interval("0 * * * 1-5")?.hours == 1)
+        #expect(RoutineSchedule.interval("0 6 * * *") == nil)
     }
 }

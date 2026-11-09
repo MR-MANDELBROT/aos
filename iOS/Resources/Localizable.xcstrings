@@ -397,6 +397,16 @@
         }
       }
     },
+    "%lld hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Stunden"
+          }
+        }
+      }
+    },
     "%lld messages wait until the session is free" : {
       "localizations" : {
         "de" : {
@@ -655,6 +665,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trag den öffentlichen Schlüssel dieses iPhones (Einstellungen > SSH-Schlüssel dieses iPhones) auf dem Rechner in ~/.ssh/authorized_keys ein."
+          }
+        }
+      }
+    },
+    "Add Time" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uhrzeit hinzufügen"
           }
         }
       }
@@ -1480,6 +1500,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unter %@ hat ein anderer Rechner geantwortet, oder der SSH-Schlüssel des Macs hat sich geändert. Hast du den Mac neu eingerichtet, kopple ihn neu."
+          }
+        }
+      }
+    },
+    "At minute %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur Minute %lld"
+          }
+        }
+      }
+    },
+    "At times" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu Uhrzeiten"
           }
         }
       }
@@ -2452,7 +2492,18 @@
         }
       }
     },
+    "Cron" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cron"
+          }
+        }
+      }
+    },
     "Cron schedule" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3121,6 +3172,58 @@
         }
       }
     },
+    "Every" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        }
+      }
+    },
+    "Every %lld hours from %@ to %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle %1$lld Stunden von %2$@ bis %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Every %1$lld hours from %2$@ to %3$@"
+          }
+        }
+      }
+    },
+    "Every few hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle paar Stunden"
+          }
+        }
+      }
+    },
+    "Every hour from %@ to %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stündlich von %1$@ bis %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Every hour from %1$@ to %2$@"
+          }
+        }
+      }
+    },
     "Expired" : {
       "localizations" : {
         "de" : {
@@ -3248,7 +3351,18 @@
         }
       }
     },
+    "Five fields in the Mac's time, like 0 6 * * 1-5 (Monday to Friday at 6:00); several separated by ;." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fünf Felder in der Zeit des Macs, etwa 0 6 * * 1-5 (Montag bis Freitag um 6:00); mehrere mit ; getrennt."
+          }
+        }
+      }
+    },
     "Five fields in the Mac's time, like 0 6 * * 1-5 (Monday to Friday at 6:00)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3327,6 +3441,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vier Tasten"
+          }
+        }
+      }
+    },
+    "From" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von"
           }
         }
       }
@@ -3604,6 +3728,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Home-Bildschirm"
+          }
+        }
+      }
+    },
+    "hour" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stunde"
           }
         }
       }
@@ -4356,7 +4490,18 @@
         }
       }
     },
+    "Mon to Fri" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mo bis Fr"
+          }
+        }
+      }
+    },
     "Mon to Fri at %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6301,6 +6446,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aus der Symbolleiste entfernen"
+          }
+        }
+      }
+    },
+    "Repeat" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederholen"
           }
         }
       }
@@ -9518,6 +9673,16 @@
         }
       }
     },
+    "Until" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bis"
+          }
+        }
+      }
+    },
     "Until the battery is almost empty (2 percent)." : {
       "localizations" : {
         "de" : {
@@ -9764,7 +9929,18 @@
         }
       }
     },
+    "Weekends" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Wochenende"
+          }
+        }
+      }
+    },
     "Weekends at %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
