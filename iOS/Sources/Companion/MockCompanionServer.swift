@@ -219,6 +219,27 @@ final class MockCompanionServer: @unchecked Sendable {
         "newChats": .object(["enabled": .bool(true), "state": .string("running")]),
         "kept": .object(["enabled": .bool(true), "running": .number(2)]),
         "bitwarden": .object(["state": .string("unlocked")]),
+        "routines": .object([
+            "items": .array([
+                .object(["id": .string("7D0B3C52-6F7E-4B0F-9F4F-4C3B2C1E0A01"), "name": .string("Morgen-Briefing"),
+                         "schedule": .string("0 6 * * *"),
+                         "prompt": .string("Lies prompts/morning-briefing.md und arbeite den Ablauf ab."),
+                         "enabled": .bool(true), "next": .string(ISO8601.format(Date().addingTimeInterval(14 * 3600)))]),
+                .object(["id": .string("7D0B3C52-6F7E-4B0F-9F4F-4C3B2C1E0A02"), "name": .string("Routine-Check"),
+                         "schedule": .string("13 14 * * *"),
+                         "prompt": .string("Lies prompts/routine-check.md und arbeite den Ablauf ab."),
+                         "enabled": .bool(true), "next": .string(ISO8601.format(Date().addingTimeInterval(2 * 3600)))]),
+                .object(["id": .string("7D0B3C52-6F7E-4B0F-9F4F-4C3B2C1E0A03"), "name": .string("Wochenplanung"),
+                         "schedule": .string("30 17 * * 0"),
+                         "prompt": .string("Lies prompts/weekly-planning.md und arbeite den Ablauf ab."),
+                         "enabled": .bool(false)]),
+            ]),
+            "reminders": .array([.object(["name": .string("Zahnarzt anrufen"),
+                                          "at": .string(ISO8601.format(Date().addingTimeInterval(5 * 3600)))])]),
+            "queued": .number(0),
+            "recent": .array([.object(["kind": .string("routine"), "name": .string("Routine-Check"),
+                                       "at": .string(ISO8601.format(Date().addingTimeInterval(-2 * 3600)))])]),
+        ]),
     ]
 
     /// What the Mac does for an action, on the status it reports.
@@ -252,7 +273,25 @@ final class MockCompanionServer: @unchecked Sendable {
                 set("display", "state", .string("on"))
             case .batteryLimit:
                 if let value, let p = Int(value) { set("awake", "batteryLimit", .number(Double(p))) }
-            case .status, .sleep:
+            case .routineSet:
+                // As the Mac does: replace the routine with the same id, or add it
+                if let value, let data = value.data(using: .utf8),
+                   let routine = try? JSONDecoder().decode(MacStatus.Routines.Item.self, from: data) {
+                    var r = status["routines"]?.object ?? [:]
+                    var items = r["items"]?.array ?? []
+                    let entry: JSONValue = .object(["id": .string(routine.id), "name": .string(routine.name),
+                                                    "schedule": .string(routine.schedule), "prompt": .string(routine.prompt),
+                                                    "enabled": .bool(routine.enabled)])
+                    if let i = items.firstIndex(where: { $0.object?["id"]?.string == routine.id }) { items[i] = entry }
+                    else { items.append(entry) }
+                    r["items"] = .array(items)
+                    status["routines"] = .object(r)
+                }
+            case .routineDelete:
+                var r = status["routines"]?.object ?? [:]
+                r["items"] = .array((r["items"]?.array ?? []).filter { $0.object?["id"]?.string != value })
+                status["routines"] = .object(r)
+            case .status, .sleep, .routineRun:
                 break
             }
             state.macStatus = status

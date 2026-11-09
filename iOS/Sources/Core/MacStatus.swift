@@ -15,6 +15,10 @@ enum MacAction: String, Sendable, CaseIterable {
     case workspaceStop = "workspace.stop"
     case bitwardenLock = "bitwarden.lock"
     case sessionRestart = "session.restart"
+    /// The session's routines: add or change one (JSON), delete one, send one now (its id).
+    case routineSet = "routines.set"
+    case routineDelete = "routines.delete"
+    case routineRun = "routines.run"
 }
 
 /// When aOS keeps the Mac awake (AOSKit `StayAwake`).
@@ -89,6 +93,38 @@ struct MacStatus: Equatable, Sendable {
         var until: Date?
     }
 
+    /// aOS's session's routines, reminders waiting for it and what went in lately (nil from an older aOS).
+    struct Routines: Equatable, Sendable {
+        struct Item: Equatable, Sendable, Identifiable, Codable {
+            var id: String
+            var name: String
+            /// Cron, five fields, the Mac's local time.
+            var schedule: String
+            var prompt: String
+            var enabled: Bool
+            var next: Date?
+
+            private enum CodingKeys: String, CodingKey { case id, name, schedule, prompt, enabled }
+        }
+        struct Upcoming: Equatable, Sendable {
+            var name: String
+            var at: Date
+        }
+        struct Sent: Equatable, Sendable {
+            /// routine, reminder, note, start
+            var kind: String
+            var name: String
+            var at: Date
+        }
+        var items: [Item]
+        var reminders: [Upcoming] = []
+        var queued = 0
+        var recent: [Sent] = []
+
+        /// The routine that runs next.
+        var next: Item? { items.filter { $0.enabled && $0.next != nil }.min { $0.next! < $1.next! } }
+    }
+
     var power: Power?
     /// nil from an older aOS (it doesn't say).
     var display: Display?
@@ -99,6 +135,7 @@ struct MacStatus: Equatable, Sendable {
     /// Kept conversations running now (nil: the setting is off).
     var kept: Int?
     var bitwarden: Vault?
+    var routines: Routines?
 
     init(power: Power? = nil, display: Display? = nil, awake: Awake? = nil, workspace: Workspace? = nil,
          session: Session? = nil, newChats: NewChats? = nil, kept: Int? = nil, bitwarden: Vault? = nil) {
@@ -141,6 +178,23 @@ struct MacStatus: Equatable, Sendable {
         if let k = o["kept"]?.object, k["enabled"]?.bool == true { kept = k["running"]?.int ?? 0 }
         if let b = o["bitwarden"]?.object, let state = b["state"]?.string {
             bitwarden = Vault(state: state, until: date(b["until"]))
+        }
+        if let r = o["routines"]?.object {
+            let items = (r["items"]?.array ?? []).compactMap { v -> Routines.Item? in
+                guard let i = v.object, let id = i["id"]?.string, let name = i["name"]?.string,
+                      let schedule = i["schedule"]?.string else { return nil }
+                return Routines.Item(id: id, name: name, schedule: schedule, prompt: i["prompt"]?.string ?? "",
+                                     enabled: i["enabled"]?.bool ?? true, next: date(i["next"]))
+            }
+            let reminders = (r["reminders"]?.array ?? []).compactMap { v -> Routines.Upcoming? in
+                guard let i = v.object, let at = date(i["at"]) else { return nil }
+                return Routines.Upcoming(name: i["name"]?.string ?? "", at: at)
+            }
+            let recent = (r["recent"]?.array ?? []).compactMap { v -> Routines.Sent? in
+                guard let i = v.object, let at = date(i["at"]) else { return nil }
+                return Routines.Sent(kind: i["kind"]?.string ?? "routine", name: i["name"]?.string ?? "", at: at)
+            }
+            routines = Routines(items: items, reminders: reminders, queued: r["queued"]?.int ?? 0, recent: recent)
         }
     }
 }

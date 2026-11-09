@@ -207,6 +207,22 @@
         }
       }
     },
+    "%@ at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ um %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
     "%@ didn't accept the login." : {
       "localizations" : {
         "de" : {
@@ -381,6 +397,16 @@
         }
       }
     },
+    "%lld messages wait until the session is free" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Nachrichten warten, bis die Sitzung frei ist"
+          }
+        }
+      }
+    },
     "%lld pt · %lld × %lld" : {
       "localizations" : {
         "de" : {
@@ -439,6 +465,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 ist in der Claude-App erreichbar"
+          }
+        }
+      }
+    },
+    "1 message waits until the session is free" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 Nachricht wartet, bis die Sitzung frei ist"
           }
         }
       }
@@ -582,6 +618,16 @@
         }
       }
     },
+    "Add Routine" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routine hinzufügen"
+          }
+        }
+      }
+    },
     "Add this iPhone's public key (Settings > SSH key of this iPhone) to ~/.ssh/authorized_keys on that computer." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -651,6 +697,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle Displays"
+          }
+        }
+      }
+    },
+    "All off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle aus"
           }
         }
       }
@@ -1050,6 +1106,16 @@
         }
       }
     },
+    "aOS sends a routine into its session on the Mac when it is due and Claude Code isn't busy. If the Mac was asleep, it comes up to 6 hours later." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS schickt eine Routine in seine Sitzung auf dem Mac, sobald sie fällig ist und Claude Code gerade nichts tut. Hat der Mac geschlafen, kommt sie bis zu 6 Stunden später."
+          }
+        }
+      }
+    },
     "aOS's background process isn't running on the Mac, so there is no Claude Code session to restart." : {
       "localizations" : {
         "de" : {
@@ -1076,6 +1142,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Hintergrunddienst von aOS ist auf dem Mac noch nicht eingerichtet."
+          }
+        }
+      }
+    },
+    "aOS's session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS-Sitzung"
           }
         }
       }
@@ -1835,6 +1911,16 @@
         }
       }
     },
+    "Connect to your Mac, and update aOS there if it's older." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde dich mit deinem Mac und aktualisiere aOS dort, falls es älter ist."
+          }
+        }
+      }
+    },
     "Connected" : {
       "localizations" : {
         "de" : {
@@ -2196,6 +2282,16 @@
         }
       }
     },
+    "Cron schedule" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cron-Zeitplan"
+          }
+        }
+      }
+    },
     "Ctrl Key" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2258,6 +2354,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausschneiden"
+          }
+        }
+      }
+    },
+    "Daily at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Täglich um %@"
           }
         }
       }
@@ -2346,7 +2452,6 @@
       }
     },
     "Delete" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2373,6 +2478,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zuordnung löschen"
+          }
+        }
+      }
+    },
+    "Delete this routine?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Routine löschen?"
           }
         }
       }
@@ -2665,7 +2780,6 @@
       }
     },
     "Edit" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2940,6 +3054,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einpassen"
+          }
+        }
+      }
+    },
+    "Five fields in the Mac's time, like 0 6 * * 1-5 (Monday to Friday at 6:00)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fünf Felder in der Zeit des Macs, etwa 0 6 * * 1-5 (Montag bis Freitag um 6:00)."
           }
         }
       }
@@ -3921,6 +4045,36 @@
         }
       }
     },
+    "Message to the session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachricht an die Sitzung"
+          }
+        }
+      }
+    },
+    "Messages aOS sends into its session on the Mac on a schedule, for example a briefing every morning." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichten, die aOS nach Zeitplan in seine Sitzung auf dem Mac schickt, etwa jeden Morgen ein Briefing."
+          }
+        }
+      }
+    },
+    "Minute Hour Day Month Weekday" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minute Stunde Tag Monat Wochentag"
+          }
+        }
+      }
+    },
     "Mission Control" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3928,6 +4082,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mission Control"
+          }
+        }
+      }
+    },
+    "Mon to Fri at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mo bis Fr um %@"
           }
         }
       }
@@ -4113,6 +4277,16 @@
         }
       }
     },
+    "New Routine" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Routine"
+          }
+        }
+      }
+    },
     "New Session" : {
       "localizations" : {
         "de" : {
@@ -4134,6 +4308,16 @@
         }
       }
     },
+    "Next %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächster Lauf %@"
+          }
+        }
+      }
+    },
     "Next Tip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4141,6 +4325,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nächster Tipp"
+          }
+        }
+      }
+    },
+    "Next: %@ at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als Nächstes: %1$@ um %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Next: %1$@ at %2$@"
           }
         }
       }
@@ -4308,6 +4508,16 @@
         }
       }
     },
+    "No routines yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Routinen."
+          }
+        }
+      }
+    },
     "No sessions on the Mac. New Session starts one." : {
       "localizations" : {
         "de" : {
@@ -4356,6 +4566,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht erlaubt. Der Arbeitsplatz bleibt geschlossen."
+          }
+        }
+      }
+    },
+    "Not available" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht verfügbar"
           }
         }
       }
@@ -4518,6 +4738,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht angemeldet"
+          }
+        }
+      }
+    },
+    "Note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinweis"
+          }
+        }
+      }
+    },
+    "Note from %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinweis von %@"
           }
         }
       }
@@ -5519,6 +5759,16 @@
         }
       }
     },
+    "Recently sent" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt geschickt"
+          }
+        }
+      }
+    },
     "Reconnect" : {
       "localizations" : {
         "de" : {
@@ -5568,6 +5818,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort merken"
+          }
+        }
+      }
+    },
+    "Reminder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erinnerung"
           }
         }
       }
@@ -5775,6 +6035,26 @@
         }
       }
     },
+    "Routines" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routinen"
+          }
+        }
+      }
+    },
+    "Run Now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt ausführen"
+          }
+        }
+      }
+    },
     "Running" : {
       "localizations" : {
         "de" : {
@@ -5826,7 +6106,6 @@
       }
     },
     "Save" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -6725,6 +7004,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starten und zeigen"
+          }
+        }
+      }
+    },
+    "Start message" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startnachricht"
           }
         }
       }
@@ -8249,6 +8538,16 @@
         }
       }
     },
+    "Time" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uhrzeit"
+          }
+        }
+      }
+    },
     "Tips" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8804,6 +9103,16 @@
         }
       }
     },
+    "Waiting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet"
+          }
+        }
+      }
+    },
     "Waiting for Permission…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8845,12 +9154,42 @@
         }
       }
     },
+    "Weekends at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Wochenende um %@"
+          }
+        }
+      }
+    },
     "What is where" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Was ist wo"
+          }
+        }
+      }
+    },
+    "What the session should do" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was die Sitzung tun soll"
+          }
+        }
+      }
+    },
+    "When" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wann"
           }
         }
       }
