@@ -232,15 +232,7 @@ struct ReachableSettings: View {
             SettingsHeader(symbol: "iphone.radiowaves.left.and.right", title: "Claude Code on your phone",
                            detail: "Start chats on this Mac from the Claude app and keep conversations reachable when you leave the Mac.")
             if ClaudeCode.isConfigured(session: model.paths.session) {
-                Section {
-                    TextField("Name in the Claude app", text: $sessionName).onSubmit(saveName)
-                    Toggle("Keep the session running", isOn: binding(\.sessionEnabled))
-                } header: {
-                    Text("\(Brand.name)'s own session")
-                } footer: {
-                    Text("A session that always runs in \(Brand.name)'s folder, with the workspace tools.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
+                SessionSettingsSections(sessionName: $sessionName, saveName: saveName)
             }
             Section {
                 Toggle(isOn: binding(\.newChats)) {

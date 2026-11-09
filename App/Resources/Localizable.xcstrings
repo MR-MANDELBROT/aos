@@ -92,6 +92,22 @@
         }
       }
     },
+    "%@ at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ um %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
     "%@ brings Tailscale along, on this Mac and in %@ on your iPhone: no VPN, no extra app. You sign in once on each device, in the browser, with your Tailscale account (you can create one there). In your tailnet only this Mac's SSH is reachable, nothing else." : {
       "localizations" : {
         "de" : {
@@ -245,6 +261,16 @@
         }
       }
     },
+    "%@ sends a routine into the session when it is due and Claude Code isn't busy. If the Mac was asleep, it comes up to 6 hours later." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ schickt eine Routine in die Sitzung, sobald sie fällig ist und Claude Code gerade nichts tut. Hat der Mac geschlafen, kommt sie bis zu 6 Stunden später."
+          }
+        }
+      }
+    },
     "%@ sets up Tailscale" : {
       "localizations" : {
         "de" : {
@@ -331,6 +357,26 @@
         }
       }
     },
+    "%@'s folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner von %@"
+          }
+        }
+      }
+    },
+    "%@'s Folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner von %@"
+          }
+        }
+      }
+    },
     "%@'s own session" : {
       "localizations" : {
         "de" : {
@@ -397,6 +443,16 @@
         }
       }
     },
+    "%lld messages wait until the session is free" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Nachrichten warten, bis die Sitzung frei ist"
+          }
+        }
+      }
+    },
     "%lld minutes" : {
       "localizations" : {
         "de" : {
@@ -423,6 +479,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 Stunde"
+          }
+        }
+      }
+    },
+    "1 message waits until the session is free" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 Nachricht wartet, bis die Sitzung frei ist"
+          }
+        }
+      }
+    },
+    "A chat that always runs, reachable in the Claude app. After a restart it continues its own conversation; after two restarts within 30 minutes it starts fresh." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Chat, der immer läuft und in der Claude-App erreichbar ist. Nach einem Neustart setzt er seine eigene Unterhaltung fort; nach zwei Neustarts innerhalb von 30 Minuten beginnt er neu."
           }
         }
       }
@@ -458,6 +534,7 @@
       }
     },
     "A session that always runs in %@'s folder, with the workspace tools." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -548,12 +625,32 @@
         }
       }
     },
+    "Add …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzufügen …"
+          }
+        }
+      }
+    },
     "add by hand" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "von Hand eintragen"
+          }
+        }
+      }
+    },
+    "Add Routine …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routine hinzufügen …"
           }
         }
       }
@@ -1530,6 +1627,16 @@
         }
       }
     },
+    "Claude Code's default" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard von Claude Code"
+          }
+        }
+      }
+    },
     "Click Allow aOS Helper. The workspace window comes to the front." : {
       "localizations" : {
         "de" : {
@@ -1792,6 +1899,16 @@
         }
       }
     },
+    "Conversation" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterhaltung"
+          }
+        }
+      }
+    },
     "Conversations" : {
       "localizations" : {
         "de" : {
@@ -1862,12 +1979,52 @@
         }
       }
     },
+    "Cron schedule" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cron-Zeitplan"
+          }
+        }
+      }
+    },
+    "Daily at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Täglich um %@"
+          }
+        }
+      }
+    },
     "Data" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Daten"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen"
+          }
+        }
+      }
+    },
+    "Delete …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen …"
           }
         }
       }
@@ -1898,6 +2055,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arbeitsplatz löschen?"
+          }
+        }
+      }
+    },
+    "Delete this routine?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Routine löschen?"
           }
         }
       }
@@ -2043,6 +2210,26 @@
         }
       }
     },
+    "Edit …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten …"
+          }
+        }
+      }
+    },
+    "Effort" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denkaufwand"
+          }
+        }
+      }
+    },
     "Email" : {
       "localizations" : {
         "de" : {
@@ -2090,6 +2277,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gib deinen Code für die zweistufige Anmeldung ein (aus deiner Authenticator-App, aus der E-Mail von Bitwarden oder von deinem YubiKey)."
+          }
+        }
+      }
+    },
+    "Environment files" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umgebungsdateien"
           }
         }
       }
@@ -2170,6 +2367,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Austauschordner"
+          }
+        }
+      }
+    },
+    "Extra high" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sehr hoch"
           }
         }
       }
@@ -2391,6 +2598,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zum Arbeitsplatz"
+          }
+        }
+      }
+    },
+    "High" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoch"
           }
         }
       }
@@ -2818,6 +3035,16 @@
         }
       }
     },
+    "Lines like KEY=value, for the tools the session uses. %@ never shows or logs the values." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen wie SCHLÜSSEL=Wert für die Werkzeuge der Sitzung. %@ zeigt und protokolliert die Werte nie."
+          }
+        }
+      }
+    },
     "Lock" : {
       "localizations" : {
         "de" : {
@@ -2894,6 +3121,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suche nach Tailscale …"
+          }
+        }
+      }
+    },
+    "Low" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niedrig"
           }
         }
       }
@@ -3064,12 +3301,62 @@
         }
       }
     },
+    "Max" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximal"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittel"
+          }
+        }
+      }
+    },
+    "Message to the session" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachricht an die Sitzung"
+          }
+        }
+      }
+    },
+    "Minute Hour Day Month Weekday" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minute Stunde Tag Monat Wochentag"
+          }
+        }
+      }
+    },
     "mixed" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "gemischt"
+          }
+        }
+      }
+    },
+    "Mon to Fri at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mo bis Fr um %@"
           }
         }
       }
@@ -3236,6 +3523,16 @@
         }
       }
     },
+    "next %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nächster Lauf %@"
+          }
+        }
+      }
+    },
     "No %@ devices in this tailnet yet." : {
       "localizations" : {
         "de" : {
@@ -3326,6 +3623,16 @@
         }
       }
     },
+    "No routines yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Routinen."
+          }
+        }
+      }
+    },
     "No sign-in waiting." : {
       "localizations" : {
         "de" : {
@@ -3352,6 +3659,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine, angemeldet bleiben"
+          }
+        }
+      }
+    },
+    "Not a valid schedule (five fields, like 0 6 * * 1-5)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein gültiger Zeitplan (fünf Felder, etwa 0 6 * * 1-5)."
           }
         }
       }
@@ -3467,12 +3784,42 @@
         }
       }
     },
+    "Note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinweis"
+          }
+        }
+      }
+    },
+    "Note from %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinweis von %@"
+          }
+        }
+      }
+    },
     "Nothing to keep reachable right now: the Mac sleeps as usual." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gerade muss nichts erreichbar bleiben: Der Mac schläft wie gewohnt."
+          }
+        }
+      }
+    },
+    "Nothing waiting." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts wartet."
           }
         }
       }
@@ -3917,6 +4264,16 @@
         }
       }
     },
+    "Other programs can leave the session a message: a JSON file with \"text\" (and \"at\" for a time, \"source\" for who sends it) in %@. Reminders more than 30 minutes late are dropped." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andere Programme können der Sitzung eine Nachricht hinterlassen: eine JSON-Datei mit „text“ (dazu „at“ für eine Uhrzeit und „source“ für den Absender) in %@. Erinnerungen, die mehr als 30 Minuten zu spät kämen, verfallen."
+          }
+        }
+      }
+    },
     "Pair" : {
       "localizations" : {
         "de" : {
@@ -4187,6 +4544,26 @@
         }
       }
     },
+    "Reminder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erinnerung"
+          }
+        }
+      }
+    },
+    "Reminders and notes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erinnerungen und Hinweise"
+          }
+        }
+      }
+    },
     "Remote Control is on" : {
       "localizations" : {
         "de" : {
@@ -4288,12 +4665,42 @@
         }
       }
     },
+    "Routine" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routine"
+          }
+        }
+      }
+    },
+    "Routines" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routinen"
+          }
+        }
+      }
+    },
     "Run in the background" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Im Hintergrund laufen lassen"
+          }
+        }
+      }
+    },
+    "Run Now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt ausführen"
           }
         }
       }
@@ -4324,6 +4731,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Startet die Anmeldung von Claude Code selbst; %@ sieht sie nie."
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichern"
           }
         }
       }
@@ -4404,6 +4821,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Selbst gehostet"
+          }
+        }
+      }
+    },
+    "Send it into the session now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt in die Sitzung schicken"
+          }
+        }
+      }
+    },
+    "Sent after each start (optional)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird nach jedem Start geschickt (optional)"
           }
         }
       }
@@ -4898,6 +5335,16 @@
         }
       }
     },
+    "Start a fresh conversation?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Unterhaltung beginnen?"
+          }
+        }
+      }
+    },
     "Start chats on this Mac from the Claude app and keep conversations reachable when you leave the Mac." : {
       "localizations" : {
         "de" : {
@@ -4908,12 +5355,42 @@
         }
       }
     },
+    "Start Fresh" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu beginnen"
+          }
+        }
+      }
+    },
+    "Start Fresh …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu beginnen …"
+          }
+        }
+      }
+    },
     "Start it for this step." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starte ihn für diesen Schritt."
+          }
+        }
+      }
+    },
+    "Start message" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startnachricht"
           }
         }
       }
@@ -5517,6 +5994,16 @@
         }
       }
     },
+    "The session restarts with an empty conversation. The old one stays in the Claude app's history." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sitzung startet mit einer leeren Unterhaltung neu. Die alte bleibt im Verlauf der Claude-App."
+          }
+        }
+      }
+    },
     "The workspace didn't start" : {
       "localizations" : {
         "de" : {
@@ -5789,6 +6276,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieser Mac verlässt dein Tailnet. Dein iPhone erreicht ihn dann nur noch im selben Netzwerk, bis du Tailscale wieder einrichtest."
+          }
+        }
+      }
+    },
+    "Time" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uhrzeit"
           }
         }
       }
@@ -6103,12 +6600,32 @@
         }
       }
     },
+    "Weekends at %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Wochenende um %@"
+          }
+        }
+      }
+    },
     "Welcome to %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Willkommen bei %@"
+          }
+        }
+      }
+    },
+    "When" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wann"
           }
         }
       }

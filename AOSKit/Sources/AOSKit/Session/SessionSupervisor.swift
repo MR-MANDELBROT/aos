@@ -411,6 +411,32 @@ public final class SessionSupervisor: @unchecked Sendable {
     }
 }
 
+/// Commands for the running session, through its socket (run/session.sock).
+public enum SessionCommand {
+    case restart
+    /// Forget the session's conversation and start a fresh one.
+    case fresh
+    /// Send a routine now.
+    case run(routine: String)
+
+    var bytes: Data {
+        switch self {
+        case .restart: return Data("\u{1B}]aos;restart\u{07}".utf8)
+        case .fresh: return Data("\u{1B}]aos;fresh\u{07}".utf8)
+        case .run(let id): return Data("\u{1B}]aos;run;\(id)\u{07}".utf8)
+        }
+    }
+
+    /// False when the session's background process doesn't run.
+    @discardableResult
+    public func send(paths: Paths) -> Bool {
+        guard let client = try? RawSocket(path: paths.run.appendingPathComponent("session.sock")) else { return false }
+        client.send(bytes)
+        client.close()
+        return true
+    }
+}
+
 /// Finding Claude Code and facts about it. The app never installs a copy of its own or touches credentials:
 /// the user installs Claude Code with Anthropic's installer and signs in through Claude Code's own flow.
 public enum ClaudeCode {
