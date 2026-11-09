@@ -314,6 +314,7 @@ login goes to `onLoginRefused`); the thumbnail goes to aOS (`onThumbnail`) inste
 `picturesFollowWindow` (a picture in the window's shape, virtual display or aOS's display, follows the iPhone in every
 orientation; OSS turns the iPhone to landscape for a Mac's virtual display); OSS's resolution command for the
 workspace too, `onResolutionScale`; `onDirectPathFailed` (below); `RemoteScreenUIView.focus(on:)` for help requests;
+the keyboard's frame from its notifications (below, "The keyboard");
 caches in `Caches/Screen`; an in-memory store for the demo; the settings page; "Controls" for OSS's "Control" menu
 (one string table: "Control" is the terminal's key). Taken in addition on 2026-11-07: `Home/ComputerCard.swift` (with
 `ComputerAvailability` from its availability monitor) and `Model/DeviceAppearance.swift`. `Bridge/ScreenClient.swift`
@@ -368,6 +369,17 @@ Island (under a Live Activity there it can't be tapped), its open bar (44 to 88 
 view lies in the safe area now, as in OSS (its own view spreads the picture over the whole screen): the handle starts at
 the picture's top edge (a small glass capsule in the middle of the menu bar, as in OSS on its side) and the open bar
 comes below it, so the menu bar stays visible. On its side the top safe area is 0: as before. `ScreenLayoutTests`.
+
+**The keyboard** (Max, 2026-11-09: the Mac's login password field stayed behind the keyboard). OSS lifts the picture
+while its keyboard is up so the pointer (where a tap clicks, so where one types) stays 48 pt above the keyboard, at
+most until the picture's bottom reaches the keyboard; moving the pointer lower lifts it further, and it goes back when
+the keyboard closes. It read the keyboard from the view's `keyboardLayoutGuide`, which in aOS's tab (TabView,
+NavigationStack, the session inside) stayed at the bottom while the keyboard was up (simulator: keyboard at 475, guide
+at 874), so nothing lifted; a plain view in the same window, or the guide in a fresh SwiftUI hierarchy, followed it.
+aOS's change in `RemoteScreenUIView` reads the keyboard's frame from `keyboardWillChangeFrame`/`WillHide` instead
+(`ScreenLayoutTests`). Screen sharing doesn't tell where the text cursor is (libsharing has no such message): on the
+Mac's login window the password field has the focus while the pointer may be elsewhere; dragging the pointer down to
+the field brings the picture up with it.
 
 **A session** (`ScreenSession`, `ScreenRoute`, `ScreenPath`): one per screen, one at a time.
 - Workspace: `CompanionClient.workspaceLogin()` (sealed, `ScreenSeal`) gives the VM's address, port and account;

@@ -5,7 +5,7 @@ import UIKit
 @testable import ScreenClient
 
 /// The session on the Screen tab, upright in the iPhone's shape (the demo's workspace, the app's real views in a
-/// window): the picture and Open Screen Sharing's toolbar below the Dynamic Island.
+/// window): the picture and Open Screen Sharing's toolbar below the Dynamic Island, the picture above the keyboard.
 @MainActor
 @Suite(.serialized, .timeLimit(.minutes(1)))
 struct ScreenLayoutTests {
@@ -45,5 +45,38 @@ struct ScreenLayoutTests {
         try? await Task.sleep(for: .milliseconds(500))
         let bar = try #require(controller.toolbarBarFrame)
         #expect(bar.minY >= handle.maxY - 0.5)
+    }
+
+    @Test func theKeyboardLiftsThePictureAboveIt() async throws {
+        let model = AppModel(isDemo: true)
+        let (window, controller, screen) = try await showWorkspace(model)
+        defer {
+            model.workspaceScreen.stop()
+            window.isHidden = true
+        }
+        let resting = screen.imageRect
+        var keyboard: CGRect?
+        let observer = NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidShowNotification, object: nil,
+                                                              queue: .main) { note in
+            keyboard = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        // Typing low on the screen (where a login's password field is): the pointer there, the keyboard up.
+        let size = controller.imageSize
+        controller.movePointer(to: CGPoint(x: size.width / 2, y: size.height * 0.9))
+        controller.setKeyboardVisible(true)
+        try await waitUntil { controller.isKeyboardVisible }
+        for _ in 0..<40 where keyboard == nil { try? await Task.sleep(for: .milliseconds(100)) }
+        // A hardware keyboard (the simulator's setting) shows no keyboard on the screen: nothing to lift.
+        guard let keyboard, keyboard.minY < window.bounds.maxY - 150 else { return }
+        try? await Task.sleep(for: .milliseconds(300))
+        let pointer = screen.viewPoint(for: controller.pointerPosition)
+        #expect(pointer.y < keyboard.minY, "the place typed into is above the keyboard")
+        #expect(screen.imageRect.minY < resting.minY)
+
+        controller.setKeyboardVisible(false)
+        try await waitUntil { !controller.isKeyboardVisible }
+        try? await Task.sleep(for: .seconds(1))
+        #expect(abs(screen.imageRect.minY - resting.minY) < 1, "back where it was")
     }
 }
