@@ -4,7 +4,7 @@ import Foundation
 public struct Routine: Codable, Sendable, Equatable, Identifiable {
     public var id: String
     public var name: String
-    /// Cron, five fields, local time (`CronSchedule`).
+    /// Cron, five fields, local time (`CronSchedule`); several separated by ";" (`CronSet`).
     public var schedule: String
     public var prompt: String
     public var enabled: Bool
@@ -17,7 +17,7 @@ public struct Routine: Codable, Sendable, Equatable, Identifiable {
         self.enabled = enabled
     }
 
-    public var cron: CronSchedule? { CronSchedule(schedule) }
+    public var cron: CronSet? { CronSet(schedule) }
 }
 
 /// A message for the session that someone else left in aOS's inbox (`<aOS>/inbox/*.json`): a reminder for a time

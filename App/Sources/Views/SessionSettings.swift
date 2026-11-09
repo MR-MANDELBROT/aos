@@ -147,9 +147,9 @@ struct SessionSettingsSections: View {
                 Text("Nothing waiting.").foregroundStyle(.secondary)
             }
         } header: {
-            Text("Reminders and notes")
+            Text("Reminders and notes from other programs")
         } footer: {
-            Text("Other programs can leave the session a message: a JSON file with \"text\" (and \"at\" for a time, \"source\" for who sends it) in \(abbreviate(model.paths.inbox.path)). Reminders more than 30 minutes late are dropped.")
+            Text("One-time messages that other programs leave for the session: a reminder arrives at its time (for example a push reminder at 8:05), a note as soon as the session is free (for example a watchdog's warning). A program leaves one as a JSON file with \"text\" (and \"at\" for a time, \"source\" for the sender) in \(abbreviate(model.paths.inbox.path)). Reminders more than 30 minutes late are dropped.")
                 .font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
         }
     }
@@ -242,17 +242,23 @@ struct RoutineRow: View {
     }
 }
 
-/// Adding or changing a routine: name, what to send, and when (a time on weekdays, or cron for more).
+/// Adding or changing a routine: name, what to send, and when: at times on weekdays, every few hours, or cron.
 struct RoutineEditor: View {
+    enum Mode: Hashable { case times, interval, cron }
+
     @State var routine: Routine
     let isNew: Bool
     let save: (Routine) -> Void
     let delete: () -> Void
     let cancel: () -> Void
-    @State private var time = Date()
-    @State private var weekdays: Set<Int> = Set(0...6)
-    @State private var advanced = false
-    @State private var cronText = ""
+    @State private var mode: Mode
+    @State private var times: [Date]
+    @State private var weekdays: Set<Int>
+    @State private var every: Int
+    @State private var from: Int
+    @State private var to: Int
+    @State private var minute: Int
+    @State private var cronText: String
     @State private var confirmDelete = false
 
     init(routine: Routine, isNew: Bool, save: @escaping (Routine) -> Void, delete: @escaping () -> Void,
@@ -262,25 +268,44 @@ struct RoutineEditor: View {
         self.save = save
         self.delete = delete
         self.cancel = cancel
-        let simple = CronSchedule(routine.schedule)?.simple
-        if let simple, simple.times.count == 1, let t = simple.times.first {
-            _time = State(initialValue: Calendar.current.date(bySettingHour: t.hour, minute: t.minute, second: 0, of: Date()) ?? Date())
+        let set = CronSet(routine.schedule)
+        func at(_ h: Int, _ m: Int) -> Date { Calendar.current.date(bySettingHour: h, minute: m, second: 0, of: Date()) ?? Date() }
+        if let i = set?.interval, i.hours > 1 || set?.simple == nil {
+            _mode = State(initialValue: .interval)
+            _times = State(initialValue: [at(8, 0)])
+            _weekdays = State(initialValue: i.weekdays)
+            _every = State(initialValue: i.hours); _from = State(initialValue: i.from); _to = State(initialValue: i.to)
+            _minute = State(initialValue: i.minute)
+        } else if let simple = set?.simple {
+            _mode = State(initialValue: .times)
+            _times = State(initialValue: simple.times.map { at($0.hour, $0.minute) })
             _weekdays = State(initialValue: simple.weekdays)
+            _every = State(initialValue: 2); _from = State(initialValue: 8); _to = State(initialValue: 20); _minute = State(initialValue: 0)
         } else {
-            _advanced = State(initialValue: true)
+            _mode = State(initialValue: .cron)
+            _times = State(initialValue: [at(8, 0)])
+            _weekdays = State(initialValue: Set(0...6))
+            _every = State(initialValue: 2); _from = State(initialValue: 8); _to = State(initialValue: 20); _minute = State(initialValue: 0)
         }
         _cronText = State(initialValue: routine.schedule)
     }
 
     var schedule: String {
-        if advanced { return cronText.trimmingCharacters(in: .whitespaces) }
-        let c = Calendar.current.dateComponents([.hour, .minute], from: time)
-        return CronSchedule.text(hour: c.hour ?? 8, minute: c.minute ?? 0, weekdays: weekdays)
+        switch mode {
+        case .cron:
+            return CronSet(cronText)?.text ?? cronText
+        case .interval:
+            return CronSet.every(hours: every, from: min(from, to), to: max(from, to), minute: minute, weekdays: weekdays)
+        case .times:
+            let list = times.map { Calendar.current.dateComponents([.hour, .minute], from: $0) }
+                .map { (hour: $0.hour ?? 8, minute: $0.minute ?? 0) }
+            return CronSet.text(times: list, weekdays: weekdays)
+        }
     }
 
     var valid: Bool {
         !routine.name.trimmingCharacters(in: .whitespaces).isEmpty && !routine.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && CronSchedule(schedule) != nil && (advanced || !weekdays.isEmpty)
+            && CronSet(schedule) != nil && (mode == .cron || !weekdays.isEmpty) && (mode != .times || !times.isEmpty)
     }
 
     var body: some View {
@@ -292,19 +317,57 @@ struct RoutineEditor: View {
                         .font(.body)
                         .frame(minHeight: 90)
                 }
-                Section("When") {
-                    Toggle("Cron schedule", isOn: $advanced)
-                    if advanced {
+                Section {
+                    Picker("Repeat", selection: $mode) {
+                        Text("At times").tag(Mode.times)
+                        Text("Every few hours").tag(Mode.interval)
+                        Text("Cron").tag(Mode.cron)
+                    }
+                    .pickerStyle(.segmented)
+                    switch mode {
+                    case .times:
+                        ForEach(times.indices, id: \.self) { i in
+                            HStack {
+                                DatePicker("Time", selection: $times[i], displayedComponents: .hourAndMinute)
+                                if times.count > 1 {
+                                    Button("Remove", systemImage: "minus.circle") { times.remove(at: i) }
+                                        .labelStyle(.iconOnly).buttonStyle(.borderless)
+                                }
+                            }
+                        }
+                        Button("Add Time", systemImage: "plus") {
+                            times.append(times.last.map { $0.addingTimeInterval(2 * 3600) } ?? Date())
+                        }
+                        .buttonStyle(.borderless)
+                        WeekdayPicker(selection: $weekdays)
+                    case .interval:
+                        Picker("Every", selection: $every) {
+                            ForEach([1, 2, 3, 4, 6, 8, 12], id: \.self) { h in
+                                Text(h == 1 ? String(localized: "hour") : String(localized: "\(h) hours")).tag(h)
+                            }
+                        }
+                        Picker("From", selection: $from) {
+                            ForEach(0..<24, id: \.self) { h in Text(String(format: "%02d:00", h)).tag(h) }
+                        }
+                        Picker("Until", selection: $to) {
+                            ForEach(0..<24, id: \.self) { h in Text(String(format: "%02d:00", h)).tag(h) }
+                        }
+                        Stepper(value: $minute, in: 0...59) {
+                            Text("At minute \(minute)")
+                        }
+                        WeekdayPicker(selection: $weekdays)
+                    case .cron:
                         TextField("Minute Hour Day Month Weekday", text: $cronText)
                             .font(.body.monospaced())
-                        Text(CronSchedule(cronText) == nil ? String(localized: "Not a valid schedule (five fields, like 0 6 * * 1-5).")
-                                                           : RoutineText.schedule(cronText))
-                            .font(.caption)
-                            .foregroundStyle(CronSchedule(cronText) == nil ? .orange : .secondary)
-                    } else {
-                        DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
-                        WeekdayPicker(selection: $weekdays)
                     }
+                } header: {
+                    Text("When")
+                } footer: {
+                    Text(CronSet(schedule) == nil
+                         ? String(localized: "Not a valid schedule (five fields, like 0 6 * * 1-5; several separated by ;).")
+                         : RoutineText.schedule(schedule))
+                        .font(.caption)
+                        .foregroundStyle(CronSet(schedule) == nil ? .orange : .secondary)
                 }
                 Toggle("On", isOn: $routine.enabled)
             }
@@ -326,7 +389,7 @@ struct RoutineEditor: View {
             }
             .padding()
         }
-        .frame(minWidth: 480, minHeight: 460)
+        .frame(minWidth: 500, minHeight: 520)
         .confirmationDialog("Delete this routine?", isPresented: $confirmDelete) {
             Button("Delete", role: .destructive, action: delete)
         }
@@ -357,21 +420,34 @@ struct WeekdayPicker: View {
     }
 }
 
-/// A schedule in words: "Daily at 06:00", "Mon to Fri at 08:00", "Sun at 17:30", else the cron text.
+/// A schedule in words: "Daily at 06:00", "Mon to Fri at 08:00, 12:00", "Every 2 hours from 10:00 to 18:00", else
+/// the cron text.
 enum RoutineText {
-    static func schedule(_ text: String) -> String {
-        guard let cron = CronSchedule(text), let simple = cron.simple else { return text }
-        let times = simple.times.map { t -> String in
-            let date = Calendar.current.date(bySettingHour: t.hour, minute: t.minute, second: 0, of: Date()) ?? Date()
-            return date.formatted(date: .omitted, time: .shortened)
-        }.joined(separator: ", ")
-        let days = simple.weekdays
-        if days.count == 7 { return String(localized: "Daily at \(times)") }
-        if days == Set(1...5) { return String(localized: "Mon to Fri at \(times)") }
-        if days == [0, 6] { return String(localized: "Weekends at \(times)") }
+    static func days(_ set: Set<Int>) -> String? {
+        if set.count == 7 { return nil }
+        if set == Set(1...5) { return String(localized: "Mon to Fri") }
+        if set == [0, 6] { return String(localized: "Weekends") }
         let symbols = Calendar.current.shortWeekdaySymbols
         let first = Calendar.current.firstWeekday - 1
-        let ordered = (0..<7).map { (first + $0) % 7 }.filter { days.contains($0) }
-        return String(localized: "\(ordered.map { symbols[$0] }.joined(separator: ", ")) at \(times)")
+        return (0..<7).map { (first + $0) % 7 }.filter { set.contains($0) }.map { symbols[$0] }.joined(separator: ", ")
+    }
+
+    static func clock(_ hour: Int, _ minute: Int) -> String {
+        let date = Calendar.current.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date()
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    static func schedule(_ text: String) -> String {
+        guard let set = CronSet(text) else { return text }
+        if let i = set.interval, i.hours > 1 || set.simple == nil {
+            let base = i.hours == 1
+                ? String(localized: "Every hour from \(clock(i.from, i.minute)) to \(clock(i.to, i.minute))")
+                : String(localized: "Every \(i.hours) hours from \(clock(i.from, i.minute)) to \(clock(i.to, i.minute))")
+            return days(i.weekdays).map { "\(base) (\($0))" } ?? base
+        }
+        guard let simple = set.simple else { return set.text }
+        let times = simple.times.map { clock($0.hour, $0.minute) }.joined(separator: ", ")
+        guard let d = days(simple.weekdays) else { return String(localized: "Daily at \(times)") }
+        return String(localized: "\(d) at \(times)")
     }
 }

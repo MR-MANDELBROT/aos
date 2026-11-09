@@ -665,6 +665,16 @@
         }
       }
     },
+    "Add Time" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uhrzeit hinzufügen"
+          }
+        }
+      }
+    },
     "Address" : {
       "localizations" : {
         "de" : {
@@ -1037,6 +1047,16 @@
         }
       }
     },
+    "At minute %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur Minute %lld"
+          }
+        }
+      }
+    },
     "At most %lld at once" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1054,6 +1074,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Höchstens gleichzeitig"
+          }
+        }
+      }
+    },
+    "At times" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu Uhrzeiten"
           }
         }
       }
@@ -1999,7 +2029,18 @@
         }
       }
     },
+    "Cron" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cron"
+          }
+        }
+      }
+    },
     "Cron schedule" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2331,6 +2372,58 @@
         }
       }
     },
+    "Every" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        }
+      }
+    },
+    "Every %lld hours from %@ to %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle %1$lld Stunden von %2$@ bis %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Every %1$lld hours from %2$@ to %3$@"
+          }
+        }
+      }
+    },
+    "Every few hours" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle paar Stunden"
+          }
+        }
+      }
+    },
+    "Every hour from %@ to %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stündlich von %1$@ bis %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Every hour from %1$@ to %2$@"
+          }
+        }
+      }
+    },
     "Every sign-in needs your yes: on your iPhone with Face ID or here with Touch ID or your Mac's password. aOS then fills in only that one login, in the workspace." : {
       "localizations" : {
         "de" : {
@@ -2552,6 +2645,16 @@
         }
       }
     },
+    "From" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von"
+          }
+        }
+      }
+    },
     "From a terminal" : {
       "localizations" : {
         "de" : {
@@ -2628,6 +2731,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoch"
+          }
+        }
+      }
+    },
+    "hour" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stunde"
           }
         }
       }
@@ -3371,7 +3484,18 @@
         }
       }
     },
+    "Mon to Fri" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mo bis Fr"
+          }
+        }
+      }
+    },
     "Mon to Fri at %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3684,7 +3808,18 @@
         }
       }
     },
+    "Not a valid schedule (five fields, like 0 6 * * 1-5; several separated by ;)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein gültiger Zeitplan (fünf Felder, etwa 0 6 * * 1-5; mehrere mit ; getrennt)."
+          }
+        }
+      }
+    },
     "Not a valid schedule (five fields, like 0 6 * * 1-5)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4033,6 +4168,16 @@
         }
       }
     },
+    "One-time messages that other programs leave for the session: a reminder arrives at its time (for example a push reminder at 8:05), a note as soon as the session is free (for example a watchdog's warning). A program leaves one as a JSON file with \"text\" (and \"at\" for a time, \"source\" for the sender) in %@. Reminders more than 30 minutes late are dropped." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einmalige Nachrichten, die andere Programme für die Sitzung hinterlassen: Eine Erinnerung kommt zu ihrer Uhrzeit (etwa eine Push-Erinnerung um 8:05), ein Hinweis, sobald die Sitzung frei ist (etwa die Warnung eines Watchdogs). Ein Programm legt dafür eine JSON-Datei mit „text“ (dazu „at“ für eine Uhrzeit und „source“ für den Absender) in %@ ab. Erinnerungen, die mehr als 30 Minuten zu spät kämen, verfallen."
+          }
+        }
+      }
+    },
     "online" : {
       "localizations" : {
         "de" : {
@@ -4286,6 +4431,7 @@
       }
     },
     "Other programs can leave the session a message: a JSON file with \"text\" (and \"at\" for a time, \"source\" for who sends it) in %@. Reminders more than 30 minutes late are dropped." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4606,11 +4752,22 @@
       }
     },
     "Reminders and notes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erinnerungen und Hinweise"
+          }
+        }
+      }
+    },
+    "Reminders and notes from other programs" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erinnerungen und Hinweise anderer Programme"
           }
         }
       }
@@ -4661,6 +4818,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entfernen"
+          }
+        }
+      }
+    },
+    "Repeat" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederholen"
           }
         }
       }
@@ -6481,6 +6648,16 @@
         }
       }
     },
+    "Until" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bis"
+          }
+        }
+      }
+    },
     "Up to about %@ GB of memory for kept conversations. That's a lot for this Mac; fewer is better." : {
       "localizations" : {
         "de" : {
@@ -6671,7 +6848,18 @@
         }
       }
     },
+    "Weekends" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Wochenende"
+          }
+        }
+      }
+    },
     "Weekends at %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

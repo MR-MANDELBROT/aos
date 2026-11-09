@@ -219,7 +219,7 @@ public enum CompanionControl {
         r.name = r.name.trimmingCharacters(in: .whitespacesAndNewlines)
         r.prompt = r.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !r.name.isEmpty, r.name.count <= 80, !r.prompt.isEmpty, r.prompt.count <= 8000,
-              let cron = CronSchedule(r.schedule), UUID(uuidString: r.id) != nil else { return nil }
+              let cron = CronSet(r.schedule), cron.schedules.count <= 24, UUID(uuidString: r.id) != nil else { return nil }
         r.schedule = cron.text
         return r
     }

@@ -118,3 +118,91 @@ public struct CronSchedule: Equatable, Sendable {
         return "\(minute) \(hour) * * \(days)"
     }
 }
+
+/// One or more cron schedules, separated by ";" (a routine at several times whose minutes differ, like Cloupi's
+/// checks at 10:03, 12:07 and 14:13): it fires when any of them does.
+public struct CronSet: Equatable, Sendable {
+    public let schedules: [CronSchedule]
+
+    public init?(_ text: String) {
+        let parts = text.split(whereSeparator: { $0 == ";" || $0 == "\n" })
+            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        guard !parts.isEmpty else { return nil }
+        var list: [CronSchedule] = []
+        for p in parts {
+            guard let c = CronSchedule(p) else { return nil }
+            list.append(c)
+        }
+        schedules = list
+    }
+
+    /// The normalized text (each schedule as five fields, "; " between them).
+    public var text: String { schedules.map(\.text).joined(separator: "; ") }
+
+    public func matches(_ date: Date, calendar: Calendar = .current) -> Bool {
+        schedules.contains { $0.matches(date, calendar: calendar) }
+    }
+
+    public func latest(atOrBefore date: Date, notAfter window: TimeInterval = 6 * 3600, notBefore: Date? = nil,
+                       calendar: Calendar = .current) -> Date? {
+        schedules.compactMap { $0.latest(atOrBefore: date, notAfter: window, notBefore: notBefore, calendar: calendar) }.max()
+    }
+
+    public func next(after date: Date, calendar: Calendar = .current) -> Date? {
+        schedules.compactMap { $0.next(after: date, calendar: calendar) }.min()
+    }
+
+    /// Times on the same weekdays (each schedule a daily time or several hours at one minute), else nil.
+    public var simple: (times: [(hour: Int, minute: Int)], weekdays: Set<Int>)? {
+        var times: [(hour: Int, minute: Int)] = []
+        var days: Set<Int>?
+        for c in schedules {
+            guard let s = c.simple else { return nil }
+            if let days, days != s.weekdays { return nil }
+            days = s.weekdays
+            times += s.times
+        }
+        guard let days else { return nil }
+        let sorted = times.sorted { ($0.hour, $0.minute) < ($1.hour, $1.minute) }
+        var unique: [(hour: Int, minute: Int)] = []
+        for t in sorted where !unique.contains(where: { $0.hour == t.hour && $0.minute == t.minute }) { unique.append(t) }
+        return (unique, days)
+    }
+
+    /// Cron text for times on weekdays: one schedule per minute value (hours that share a minute go together).
+    public static func text(times: [(hour: Int, minute: Int)], weekdays: Set<Int>) -> String {
+        let days = weekdays.isEmpty || weekdays.count == 7 ? "*" : weekdays.sorted().map(String.init).joined(separator: ",")
+        var byMinute: [Int: [Int]] = [:]
+        for t in times { byMinute[t.minute, default: []].append(t.hour) }
+        return byMinute.keys.sorted().map { m in
+            let hours = Array(Set(byMinute[m]!)).sorted().map(String.init).joined(separator: ",")
+            return "\(m) \(hours) * * \(days)"
+        }.joined(separator: "; ")
+    }
+
+    /// Every `hours` hours from `from` to `to` (inclusive) at minute `minute`, on weekdays.
+    public static func every(hours: Int, from: Int, to: Int, minute: Int, weekdays: Set<Int>) -> String {
+        let days = weekdays.isEmpty || weekdays.count == 7 ? "*" : weekdays.sorted().map(String.init).joined(separator: ",")
+        let range = from == 0 && to == 23 ? "*" : "\(from)-\(to)"
+        return "\(minute) \(range)\(hours > 1 ? "/\(hours)" : "") * * \(days)"
+    }
+
+    /// An interval schedule as `every` writes it: (hours, from, to, minute, weekdays), else nil.
+    public var interval: (hours: Int, from: Int, to: Int, minute: Int, weekdays: Set<Int>)? {
+        guard schedules.count == 1, let c = schedules.first, c.minutes.count == 1 else { return nil }
+        let fields = c.text.split(separator: " ")
+        guard fields.count == 5, fields[2] == "*", fields[3] == "*" else { return nil }
+        let hourField = String(fields[1])
+        let parts = hourField.split(separator: "/")
+        let step = parts.count == 2 ? Int(parts[1]) ?? 0 : 1
+        guard step >= 1, parts.count <= 2 else { return nil }
+        var from = 0, to = 23
+        if parts[0] != "*" {
+            let b = parts[0].split(separator: "-").compactMap { Int($0) }
+            guard b.count == 2 else { return nil }
+            from = b[0]; to = b[1]
+        }
+        guard step > 1 || parts[0] == "*" else { return nil }
+        return (step, from, to, c.minutes.first!, c.weekdays.count == 7 ? Set(0...6) : c.weekdays)
+    }
+}
