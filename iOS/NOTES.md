@@ -360,6 +360,15 @@ pictures then fill the screen and follow the iPhone when it turns (same toolbar:
 fit and fill). A screen in its own size (the setting off, or the Mac through SSH) turns the iPhone to it as OSS does,
 with its toolbar in the letterbox. The resolution chosen in a session becomes the setting.
 
+**Upright, below the Dynamic Island** (Max, 2026-11-09: the Mac's menu bar under the Dynamic Island). The picture
+itself was right: in his screenshot (iPhone 16) it started at 59 pt, the top safe area, as `ScreenWindowTracker`'s
+area and the display's shape have it. What was wrong was OSS's toolbar: ScreenTab wrapped the session in
+`.ignoresSafeArea()`, so the toolbar inside it saw no safe area and sat at the very top, its handle behind the Dynamic
+Island (under a Live Activity there it can't be tapped), its open bar (44 to 88 pt) over the menu bar. The session
+view lies in the safe area now, as in OSS (its own view spreads the picture over the whole screen): the handle starts at
+the picture's top edge (a small glass capsule in the middle of the menu bar, as in OSS on its side) and the open bar
+comes below it, so the menu bar stays visible. On its side the top safe area is 0: as before. `ScreenLayoutTests`.
+
 **A session** (`ScreenSession`, `ScreenRoute`, `ScreenPath`): one per screen, one at a time.
 - Workspace: `CompanionClient.workspaceLogin()` (sealed, `ScreenSeal`) gives the VM's address, port and account;
   `LocalForwarder` listens on 127.0.0.1 (random port) and opens a direct-tcpip channel per connection to that address
