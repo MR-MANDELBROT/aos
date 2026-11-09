@@ -119,16 +119,11 @@ enum AX {
 
     static func isSecure(_ e: AXUIElement) -> Bool { string(e, kAXSubroleAttribute) == "AXSecureTextField" }
 
-    /// "password", "code" or "username" for a text field; codes are recognized by their label.
+    /// "password", "code" or "username" for a text field (SignInField: codes by whole words of their label).
     static func kind(_ e: AXUIElement) -> String {
-        if isSecure(e) { return "password" }
-        let label = [kAXDescriptionAttribute, kAXTitleAttribute, kAXPlaceholderValueAttribute, kAXHelpAttribute,
-                     "AXDOMIdentifier"].compactMap { string(e, $0) }.joined(separator: " ").lowercased()
-        let codeWords = ["code", "otp", "2fa", "token", "verification", "bestätigung", "einmal", "pin", "authenticator"]
-        if codeWords.contains(where: { label.contains($0) }) && !label.contains("postal") && !label.contains("zip") {
-            return "code"
-        }
-        return "username"
+        let labels = [kAXDescriptionAttribute, kAXTitleAttribute, kAXPlaceholderValueAttribute, kAXHelpAttribute]
+            .compactMap { string(e, $0) }
+        return SignInField.kind(secure: isSecure(e), labels: labels, domIdentifier: string(e, "AXDOMIdentifier"))
     }
 
     /// Text fields of a page in document order (bounded walk).
