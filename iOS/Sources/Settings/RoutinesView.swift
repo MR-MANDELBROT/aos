@@ -172,15 +172,21 @@ struct RoutineRowView: View {
     }
 }
 
-/// Adding or changing a routine: a name, the message, and a time on weekdays (or cron for more).
+/// Adding or changing a routine: a name, the message, and when: at times on weekdays, every few hours, or cron.
 struct RoutineEditorView: View {
+    enum Mode: Hashable { case times, interval, cron }
+
     @State var routine: MacStatus.Routines.Item
     let isNew: Bool
     let save: (MacStatus.Routines.Item) -> Void
     let cancel: () -> Void
-    @State private var time: Date
+    @State private var mode: Mode
+    @State private var times: [Date]
     @State private var weekdays: Set<Int>
-    @State private var advanced: Bool
+    @State private var every: Int
+    @State private var from: Int
+    @State private var to: Int
+    @State private var minute: Int
     @State private var cronText: String
 
     init(routine: MacStatus.Routines.Item, isNew: Bool, save: @escaping (MacStatus.Routines.Item) -> Void,
@@ -189,24 +195,47 @@ struct RoutineEditorView: View {
         self.isNew = isNew
         self.save = save
         self.cancel = cancel
+        func at(_ h: Int, _ m: Int) -> Date { Calendar.current.date(bySettingHour: h, minute: m, second: 0, of: Date()) ?? Date() }
         let simple = RoutineSchedule.simple(routine.schedule)
-        _time = State(initialValue: Calendar.current.date(bySettingHour: simple?.hour ?? 8, minute: simple?.minute ?? 0,
-                                                          second: 0, of: Date()) ?? Date())
-        _weekdays = State(initialValue: simple?.weekdays ?? Set(0...6))
-        _advanced = State(initialValue: simple == nil)
+        let interval = RoutineSchedule.interval(routine.schedule)
+        if let i = interval, i.hours > 1 || simple == nil {
+            _mode = State(initialValue: .interval)
+            _times = State(initialValue: [at(8, 0)])
+            _weekdays = State(initialValue: i.weekdays)
+            _every = State(initialValue: i.hours); _from = State(initialValue: i.from); _to = State(initialValue: i.to)
+            _minute = State(initialValue: i.minute)
+        } else if let simple {
+            _mode = State(initialValue: .times)
+            _times = State(initialValue: simple.times.map { at($0.hour, $0.minute) })
+            _weekdays = State(initialValue: simple.weekdays)
+            _every = State(initialValue: 2); _from = State(initialValue: 8); _to = State(initialValue: 20); _minute = State(initialValue: 0)
+        } else {
+            _mode = State(initialValue: .cron)
+            _times = State(initialValue: [at(8, 0)])
+            _weekdays = State(initialValue: Set(0...6))
+            _every = State(initialValue: 2); _from = State(initialValue: 8); _to = State(initialValue: 20); _minute = State(initialValue: 0)
+        }
         _cronText = State(initialValue: routine.schedule)
     }
 
     private var schedule: String {
-        if advanced { return cronText.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
-        let c = Calendar.current.dateComponents([.hour, .minute], from: time)
-        return RoutineSchedule.cron(hour: c.hour ?? 8, minute: c.minute ?? 0, weekdays: weekdays)
+        switch mode {
+        case .cron:
+            return cronText.split(separator: ";").map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+                .filter { !$0.isEmpty }.joined(separator: "; ")
+        case .interval:
+            return RoutineSchedule.every(hours: every, from: min(from, to), to: max(from, to), minute: minute, weekdays: weekdays)
+        case .times:
+            let list = times.map { Calendar.current.dateComponents([.hour, .minute], from: $0) }
+                .map { (hour: $0.hour ?? 8, minute: $0.minute ?? 0) }
+            return RoutineSchedule.cron(times: list, weekdays: weekdays)
+        }
     }
 
     private var valid: Bool {
         !routine.name.trimmingCharacters(in: .whitespaces).isEmpty
             && !routine.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && (advanced ? RoutineSchedule.looksValid(schedule) : !weekdays.isEmpty)
+            && RoutineSchedule.looksValid(schedule) && (mode == .cron || !weekdays.isEmpty) && (mode != .times || !times.isEmpty)
     }
 
     var body: some View {
@@ -221,21 +250,47 @@ struct RoutineEditorView: View {
                 Text("Message to the session")
             }
             Section {
-                if advanced {
+                Picker("Repeat", selection: $mode) {
+                    Text("At times").tag(Mode.times)
+                    Text("Every few hours").tag(Mode.interval)
+                    Text("Cron").tag(Mode.cron)
+                }
+                .pickerStyle(.segmented)
+                switch mode {
+                case .times:
+                    ForEach(times.indices, id: \.self) { i in
+                        DatePicker("Time", selection: $times[i], displayedComponents: .hourAndMinute)
+                    }
+                    .onDelete { offsets in if times.count > offsets.count { times.remove(atOffsets: offsets) } }
+                    Button("Add Time", systemImage: "plus") {
+                        times.append(times.last.map { $0.addingTimeInterval(2 * 3600) } ?? Date())
+                    }
+                    WeekdayToggles(selection: $weekdays)
+                case .interval:
+                    Picker("Every", selection: $every) {
+                        ForEach([1, 2, 3, 4, 6, 8, 12], id: \.self) { h in
+                            Text(h == 1 ? String(localized: "hour") : String(localized: "\(h) hours")).tag(h)
+                        }
+                    }
+                    Picker("From", selection: $from) {
+                        ForEach(0..<24, id: \.self) { h in Text(String(format: "%02d:00", h)).tag(h) }
+                    }
+                    Picker("Until", selection: $to) {
+                        ForEach(0..<24, id: \.self) { h in Text(String(format: "%02d:00", h)).tag(h) }
+                    }
+                    Stepper(value: $minute, in: 0...59) { Text("At minute \(minute)") }
+                    WeekdayToggles(selection: $weekdays)
+                case .cron:
                     TextField("Minute Hour Day Month Weekday", text: $cronText)
                         .font(.body.monospaced())
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
-                } else {
-                    DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
-                    WeekdayToggles(selection: $weekdays)
                 }
-                Toggle("Cron schedule", isOn: $advanced)
             } header: {
                 Text("When")
             } footer: {
-                Text(advanced ? String(localized: "Five fields in the Mac's time, like 0 6 * * 1-5 (Monday to Friday at 6:00).")
-                              : RoutineSchedule.text(schedule))
+                Text(mode == .cron ? String(localized: "Five fields in the Mac's time, like 0 6 * * 1-5 (Monday to Friday at 6:00); several separated by ;.")
+                                   : RoutineSchedule.text(schedule))
             }
             Section {
                 Toggle("On", isOn: $routine.enabled)
@@ -288,52 +343,130 @@ struct WeekdayToggles: View {
     }
 }
 
-/// Cron schedules as simple as aOS writes them ("M H * * days") and in words.
+/// Cron schedules as aOS writes them: times on weekdays ("M H * * days", several separated by ";") or every few
+/// hours ("M A-B/N * * days"), in words.
 enum RoutineSchedule {
     struct Simple: Equatable {
-        var hour: Int
-        var minute: Int
+        var times: [Time]
         /// 0 is Sunday.
         var weekdays: Set<Int>
     }
+    struct Time: Equatable {
+        var hour: Int
+        var minute: Int
+    }
+    struct Interval: Equatable {
+        var hours: Int
+        var from: Int
+        var to: Int
+        var minute: Int
+        var weekdays: Set<Int>
+    }
+
+    static func parts(_ text: String) -> [[String]] {
+        text.split(separator: ";").map { $0.split(whereSeparator: \.isWhitespace).map(String.init) }.filter { !$0.isEmpty }
+    }
+
+    static func days(_ field: String) -> Set<Int>? {
+        if field == "*" { return Set(0...6) }
+        var out = Set<Int>()
+        for part in field.split(separator: ",") {
+            let bounds = part.split(separator: "-").compactMap { Int($0) }
+            guard (1...2).contains(bounds.count), bounds.allSatisfy({ (0...7).contains($0) }), bounds[0] <= bounds.last! else { return nil }
+            for d in bounds[0]...bounds.last! { out.insert(d == 7 ? 0 : d) }
+        }
+        return out.isEmpty ? nil : out
+    }
 
     static func simple(_ cron: String) -> Simple? {
-        let f = cron.split(whereSeparator: \.isWhitespace).map(String.init)
-        guard f.count == 5, let minute = Int(f[0]), let hour = Int(f[1]), (0...59).contains(minute), (0...23).contains(hour),
-              f[2] == "*", f[3] == "*" else { return nil }
-        if f[4] == "*" { return Simple(hour: hour, minute: minute, weekdays: Set(0...6)) }
-        var days = Set<Int>()
-        for part in f[4].split(separator: ",") {
-            let bounds = part.split(separator: "-").compactMap { Int($0) }
-            guard (1...2).contains(bounds.count), bounds.allSatisfy({ (0...7).contains($0) }) else { return nil }
-            let lo = bounds[0], hi = bounds.last!
-            guard lo <= hi else { return nil }
-            for d in lo...hi { days.insert(d == 7 ? 0 : d) }
+        var times: [Time] = []
+        var weekdays: Set<Int>?
+        for f in parts(cron) {
+            guard f.count == 5, let minute = Int(f[0]), (0...59).contains(minute), f[2] == "*", f[3] == "*",
+                  let d = days(f[4]) else { return nil }
+            let hours = f[1].split(separator: ",").compactMap { Int($0) }
+            guard !hours.isEmpty, hours.count == f[1].split(separator: ",").count, hours.allSatisfy({ (0...23).contains($0) })
+            else { return nil }
+            if let weekdays, weekdays != d { return nil }
+            weekdays = d
+            times += hours.map { Time(hour: $0, minute: minute) }
         }
-        return days.isEmpty ? nil : Simple(hour: hour, minute: minute, weekdays: days)
+        guard let weekdays, !times.isEmpty else { return nil }
+        var unique: [Time] = []
+        for t in times.sorted(by: { ($0.hour, $0.minute) < ($1.hour, $1.minute) }) where !unique.contains(t) { unique.append(t) }
+        return Simple(times: unique, weekdays: weekdays)
+    }
+
+    static func interval(_ cron: String) -> Interval? {
+        let p = parts(cron)
+        guard p.count == 1, let f = p.first, f.count == 5, let minute = Int(f[0]), (0...59).contains(minute),
+              f[2] == "*", f[3] == "*", let d = days(f[4]) else { return nil }
+        let hp = f[1].split(separator: "/")
+        let step = hp.count == 2 ? Int(hp[1]) ?? 0 : 1
+        guard hp.count <= 2, step >= 1 else { return nil }
+        var from = 0, to = 23
+        if hp[0] != "*" {
+            let b = hp[0].split(separator: "-").compactMap { Int($0) }
+            guard b.count == 2 else { return nil }
+            from = b[0]; to = b[1]
+        }
+        guard step > 1 || hp[0] == "*" else { return nil }
+        return Interval(hours: step, from: from, to: to, minute: minute, weekdays: d)
+    }
+
+    static func dayField(_ weekdays: Set<Int>) -> String {
+        weekdays.count == 7 || weekdays.isEmpty ? "*" : weekdays.sorted().map(String.init).joined(separator: ",")
+    }
+
+    /// One schedule per minute value (hours that share a minute go together), as the Mac writes it.
+    static func cron(times: [(hour: Int, minute: Int)], weekdays: Set<Int>) -> String {
+        var byMinute: [Int: [Int]] = [:]
+        for t in times { byMinute[t.minute, default: []].append(t.hour) }
+        return byMinute.keys.sorted().map { m in
+            "\(m) \(Array(Set(byMinute[m]!)).sorted().map(String.init).joined(separator: ",")) * * \(dayField(weekdays))"
+        }.joined(separator: "; ")
     }
 
     static func cron(hour: Int, minute: Int, weekdays: Set<Int>) -> String {
-        let days = weekdays.count == 7 || weekdays.isEmpty ? "*" : weekdays.sorted().map(String.init).joined(separator: ",")
-        return "\(minute) \(hour) * * \(days)"
+        cron(times: [(hour, minute)], weekdays: weekdays)
     }
 
-    /// Five fields of digits and cron's signs (the Mac checks it properly).
+    static func every(hours: Int, from: Int, to: Int, minute: Int, weekdays: Set<Int>) -> String {
+        let range = from == 0 && to == 23 ? "*" : "\(from)-\(to)"
+        return "\(minute) \(range)\(hours > 1 ? "/\(hours)" : "") * * \(dayField(weekdays))"
+    }
+
+    /// Five fields of digits and cron's signs per schedule (the Mac checks it properly).
     static func looksValid(_ cron: String) -> Bool {
-        let f = cron.split(whereSeparator: \.isWhitespace)
-        return f.count == 5 && f.allSatisfy { $0.allSatisfy { $0.isNumber || "*,-/".contains($0) } }
+        let p = parts(cron)
+        return !p.isEmpty && p.allSatisfy { f in f.count == 5 && f.allSatisfy { $0.allSatisfy { $0.isNumber || "*,-/".contains($0) } } }
+    }
+
+    static func clock(_ hour: Int, _ minute: Int) -> String {
+        let date = Calendar.current.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date()
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    static func daysText(_ set: Set<Int>) -> String? {
+        if set.count == 7 { return nil }
+        if set == Set(1...5) { return String(localized: "Mon to Fri") }
+        if set == [0, 6] { return String(localized: "Weekends") }
+        let symbols = Calendar.current.shortWeekdaySymbols
+        let first = Calendar.current.firstWeekday - 1
+        return (0..<7).map { (first + $0) % 7 }.filter { set.contains($0) }.map { symbols[$0] }.joined(separator: ", ")
     }
 
     static func text(_ cron: String) -> String {
-        guard let s = simple(cron) else { return cron }
-        let date = Calendar.current.date(bySettingHour: s.hour, minute: s.minute, second: 0, of: Date()) ?? Date()
-        let time = date.formatted(date: .omitted, time: .shortened)
-        if s.weekdays.count == 7 { return String(localized: "Daily at \(time)") }
-        if s.weekdays == Set(1...5) { return String(localized: "Mon to Fri at \(time)") }
-        if s.weekdays == [0, 6] { return String(localized: "Weekends at \(time)") }
-        let symbols = Calendar.current.shortWeekdaySymbols
-        let first = Calendar.current.firstWeekday - 1
-        let days = (0..<7).map { (first + $0) % 7 }.filter { s.weekdays.contains($0) }.map { symbols[$0] }
-        return String(localized: "\(days.joined(separator: ", ")) at \(time)")
+        let s = simple(cron)
+        if let i = interval(cron), i.hours > 1 || s == nil {
+            let base = i.hours == 1
+                ? String(localized: "Every hour from \(clock(i.from, i.minute)) to \(clock(i.to, i.minute))")
+                : String(localized: "Every \(i.hours) hours from \(clock(i.from, i.minute)) to \(clock(i.to, i.minute))")
+            return daysText(i.weekdays).map { "\(base) (\($0))" } ?? base
+        }
+        guard let s else { return cron }
+        let times = s.times.map { clock($0.hour, $0.minute) }.joined(separator: ", ")
+        guard let d = daysText(s.weekdays) else { return String(localized: "Daily at \(times)") }
+        return String(localized: "\(d) at \(times)")
     }
 }
