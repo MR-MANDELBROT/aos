@@ -151,7 +151,9 @@ struct ScreenTab: View {
                 ScreenCard(name: String(localized: "Workspace"), detail: workspaceText, model: record?.model ?? "",
                            enclosureColor: record?.enclosureColor ?? "", thumbnail: id.flatMap(picture),
                            availability: workspaceAvailability)
-                    .overlay { if session.phase == .preparing || session.phase == .paused { Connecting() } }
+                    .overlay(alignment: .top) {
+                        if session.phase == .preparing || session.phase == .paused { Connecting() }
+                    }
             }
             .buttonStyle(.plain)
             .hoverEffectDisabled()
@@ -169,7 +171,9 @@ struct ScreenTab: View {
                 ScreenCard(name: model.activeMac?.name ?? "Mac", detail: macText(record), model: record?.model ?? "",
                            enclosureColor: record?.enclosureColor ?? "", thumbnail: id.flatMap(picture),
                            availability: macAvailability)
-                    .overlay { if session.phase == .preparing || session.phase == .paused { Connecting() } }
+                    .overlay(alignment: .top) {
+                        if session.phase == .preparing || session.phase == .paused { Connecting() }
+                    }
             }
             .buttonStyle(.plain)
             .hoverEffectDisabled()
@@ -454,13 +458,18 @@ struct ScreenTab: View {
     }
 }
 
-/// Connecting: over the card's picture.
+/// Connecting: in the middle of the card's picture (the card's top, in the picture's 16:10 shape), not of the whole
+/// card with the name and the line below it. Put it over the card with `.overlay(alignment: .top)`.
 private struct Connecting: View {
     var body: some View {
-        ProgressView()
-            .controlSize(.large)
-            .padding(18)
-            .glassEffect(in: Circle())
+        Color.clear
+            .aspectRatio(ScreenCard.aspectRatio, contentMode: .fit)
+            .overlay {
+                ProgressView()
+                    .controlSize(.large)
+                    .padding(18)
+                    .glassEffect(in: Circle())
+            }
     }
 }
 
