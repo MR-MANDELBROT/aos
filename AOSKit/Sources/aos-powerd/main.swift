@@ -638,12 +638,14 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         guard preferredNetworks().contains(name) else {
             return HelperReply(ok: false, message: "not a network this Mac knows")
         }
+        // Leaving the iPhone hotspot for a known network: only an address outside the hotspot counts.
+        let fromHotspot = NetworkCarePolicy.isHotspotAddress(WiFiRadio.ipv4())
         let r = run("/usr/sbin/networksetup", ["-setairportnetwork", WiFiRadio.interfaceName, name], timeout: 25)
         // networksetup sometimes reports "Failed to join" and the Mac is connected two seconds later (Cloupi saw it
         // on this Mac): the address decides.
         for _ in 0..<10 {
             let ip = WiFiRadio.ipv4()
-            if !ip.isEmpty {
+            if !ip.isEmpty, !(fromHotspot && NetworkCarePolicy.isHotspotAddress(ip)) {
                 log("joined \(name) (\(NetworkCarePolicy.isHotspotAddress(ip) ? "hotspot address" : "address \(ip)"))")
                 return HelperReply(ok: true, message: ip)
             }

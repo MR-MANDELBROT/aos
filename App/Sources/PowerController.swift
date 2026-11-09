@@ -61,6 +61,10 @@ final class PowerController: ObservableObject {
     private var networkBusy = false
     private var preferredNetworks: (at: Date, names: [String])?
     private var helperHotspots: [String]?
+    /// Leaving the hotspot: when aOS last looked, whether a look runs, and joins that failed (they rest a while).
+    private var lastHotspotLook = Date.distantPast
+    private var leavingHotspot = false
+    private var hotspotMemory = NetworkMemory()
     /// The hotspot choice in effect now (only while the lid is closed); nil: the user's own macOS settings.
     private var hotspotHeld: HotspotJoin?
     /// At the first chance after launch the helper restores the user's settings, should an earlier run have ended
@@ -260,6 +264,7 @@ final class PowerController: ObservableObject {
         } else if network.offlineSince != nil {
             network = NetworkMemory()
         }
+        leaveHotspotTick(now: now, enabled: settings.leaveHotspot)
         // macOS 27 doesn't let apps (not even the helper as root) change the hotspot settings: aOS only explains
         // where the person sets them (HotspotHint); `updateHotspot` stays for a macOS that allows it again.
     }
@@ -562,6 +567,51 @@ final class PowerController: ObservableObject {
             network.lastCycleAt = t
             network.cyclesInOutage += 1
             log("network care: Wi-Fi off and on\(ok ? "" : ", failed")")
+        }
+    }
+
+    // MARK: Leaving the hotspot (lid open or closed)
+
+    /// While the Mac uses the iPhone hotspot, every 2 minutes a scan by name for the known networks; the first one in
+    /// macOS's order with a good signal is joined through the helper (macOS never leaves a network for a better one).
+    private func leaveHotspotTick(now: Date, enabled: Bool) {
+        guard enabled, helperStatus == .enabled, !cloupiPresent, !leavingHotspot,
+              now.timeIntervalSince(lastHotspotLook) >= NetworkCarePolicy.hotspotLookIntervalSec,
+              NetworkCarePolicy.isHotspotAddress(WiFiRadio.ipv4()) else { return }
+        lastHotspotLook = now
+        leavingHotspot = true
+        let t = now.timeIntervalSince1970
+        let memory = hotspotMemory
+        let fromHelper = helperHotspots
+        let cachedPreferred = preferredNetworks.flatMap { now.timeIntervalSince($0.at) < 600 ? $0.names : nil }
+        let helper = self.helper
+        Task.detached(priority: .utility) {
+            var preferred = cachedPreferred
+            if preferred == nil {
+                let r = try? await Subprocess.run("/usr/sbin/networksetup",
+                                                  ["-listpreferredwirelessnetworks", WiFiRadio.interfaceName], timeout: 10)
+                preferred = r.map { NetworkCarePolicy.parsePreferred(String(decoding: $0.stdout, as: UTF8.self)) }
+            }
+            let known = preferred ?? []
+            let hotspots = NetworkCarePolicy.hotspotNames(preferred: known, fromHelper: fromHelper)
+            let candidates = NetworkCarePolicy.leaveCandidates(preferred: known, hotspots: hotspots)
+            var joined: (name: String, ok: Bool, message: String)?
+            if !candidates.isEmpty, let signal = WiFiRadio.signal(candidates),
+               let target = NetworkCarePolicy.leaveTarget(signal: signal, candidates: candidates, memory: memory, now: t) {
+                let r = await helper.join(network: target)
+                joined = (target, r.ok, r.message)
+            }
+            let result = joined
+            let finalPreferred = preferred
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                self.leavingHotspot = false
+                if cachedPreferred == nil, let finalPreferred { self.preferredNetworks = (Date(), finalPreferred) }
+                guard let result else { return }
+                self.hotspotMemory.noteJoin(result.name, ok: result.ok, visible: true, now: t)
+                self.log(result.ok ? "left the iPhone hotspot for \(result.name)"
+                                   : "leaving the iPhone hotspot for \(result.name) failed (\(result.message))")
+            }
         }
     }
 

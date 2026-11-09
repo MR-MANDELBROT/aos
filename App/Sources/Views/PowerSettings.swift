@@ -189,6 +189,13 @@ struct HotspotSection: View {
             if power.cloupiPresent {
                 OtherWakeServiceNote()
             } else {
+                Toggle(isOn: Binding(get: { model.settings.leaveHotspot }, set: { v in model.update { $0.leaveHotspot = v } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Leave the hotspot for known Wi-Fi")
+                        Text("While the Mac uses your iPhone's hotspot, \(Brand.name) looks for your known Wi-Fi networks every 2 minutes and switches to one with a good signal (macOS stays on the hotspot by itself). Needs the background helper.")
+                            .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
                 HotspotHint()
                 if let w = power.wifi { HotspotStateLine(state: w, choice: nil) }
             }

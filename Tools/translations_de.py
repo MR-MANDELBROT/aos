@@ -769,4 +769,7 @@ DE.update({
     "The Mac also stays awake with the lid closed, on battery too. Meanwhile %@ freezes your other apps and turns the display off; when you open the lid, everything continues. Claude, terminals, code editors and your agents keep running. On battery it stays awake down to the level you choose below; then, or when it gets too hot, the Mac sleeps.": "Der Mac bleibt auch mit geschlossenem Deckel wach, auch im Akkubetrieb. Solange friert %@ deine anderen Apps ein und schaltet den Bildschirm aus; wenn du den Deckel aufklappst, läuft alles weiter. Claude, Terminals, Code-Editoren und deine Agents arbeiten weiter. Im Akkubetrieb bleibt er bis zu dem Akkustand wach, den du unten wählst; dann, oder wenn er zu heiß wird, schläft der Mac.",
     "Battery below %lld percent: the Mac may sleep now.": "Akku unter %lld Prozent: Der Mac darf jetzt schlafen.",
     "No limit": "Kein Limit",
+    "Leave the hotspot for known Wi-Fi": "Hotspot für bekanntes WLAN verlassen",
+    "While the Mac uses your iPhone's hotspot, %@ looks for your known Wi-Fi networks every 2 minutes and switches to one with a good signal (macOS stays on the hotspot by itself). Needs the background helper.":
+        "Solange der Mac den Hotspot deines iPhones nutzt, sucht %@ alle 2 Minuten nach deinen bekannten WLANs und wechselt zu einem mit gutem Signal (macOS selbst bleibt im Hotspot). Dafür braucht es den Helfer.",
 })

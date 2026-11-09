@@ -25,6 +25,9 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// How the Mac joins the user's iPhone hotspot; nil until the user answered the question (then aOS leaves
     /// macOS's own settings alone).
     public var hotspotJoin: HotspotJoin?
+    /// Leave the iPhone hotspot as soon as a known Wi-Fi network is in range with a good signal (with the lid open
+    /// too: macOS itself never leaves a network it is connected to for a better one).
+    public var leaveHotspot: Bool = true
     /// Agents connected during setup (ids of AgentIntegration).
     public var agents: [String] = []
     /// The setup ran to the end once.
@@ -82,6 +85,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case bitwardenLockHours
         case reachWay
         case stayAwakeMinBattery
+        case leaveHotspot
     }
 
     /// Keys of earlier versions, read once and written in their new form.
@@ -122,6 +126,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         reachWay = try? c.decodeIfPresent(ReachWay.self, forKey: .reachWay)
         stayAwakeMinBattery = min(max(try c.decodeIfPresent(Int.self, forKey: .stayAwakeMinBattery) ?? d.stayAwakeMinBattery,
                                       0), 90)
+        leaveHotspot = try c.decodeIfPresent(Bool.self, forKey: .leaveHotspot) ?? d.leaveHotspot
     }
 
     /// The folder new chats from the Claude app start in.

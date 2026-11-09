@@ -143,6 +143,32 @@ public enum NetworkCarePolicy {
         return nil
     }
 
+    // MARK: Leaving the hotspot
+
+    /// While the Mac uses the iPhone hotspot, aOS looks this often for a known Wi-Fi network (Max, 2026-11-09: at home
+    /// the Mac stayed on the hotspot; macOS never leaves a network it is connected to for a better one).
+    public static let hotspotLookIntervalSec = 120.0
+    /// A network weaker than this (dBm) isn't worth leaving the hotspot for.
+    public static let hotspotLeaveMinRSSI = -75
+
+    /// The known networks worth looking for while on the hotspot: macOS's order, without the user's hotspots.
+    public static func leaveCandidates(preferred: [String], hotspots: [String], limit: Int = scanLimit) -> [String] {
+        let hotspotSet = Set(hotspots.map { $0.lowercased() })
+        return Array(preferred.filter { !hotspotSet.contains($0.lowercased()) && !looksLikeHotspot($0) }.prefix(limit))
+    }
+
+    /// Where to go from the hotspot: the first known network in macOS's order that a scan found with a good signal
+    /// (`signal`: name to RSSI), unless it rests after a failed join.
+    public static func leaveTarget(signal: [String: Int], candidates: [String], memory m: NetworkMemory,
+                                   now: Double) -> String? {
+        let found = Dictionary(signal.map { ($0.key.lowercased(), $0.value) }, uniquingKeysWith: max)
+        for name in candidates {
+            guard let rssi = found[name.lowercased()], rssi >= hotspotLeaveMinRSSI else { continue }
+            if !resting(name, memory: m, now: now) { return name }
+        }
+        return nil
+    }
+
     /// The user's hotspots: what the helper read from macOS's known networks (marked Personal Hotspot), else the
     /// preferred networks named like an iPhone or iPad.
     public static func hotspotNames(preferred: [String], fromHelper: [String]?) -> [String] {

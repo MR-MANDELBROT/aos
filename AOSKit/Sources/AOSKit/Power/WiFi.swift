@@ -238,6 +238,24 @@ public enum WiFiRadio {
         } ?? nil
     }
 
+    /// The strongest signal (RSSI, dBm) of each name a scan by name finds; nil when the scan fails.
+    public static func signal(_ names: [String], budget: Double = 25) -> [String: Int]? {
+        withDeadline(budget + 10) { () -> [String: Int]? in
+            guard let i = interface(), i.powerOn() else { return nil }
+            let start = Date()
+            var found: [String: Int] = [:]
+            var anyOK = false
+            for name in names {
+                if Date().timeIntervalSince(start) > budget { break }
+                if let result = try? i.scanForNetworks(withName: name) {
+                    anyOK = true
+                    if let best = result.map(\.rssiValue).max() { found[name] = best }
+                }
+            }
+            return anyOK ? found : nil
+        } ?? nil
+    }
+
     /// Online some other way (an Ethernet adapter): the system's primary IPv4 interface is a real one other than
     /// Wi-Fi. VPN tunnels and bridges don't count (their addresses stay when the network is gone).
     public static func onlineElsewhere() -> Bool {
