@@ -277,6 +277,24 @@ final class CompanionControlTests: XCTestCase {
     }
 
     @MainActor
+    func testStartStopAndDeleteAChat() async throws {
+        let (c, controls, _, _, recent, _) = try chatsController()
+        let start = await c.handle(phone.sign(request(CompanionControl.chatsStart, text: recent)))
+        XCTAssertTrue(start.ok, start.text)
+        XCTAssertEqual(controls.changes.map(\.1), [.pin])
+        let stop = await c.handle(phone.sign(request(CompanionControl.chatsStop, text: recent)))
+        XCTAssertTrue(stop.ok, stop.text)
+        XCTAssertEqual(controls.changes.map(\.1), [.pin, .unpin, .skip])
+        // A conversation that isn't on this Mac: nothing to delete
+        let missing = await c.handle(phone.sign(request(CompanionControl.chatsDelete, text: UUID().uuidString)))
+        XCTAssertFalse(missing.ok)
+        XCTAssertEqual(missing.code, "not-found")
+        let hello = await c.handle(phone.sign(request("companion.hello")))
+        let features = try XCTUnwrap(try object(hello)["features"] as? [String])
+        XCTAssertTrue(features.contains("chats.start") && features.contains("chats.stop") && features.contains("chats.delete"))
+    }
+
+    @MainActor
     func testChangingAChatGoesThroughTheApp() async throws {
         let (c, controls, log, _, recent, _) = try chatsController()
         for (op, change) in [(CompanionControl.chatsPin, ConversationChange.pin), (CompanionControl.chatsUnpin, .unpin),

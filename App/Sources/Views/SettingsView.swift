@@ -312,10 +312,14 @@ struct ReachableSettings: View {
                     if model.conversations.isEmpty {
                         Text("No conversations in the last days.").foregroundStyle(.secondary)
                     }
-                    // In the keeper's order (pinned first, then by your last use), so the top ones are the kept ones.
+                    // Reachable ones first, then pinned, then by your last use (ChatListing, the same order as the iPhone).
                     let own = SessionKeeper.ownConversation(model.paths)
                     let wanted = keptNow(own)
-                    ForEach(model.conversations) { c in
+                    let reachable = Set((model.keeper?.entries ?? []).filter { [.running, .starting, .openElsewhere].contains($0.state) }
+                        .map(\.id)).union(model.liveConversations)
+                    ForEach(ChatListing.shown(model.conversations, reachable: reachable,
+                                              pinned: Set(model.settings.keptConversations), exclude: ownFolder,
+                                              ownConversation: own)) { c in
                         ConversationRow(conversation: c, entry: model.keeper?.entries.first { $0.id == c.id },
                                         reason: SessionKeeper.reason(c, settings: model.settings, exclude: ownFolder,
                                                                      ownConversation: own, kept: wanted))
@@ -323,7 +327,7 @@ struct ReachableSettings: View {
                 } header: {
                     Text("Conversations")
                 } footer: {
-                    Text("Pinned ones on top, then the ones you wrote in or got an answer in last.").font(.caption).foregroundStyle(.secondary)
+                    Text("The ones reachable in the Claude app now on top, then pinned ones, then the ones you wrote in or got an answer in last. aOS's own session isn't listed here.").font(.caption).foregroundStyle(.secondary)
                 }
             }
 

@@ -34,9 +34,9 @@ struct Transcript {
     }
 
     /// Something the person typed (newer Claude Code marks it `origin.kind: human`; older versions don't say).
-    mutating func prompt(_ at: Date, origin: String? = "human", meta: Bool = false) {
+    mutating func prompt(_ at: Date, origin: String? = "human", meta: Bool = false, text: String = "Hallo") {
         var o = base("user", at)
-        o["message"] = ["role": "user", "content": "Hallo"]
+        o["message"] = ["role": "user", "content": text]
         o["promptId"] = UUID().uuidString
         if let origin { o["origin"] = ["kind": origin] }
         if meta { o["isMeta"] = true }
@@ -156,6 +156,23 @@ final class ConversationRankingTests: XCTestCase {
         t.prompt(ago(0.2))
         try t.write()
         assertSame(try read(t).lastActivity, ago(0.2))
+    }
+
+    func testWhatAOSTypesIntoItsSessionIsNoActivity() throws {
+        var t = Transcript(in: folder)
+        t.prompt(ago(6))
+        t.reply(ago(5.9))
+        // aOS's routine, reminder, note and start message arrive like typed prompts (origin human)
+        t.prompt(ago(3), text: "[aOS routine \"Routine-Check\", scheduled 2026-11-09 14:13]\nLies prompts/routine-check.md")
+        t.reply(ago(2.9))
+        t.prompt(ago(2), text: "[aOS note from watchdog]\nCheck ist stale")
+        t.reply(ago(1.9))
+        t.prompt(ago(1), text: "[aOS: the session just started]\nBoot")
+        t.reply(ago(0.9))
+        try t.write()
+        assertSame(try read(t).lastActivity, ago(5.9))
+        XCTAssertTrue(TranscriptScan.isFromAOS([["type": "text", "text": "[aOS reminder for 2026-11-10 08:05]\nx"]]))
+        XCTAssertFalse(TranscriptScan.isFromAOS("Was macht [aOS routine ...]?"))
     }
 
     func testTurnsAutomationStartedDontCount() throws {
@@ -391,5 +408,49 @@ final class ConversationRankingTests: XCTestCase {
         s.keepHours = 24 * 30
         XCTAssertEqual(ClaudeConversations.shown(settings: s, cache: cache, sources: sources).map(\.id),
                        [old.id, recent.id, yesterday.id, kept.id])
+    }
+}
+
+/// The lists on the Mac and the iPhone: reachable first, aOS's own session left out, older versions hidden.
+final class ChatListingTests: XCTestCase {
+    func conversation(_ id: String, cwd: String = "/Users/x/p", hoursAgo: Double, current: String? = nil) -> ClaudeConversation {
+        var c = ClaudeConversation(id: id, cwd: cwd, title: id, lastActivity: Date().addingTimeInterval(-hoursAgo * 3600),
+                                   usedRemoteControl: true, startedIn: "claude-desktop", desktop: nil, modified: nil)
+        if let current {
+            c.desktop = ClaudeConversation.DesktopInfo(archived: false, scheduled: false, permissionMode: nil,
+                                                       remoteControlTurnedOff: false, title: nil, lastActivity: nil,
+                                                       current: current)
+        }
+        return c
+    }
+
+    func testReachableFirstThenPinnedThenActivity() {
+        let list = [conversation("a", hoursAgo: 1), conversation("b", hoursAgo: 5), conversation("c", hoursAgo: 2),
+                    conversation("d", hoursAgo: 0.5), conversation("own", cwd: "/Users/x/cloupi", hoursAgo: 0.1),
+                    conversation("old-aos", cwd: "/aos/Session", hoursAgo: 0.2)]
+        let shown = ChatListing.shown(list, reachable: ["b", "c"], pinned: ["a"], exclude: "/aos/Session", ownConversation: "own")
+        XCTAssertEqual(shown.map(\.id), ["c", "b", "a", "d"])
+    }
+
+    func testReachableComesFromTheKeeperAndRunningProcesses() {
+        let entry = { (id: String, state: KeeperStatus.State) in
+            KeeperStatus.Entry(id: id, title: id, cwd: "/", pinned: false, state: state, detail: "", pid: nil,
+                               since: Date(), lastActivity: Date())
+        }
+        let keeper = KeeperStatus(enabled: true, entries: [entry("k1", .running), entry("k2", .openElsewhere),
+                                                            entry("k3", .waitingForNetwork)], updated: Date())
+        let live = [LiveClaudeProcess(pid: 1, sessionId: "l1", cwd: "/", entrypoint: "claude-desktop", name: nil)]
+        XCTAssertEqual(ChatListing.reachable(keeper: keeper, live: live), ["k1", "k2", "l1"])
+    }
+
+    func testAnOlderVersionOfADesktopConversationIsMarked() {
+        XCTAssertTrue(conversation("old", hoursAgo: 1, current: "new").isOlderVersion)
+        XCTAssertFalse(conversation("new", hoursAgo: 1, current: "new").isOlderVersion)
+        XCTAssertFalse(conversation("cli", hoursAgo: 1).isOlderVersion)
+        let desktop = ["old": ClaudeConversation.DesktopInfo(archived: false, scheduled: false, permissionMode: nil,
+                                                             remoteControlTurnedOff: false, title: nil, lastActivity: nil,
+                                                             current: "new")]
+        XCTAssertEqual(ClaudeConversations.currentID("old", desktop: desktop), "new")
+        XCTAssertEqual(ClaudeConversations.currentID("other", desktop: desktop), "other")
     }
 }
