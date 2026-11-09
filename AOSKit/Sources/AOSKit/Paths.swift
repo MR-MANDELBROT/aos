@@ -36,6 +36,8 @@ public struct Paths: Sendable {
     public var fetched: URL { root.appendingPathComponent("Fetched", isDirectory: true) }
     /// Working directory of the Claude Code session.
     public var session: URL { root.appendingPathComponent("Session", isDirectory: true) }
+    /// Messages for the session from other programs (reminders and notes, see InboxMessage).
+    public var inbox: URL { root.appendingPathComponent("Inbox", isDirectory: true) }
     /// Guest scripts copied out of the app bundle for upload.
     public var guestKit: URL { root.appendingPathComponent("GuestKit", isDirectory: true) }
     /// Programs aOS downloads (Bitwarden's command line tool, checked by its signature before every use).
@@ -46,7 +48,7 @@ public struct Paths: Sendable {
     /// Creates the directories that must exist, with private permissions.
     public func prepare() throws {
         let fm = FileManager.default
-        for dir in [root, vm, restoreImages, run, keys, logs, exchange, fetched, session, bin, bitwarden] {
+        for dir in [root, vm, restoreImages, run, keys, logs, exchange, fetched, session, bin, bitwarden, inbox] {
             try fm.createDirectory(at: dir, withIntermediateDirectories: true,
                                    attributes: [.posixPermissions: 0o700])
         }
