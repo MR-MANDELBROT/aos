@@ -79,6 +79,21 @@ struct SettingsView: View {
                     }
                 }
 
+                // aOS's session on the Mac (only from an aOS that has routines)
+                if model.connection?.macStatus?.routines != nil {
+                    Section {
+                        NavigationLink {
+                            RoutinesPage()
+                        } label: {
+                            Label("Routines", systemImage: "clock.arrow.circlepath")
+                        }
+                    } header: {
+                        Text("aOS's session")
+                    } footer: {
+                        Text("Messages aOS sends into its session on the Mac on a schedule, for example a briefing every morning.")
+                    }
+                }
+
                 Section {
                     NavigationLink {
                         DeviceKeyView()

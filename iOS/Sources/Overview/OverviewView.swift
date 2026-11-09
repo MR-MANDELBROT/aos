@@ -772,6 +772,17 @@ struct AOSCard: View {
                         }
                     }
                 }
+                if let routines = connection.macStatus?.routines, !routines.items.isEmpty {
+                    NavigationLink {
+                        RoutinesPage()
+                    } label: {
+                        OverviewRow(symbol: "clock.arrow.circlepath", title: String(localized: "Routines"),
+                                    detail: Self.routinesText(routines)) {
+                            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
                 // What to do, under the row that asks for the sign-in (the session's first).
                 let sessionSignIn = connection.macStatus?.session.map { $0.enabled && $0.state == "needsLogin" } ?? false
                 if sessionSignIn {
@@ -832,6 +843,13 @@ struct AOSCard: View {
         case nil: return String(localized: "Not set up")
         default: return s.state ?? ""
         }
+    }
+
+    static func routinesText(_ r: MacStatus.Routines) -> String {
+        guard let next = r.next, let at = next.next else { return String(localized: "All off") }
+        let when = Calendar.current.isDateInToday(at) ? at.formatted(date: .omitted, time: .shortened)
+                                                      : at.formatted(.dateTime.weekday(.abbreviated).hour().minute())
+        return String(localized: "Next: \(next.name) at \(when)")
     }
 
     static func chatsText(_ c: MacStatus.NewChats) -> String {
