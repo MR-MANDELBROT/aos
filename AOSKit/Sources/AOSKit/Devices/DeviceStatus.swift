@@ -41,7 +41,8 @@ public struct DeviceStatus: Codable, Sendable, Equatable {
     public var device: Device?
     /// Since when the current tunnel is up.
     public var since: Date?
-    /// "wifi" while the iPhone's pairing port answers, "cellular" while it doesn't but the tunnel holds.
+    /// "wifi" while the iPhone's pairing port answers, "cellular" while it doesn't but the tunnel holds, "offline" while
+    /// the iPhone answers no ping (the tunnel waits for it, sending nothing).
     public var network: String?
     public var lastHeartbeat: Date?
     public var updated: Date?
@@ -85,6 +86,8 @@ public struct DeviceStatus: Codable, Sendable, Equatable {
 
     /// The tunnel is up and installs go through it now.
     public var isConnected: Bool { state == .connected }
+    /// The tunnel is up, but the iPhone is offline right now (installs wait until it's back).
+    public var isOffline: Bool { isConnected && network == "offline" }
 
     public static func decoder() -> JSONDecoder {
         let d = JSONDecoder()

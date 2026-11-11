@@ -2019,6 +2019,16 @@
         }
       }
     },
+    "Connected to %@, offline right now: the connection waits" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden mit %@, gerade offline: die Verbindung wartet"
+          }
+        }
+      }
+    },
     "Connected to %@, on cellular" : {
       "localizations" : {
         "de" : {

@@ -96,7 +96,8 @@ struct DeviceSettings: View {
         let status = model.devices.flatMap { $0.isFresh() ? $0 : nil }
         if let status {
             Label(stateText(status), systemImage: stateSymbol(status))
-                .foregroundStyle(status.isConnected ? Color.green : (status.state == .notPaired ? .orange : .secondary))
+                .foregroundStyle(status.isConnected && !status.isOffline ? Color.green
+                                 : (status.state == .notPaired ? .orange : .secondary))
             if let device = status.device {
                 LabeledContent("iPhone") {
                     Text(verbatim: [device.name, device.ios.map { "iOS \($0)" }].compactMap { $0 }.joined(separator: ", "))
@@ -148,6 +149,7 @@ struct DeviceSettings: View {
         let name = status.device?.name ?? String(localized: "your iPhone")
         switch status.state {
         case .connected:
+            if status.isOffline { return String(localized: "Connected to \(name), offline right now: the connection waits") }
             return status.network == "cellular"
                 ? String(localized: "Connected to \(name), on cellular")
                 : String(localized: "Connected to \(name), on Wi-Fi")
@@ -159,7 +161,9 @@ struct DeviceSettings: View {
 
     func stateSymbol(_ status: DeviceStatus) -> String {
         switch status.state {
-        case .connected: return status.network == "cellular" ? "antenna.radiowaves.left.and.right" : "wifi"
+        case .connected:
+            if status.isOffline { return "antenna.radiowaves.left.and.right.slash" }
+            return status.network == "cellular" ? "antenna.radiowaves.left.and.right" : "wifi"
         case .notPaired: return "cable.connector"
         default: return "hourglass"
         }

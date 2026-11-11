@@ -110,7 +110,7 @@ public struct DeviceInstaller: Sendable {
         while Date() < end {
             guard let job = job(id) else { return nil }
             if job.isFinished { return job }
-            if job.state == .queued, DeviceStatus.load(paths)?.isConnected != true {
+            if job.state == .queued, let status = DeviceStatus.load(paths), !status.isConnected || status.isOffline {
                 withoutTunnel += 1
                 if withoutTunnel >= 3 { return job }
             } else {
@@ -143,6 +143,10 @@ public struct DeviceInstaller: Sendable {
         case .failed:
             return (false, "The iPhone refused \(label): \(finished.message ?? "unknown error")")
         default:
+            if DeviceStatus.load(paths)?.isOffline == true {
+                return (true, "Signed and queued \(label). The iPhone is offline right now; the tunnel waits for it, and "
+                        + "\(Brand.name) installs it by itself as soon as the iPhone is back online. Job \(job.id).")
+            }
             return (true, "Signed and queued \(label). The iPhone isn't reachable right now: \(Brand.name) installs it by itself "
                     + "as soon as the iPhone is on any Wi-Fi (the tunnel then also holds on cellular). Job \(job.id).")
         }
@@ -160,8 +164,13 @@ public struct DeviceInstaller: Sendable {
         switch status.state {
         case .connected:
             let minutes = status.since.map { Int(now.timeIntervalSince($0) / 60) } ?? 0
-            let network = status.network == "cellular" ? "on cellular" : "on Wi-Fi"
-            lines.append("Connected to \(name) (iOS \(status.device?.ios ?? "?")), \(network), tunnel up for \(minutes) min: installs take seconds.")
+            if status.isOffline {
+                lines.append("Tunnel to \(name) up for \(minutes) min, but the iPhone is offline right now: installs wait until "
+                             + "it's back online (the tunnel holds meanwhile).")
+            } else {
+                let network = status.network == "cellular" ? "on cellular" : "on Wi-Fi"
+                lines.append("Connected to \(name) (iOS \(status.device?.ios ?? "?")), \(network), tunnel up for \(minutes) min: installs take seconds.")
+            }
         case .notPaired:
             lines.append("This Mac isn't paired with an iPhone yet.")
         default:

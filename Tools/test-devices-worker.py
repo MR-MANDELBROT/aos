@@ -1,7 +1,8 @@
-# Tests how the device worker (App/Resources/aos-devices-worker.py) rides out outages, with fakes instead of an
-# iPhone: the keepalive on a real socket, the retransmit budget inside the tunnel, a heartbeat outage that recovers,
-# the tunnel's connection dying, the give-up backstop, an install cut off by an outage going back to the queue, and a
-# refused app. Runs with the Python of aOS's device environment:
+# Tests how the device worker (App/Resources/aos-devices-worker.py) rides out silence, with fakes instead of an iPhone:
+# no keepalive on a real socket, the retransmit budget inside the tunnel, a long time offline without a single packet
+# into the tunnel, coming back, the tunnel's connection dying, a tunnel that doesn't answer while the iPhone is online,
+# an install cut off by an outage going back to the queue, and a refused app. Runs with the Python of aOS's device
+# environment:
 #
 #   ~/Library/Application\ Support/aOS/Devices/env/bin/python -I Tools/test-devices-worker.py
 import asyncio, importlib.util, json, socket, sys, tempfile, time
@@ -21,16 +22,14 @@ def check(name, ok, detail=""):
     print("OK  " if ok else "FAIL", name, detail)
 
 
-# A: keepalive on the tunnel's socket
+# A: no keepalive on the tunnel's socket (pymobiledevice3 asks for one, the worker turns it off)
 w.tolerate_outages()
 w.tolerate_outages()  # idempotent
 srv = socket.socket(); srv.bind(("127.0.0.1", 0)); srv.listen()
 sock = socket.create_connection(srv.getsockname())
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 w.tunnel_service.OSUTIL.set_keepalive(sock)
-TCP_KEEPALIVE, TCP_KEEPINTVL, TCP_KEEPCNT = 0x10, 0x101, 0x102
-vals = (sock.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE) != 0, sock.getsockopt(socket.IPPROTO_TCP, TCP_KEEPALIVE),
-        sock.getsockopt(socket.IPPROTO_TCP, TCP_KEEPINTVL), sock.getsockopt(socket.IPPROTO_TCP, TCP_KEEPCNT))
-check("keepalive 30 s, every 15 s, 18 probes", vals == (True, 30, 15, 18), str(vals))
+check("no keepalive on the tunnel's connection", sock.getsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE) == 0)
 check("OSUTIL proxy forwards the rest", w.tunnel_service.OSUTIL.loopback_header is not None)
 sock.close(); srv.close()
 
@@ -43,30 +42,45 @@ sysctl.set("tcp.retransmit.max_count", sysctls["tcp.retransmit.max_count"])
 check("pmd-pytcp takes it", tcp__constants.TCP__RETRANSMIT__MAX_COUNT == 12)
 
 
-# Fakes for the session
+# C: the real ping (this Mac answers itself; a documentation address doesn't)
+async def pings():
+    return await w.reachable("127.0.0.1", 1), await w.reachable("192.0.2.1", 1)
+check("ping: answers / no answer", asyncio.run(pings()) == (True, False))
+
+
+# Fakes for the session: `online` is whether pings get through, `tunnel` whether the tunnel answers.
 class Lockdown:
     async def close(self): pass
 
 
 class Rsd:
     def __init__(self):
-        self.product_version, self.udid, self.lockdown, self.up, self.reopened = "27.2", "U", Lockdown(), True, 0
-        self.install_cut = False
+        self.product_version, self.udid, self.lockdown, self.reopened = "27.2", "U", Lockdown(), 0
+        self.online, self.tunnel, self.install_cut = True, True, False
+        self.sent_while_offline = 0
+
+    def _use(self):
+        if not self.online:
+            self.sent_while_offline += 1
+        if not (self.online and self.tunnel):
+            raise ConnectionError("no answer")
 
     async def get_value(self, domain=None, key=None):
-        if not self.up:
-            raise ConnectionError("no route")
+        self._use()
         return "Test iPhone"
 
     async def start_lockdown_service(self, name):
-        if not self.up:
-            raise ConnectionError("no route")
+        self._use()
         self.reopened += 1
         return "service"
 
 
 async def create_using_remote(service, identifier=None):
     return Lockdown()
+
+
+async def reachable(host, timeout=3):
+    return RSD.online
 
 
 class Tunnel:
@@ -89,17 +103,21 @@ class Installer:
         pass
 
     async def install_from_local(self, app):
+        RSD._use()
         if RSD.install_cut:
             RSD.install_cut = False
-            RSD.up = False
+            RSD.online = False
             raise ConnectionError("cut off")
         await asyncio.sleep(0.05)
 
 
 w.create_using_remote = create_using_remote
+w.reachable = reachable
 w.userspace_tunnel.UserspaceRsdTunnel = Tunnel
 w.InstallationProxyService = Installer
-w.TICK, w.RETRY_EVERY, w.GIVE_UP_AFTER, w.PROBE_EVERY = 0.05, 0.1, 1.5, 999
+w.TICK, w.RETRY_EVERY, w.PROBE_EVERY = 0.02, 0.05, 999
+LOG = []
+w.log = lambda *a: LOG.append(" ".join(str(x) for x in a))
 
 
 def worker():
@@ -108,42 +126,58 @@ def worker():
     wk.heartbeat_seconds = lambda: 0.2
 
     async def port_open(host, port=0, timeout=0):
-        return True
+        return RSD.online
     wk.port_open = port_open
     return wk, root
 
 
+def queue(root, job_id, name):
+    app = root / "Devices" / "Staging" / job_id / f"{name}.app"
+    app.mkdir(parents=True)
+    job = {"id": job_id, "app": str(app), "name": name, "bundleId": f"dev.x.{name.lower()}", "state": "queued",
+           "created": w.now_iso()}
+    (root / "Devices" / "Jobs" / f"{job_id}.json").write_text(json.dumps(job))
+    return app
 
-LOG = []
-w.log = lambda *a: LOG.append(" ".join(str(x) for x in a))
+
+def job(root, job_id):
+    return json.loads((root / "Devices" / "Jobs" / f"{job_id}.json").read_text())
 
 
-async def scenario_recovers():
+async def scenario_long_silence():
     global RSD
     RSD = Rsd()
     wk, root = worker()
     task = asyncio.create_task(wk.session("U", "100.1.2.3", "test"))
-    await asyncio.sleep(0.5); RSD.up = False
-    await asyncio.sleep(1.0)
-    check("outage: still connected", wk.status["state"] == "connected" and not task.done())
-    RSD.up = True
     await asyncio.sleep(0.5)
-    check("recovery: answers again, fresh lockdown", any("answers again" in l for l in LOG) and RSD.reopened >= 1)
-    Tunnel.current.rsd = None  # pymobiledevice3 tore it down (transport died)
+    RSD.online = False
+    await asyncio.sleep(3.0)  # 60 retry cycles: hours, scaled down
+    check("offline: the tunnel waits", wk.status["state"] == "connected" and wk.status["network"] == "offline"
+          and not task.done())
+    check("offline: not one packet into the tunnel", RSD.sent_while_offline == 0, f"{RSD.sent_while_offline} sent")
+    queue(root, "j0", "Queued")
+    await asyncio.sleep(0.3)
+    check("offline: a new install waits", job(root, "j0")["state"] == "queued" and RSD.sent_while_offline == 0)
+    RSD.online = True
+    await asyncio.sleep(0.5)
+    check("back online: network known again, install done",
+          any("online again" in l for l in LOG) and wk.status["network"] == "wifi" and job(root, "j0")["state"] == "done",
+          f'{wk.status["network"]}, {job(root, "j0")["state"]}')
+    Tunnel.current.rsd = None  # pymobiledevice3 tore it down (the iPhone answered with a reset)
     await asyncio.wait_for(task, 2)
     check("transport death ends it at once", wk.history[-1]["reason"] == "connection lost", wk.history[-1]["reason"])
 
 
-async def scenario_gives_up():
+async def scenario_dead_tunnel_online():
     global RSD
     RSD = Rsd()
     wk, root = worker()
     task = asyncio.create_task(wk.session("U", "100.1.2.3", "test"))
-    await asyncio.sleep(0.4); RSD.up = False
-    t = time.time()
+    await asyncio.sleep(0.4)
+    RSD.tunnel = False  # pings answer, the tunnel doesn't
     await asyncio.wait_for(task, 5)
     reason = wk.history[-1]["reason"]
-    check("no answer past the limit ends it", reason.startswith("no answer for"), f"{reason} after {time.time() - t:.1f}s")
+    check("online but no answer through the tunnel ends it", reason.startswith("no answer through the tunnel"), reason)
     check("status back to searching", wk.status["state"] == "searching")
 
 
@@ -151,20 +185,16 @@ async def scenario_install_cut():
     global RSD
     RSD = Rsd()
     wk, root = worker()
-    app = root / "Devices" / "Staging" / "job1" / "Mini.app"
-    app.mkdir(parents=True)
-    job = {"id": "job1", "app": str(app), "name": "Mini", "bundleId": "dev.x.mini", "state": "queued",
-           "created": w.now_iso()}
-    (root / "Devices" / "Jobs" / "job1.json").write_text(json.dumps(job))
+    app = queue(root, "j1", "Mini")
     RSD.install_cut = True
     task = asyncio.create_task(wk.session("U", "100.1.2.3", "test"))
     await asyncio.sleep(0.6)
-    j = json.loads((root / "Devices" / "Jobs" / "job1.json").read_text())
+    j = job(root, "j1")
     check("cut-off install goes back to the queue", j["state"] == "queued" and j["attempts"] == 1 and app.exists(), j["state"])
-    RSD.up = True
+    RSD.online = True
     await asyncio.sleep(0.8)
-    j = json.loads((root / "Devices" / "Jobs" / "job1.json").read_text())
-    check("installed after the outage", j["state"] == "done" and j["attempts"] == 2 and not app.parent.exists(),
+    j = job(root, "j1")
+    check("installed once the iPhone is back", j["state"] == "done" and j["attempts"] == 2 and not app.parent.exists(),
           f'{j["state"]} attempts={j.get("attempts")}')
     wk.stopping = True
     await asyncio.wait_for(task, 2)
@@ -174,10 +204,7 @@ async def scenario_refused():
     global RSD
     RSD = Rsd()
     wk, root = worker()
-    app = root / "Devices" / "Staging" / "job2" / "Bad.app"
-    app.mkdir(parents=True)
-    job = {"id": "job2", "app": str(app), "name": "Bad", "bundleId": "dev.x.bad", "state": "queued", "created": w.now_iso()}
-    (root / "Devices" / "Jobs" / "job2.json").write_text(json.dumps(job))
+    queue(root, "j2", "Bad")
 
     class Refusing:
         def __init__(self, lockdown): pass
@@ -185,7 +212,7 @@ async def scenario_refused():
     w.InstallationProxyService = Refusing
     task = asyncio.create_task(wk.session("U", "100.1.2.3", "test"))
     await asyncio.sleep(0.5)
-    j = json.loads((root / "Devices" / "Jobs" / "job2.json").read_text())
+    j = job(root, "j2")
     check("refused app fails, tunnel stays", j["state"] == "failed" and wk.status["state"] == "connected" and not task.done(),
           j.get("message", ""))
     wk.stopping = True
@@ -194,12 +221,12 @@ async def scenario_refused():
 
 
 async def main():
-    await scenario_recovers()
-    await scenario_gives_up()
+    await scenario_long_silence()
+    await scenario_dead_tunnel_online()
     await scenario_install_cut()
     await scenario_refused()
 
 asyncio.run(main())
-print("\n".join("  log: " + l for l in LOG[-12:]))
+print("\n".join("  log: " + l for l in LOG[-14:]))
 print("ALL OK" if all(results) else "SOME FAILED")
 sys.exit(0 if all(results) else 1)
