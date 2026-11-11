@@ -19,6 +19,8 @@ public enum DeviceRuntime {
     /// The requirements and the worker shipped with this version of aOS (in the app's Resources folder).
     public static func requirements(in resources: URL) -> URL { resources.appendingPathComponent("aos-devices-requirements.txt") }
     public static func worker(in resources: URL) -> URL { resources.appendingPathComponent("aos-devices-worker.py") }
+    /// The setup's helper: trust, Developer Mode and the RemotePairing record on the iPhone (one JSON answer per call).
+    public static func setupHelper(in resources: URL) -> URL { resources.appendingPathComponent("aos-devices-setup.py") }
     /// The app's Resources folder, seen from a program in its Contents/MacOS.
     public static func appResources(executable: URL) -> URL {
         executable.resolvingSymlinksInPath().deletingLastPathComponent().deletingLastPathComponent()

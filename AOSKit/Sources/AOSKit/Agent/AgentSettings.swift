@@ -36,6 +36,10 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     public var iphoneAddress: String = ""
     /// Seconds between the tunnel's heartbeats (10 to 300).
     public var iphoneHeartbeat: Int = 30
+    /// The Apple developer team whose signing the setup set up (Settings > Apps, "Set Up Step by Step").
+    public var iphoneTeam: String = ""
+    /// The bundle id prefix of the team's wildcard App ID ("dev.example": apps "dev.example.*").
+    public var iphonePrefix: String = ""
     /// Keep the Mac awake while something must stay reachable: not at all, while the lid is open (idle sleep
     /// prevented), or also with the lid closed (aOS's background helper; other apps freeze meanwhile).
     /// Settings written before this existed carry `keepAwake` (true: while the lid is open).
@@ -110,7 +114,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case stayAwakeMinBattery
         case leaveHotspot
         case sessionFolder, sessionEffort, sessionEnvFiles, sessionStartMessage, routines, sessionPermissionMode
-        case iphoneApps, iphoneAddress, iphoneHeartbeat
+        case iphoneApps, iphoneAddress, iphoneHeartbeat, iphoneTeam, iphonePrefix
     }
 
     /// Keys of earlier versions, read once and written in their new form.
@@ -163,6 +167,8 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         iphoneApps = try c.decodeIfPresent(Bool.self, forKey: .iphoneApps) ?? d.iphoneApps
         iphoneAddress = try c.decodeIfPresent(String.self, forKey: .iphoneAddress) ?? d.iphoneAddress
         iphoneHeartbeat = min(max(try c.decodeIfPresent(Int.self, forKey: .iphoneHeartbeat) ?? d.iphoneHeartbeat, 10), 300)
+        iphoneTeam = try c.decodeIfPresent(String.self, forKey: .iphoneTeam) ?? d.iphoneTeam
+        iphonePrefix = try c.decodeIfPresent(String.self, forKey: .iphonePrefix) ?? d.iphonePrefix
     }
 
     /// The folder the session works in: `sessionFolder` if it exists, else aOS's own session folder.

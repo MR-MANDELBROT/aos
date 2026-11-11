@@ -38,7 +38,7 @@ func runCommand() async {
         let bundle = VMBundle(url: paths.vm)
         switch args.first {
         case "devices":
-            // aosctl devices setup RESOURCES | sign APP | install APP | status
+            // aosctl devices setup RESOURCES | sign APP | install APP | signing | status
             let resources = URL(fileURLWithPath: args.count > 2 ? args[2] : "App/Resources")
             switch args.dropFirst().first {
             case "setup":
@@ -54,12 +54,24 @@ func runCommand() async {
                 let signer = await IOSAppSigner.current()
                 print(try await signer.sign(app: app, udid: udid, workFolder: FileManager.default.temporaryDirectory
                     .appendingPathComponent("aos-sign-\(UUID().uuidString)")))
+            case "signing":
+                let settings = AgentSettings.load(paths)
+                let teams = IPhoneDevSetup.xcodeTeams()
+                let signer = await IOSAppSigner.current()
+                print("xcode:", IPhoneDevSetup.xcodeInstalled(), "teams:", teams.map { "\($0.name) (\($0.id)\($0.isFree ? ", free" : ""))" })
+                if let team = teams.first(where: { $0.id == settings.iphoneTeam }) ?? teams.first {
+                    let prefix = settings.iphonePrefix.isEmpty ? IPhoneDevSetup.suggestedPrefix(team: team, profiles: signer.profiles)
+                        : settings.iphonePrefix
+                    print("prefix:", prefix)
+                    print("signing:", IPhoneDevSetup.signing(signer, team: team.id, prefix: prefix,
+                                                             udid: DeviceInstaller(paths: paths).deviceUDID()))
+                }
             case "install":
                 guard args.count > 2 else { fail("aosctl devices install APP") }
                 let result = await DeviceInstaller(paths: paths).installForAgent(path: args[2], source: "aosctl")
                 print(result.text)
             default:
-                print(DeviceInstaller(paths: paths).statusText())
+                print(await DeviceInstaller(paths: paths).statusTextWithSigning())
             }
             exit(0)
         case "latest":

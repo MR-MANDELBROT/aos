@@ -11,7 +11,8 @@ import Virtualization
 @MainActor
 final class SetupController: ObservableObject {
     enum Step: Int, CaseIterable, Identifiable {
-        case requirements, agents, options, download, install, prepare, screenSharing, connect, session, reach, pair, bitwarden, done
+        case requirements, agents, options, download, install, prepare, screenSharing, connect, session, reach, pair, iphoneApps,
+             bitwarden, done
         var id: Int { rawValue }
         var title: String {
             switch self {
@@ -26,6 +27,7 @@ final class SetupController: ObservableObject {
             case .session: return String(localized: "Reach it from your phone")
             case .reach: return String(localized: "On the go")
             case .pair: return String(localized: "Pair your iPhone")
+            case .iphoneApps: return String(localized: "Apps on your iPhone")
             case .bitwarden: return String(localized: "Sign in to Bitwarden")
             case .done: return String(localized: "Ready")
             }
@@ -145,6 +147,7 @@ final class SetupController: ObservableObject {
         switch s {
         case .download: activity = .progress(String(localized: "Downloading macOS 27.2.0"), 0.42)
         case .prepare: activity = .working(String(localized: "Setting up the workspace (installs Chrome, a few minutes)"))
+        case .iphoneApps: AppModel.shared.iphoneSetup.showPreview(); activity = .idle
         default: activity = .idle
         }
     }
@@ -589,6 +592,14 @@ final class SetupController: ObservableObject {
     /// Paired, or skipped (not recommended: without the phone, approvals only happen at the Mac).
     func continueAfterPair() {
         AppModel.shared.stopPairing()
+        step = .iphoneApps
+    }
+
+    // MARK: 11. Apps on the iPhone
+
+    /// Set up, or skipped (for people who don't build iPhone apps; Settings > Apps has the same guide).
+    func continueAfterIPhoneApps() {
+        AppModel.shared.iphoneSetup.stop()
         step = .bitwarden
     }
 
@@ -619,7 +630,7 @@ final class SetupController: ObservableObject {
         toPairing()
     }
 
-    // MARK: 11. Bitwarden
+    // MARK: 12. Bitwarden
 
     /// Signed in, or later (the agent's sign-ins then have no logins to offer until the user signs in in the
     /// settings).

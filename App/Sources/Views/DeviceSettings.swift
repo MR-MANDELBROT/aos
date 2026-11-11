@@ -13,6 +13,7 @@ struct DeviceSettings: View {
     @State private var pairing = false
     @State private var pairError: String?
     @State private var installError: String?
+    @State private var showGuide = false
 
     var body: some View {
         Form {
@@ -23,6 +24,12 @@ struct DeviceSettings: View {
                                                                   set: { v in model.update { $0.iphoneApps = v } }))
                 Text("\(Brand.name) keeps a connection to your iPhone. It comes up whenever the iPhone is on any Wi-Fi, and then also holds on cellular, until the iPhone restarts. Your iPhone and this Mac need Tailscale, and Developer Mode must be on on the iPhone.")
                     .font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Text("New here, or a new iPhone? The guide takes you through it once: Xcode, signing, the cable, Developer Mode.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Set Up Step by Step …") { showGuide = true }
+                }
                 if model.settings.iphoneApps {
                     environmentRow
                     if model.deviceRuntimeReady { connectionRows }
@@ -50,6 +57,25 @@ struct DeviceSettings: View {
         }
         .formStyle(.grouped)
         .task(id: model.devices?.device?.udid) { await loadSigning() }
+        .sheet(isPresented: $showGuide) {
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Apps on your iPhone").font(.title2.bold())
+                        IPhoneAppsSetupView(setup: model.iphoneSetup)
+                    }
+                    .padding(24)
+                }
+                Divider()
+                HStack {
+                    Spacer()
+                    Button("Done") { showGuide = false }.buttonStyle(.glassProminent).keyboardShortcut(.defaultAction)
+                }
+                .padding(14)
+            }
+            .frame(width: 640, height: 720)
+            .environmentObject(model)
+        }
     }
 
     // MARK: Environment
@@ -59,7 +85,7 @@ struct DeviceSettings: View {
         case .running(let step):
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
-                Text(stepText(step))
+                Text(Self.stepText(step))
             }
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
@@ -80,7 +106,7 @@ struct DeviceSettings: View {
         }
     }
 
-    func stepText(_ step: DeviceRuntime.Step) -> String {
+    static func stepText(_ step: DeviceRuntime.Step) -> String {
         switch step {
         case .downloadingUV: return String(localized: "Downloading uv …")
         case .installingPython: return String(localized: "Installing Python …")
