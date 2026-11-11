@@ -420,7 +420,12 @@ neither on the same network nor on a cable ("morphing software"). Measured on iO
   LocalDevVPN (lockdownd 62078 refuses too), not to apps on the iPhone itself (the sandbox blocks 62078 for apps;
   RemotePairing on 127.0.0.1 and on the hotspot address hangs up on a handshake from the iPhone itself).
 - A tunnel built while the port answers **survives the move to cellular**: over Tailscale the iPhone keeps its tailnet
-  address, so the TCP connections inside stay. Installed over such a tunnel on cellular: 3 to 7 s.
+  address, so the TCP connections inside stay. Installed over such a tunnel on cellular: 3 to 7 s. The first one held
+  14 h 25 min through about ten switches between Wi-Fi and cellular.
+- **Outages on a switch**: when the iPhone leaves a Wi-Fi network (a weak one above all), Tailscale can take 20 to
+  30 s to find its new path (`magicsock ... now using`, `open-conn-track ... lastRecv=22s` in Tailscale's log).
+  pymobiledevice3 tunes the tunnel for a cable: TCP keepalive after 3 s, 3 probes 3 s apart, so it gave up after
+  12 s, and the connections inside after 6 retransmissions. Exactly those switches killed the tunnel.
 
 So aOS **holds** the tunnel. Parts:
 
@@ -428,15 +433,20 @@ So aOS **holds** the tunnel. Parts:
   in `iphoneAddress`, else the iOS devices of the person's tailnet from `tailscale status --json`, not aOS's own
   `aos-` nodes; the last address that worked first), tries the port every 15 s, and when it answers builds a
   RemotePairing TCP tunnel with pymobiledevice3's userspace stack (no root, no utun: its no-root tunnel provider is
-  pointed at `create_core_device_tunnel_service_using_remotepairing(udid, address, 49152)`). Then a heartbeat
-  (`get_value DeviceName` through the tunnel, every `iphoneHeartbeat` s, default 30; three misses end it), a look at
-  the port every 30 s (answers: the iPhone is on Wi-Fi, else on cellular), and the jobs every 2 s. Its report is
+  pointed at `create_core_device_tunnel_service_using_remotepairing(udid, address, 49152)`). It rides out outages
+  of about 5 minutes (`tolerate_outages`: keepalive after 30 s, then every 15 s; 12 retransmissions inside; tested by
+  `Tools/test-devices-worker.py`). Then a
+  heartbeat (`get_value DeviceName` through the tunnel, every `iphoneHeartbeat` s, default 30; without an answer every
+  10 s over a fresh lockdown connection, and the tunnel ends when pymobiledevice3 tears it down or after 6 minutes
+  without one), a look at the port every 30 s (answers: the iPhone is on Wi-Fi, else on cellular), and the jobs every
+  2 s. Its report is
   `run/devices.json` (`DeviceStatus`: state, device, since, network, the last 10 tunnels with how long they held and
   why they ended, the latest 30 jobs); `Devices/state.json` keeps addresses and tunnels across restarts.
 - **Jobs** (`Devices/Jobs/<id>.json`, `DeviceJob`, 0600): aOS copies the app into `Devices/Staging/<id>/` (an .ipa
   is unpacked), signs the copy and writes the job `queued`; the worker installs it through the tunnel
   (`InstallationProxyService.install_from_local`), sets `installing`, then `done` or `failed` (with the device's
-  error) and removes the copy. A refused app doesn't end the tunnel. Without a tunnel a job waits for the next one.
+  error) and removes the copy. A refused app doesn't end the tunnel. An install cut off by an outage goes back to the
+  queue (at most 3 attempts). Without a tunnel a job waits for the next one.
 - **Signing** (`IOSAppSigner`): the profiles in Xcode's folders (`security`'s CMS decoder in-process), the identities
   of `security find-identity -v -p codesigning`; the profile must cover the bundle id and the iPhone and be valid, an
   exact one before a wildcard, then the one that runs longest, with an identity whose certificate it lists.
