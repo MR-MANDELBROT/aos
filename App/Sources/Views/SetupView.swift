@@ -37,6 +37,7 @@ extension SetupController.Step {
         case .screenSharing: return "rectangle.on.rectangle"
         case .connect: return "link"
         case .pair: return "qrcode"
+        case .iphoneApps: return "apps.iphone"
         case .reach: return "point.3.connected.trianglepath.dotted"
         case .session: return "iphone.radiowaves.left.and.right"
         case .bitwarden: return "key.horizontal"
@@ -168,6 +169,7 @@ private struct StepPage: View {
         case .connect: connect
         case .reach: reach
         case .pair: pair
+        case .iphoneApps: iphoneApps
         case .session: session
         case .bitwarden: bitwardenStep
         case .done: done
@@ -550,6 +552,14 @@ private struct StepPage: View {
         .onReceive(Timer.publish(every: 3, on: .main, in: .common).autoconnect()) { _ in model.refreshPhone() }
     }
 
+    var iphoneApps: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("For iPhone apps: your agents build them, and \(Brand.name) puts them on your iPhone within seconds, at home and on the go. Once, with a cable, about 10 minutes. Skip it if you don't build iPhone apps; Settings > Apps has the same guide.")
+                .font(.title3).foregroundStyle(.secondary)
+            IPhoneAppsSetupView(setup: model.iphoneSetup)
+        }
+    }
+
     var bitwardenSignedIn: Bool {
         let _ = model.bitwardenTick
         switch model.bitwarden.phase {
@@ -618,6 +628,9 @@ private struct StepPage: View {
                     }
                     if let device = model.pairedDevices.first {
                         feature("iphone", "\(Brand.name) on your iPhone", "\(device.name) is paired: approve sign-ins with Face ID, also on the go.")
+                    }
+                    if model.settings.iphoneApps {
+                        feature("apps.iphone", "Apps on your iPhone", "Your agents put the iPhone apps they build on your iPhone, at home and on the go.")
                     }
                 }
             }
@@ -700,6 +713,8 @@ private struct StepPage: View {
             if model.pairedDevices.isEmpty {
                 Button("Skip (not recommended)") { setup.continueAfterPair() }.buttonStyle(.glass)
             }
+        case .iphoneApps:
+            IPhoneAppsSkipButton(iphone: model.iphoneSetup)
         case .bitwarden:
             if !bitwardenSignedIn {
                 Button("Skip") { setup.continueAfterBitwarden() }.buttonStyle(.glass)
@@ -752,6 +767,8 @@ private struct StepPage: View {
         case .pair:
             Button("Continue") { setup.continueAfterPair() }
                 .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(model.pairedDevices.isEmpty)
+        case .iphoneApps:
+            IPhoneAppsContinueButton(iphone: model.iphoneSetup)
         case .bitwarden:
             Button("Continue") { setup.continueAfterBitwarden() }
                 .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(!bitwardenSignedIn)
@@ -823,6 +840,28 @@ private struct ActivityView: View {
                 }
                 .font(.caption)
             }
+        }
+    }
+}
+
+/// "Continue" on the step about iPhone apps: once every part is done (it redraws with the guide's state).
+private struct IPhoneAppsContinueButton: View {
+    @EnvironmentObject var setup: SetupController
+    @ObservedObject var iphone: IPhoneSetupModel
+
+    var body: some View {
+        Button("Continue") { setup.continueAfterIPhoneApps() }
+            .buttonStyle(.glassProminent).keyboardShortcut(.defaultAction).disabled(!iphone.finished)
+    }
+}
+
+private struct IPhoneAppsSkipButton: View {
+    @EnvironmentObject var setup: SetupController
+    @ObservedObject var iphone: IPhoneSetupModel
+
+    var body: some View {
+        if !iphone.finished {
+            Button(iphone.isDone(.tools) ? "Later" : "Skip") { setup.continueAfterIPhoneApps() }.buttonStyle(.glass)
         }
     }
 }

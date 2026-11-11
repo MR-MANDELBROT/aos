@@ -474,8 +474,33 @@ So aOS **holds** the tunnel. Parts:
 - **Pairing**: once, over a cable: pymobiledevice3 `lockdown pair` (the iPhone's Trust dialog) and
   `lockdown remotepairing --pair`; the record is pymobiledevice3's `~/.pymobiledevice3/remote_<udid>.plist`.
   Developer Mode must be on.
+- **Guided setup** (`IPhoneSetupModel`, `IPhoneAppsSetupView`; the setup's step "Apps on your iPhone" after the pairing
+  of the iPhone app, and Settings > Apps > Set Up Step by Step). It assumes nothing: no Xcode account, no certificate,
+  an iPhone without Developer Mode. Six parts, each recognized from the state on the Mac and the iPhone (every 3 s
+  while shown), so it can be left and resumed:
+  1. Xcode installed, a team in Xcode (`IDEProvisioningTeamByIdentifier` in Xcode's preferences; paid ones first,
+     a free "Personal Team" is explained: only apps built in Xcode, 7 days), the device environment set up.
+  2. A **wildcard App ID** (`<prefix>.*`, paid teams), registered by the person on developer.apple.com (aOS opens the
+     page, suggests the prefix of an existing wildcard profile or `com.<team name>`, copies it). Xcode, building any
+     app under the prefix with automatic signing, then makes and keeps up to date a managed wildcard profile
+     ("iOS Team Provisioning Profile: dev.marquart.*" is one): it covers every app under the prefix and every
+     registered device.
+  3. The iPhone on the cable, trusted: `App/Resources/aos-devices-setup.py` (one JSON answer per call: `status`,
+     `trust`, `reveal`, `remotepair`; usbmux, also Wi-Fi sync) asks Trust by itself when a new iPhone appears.
+  4. **Developer Mode**: the switch only appears in Settings > Privacy & Security once something asks for it; aOS
+     reveals it (AMFI) and tells the steps (switch on, restart, Turn On with the passcode). Turning it on from the Mac
+     only works without a passcode, so it doesn't try.
+  5. **Signing**: aOS writes a small app, aOS Setup (`SetupAppProject`, made with XcodeGen, bundle id
+     `<prefix>.aossetup`, the team, automatic signing) into `Devices/Setup App` and opens it in Xcode; the person
+     runs it on the iPhone once. Xcode registers the iPhone, creates the development certificate if there is none,
+     makes the profile and prepares the iPhone for development. aOS never runs Xcode's signing itself.
+     Done when `IPhoneDevSetup.signing` finds a valid wildcard profile for the iPhone with its certificate.
+  6. **Without a cable**: the RemotePairing record (made by itself once Developer Mode is on), then the worker's
+     tunnel when the iPhone is on Wi-Fi with Tailscale.
+  `aosctl devices signing` prints teams, prefix and signing state.
 - **Agents**: the MCP tools `iphone_install(path, wait)` (a .app built for a device with `CODE_SIGNING_ALLOWED=NO`,
-  or an .ipa; waits up to 3 minutes, returns at once with "queued" while there is no tunnel) and `iphone_status`.
+  or an .ipa; waits up to 3 minutes, returns at once with "queued" while there is no tunnel) and `iphone_status`
+  (also the bundle id patterns the person's wildcard profiles cover on the iPhone; a refused signing names them).
   They don't count as workspace activity. Settings > Apps shows the connection, the installs and the signing, and
   installs a chosen app; the iPhone shows the same under Overview > Apps (`apps` in `mac.status`).
 

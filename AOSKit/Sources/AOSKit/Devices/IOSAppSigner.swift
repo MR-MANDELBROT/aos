@@ -138,7 +138,8 @@ public struct IOSAppSigner: Sendable {
     public enum SignError: LocalizedError, Equatable {
         case notAnApp(String)
         case simulatorBuild
-        case noProfile(bundleID: String, udid: String)
+        /// `covered`: the bundle id patterns the person's wildcard profiles cover on this iPhone ("dev.example.*").
+        case noProfile(bundleID: String, udid: String, covered: [String] = [])
         case noIdentity(profile: String)
         case codesign(String, String)
 
@@ -148,9 +149,14 @@ public struct IOSAppSigner: Sendable {
                 return "\(name) is not an iPhone app (no Info.plist with a bundle id)."
             case .simulatorBuild:
                 return "This is a build for the iOS Simulator. Build for a device (generic/platform=iOS)."
-            case .noProfile(let id, let udid):
+            case .noProfile(let id, let udid, let covered):
+                if !covered.isEmpty {
+                    return "No development provisioning profile covers \(id) on this iPhone. Use a bundle id under "
+                        + covered.joined(separator: " or ") + " (the person's wildcard profile covers those), then build again."
+                }
                 return "No development provisioning profile in Xcode covers \(id) and this iPhone (\(udid)). "
-                    + "A wildcard profile (TEAM.*) of the team covers every app."
+                    + "A wildcard profile of the team covers every app under its prefix: \(Brand.name) > Settings > Apps > "
+                    + "Set Up Step by Step."
             case .noIdentity(let profile):
                 return "The signing certificate of the profile \(profile) isn't in the keychain."
             case .codesign(let path, let output):
@@ -180,7 +186,7 @@ public struct IOSAppSigner: Sendable {
             $0.expiration > now && $0.covers(bundleID: bundleID) && $0.covers(device: udid)
                 && ($0.platforms.isEmpty || $0.platforms.contains("iOS"))
         }
-        guard !usable.isEmpty else { throw SignError.noProfile(bundleID: bundleID, udid: udid) }
+        guard !usable.isEmpty else { throw SignError.noProfile(bundleID: bundleID, udid: udid, covered: coveredPatterns(udid: udid)) }
         let ranked = usable.sorted {
             if $0.isWildcard != $1.isWildcard { return !$0.isWildcard }
             return $0.expiration > $1.expiration
@@ -191,6 +197,17 @@ public struct IOSAppSigner: Sendable {
             }
         }
         throw SignError.noIdentity(profile: ranked[0].name)
+    }
+
+    /// The bundle id patterns ("dev.example.*") of the valid wildcard profiles that cover the iPhone and have their
+    /// certificate in the keychain: every app under one of them can be signed for it.
+    public func coveredPatterns(udid: String) -> [String] {
+        let patterns = profiles.filter { profile in
+            profile.isWildcard && profile.expiration > now && profile.covers(device: udid)
+                && (profile.platforms.isEmpty || profile.platforms.contains("iOS"))
+                && identities.contains { profile.certificateFingerprints.contains($0.fingerprint) }
+        }.map { String($0.applicationIdentifier.dropFirst($0.teamID.count + 1)) }
+        return Array(Set(patterns)).sorted()
     }
 
     /// The entitlements a development build of `bundleID` gets under `profile`.

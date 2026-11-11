@@ -152,7 +152,18 @@ public struct DeviceInstaller: Sendable {
         }
     }
 
-    /// The state in a few lines (the tool `iphone_status`).
+    /// The state, and which bundle ids the person's signing covers on the iPhone (the tool `iphone_status`).
+    public func statusTextWithSigning() async -> String {
+        var text = statusText()
+        guard AgentSettings.load(paths).iphoneApps, let udid = deviceUDID() else { return text }
+        let covered = await IOSAppSigner.current().coveredPatterns(udid: udid)
+        text += covered.isEmpty
+            ? "\nNo wildcard profile covers this iPhone: only apps with a profile of their own in Xcode install."
+            : "\nGive new apps a bundle id under \(covered.joined(separator: " or ")): the person's wildcard profile signs those."
+        return text
+    }
+
+    /// The state in a few lines.
     public func statusText(now: Date = Date()) -> String {
         let settings = AgentSettings.load(paths)
         guard settings.iphoneApps else { return "Installing apps on the iPhone is off (\(Brand.name): Settings > Apps)." }

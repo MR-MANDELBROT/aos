@@ -120,6 +120,88 @@ final class DevicesTests: XCTestCase {
         }
     }
 
+    func testTellsWhichBundleIDsItCovers() {
+        let identity = SigningIdentity(fingerprint: "AAAA", name: "Apple Development: Test")
+        let signer = IOSAppSigner(profiles: [profile("TEAM.dev.x.*"), profile("TEAM.dev.y.*", devices: ["UDID-2"]),
+                                             profile("TEAM.dev.z.*", certs: ["BBBB"]), profile("TEAM.dev.old.*", expires: -1),
+                                             profile("TEAM.dev.x.single")],
+                                  identities: [identity])
+        XCTAssertEqual(signer.coveredPatterns(udid: "UDID-1"), ["dev.x.*"])
+        XCTAssertThrowsError(try signer.choose(bundleID: "com.other.app", udid: "UDID-1")) { error in
+            XCTAssertEqual(error as? IOSAppSigner.SignError,
+                           .noProfile(bundleID: "com.other.app", udid: "UDID-1", covered: ["dev.x.*"]))
+            XCTAssertTrue(error.localizedDescription.contains("under dev.x.*"))
+        }
+    }
+
+    // MARK: The guided setup
+
+    func testReadsXcodesTeamsPaidFirst() {
+        let prefs: [String: Any] = [
+            "ACCOUNT-1": [["teamID": "FREE123456", "teamName": "Max Muster (Personal Team)", "isFreeProvisioningTeam": 1]],
+            "ACCOUNT-2": [["teamID": "S3725YB7V6", "teamName": "Maximilian Marquart", "isFreeProvisioningTeam": false],
+                          ["teamID": "FREE123456", "teamName": "duplicate", "isFreeProvisioningTeam": true]],
+        ]
+        let teams = IPhoneDevSetup.teams(from: prefs)
+        XCTAssertEqual(teams.map(\.id), ["S3725YB7V6", "FREE123456"])
+        XCTAssertEqual(teams.map(\.isFree), [false, true])
+        XCTAssertTrue(IPhoneDevSetup.teams(from: nil).isEmpty)
+    }
+
+    func testSuggestsAPrefix() {
+        let team = IPhoneDevSetup.Team(id: "TEAM", name: "Jürgen Müller-Lüdenscheidt", isFree: false)
+        XCTAssertEqual(IPhoneDevSetup.suggestedPrefix(team: team, profiles: []), "com.jurgenmullerludenscheidt")
+        XCTAssertEqual(IPhoneDevSetup.suggestedPrefix(team: team, profiles: [profile("TEAM.dev.marquart.*"), profile("TEAM.x.y")]),
+                       "dev.marquart", "the prefix of an existing wildcard")
+        XCTAssertTrue(IPhoneDevSetup.isValidPrefix("dev.marquart"))
+        XCTAssertTrue(IPhoneDevSetup.isValidPrefix("com.my-name.apps"))
+        XCTAssertFalse(IPhoneDevSetup.isValidPrefix("marquart"))
+        XCTAssertFalse(IPhoneDevSetup.isValidPrefix("dev.marquart.*"))
+        XCTAssertFalse(IPhoneDevSetup.isValidPrefix("dev..x"))
+        XCTAssertFalse(IPhoneDevSetup.isValidPrefix("dev.mär"))
+        XCTAssertEqual(IPhoneDevSetup.setupBundleID(prefix: "dev.marquart"), "dev.marquart.aossetup")
+    }
+
+    func testKnowsHowFarSigningIs() {
+        let dev = SigningIdentity(fingerprint: "AAAA", name: "Apple Development: Test (X)")
+        let developerID = SigningIdentity(fingerprint: "CCCC", name: "Developer ID Application: Test (TEAM)")
+        func state(_ profiles: [ProvisioningProfile], _ ids: [SigningIdentity] = [dev], udid: String? = "UDID-1",
+                   prefix: String = "dev.x") -> IPhoneDevSetup.Signing {
+            IPhoneDevSetup.signing(IOSAppSigner(profiles: profiles, identities: ids), team: "TEAM", prefix: prefix, udid: udid)
+        }
+        XCTAssertEqual(state([profile("TEAM.dev.x.*")], [developerID]), .noCertificate)
+        XCTAssertEqual(state([profile("TEAM.dev.x.*")], udid: nil), .noProfile)
+        XCTAssertEqual(state([profile("TEAM.dev.x.*", devices: ["UDID-2"])]), .noProfile, "the iPhone isn't in it yet")
+        XCTAssertEqual(state([profile("TEAM.dev.x.aossetup")]), .exactOnly)
+        guard case .ready(let pattern, _, _) = state([profile("TEAM.dev.other.*", expires: 900), profile("TEAM.dev.x.*"),
+                                                     profile("TEAM.dev.x.aossetup")]) else {
+            return XCTFail("a wildcard for the prefix is ready")
+        }
+        XCTAssertEqual(pattern, "dev.x.*", "the chosen prefix before a longer running other one")
+        guard case .ready(let other, _, _) = state([profile("TEAM.dev.other.*")]) else {
+            return XCTFail("a wildcard for another prefix works too")
+        }
+        XCTAssertEqual(other, "dev.other.*")
+    }
+
+    func testWritesTheSetupAppProject() throws {
+        let folder = root.appendingPathComponent("Setup App")
+        let project = try SetupAppProject.write(to: folder, bundleID: "dev.x.aossetup", team: "TEAM123456",
+                                                title: "aOS ist eingerichtet", message: "Sag \"Hallo\" \\ tschüss")
+        XCTAssertEqual(project.lastPathComponent, "aOS Setup.xcodeproj")
+        let pbxproj = try String(contentsOf: project.appendingPathComponent("project.pbxproj"), encoding: .utf8)
+        XCTAssertTrue(pbxproj.contains("PRODUCT_BUNDLE_IDENTIFIER = dev.x.aossetup;"))
+        XCTAssertTrue(pbxproj.contains("DEVELOPMENT_TEAM = TEAM123456;"))
+        XCTAssertTrue(pbxproj.contains("CODE_SIGN_STYLE = Automatic;"))
+        XCTAssertFalse(pbxproj.contains("AOSTEAM") || pbxproj.contains("AOSBUNDLEID"))
+        let source = try String(contentsOf: folder.appendingPathComponent("Sources/SetupApp.swift"), encoding: .utf8)
+        XCTAssertTrue(source.contains(#"Text("Sag \"Hallo\" \\ tschüss")"#), source)
+        // Written again: replaced, not mixed
+        _ = try SetupAppProject.write(to: folder, bundleID: "dev.y.aossetup", team: "TEAM123456", title: "t", message: "m")
+        let again = try String(contentsOf: project.appendingPathComponent("project.pbxproj"), encoding: .utf8)
+        XCTAssertTrue(again.contains("dev.y.aossetup") && !again.contains("dev.x.aossetup"))
+    }
+
     func testEntitlementsOfADevelopmentBuild() {
         let e = IOSAppSigner.entitlements(bundleID: "dev.x.app", profile: profile("TEAM.*"))
         XCTAssertEqual(e["application-identifier"] as? String, "TEAM.dev.x.app")

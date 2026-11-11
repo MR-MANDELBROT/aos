@@ -137,7 +137,7 @@ public final class WorkspaceController {
             return AgentResponse(id: request.id, ok: result.ok, text: result.text)
         }
         if request.op == "iphone_status" {
-            return AgentResponse(id: request.id, ok: true, text: DeviceInstaller(paths: paths).statusText())
+            return AgentResponse(id: request.id, ok: true, text: await DeviceInstaller(paths: paths).statusTextWithSigning())
         }
         if signingIn && request.op != "status" {
             return AgentResponse.failure(request.id, "A sign-in is in progress. Wait for the result of sign_in, then continue.")

@@ -222,7 +222,8 @@ public enum MCPTools {
     without a cable (\(Brand.name) keeps a tunnel to the iPhone). Build for a device (xcodebuild -destination \
     'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO, or an .ipa): \(Brand.name) signs it with the user's development profile. \
     Never let Xcode manage signing (-allowProvisioningUpdates or automatic signing): it signs the user out of Xcode. \
-    iphone_status says whether the iPhone is reachable right now and what was installed.
+    iphone_status says whether the iPhone is reachable right now, what was installed, and which bundle ids the user's \
+    signing covers: give a new app a bundle id under one of them.
     """
 
     static func schema(_ properties: [String: Any], required: [String] = []) -> [String: Any] {
@@ -373,7 +374,7 @@ public enum MCPTools {
             [
                 "name": "iphone_status",
                 "title": "iPhone status",
-                "description": "Whether \(Brand.name) reaches the user's iPhone right now (its tunnel, Wi-Fi or cellular) and the latest installs.",
+                "description": "Whether \(Brand.name) reaches the user's iPhone right now (its tunnel, Wi-Fi or cellular), the latest installs, and the bundle ids the user's signing covers (give new apps one of those).",
                 "inputSchema": schema([:]),
                 "annotations": ["readOnlyHint": true],
             ],

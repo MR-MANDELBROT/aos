@@ -20,6 +20,8 @@ final class AppModel: ObservableObject {
     let paths = Paths.default
     let workspace: WorkspaceController
     let setup: SetupController
+    /// The guided setup of installing apps on the iPhone (the setup's step and Settings > Apps).
+    lazy var iphoneSetup = IPhoneSetupModel(model: self)
     /// Sparkle updates (only once a real EdDSA key is in Info.plist; see Tools/release.sh).
     let updater: SPUStandardUpdaterController
     private var server: LineSocketServer?
