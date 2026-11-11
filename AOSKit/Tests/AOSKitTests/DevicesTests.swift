@@ -56,6 +56,16 @@ final class DevicesTests: XCTestCase {
         XCTAssertFalse(status.isFresh(alive: { _ in true }), "no pid: not a running worker")
     }
 
+    func testOfflineIsATunnelThatWaits() throws {
+        let report = workerReport.replacingOccurrences(of: #""network": "cellular", "lastHeartbeat""#,
+                                                       with: #""network": "offline", "lastHeartbeat""#)
+        let status = try DeviceStatus.decoder().decode(DeviceStatus.self, from: Data(report.utf8))
+        XCTAssertTrue(status.isConnected, "the tunnel is still up")
+        XCTAssertTrue(status.isOffline)
+        let cellular = try DeviceStatus.decoder().decode(DeviceStatus.self, from: Data(workerReport.utf8))
+        XCTAssertFalse(cellular.isOffline)
+    }
+
     func testFreshOnlyWhileTheWorkerLives() throws {
         let status = try DeviceStatus.decoder().decode(DeviceStatus.self, from: Data(workerReport.utf8))
         XCTAssertTrue(status.isFresh(alive: { $0 == 4242 }))

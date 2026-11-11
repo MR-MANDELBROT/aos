@@ -874,6 +874,7 @@ DE.update({
     'your iPhone': 'dein iPhone',
     'Connected to %@, on cellular': 'Verbunden mit %@, im Mobilfunk',
     'Connected to %@, on Wi-Fi': 'Verbunden mit %@, im WLAN',
+    'Connected to %@, offline right now: the connection waits': 'Verbunden mit %@, gerade offline: die Verbindung wartet',
     'Connecting to %@ …': 'Verbinde mit %@ …',
     "This Mac isn't paired with an iPhone yet.": 'Dieser Mac ist noch mit keinem iPhone gekoppelt.',
     'Waiting for %@ to be on Wi-Fi': 'Wartet, bis %@ im WLAN ist',
