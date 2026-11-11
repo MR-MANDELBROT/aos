@@ -965,3 +965,9 @@ DE.update({
     'free': 'kostenlos',
 })
 
+# The quiet tunnel (Settings > Apps)
+DE.update({
+    'Online check': 'Online-Prüfung',
+    "How often %@ pings your iPhone to know whether it's online. The connection itself stays quiet: %@ uses it only for installs and for a check when the iPhone joins a Wi-Fi network, so it holds through hours without a network.": 'Wie oft %@ dein iPhone anpingt, um zu wissen, ob es online ist. Die Verbindung selbst bleibt still: %@ nutzt sie nur für Installationen und für eine Prüfung, wenn das iPhone in ein WLAN kommt. So hält sie auch stundenlang ohne Netz.',
+})
+

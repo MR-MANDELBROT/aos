@@ -431,6 +431,11 @@ neither on the same network nor on a cable ("morphing software"). Measured on iO
   keepalive probes end it sooner. pymobiledevice3 itself sends nothing unasked (its ICMP nudge only follows our own
   packets). So the tunnel survives hours without a network, as long as nothing goes into it meanwhile; the iPhone's
   side is an open question (whether iOS probes or sends on the tunnel by itself).
+- **A ping before each use isn't enough** (measured 2026-11-11): on a flaky network (answers 3 to 9 s late) a
+  heartbeat passed the ping gate and stuck, the outage after it lasted longer than 9 minutes, and the tunnel ended 10
+  minutes after that heartbeat (`TimeoutError in sock-read-task`). Leaving a weak Wi-Fi is exactly such a moment. So
+  nothing periodic goes through the tunnel at all. On Wi-Fi a lost tunnel costs nothing (it is built again at once),
+  so that is where it is checked.
 
 So aOS **holds** the tunnel. Parts:
 
@@ -439,14 +444,16 @@ So aOS **holds** the tunnel. Parts:
   `aos-` nodes; the last address that worked first), tries the port every 15 s, and when it answers builds a
   RemotePairing TCP tunnel with pymobiledevice3's userspace stack (no root, no utun: its no-root tunnel provider is
   pointed at `create_core_device_tunnel_service_using_remotepairing(udid, address, 49152)`). The tunnel's connection
-  has no keepalive (`tolerate_outages`; 12 retransmissions inside), and nothing goes through the tunnel unless a ping
-  past it (`reachable`: `/sbin/ping` over Tailscale) has just answered: while the iPhone is offline (two pings without
-  an answer: status network `offline`) the tunnel sits idle and waits, however long. Then a heartbeat (`get_value
-  DeviceName` through the tunnel, every `iphoneHeartbeat` s, default 30; every 10 s while offline or without an
-  answer, then over a fresh lockdown connection). The tunnel ends when pymobiledevice3 tears it down (the iPhone
-  answered with a reset: it restarted) or after 3 heartbeats without an answer while the iPhone is online. A look at
-  the port every 30 s while online (answers: the iPhone is on Wi-Fi, else on cellular), and queued jobs at once
-  (tested with fakes by `Tools/test-devices-worker.py`). Its report is
+  has no keepalive (`tolerate_outages`; 12 retransmissions inside) and **stays quiet**: no connection inside it stays
+  open (`connect` opens RemoteServiceDiscovery and lockdown for one use, `disconnect` closes them; an idle one could
+  be probed by the iPhone while it's offline), and only two things go through it: a check (`get_value DeviceName`)
+  once the iPhone has been on Wi-Fi for 20 s (then hourly while it stays there; two misses end the tunnel, and since
+  the port answers it is built again at once), and installs (on Wi-Fi at once, on cellular after two pings in a row,
+  offline not at all). Beside the tunnel: a ping every `iphoneHeartbeat` s (Settings > Apps, "Online check", default
+  30; `reachable`: `/sbin/ping` over Tailscale; two without an answer: status network `offline`), then the pairing
+  port (answers: Wi-Fi, else cellular). The tunnel also ends when pymobiledevice3 tears it down (the iPhone answered
+  with a reset: it restarted). Tested with fakes by `Tools/test-devices-worker.py` (among others: not one use of the
+  tunnel on cellular or offline). Its report is
   `run/devices.json` (`DeviceStatus`: state, device, since, network, the last 10 tunnels with how long they held and
   why they ended, the latest 30 jobs); `Devices/state.json` keeps addresses and tunnels across restarts.
 - **Jobs** (`Devices/Jobs/<id>.json`, `DeviceJob`, 0600): aOS copies the app into `Devices/Staging/<id>/` (an .ipa
