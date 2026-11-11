@@ -29,6 +29,13 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     public var sessionStartMessage: String = ""
     /// Prompts aOS sends into the session on a schedule.
     public var routines: [Routine] = []
+    /// Install apps on the iPhone: aOS keeps a tunnel to it (built whenever the iPhone is on any Wi-Fi, held over
+    /// Tailscale on cellular) and installs through it (Docs/DESIGN.md, "Installing apps on the iPhone").
+    public var iphoneApps: Bool = false
+    /// The iPhone's address (its tailnet address or name); empty: found through the Tailscale app.
+    public var iphoneAddress: String = ""
+    /// Seconds between the tunnel's heartbeats (10 to 300).
+    public var iphoneHeartbeat: Int = 30
     /// Keep the Mac awake while something must stay reachable: not at all, while the lid is open (idle sleep
     /// prevented), or also with the lid closed (aOS's background helper; other apps freeze meanwhile).
     /// Settings written before this existed carry `keepAwake` (true: while the lid is open).
@@ -103,6 +110,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case stayAwakeMinBattery
         case leaveHotspot
         case sessionFolder, sessionEffort, sessionEnvFiles, sessionStartMessage, routines, sessionPermissionMode
+        case iphoneApps, iphoneAddress, iphoneHeartbeat
     }
 
     /// Keys of earlier versions, read once and written in their new form.
@@ -152,6 +160,9 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         sessionEnvFiles = try c.decodeIfPresent([String].self, forKey: .sessionEnvFiles) ?? d.sessionEnvFiles
         sessionStartMessage = try c.decodeIfPresent(String.self, forKey: .sessionStartMessage) ?? d.sessionStartMessage
         routines = (try? c.decodeIfPresent([Routine].self, forKey: .routines)) ?? d.routines
+        iphoneApps = try c.decodeIfPresent(Bool.self, forKey: .iphoneApps) ?? d.iphoneApps
+        iphoneAddress = try c.decodeIfPresent(String.self, forKey: .iphoneAddress) ?? d.iphoneAddress
+        iphoneHeartbeat = min(max(try c.decodeIfPresent(Int.self, forKey: .iphoneHeartbeat) ?? d.iphoneHeartbeat, 10), 300)
     }
 
     /// The folder the session works in: `sessionFolder` if it exists, else aOS's own session folder.

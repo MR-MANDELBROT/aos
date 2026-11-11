@@ -177,6 +177,7 @@ public final class MCPServer {
                 r.name = args["name"] as? String
                 r.keep = args["keep"] as? Bool
                 r.region = (args["region"] as? [NSNumber])?.map(\.doubleValue)
+                r.wait = args["wait"] as? Bool
             }
             var content: [[String: Any]] = [["type": "text", "text": response.text]]
             if let image = response.image, let mime = response.mimeType {
@@ -217,6 +218,11 @@ public enum MCPTools {
     /Volumes/My Shared Files/Applications (read only; in Finder cmd+shift+g, type the path, return) if the user \
     shares them: they start fresh there, without the user's data and sign-ins, and App Store or licensed apps \
     often don't run.
+    The user's iPhone: iphone_install puts an iPhone app you built on it within seconds, at home or on the go, \
+    without a cable (\(Brand.name) keeps a tunnel to the iPhone). Build for a device (xcodebuild -destination \
+    'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO, or an .ipa): \(Brand.name) signs it with the user's development profile. \
+    Never let Xcode manage signing (-allowProvisioningUpdates or automatic signing): it signs the user out of Xcode. \
+    iphone_status says whether the iPhone is reachable right now and what was installed.
     """
 
     static func schema(_ properties: [String: Any], required: [String] = []) -> [String: Any] {
@@ -231,6 +237,7 @@ public enum MCPTools {
         "type_text": "type", "press_keys": "keys", "wait": "wait",
         "list_files": "files", "put_file": "put", "get_file": "get", "ask_user_for_help": "help",
         "sign_in": "sign_in",
+        "iphone_install": "iphone_install", "iphone_status": "iphone_status",
     ]
 
     public static var definitions: [[String: Any]] {
@@ -352,6 +359,23 @@ public enum MCPTools {
                     "purpose": ["type": "string", "description": "One sentence: why you need to sign in (shown to the user)."],
                 ], required: ["purpose"]),
                 "_meta": ["anthropic/requiresUserInteraction": true],
+            ],
+            [
+                "name": "iphone_install",
+                "title": "Install an app on the iPhone",
+                "description": "Install an iPhone app on the user's iPhone: the absolute path of a .app built for a device (generic/platform=iOS) or of an .ipa. \(Brand.name) copies it, signs the copy with the user's development profile and installs it through its tunnel to the iPhone (seconds, on Wi-Fi or cellular). Without a tunnel right now it stays queued and installs as soon as the iPhone is on any Wi-Fi. The original isn't changed.",
+                "inputSchema": schema([
+                    "path": ["type": "string", "description": "Absolute path of the .app folder or the .ipa."],
+                    "wait": ["type": "boolean", "default": true, "description": "Wait for the result (up to 3 minutes)."],
+                ], required: ["path"]),
+                "annotations": ["title": "Install an app on the iPhone", "readOnlyHint": false, "openWorldHint": false],
+            ],
+            [
+                "name": "iphone_status",
+                "title": "iPhone status",
+                "description": "Whether \(Brand.name) reaches the user's iPhone right now (its tunnel, Wi-Fi or cellular) and the latest installs.",
+                "inputSchema": schema([:]),
+                "annotations": ["readOnlyHint": true],
             ],
             [
                 "name": "ask_user_for_help",

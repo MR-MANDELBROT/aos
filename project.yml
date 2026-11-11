@@ -21,7 +21,7 @@ settings:
   base:
     DEVELOPMENT_TEAM: S3725YB7V6
     MARKETING_VERSION: 0.1.0
-    CURRENT_PROJECT_VERSION: 19
+    CURRENT_PROJECT_VERSION: 20
     ENABLE_HARDENED_RUNTIME: YES
     SWIFT_VERSION: "5.0"
     MACOSX_DEPLOYMENT_TARGET: "27.0"
@@ -45,10 +45,22 @@ targets:
       - path: App/Resources
         excludes:
           - "AppIcon.icon"
+          - "**/__pycache__"
+          - "aos-devices-worker.py"
+      # The device worker (Python, run by aos-devices with aOS's own Python environment): a plain resource
+      - path: App/Resources/aos-devices-worker.py
+        type: file
+        buildPhase: resources
       - path: App/Resources/AppIcon.icon
         type: file
         buildPhase: resources
       - path: App/LaunchAgents/dev.marquart.aos.session.plist
+        buildPhase:
+          copyFiles:
+            destination: wrapper
+            subpath: Contents/Library/LaunchAgents
+      # Installing apps on the iPhone (Docs/DESIGN.md): the device worker's LaunchAgent
+      - path: App/LaunchAgents/dev.marquart.aos.devices.plist
         buildPhase:
           copyFiles:
             destination: wrapper
@@ -70,6 +82,11 @@ targets:
         copy:
           destination: executables
       - target: aos-session
+        embed: true
+        codeSign: true
+        copy:
+          destination: executables
+      - target: aos-devices
         embed: true
         codeSign: true
         copy:
@@ -158,6 +175,20 @@ targets:
       base:
         PRODUCT_NAME: aos-session
         PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.aos.session
+        SKIP_INSTALL: YES
+
+  aos-devices:
+    type: tool
+    platform: macOS
+    sources:
+      - path: AOSKit/Sources/aos-devices
+    dependencies:
+      - package: AOSKit
+        product: AOSKit
+    settings:
+      base:
+        PRODUCT_NAME: aos-devices
+        PRODUCT_BUNDLE_IDENTIFIER: dev.marquart.aos.devices
         SKIP_INSTALL: YES
 
   aos-companion:

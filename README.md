@@ -16,6 +16,11 @@ terminal (its sessions keep running on the Mac when the connection drops and pic
 Mac's battery, lid and staying awake and put it to sleep, start or close the workspace, and watch and control your
 Mac and the workspace.
 
+**Apps on your iPhone**: your agent builds an iPhone app, and aOS signs it with your development profile and puts it
+on your iPhone within seconds, at home or on the go, without a cable (the MCP tool `iphone_install`). aOS keeps a
+connection to the iPhone for this: it comes up whenever the iPhone is on any Wi-Fi and then holds over Tailscale on
+cellular too (Settings > Apps; needs Tailscale on both and Developer Mode on the iPhone).
+
 aOS is not made by or affiliated with Anthropic, OpenAI, Google, Microsoft or any other agent's maker.
 
 ## Requirements
@@ -58,6 +63,7 @@ Opening the workspace always needs the user's yes:
 | `aOS.app` | Menu bar app: setup, settings, the workspace window, and the workspace engine (runs the VM with Apple's Virtualization framework, talks to the guest over SSH and screen sharing) |
 | `aos-mcp` | MCP server that the agent starts. Its tools (open, screenshot, click, type, keys, scroll, drag, files, close) go to the app over a private socket |
 | `aos-session` | LaunchAgent: keeps Claude Code conversations reachable (resumes them with Remote Control when no other process has them) and the optional always-on session |
+| `aos-devices` | Optional LaunchAgent (Settings > Apps): runs the device worker (Python with pymobiledevice3, in aOS's own environment set up by uv), which holds a tunnel to your iPhone and installs the apps aOS signed through it |
 | `aos-companion` | What the iPhone app runs over SSH: requests and events between the phone and the app, and the terminal sessions that outlive the connection (`aos-companion term`) |
 | `aos-powerd` | Optional privileged helper (LaunchDaemon you allow once in Login Items): keeps the Mac awake with the lid closed (`pmset disablesleep`, as a lease aOS renews), sets your iPhone hotspot's join settings, rejoins known networks. Only aOS may talk to it; it stays out of the way of Cloupi's own wake service |
 | Bitwarden's `bw` | Bitwarden's official command line tool, not part of aOS: downloaded from Bitwarden when you sign in (or yours, if it is Bitwarden's signed build), checked by its signature before every use; aOS runs it to sign in to your Bitwarden account and to get the login you approve |

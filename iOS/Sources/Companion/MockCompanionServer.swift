@@ -268,6 +268,32 @@ final class MockCompanionServer: @unchecked Sendable {
             "recent": .array([.object(["kind": .string("routine"), "name": .string("Routine-Check"),
                                        "at": .string(ISO8601.format(Date().addingTimeInterval(-2 * 3600)))])]),
         ]),
+        // Installing apps on the iPhone: connected over Wi-Fi, one install going on, earlier ones done and failed.
+        "apps": .object([
+            "state": .string("connected"), "network": .string("wifi"), "device": .string("Max’s iPhone"),
+            "since": .string(ISO8601.format(Date().addingTimeInterval(-95 * 60))), "previousSeconds": .number(4210),
+            "jobs": .array([
+                .object(["id": .string("A1"), "name": .string("Tunnel Test"), "bundleId": .string("dev.marquart.tunneltest"),
+                         "state": .string("installing"), "version": .string("1.0 (3)"), "source": .string("Claude Code"),
+                         "created": .string(ISO8601.format(Date().addingTimeInterval(-20)))]),
+                .object(["id": .string("A2"), "name": .string("Tunnel Test"), "bundleId": .string("dev.marquart.tunneltest"),
+                         "state": .string("done"), "version": .string("1.0 (2)"), "source": .string("Claude Code"),
+                         "created": .string(ISO8601.format(Date().addingTimeInterval(-40 * 60))),
+                         "finished": .string(ISO8601.format(Date().addingTimeInterval(-40 * 60 + 3))),
+                         "seconds": .number(3), "network": .string("cellular")]),
+                .object(["id": .string("A3"), "name": .string("Haushaltsbuch"), "bundleId": .string("dev.marquart.haushalt"),
+                         "state": .string("failed"), "version": .string("0.4 (12)"), "source": .string("Claude Code"),
+                         "created": .string(ISO8601.format(Date().addingTimeInterval(-26 * 3600))),
+                         "finished": .string(ISO8601.format(Date().addingTimeInterval(-26 * 3600 + 8))),
+                         "seconds": .number(8), "network": .string("wifi"),
+                         "message": .string("No provisioning profile covers dev.marquart.haushalt on this iPhone.")]),
+                .object(["id": .string("A4"), "name": .string("Haushaltsbuch"), "bundleId": .string("dev.marquart.haushalt"),
+                         "state": .string("done"), "version": .string("0.3 (11)"), "source": .string("Mac"),
+                         "created": .string(ISO8601.format(Date().addingTimeInterval(-50 * 3600))),
+                         "finished": .string(ISO8601.format(Date().addingTimeInterval(-50 * 3600 + 4))),
+                         "seconds": .number(4), "network": .string("wifi")]),
+            ]),
+        ]),
     ]
 
     /// What the Mac does for an action, on the status it reports.

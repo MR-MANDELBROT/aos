@@ -387,6 +387,26 @@
         }
       }
     },
+    "%lld apps are being installed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Apps werden installiert"
+          }
+        }
+      }
+    },
+    "%lld apps wait" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Apps warten"
+          }
+        }
+      }
+    },
     "%lld are reachable in the Claude app" : {
       "localizations" : {
         "de" : {
@@ -443,6 +463,16 @@
         }
       }
     },
+    "%lld s" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld s"
+          }
+        }
+      }
+    },
     "%lld:%@ left" : {
       "localizations" : {
         "de" : {
@@ -475,6 +505,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "+1 Monitor"
+          }
+        }
+      }
+    },
+    "1 app is being installed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 App wird installiert"
+          }
+        }
+      }
+    },
+    "1 app waits" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 App wartet"
           }
         }
       }
@@ -1067,6 +1117,16 @@
         }
       }
     },
+    "aOS on the Mac connects as soon as this iPhone is on any Wi-Fi." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf dem Mac verbindet sich, sobald dieses iPhone in einem WLAN ist."
+          }
+        }
+      }
+    },
     "aOS on the Mac didn't answer in time." : {
       "localizations" : {
         "de" : {
@@ -1083,6 +1143,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS auf dem Mac antwortet nicht."
+          }
+        }
+      }
+    },
+    "aOS on the Mac doesn't keep the connection right now. Look in aOS on the Mac (Settings > Apps)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS auf dem Mac hält die Verbindung gerade nicht. Sieh in aOS auf dem Mac nach (Einstellungen > Apps)."
           }
         }
       }
@@ -1820,6 +1890,16 @@
         }
       }
     },
+    "Cellular" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mobilfunk"
+          }
+        }
+      }
+    },
     "Change login" : {
       "localizations" : {
         "de" : {
@@ -2163,6 +2243,16 @@
         }
       }
     },
+    "Connect this iPhone to the Mac with a cable once, then pair it in aOS on the Mac (Settings > Apps)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde dieses iPhone einmal per Kabel mit dem Mac und kopple es dann in aOS auf dem Mac (Einstellungen > Apps)."
+          }
+        }
+      }
+    },
     "Connect to this Mac" : {
       "localizations" : {
         "de" : {
@@ -2204,12 +2294,42 @@
         }
       }
     },
+    "Connected since" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden seit"
+          }
+        }
+      }
+    },
     "Connected via %@" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbunden über %@"
+          }
+        }
+      }
+    },
+    "Connected, on cellular" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden, im Mobilfunk"
+          }
+        }
+      }
+    },
+    "Connected, on Wi-Fi" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden, im WLAN"
           }
         }
       }
@@ -3889,6 +4009,36 @@
         }
       }
     },
+    "Installed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installiert"
+          }
+        }
+      }
+    },
+    "Installing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird installiert"
+          }
+        }
+      }
+    },
+    "Installs" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installationen"
+          }
+        }
+      }
+    },
     "iPad Style" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3896,6 +4046,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iPad-Stil"
+          }
+        }
+      }
+    },
+    "iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone"
           }
         }
       }
@@ -4754,6 +4914,16 @@
         }
       }
     },
+    "Network" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerk"
+          }
+        }
+      }
+    },
     "Never used Remote Control" : {
       "localizations" : {
         "de" : {
@@ -5291,6 +5461,16 @@
         }
       }
     },
+    "Not paired" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht gekoppelt"
+          }
+        }
+      }
+    },
     "Not pinned" : {
       "localizations" : {
         "de" : {
@@ -5403,6 +5583,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "nothing answered at %1$@, port %2$lld"
+          }
+        }
+      }
+    },
+    "Nothing installed yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nichts installiert."
           }
         }
       }
@@ -5526,6 +5716,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Im Akkubetrieb wach bis"
+          }
+        }
+      }
+    },
+    "on cellular" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "im Mobilfunk"
           }
         }
       }
@@ -6361,6 +6561,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Drückgeste"
+          }
+        }
+      }
+    },
+    "Previous connection held" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Verbindung hielt"
           }
         }
       }
@@ -7904,6 +8114,16 @@
         }
       }
     },
+    "State unknown" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zustand unbekannt"
+          }
+        }
+      }
+    },
     "Stay awake" : {
       "localizations" : {
         "de" : {
@@ -7991,6 +8211,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "App wechseln"
+          }
+        }
+      }
+    },
+    "Switch on “Install apps on my iPhone” in aOS on the Mac (Settings > Apps)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte in aOS auf dem Mac „Apps auf meinem iPhone installieren“ ein (Einstellungen > Apps)."
           }
         }
       }
@@ -8352,6 +8582,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Verbindung"
+          }
+        }
+      }
+    },
+    "The connection holds on cellular too, until the iPhone restarts." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Verbindung hält auch im Mobilfunk, bis das iPhone neu startet."
           }
         }
       }
@@ -10110,6 +10350,16 @@
         }
       }
     },
+    "Waiting for Wi-Fi" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet auf WLAN"
+          }
+        }
+      }
+    },
     "Waiting for you" : {
       "localizations" : {
         "de" : {
@@ -10253,6 +10503,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Während du zusiehst, nimmt der Bildschirm des Arbeitsplatzes die Form deines iPhones an, hochkant oder quer. Wenn du aufhörst, bekommt er seine eigene Größe zurück. Retina zeichnet doppelt so viele Pixel: schärfer, mehr Daten."
+          }
+        }
+      }
+    },
+    "Wi-Fi" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WLAN"
           }
         }
       }
@@ -10417,6 +10677,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Agent sieht nie ein Passwort. aOS trägt es für dich im Arbeitsplatz ein."
+          }
+        }
+      }
+    },
+    "Your agents put apps on this iPhone through aOS. When there is no connection, installs wait until the iPhone is on any Wi-Fi." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Agents bringen Apps über aOS auf dieses iPhone. Steht keine Verbindung, warten die Installationen, bis das iPhone in einem WLAN ist."
           }
         }
       }

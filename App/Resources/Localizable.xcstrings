@@ -165,6 +165,16 @@
         }
       }
     },
+    "%@ downloads Python and pymobiledevice3 (about 80 MB) into its own folder. Nothing else on your Mac changes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ lädt Python und pymobiledevice3 (etwa 80 MB) in seinen eigenen Ordner. Sonst ändert sich nichts auf deinem Mac."
+          }
+        }
+      }
+    },
     "%@ gives your coding agent its own Mac: a virtual Mac with its own screen and browser, separate from yours. Your agent uses it for tasks that need a website or an app; you approve every time it opens." : {
       "localizations" : {
         "de" : {
@@ -201,6 +211,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ ist noch nicht auf deinem iPhone?"
+          }
+        }
+      }
+    },
+    "%@ keeps a connection to your iPhone. It comes up whenever the iPhone is on any Wi-Fi, and then also holds on cellular, until the iPhone restarts. Your iPhone and this Mac need Tailscale, and Developer Mode must be on on the iPhone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ hält eine Verbindung zu deinem iPhone. Sie entsteht, sobald das iPhone in irgendeinem WLAN ist, und hält danach auch im Mobilfunk, bis das iPhone neu startet. Dein iPhone und dieser Mac brauchen Tailscale, und auf dem iPhone muss der Entwicklermodus an sein."
           }
         }
       }
@@ -281,6 +301,16 @@
         }
       }
     },
+    "%@ signs every app with your development certificate and a profile that covers it and your iPhone, like Xcode does for a device build. A wildcard profile of your team covers every app." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ signiert jede App mit deinem Entwicklerzertifikat und einem Profil, das die App und dein iPhone abdeckt, so wie Xcode bei einem Build für ein Gerät. Ein Wildcard-Profil deines Teams deckt jede App ab."
+          }
+        }
+      }
+    },
     "%@ starts with your Mac and shows what the workspace is doing." : {
       "localizations" : {
         "de" : {
@@ -327,6 +357,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ möchte sich anmelden"
+          }
+        }
+      }
+    },
+    "%@, profile %@ (%@), valid until %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Profil %2$@ (%3$@), gültig bis %4$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, profile %2$@ (%3$@), valid until %4$@"
           }
         }
       }
@@ -459,6 +505,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld Minuten"
+          }
+        }
+      }
+    },
+    "%lld s" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld s"
           }
         }
       }
@@ -681,6 +737,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adresse"
+          }
+        }
+      }
+    },
+    "Advanced" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweitert"
           }
         }
       }
@@ -973,6 +1039,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldungen mit Face ID freigeben, Terminal und Bildschirm deines Macs, auch unterwegs."
+          }
+        }
+      }
+    },
+    "Apps" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps"
+          }
+        }
+      }
+    },
+    "Apps on your iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps auf deinem iPhone"
           }
         }
       }
@@ -1567,6 +1653,16 @@
         }
       }
     },
+    "Choose an iPhone app built for a device (.app) or an .ipa." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle eine für ein Gerät gebaute iPhone-App (.app) oder eine .ipa."
+          }
+        }
+      }
+    },
     "Choose your agent" : {
       "localizations" : {
         "de" : {
@@ -1863,12 +1959,32 @@
         }
       }
     },
+    "Connect the iPhone with a cable, unlock it and tap Trust." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde das iPhone per Kabel, entsperre es und tippe auf „Vertrauen“."
+          }
+        }
+      }
+    },
     "Connect your agent" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Agent verbinden"
+          }
+        }
+      }
+    },
+    "Connect your iPhone to this Mac with a cable once, unlock it and tap Trust if it asks." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde dein iPhone einmal per Kabel mit diesem Mac, entsperre es und tippe auf „Vertrauen“, falls es fragt."
           }
         }
       }
@@ -1893,6 +2009,36 @@
         }
       }
     },
+    "Connected since" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden seit"
+          }
+        }
+      }
+    },
+    "Connected to %@, on cellular" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden mit %@, im Mobilfunk"
+          }
+        }
+      }
+    },
+    "Connected to %@, on Wi-Fi" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden mit %@, im WLAN"
+          }
+        }
+      }
+    },
     "Connected: %@ (%@)" : {
       "localizations" : {
         "de" : {
@@ -1905,6 +2051,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Connected: %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "Connecting to %@ …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinde mit %@ …"
           }
         }
       }
@@ -2025,6 +2181,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arbeitsplatz anlegen"
+          }
+        }
+      }
+    },
+    "Creating the environment …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umgebung wird angelegt …"
           }
         }
       }
@@ -2246,6 +2412,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lade macOS 27.2.0"
+          }
+        }
+      }
+    },
+    "Downloading uv …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "uv wird geladen …"
           }
         }
       }
@@ -2635,6 +2811,16 @@
         }
       }
     },
+    "Found through Tailscale" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über Tailscale gefunden"
+          }
+        }
+      }
+    },
     "Fresh every time" : {
       "localizations" : {
         "de" : {
@@ -2725,6 +2911,26 @@
         }
       }
     },
+    "Heartbeat" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herzschlag"
+          }
+        }
+      }
+    },
+    "held %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hielt %@"
+          }
+        }
+      }
+    },
     "High" : {
       "localizations" : {
         "de" : {
@@ -2751,6 +2957,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "So funktioniert es"
+          }
+        }
+      }
+    },
+    "How often %@ checks that the connection still holds. Rarely is enough; it costs the iPhone next to no battery." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie oft %@ prüft, ob die Verbindung noch hält. Selten genügt, es kostet das iPhone kaum Akku."
           }
         }
       }
@@ -2904,6 +3120,36 @@
         }
       }
     },
+    "Install an App …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App installieren …"
+          }
+        }
+      }
+    },
+    "Install apps on my iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps auf meinem iPhone installieren"
+          }
+        }
+      }
+    },
+    "Installed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installiert"
+          }
+        }
+      }
+    },
     "installing macOS" : {
       "localizations" : {
         "de" : {
@@ -2934,12 +3180,52 @@
         }
       }
     },
+    "Installing on the iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf dem iPhone installieren"
+          }
+        }
+      }
+    },
+    "Installing pymobiledevice3 …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pymobiledevice3 wird installiert …"
+          }
+        }
+      }
+    },
+    "Installing Python …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Python wird installiert …"
+          }
+        }
+      }
+    },
     "iPhone" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "iPhone"
+          }
+        }
+      }
+    },
+    "iPhone address" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse des iPhones"
           }
         }
       }
@@ -3336,6 +3622,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS fragt dich einmal: Schalte %@ unter „Anmeldeobjekte & Erweiterungen“ bei „Im Hintergrund erlauben“ ein."
+          }
+        }
+      }
+    },
+    "macOS asks you to allow the background item of %@: System Settings > General > Login Items." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS bittet dich, das Hintergrundobjekt von %@ zu erlauben: Systemeinstellungen > Allgemein > Anmeldeobjekte."
           }
         }
       }
@@ -3788,6 +4084,16 @@
         }
       }
     },
+    "No wildcard development profile covers this iPhone. Apps install only if Xcode has a profile for their exact bundle id. In Xcode, build any app of your team for this iPhone once to get one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Wildcard-Entwicklerprofil deckt dieses iPhone ab. Apps lassen sich nur installieren, wenn Xcode ein Profil für genau ihre Bundle-ID hat. Baue in Xcode einmal irgendeine App deines Teams für dieses iPhone, dann gibt es eins."
+          }
+        }
+      }
+    },
     "None of your files, passwords or sign-ins are inside." : {
       "localizations" : {
         "de" : {
@@ -3960,6 +4266,16 @@
         }
       }
     },
+    "Nothing installed yet. Your agents use the tool iphone_install, or install an app here." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch nichts installiert. Deine Agenten nutzen das Werkzeug iphone_install, oder du installierst hier eine App."
+          }
+        }
+      }
+    },
     "Nothing to keep reachable right now: the Mac sleeps as usual." : {
       "localizations" : {
         "de" : {
@@ -4086,6 +4402,16 @@
         }
       }
     },
+    "on cellular" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "im Mobilfunk"
+          }
+        }
+      }
+    },
     "On the go" : {
       "localizations" : {
         "de" : {
@@ -4174,6 +4500,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einmalige Nachrichten, die andere Programme für die Sitzung hinterlassen: Eine Erinnerung kommt zu ihrer Uhrzeit (etwa eine Push-Erinnerung um 8:05), ein Hinweis, sobald die Sitzung frei ist (etwa die Warnung eines Watchdogs). Ein Programm legt dafür eine JSON-Datei mit „text“ (dazu „at“ für eine Uhrzeit und „source“ für den Absender) in %@ ab. Erinnerungen, die mehr als 30 Minuten zu spät kämen, verfallen."
+          }
+        }
+      }
+    },
+    "One-time setup" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einmal einrichten"
           }
         }
       }
@@ -4291,7 +4627,6 @@
       }
     },
     "Open Login Items" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4491,6 +4826,16 @@
         }
       }
     },
+    "Pairing …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird gekoppelt …"
+          }
+        }
+      }
+    },
     "Pairing didn't work" : {
       "localizations" : {
         "de" : {
@@ -4608,6 +4953,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wird vorbereitet …"
+          }
+        }
+      }
+    },
+    "Previous connection" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Verbindung"
           }
         }
       }
@@ -5115,7 +5470,6 @@
       }
     },
     "Set Up" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5484,6 +5838,16 @@
         }
       }
     },
+    "Signing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signieren"
+          }
+        }
+      }
+    },
     "Signing in" : {
       "localizations" : {
         "de" : {
@@ -5510,6 +5874,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldung bei Bitwarden"
+          }
+        }
+      }
+    },
+    "Signing is checked once an iPhone is paired." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Signieren wird geprüft, sobald ein iPhone gekoppelt ist."
           }
         }
       }
@@ -6519,6 +6893,16 @@
         }
       }
     },
+    "This Mac isn't paired with an iPhone yet." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Mac ist noch mit keinem iPhone gekoppelt."
+          }
+        }
+      }
+    },
     "This Mac leaves your tailnet. Your iPhone then reaches it only on the same network, until you set Tailscale up again." : {
       "localizations" : {
         "de" : {
@@ -6739,6 +7123,16 @@
         }
       }
     },
+    "Waiting for %@ to be on Wi-Fi" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet, bis %@ im WLAN ist"
+          }
+        }
+      }
+    },
     "Waiting for the internet connection." : {
       "localizations" : {
         "de" : {
@@ -6805,6 +7199,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wartet bis %@"
+          }
+        }
+      }
+    },
+    "waits for the connection" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wartet auf die Verbindung"
           }
         }
       }
@@ -7242,6 +7646,16 @@
         }
       }
     },
+    "Your agents build iPhone apps, and %@ puts them on your iPhone within seconds: at home and on the go, without a cable." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Agenten bauen iPhone-Apps, und %@ bringt sie in Sekunden auf dein iPhone: zu Hause und unterwegs, ohne Kabel."
+          }
+        }
+      }
+    },
     "Your browser opens Tailscale's sign-in page. %@ never sees your Tailscale account." : {
       "localizations" : {
         "de" : {
@@ -7279,6 +7693,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Benutzerordner"
+          }
+        }
+      }
+    },
+    "your iPhone" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dein iPhone"
           }
         }
       }

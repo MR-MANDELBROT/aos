@@ -18,6 +18,7 @@ let package = Package(
         .executable(name: "aosctl", targets: ["aosctl"]),
         .executable(name: "aos-mcp", targets: ["aos-mcp"]),
         .executable(name: "aos-session", targets: ["aos-session"]),
+        .executable(name: "aos-devices", targets: ["aos-devices"]),
         .executable(name: "aos-companion", targets: ["aos-companion"]),
         .executable(name: "aos-powerd", targets: ["aos-powerd"]),
         .executable(name: "aos-guest-helper", targets: ["aos-guest-helper"]),
@@ -42,6 +43,7 @@ let package = Package(
         .executableTarget(name: "aosctl", dependencies: ["AOSKit"], path: "Sources/aosctl"),
         .executableTarget(name: "aos-mcp", dependencies: ["AOSKit"], path: "Sources/aos-mcp"),
         .executableTarget(name: "aos-session", dependencies: ["AOSKit"], path: "Sources/aos-session"),
+        .executableTarget(name: "aos-devices", dependencies: ["AOSKit"], path: "Sources/aos-devices"),
         .executableTarget(name: "aos-companion", dependencies: ["AOSKit"], path: "Sources/aos-companion"),
         // The privileged helper (root LaunchDaemon from the app bundle): sleep with the lid closed and Wi-Fi settings.
         .executableTarget(name: "aos-powerd", dependencies: ["AOSKit"], path: "Sources/aos-powerd"),

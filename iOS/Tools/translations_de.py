@@ -956,3 +956,41 @@ DE.update({
     "Start keeps a chat reachable in the Claude app, also when you haven't used it for a while. Stop ends it on the Mac until you start it again.":
         '„Starten“ hält einen Chat in der Claude-App erreichbar, auch wenn du ihn länger nicht benutzt hast. „Stoppen“ beendet ihn auf dem Mac, bis du ihn wieder startest.',
 })
+
+# Apps on this iPhone (2026-11-11): the Overview's Apps row and the Apps page
+DE.update({
+    'Apps': 'Apps',
+    'Connected, on Wi-Fi': 'Verbunden, im WLAN',
+    'Connected, on cellular': 'Verbunden, im Mobilfunk',
+    'Waiting for Wi-Fi': 'Wartet auf WLAN',
+    'Not paired': 'Nicht gekoppelt',
+    'State unknown': 'Zustand unbekannt',
+    '1 app waits': '1 App wartet',
+    '%lld apps wait': '%lld Apps warten',
+    '1 app is being installed': '1 App wird installiert',
+    '%lld apps are being installed': '%lld Apps werden installiert',
+    'The connection holds on cellular too, until the iPhone restarts.':
+        'Die Verbindung hält auch im Mobilfunk, bis das iPhone neu startet.',
+    'aOS on the Mac connects as soon as this iPhone is on any Wi-Fi.':
+        'aOS auf dem Mac verbindet sich, sobald dieses iPhone in einem WLAN ist.',
+    'Connect this iPhone to the Mac with a cable once, then pair it in aOS on the Mac (Settings > Apps).':
+        'Verbinde dieses iPhone einmal per Kabel mit dem Mac und kopple es dann in aOS auf dem Mac (Einstellungen > Apps).',
+    "aOS on the Mac doesn't keep the connection right now. Look in aOS on the Mac (Settings > Apps).":
+        'aOS auf dem Mac hält die Verbindung gerade nicht. Sieh in aOS auf dem Mac nach (Einstellungen > Apps).',
+    'iPhone': 'iPhone',
+    'Connected since': 'Verbunden seit',
+    'Network': 'Netzwerk',
+    'Wi-Fi': 'WLAN',
+    'Cellular': 'Mobilfunk',
+    'Previous connection held': 'Letzte Verbindung hielt',
+    'Installs': 'Installationen',
+    'Nothing installed yet.': 'Noch nichts installiert.',
+    'Your agents put apps on this iPhone through aOS. When there is no connection, installs wait until the iPhone is on any Wi-Fi.':
+        'Deine Agents bringen Apps über aOS auf dieses iPhone. Steht keine Verbindung, warten die Installationen, bis das iPhone in einem WLAN ist.',
+    'Switch on “Install apps on my iPhone” in aOS on the Mac (Settings > Apps).':
+        'Schalte in aOS auf dem Mac „Apps auf meinem iPhone installieren“ ein (Einstellungen > Apps).',
+    'Installed': 'Installiert',
+    'Installing': 'Wird installiert',
+    '%lld s': '%lld s',
+    'on cellular': 'im Mobilfunk',
+})
