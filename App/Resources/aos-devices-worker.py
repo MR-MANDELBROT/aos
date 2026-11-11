@@ -220,8 +220,10 @@ class Worker:
         if not tool:
             return []
         try:
+            # TAILSCALE_BE_CLI: without a terminal's environment the app's binary takes itself for an app launch.
             out = subprocess.run([tool, "status", "--json"], capture_output=True, timeout=8,
-                                 env={"PATH": "/usr/bin:/bin", "HOME": os.environ.get("HOME", "")}).stdout
+                                 env={"PATH": "/usr/bin:/bin", "HOME": os.environ.get("HOME", ""),
+                                      "TAILSCALE_BE_CLI": "1"}).stdout
             start = out.find(b"{")
             status = json.loads(out[start:]) if start >= 0 else {}
         except (OSError, subprocess.TimeoutExpired, ValueError):

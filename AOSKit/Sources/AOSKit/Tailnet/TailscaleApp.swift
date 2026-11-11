@@ -29,9 +29,10 @@ public enum TailscaleApp {
         }
     }
 
-    /// A small environment: the tool needs nothing of aOS's.
+    /// A small environment: the tool needs nothing of aOS's. TAILSCALE_BE_CLI: without a terminal's environment the
+    /// app's binary takes itself for an app launch ("The Tailscale GUI failed to start", Tailscale 1.102).
     static var environment: [String: String] {
-        var env = ["PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "LANG": "en_US.UTF-8"]
+        var env = ["PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "LANG": "en_US.UTF-8", "TAILSCALE_BE_CLI": "1"]
         if let home = ProcessInfo.processInfo.environment["HOME"] { env["HOME"] = home }
         return env
     }
