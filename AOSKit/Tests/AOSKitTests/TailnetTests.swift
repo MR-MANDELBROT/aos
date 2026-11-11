@@ -189,6 +189,12 @@ final class TailnetStatusTests: XCTestCase {
 
     // MARK: Addresses
 
+    func testTheTailscaleToolRunsAsCLI() {
+        // Without it the app's binary takes the call for an app launch and prints no status (Tailscale 1.102).
+        XCTAssertEqual(TailscaleApp.environment["TAILSCALE_BE_CLI"], "1")
+        XCTAssertNil(TailscaleApp.environment["SSH_AUTH_SOCK"], "nothing of aOS's environment")
+    }
+
     func testTailscalesAddressRanges() {
         for yes in ["100.64.0.0", "100.101.102.103", "100.127.255.255"] { XCTAssertTrue(TailnetAddress.isTailnetIPv4(yes), yes) }
         for no in ["100.63.255.255", "100.128.0.0", "10.0.0.1", "192.168.1.20", "fd7a:115c:a1e0::1", "mac.local", ""] {
