@@ -24,6 +24,7 @@ SHOTS=(
   "approval|-AOSDemoTab overview -AOSDemoSheet approval"
   "pairing|-AOSDemoTab overview -AOSDemoSheet pairing"
   "settings|-AOSDemoTab overview -AOSDemoSheet settings"
+  "apps|-AOSDemoTab overview -AOSDemoSheet apps"
   "lock|-AOSDemoTab overview -AOSDemoSheet lock"
   "terminal-list|-AOSDemoTab terminal"
   "terminal|-AOSDemoTab terminal -AOSDemoSheet shell"

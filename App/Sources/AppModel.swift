@@ -43,6 +43,11 @@ final class AppModel: ObservableObject {
     @Published var liveConversations: Set<String> = []
     /// What the session's routines do next and what was sent (run/routines.json, written by aos-session).
     @Published var routines: RoutinesStatus?
+    /// Installing apps on the iPhone: what the device worker reports, its LaunchAgent, the environment's setup.
+    @Published var devices: DeviceStatus?
+    @Published var devicesAgentStatus: SMAppService.Status = .notRegistered
+    @Published var deviceSetup: DeviceSetupState = .idle
+    @Published var deviceRuntimeReady = false
     @Published var remote: RemoteServerStatus?
     /// Recent Claude Code conversations, for the settings (filled while the settings show them).
     @Published var conversations: [ClaudeConversation] = []
@@ -360,6 +365,7 @@ final class AppModel: ObservableObject {
             keeper = k
         }
         changed(\.remote, RemoteServerStatus.read(paths))
+        refreshDevices(loginItems: loginItems)
         let r = RoutinesStatus.read(paths)
         if r?.next != routines?.next || r?.reminders != routines?.reminders || r?.queued != routines?.queued
             || r?.recent != routines?.recent { routines = r }
@@ -401,7 +407,9 @@ final class AppModel: ObservableObject {
         let kept = settings.keepReachable
             && (keeper?.entries.contains { $0.state != .failed && $0.state != .folderMissing } ?? false)
         let background = sessionAgentStatus == .enabled && (ownSession || kept)
-        return background || vmPhase == .running || status?.leaseUntil != nil
+        // A held tunnel to the iPhone ends when the Mac sleeps, and only comes back once the iPhone is on Wi-Fi.
+        let tunnel = settings.iphoneApps && devices?.isConnected == true
+        return background || tunnel || vmPhase == .running || status?.leaseUntil != nil
     }
 
     // MARK: Settings
@@ -415,6 +423,7 @@ final class AppModel: ObservableObject {
             settings = s
             if sessionChanged { SessionAgent.restart(paths: paths) }
             updateSessionAgent()
+            updateDevicesAgent()
             // Both need the background helper; macOS asks the user once to allow it.
             // The helper needs the person's yes in Login Items: the window shows the guided way (HelperApproval).
             _ = lidClosedChosen

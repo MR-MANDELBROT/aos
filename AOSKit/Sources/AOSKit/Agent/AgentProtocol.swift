@@ -23,6 +23,8 @@ public struct AgentRequest: Codable, Sendable {
     public var name: String?
     public var keep: Bool?
     public var region: [Double]?
+    /// iphone_install: wait for the result (default) or return once queued.
+    public var wait: Bool?
     /// How opening was approved: "agent" (the agent asked), "elicited" (the user said yes through the agent),
     /// "mac" (aOS must ask on the Mac).
     public var approval: String?

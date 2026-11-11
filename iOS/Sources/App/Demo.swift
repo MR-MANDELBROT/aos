@@ -8,10 +8,10 @@ import UniformTypeIdentifiers
 
 /// Sample data for screenshots and UI work: start the app with `-AOSDemo YES` (debug builds only).
 /// `-AOSDemoTab overview|terminal|screen` picks the tab, `-AOSDemoSheet signin|signin-code|signin-none|signin-locked|
-/// signin-off|approval|help|pairing|settings|lock|requests|chats|chat` opens a request, sheet or page (`chats`: the Chats
-/// page, `chat`: a chat's page on it; `-AOSDemoChats off|old|older` below). Nothing here touches the keychain or the
-/// network; the Screen tab's pictures come from a screen sharing server in the app (`DemoScreenServer`), shown with the
-/// real screen client.
+/// signin-off|approval|help|pairing|settings|lock|requests|chats|chat|apps` opens a request, sheet or page (`chats`: the
+/// Chats page, `chat`: a chat's page on it, `apps`: the Apps page; `-AOSDemoChats off|old|older` below). Nothing here
+/// touches the keychain or the network; the Screen tab's pictures come from a screen sharing server in the app
+/// (`DemoScreenServer`), shown with the real screen client.
 enum Demo {
     static var isRequested: Bool { UserDefaults.standard.bool(forKey: "AOSDemo") }
     static var tab: String? { UserDefaults.standard.string(forKey: "AOSDemoTab") }

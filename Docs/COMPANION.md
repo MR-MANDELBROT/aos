@@ -262,6 +262,10 @@ with `error` (English) and `code`, which the phone says in its own words.
   - `newChats`: `{"enabled":true,"state":"off|waitingForNetwork|starting|running|needsLogin|needsTrust|missingClaude|restarting"}`
   - `kept`: `{"enabled":true,"running":2}` (kept conversations)
   - `bitwarden`: `{"state":"unlocked|locked|signedOut|needsHelper|unknown","until":"<ISO, if it locks by itself>"}`
+  - `apps` (only while Settings > Apps is on): `{"state":"connected|searching|connecting|notPaired|starting|stopped","since":"<ISO>","network":"wifi|cellular","device":"iPhone von Max","previousSeconds":4210,"jobs":[{"id","name","bundleId","state":"queued|installing|done|failed","created","version"?,"source"?,"finished"?,"seconds"?,"network"?,"message"?}]}`
+    (the tunnel aOS holds to the iPhone for installing apps, see Docs/DESIGN.md; `since` and `network` while
+    connected, `previousSeconds`: how long the previous tunnel held, `jobs`: the latest 10, newest first, `message`
+    only for a failed one; `stopped`: the device worker doesn't run)
 - `mac.sleep` -> `{"ok":true,"sleeping":true,"after":1.5,"status":...}`: the Mac sleeps 1.5 s later (the answer goes
   out first). With aOS's lid-closed hold the helper first sets `pmset disablesleep` back, and aOS holds nothing until
   a screen comes on again (a dark wake doesn't keep the Mac up). Refused when sleep stays off: `sleep-disabled`

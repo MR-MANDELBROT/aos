@@ -267,6 +267,18 @@ and Delete ask first, Start doesn't. The list every 15 s while the page is on sc
 Demo: `-AOSDemoSheet chats|chat`, `-AOSDemoChats off|old|older`; the mock's keeper runs a started chat 2 s later. All rows share one 30 pt icon column (`OverviewRow`); `FactRow` centers its symbol in the same column on
 the first line's baseline (the eye was wider than the others and pushed its text out of line).
 
+**Apps** (`Overview/AppsPage.swift`, `MacStatus.Apps`). aOS on the Mac puts iPhone apps its agents build on this
+iPhone through a CoreDevice tunnel (Mac: Settings > Apps, AOSKit `CompanionControl.apps`). `mac.status` carries `apps`
+only while that is on: `state` (`connected`, `searching`, `connecting`, `starting`, `notPaired`, `stopped`, `unknown`;
+others are kept as they come), `since` and `network` (`wifi`, `cellular`) while connected, `device`, `previousSeconds`
+(how long the previous tunnel held) and `jobs`, newest first, at most 10 (`id`, `name`, `bundleId`, `state` `queued`,
+`installing`, `done`, `failed`, `created`, optional `version`, `source`, `finished`, `seconds`, `network`, `message`
+for failed ones; one without an id is left out). The aOS card's row "Apps" says the connection ("Connected, on
+Wi-Fi", "Waiting for Wi-Fi", "Not paired" in orange, "Off") and on a second line the installs not done yet; it pushes
+the Apps page: the connection (iPhone, connected since, network, how long the previous one held), the installs (state
+symbol, name and version, when, state and who asked, bundle id, seconds, "on cellular", the failure message). Read
+only; the status every 5 s while an install waits or runs, else every 15 s. Demo: `-AOSDemoSheet apps`.
+
 Note for the screen tab: a workspace started from the phone reports `running` (no agent lease), not `open`.
 
 **Starting and closing the workspace** (Max, 2026-11-09: after Close the progress went away at once, the card looked

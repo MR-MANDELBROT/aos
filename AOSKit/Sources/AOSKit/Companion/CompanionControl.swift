@@ -270,6 +270,33 @@ public enum CompanionControl {
     }
 }
 
+extension CompanionControl {
+    /// Installing apps on the iPhone, as the phone shows it (nil while the feature is off): the tunnel's state, since
+    /// when it holds and on which network, and the latest installs.
+    static func apps(settings: AgentSettings, status: DeviceStatus?, iso: ISO8601DateFormatter,
+                     alive: (Int32) -> Bool = { kill($0, 0) == 0 }) -> [String: Any]? {
+        guard settings.iphoneApps else { return nil }
+        guard let status, status.isFresh(alive: alive) else { return ["state": "stopped", "jobs": [Any]()] }
+        var apps: [String: Any] = ["state": status.state.rawValue]
+        if let since = status.since, status.isConnected { apps["since"] = iso.string(from: since) }
+        if let network = status.network, status.isConnected { apps["network"] = network }
+        if let name = status.device?.name { apps["device"] = name }
+        if let last = status.history.last { apps["previousSeconds"] = last.seconds }
+        apps["jobs"] = status.jobs.prefix(10).map { job -> [String: Any] in
+            var o: [String: Any] = ["id": job.id, "name": job.name, "bundleId": job.bundleId, "state": job.state.rawValue,
+                                    "created": iso.string(from: job.created)]
+            if let v = job.version { o["version"] = v }
+            if let v = job.source { o["source"] = v }
+            if let v = job.finished { o["finished"] = iso.string(from: v) }
+            if let v = job.seconds { o["seconds"] = v }
+            if let v = job.network { o["network"] = v }
+            if let v = job.message, job.state == .failed { o["message"] = v }
+            return o
+        }
+        return apps
+    }
+}
+
 extension WorkspaceController {
     /// The Mac and aOS as the phone shows them.
     func macStatus() -> [String: Any] {
@@ -326,6 +353,9 @@ extension WorkspaceController {
             routines["recent"] = rs.recent.prefix(5).map { ["kind": $0.kind.rawValue, "name": $0.name, "at": iso.string(from: $0.at)] }
         }
         result["routines"] = routines
+        if let apps = CompanionControl.apps(settings: settings, status: DeviceStatus.load(paths), iso: iso) {
+            result["apps"] = apps
+        }
         var vault: [String: Any] = ["state": CompanionControl.bitwardenState(bitwarden.phase)]
         if bitwarden.phase == .unlocked, let until = bitwarden.lockedAt, until != .distantFuture {
             vault["until"] = iso.string(from: until)

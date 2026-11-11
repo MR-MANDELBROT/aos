@@ -37,6 +37,31 @@ func runCommand() async {
         try paths.prepare()
         let bundle = VMBundle(url: paths.vm)
         switch args.first {
+        case "devices":
+            // aosctl devices setup RESOURCES | sign APP | install APP | status
+            let resources = URL(fileURLWithPath: args.count > 2 ? args[2] : "App/Resources")
+            switch args.dropFirst().first {
+            case "setup":
+                try await DeviceRuntime.setUp(paths, requirements: DeviceRuntime.requirements(in: resources)) { step in
+                    print("step: \(step)")
+                }
+                print("ready:", DeviceRuntime.isReady(paths, requirements: DeviceRuntime.requirements(in: resources)))
+            case "sign":
+                guard args.count > 2 else { fail("aosctl devices sign APP") }
+                let installer = DeviceInstaller(paths: paths)
+                guard let udid = installer.deviceUDID() else { fail("no paired iPhone") }
+                let app = URL(fileURLWithPath: args[2])
+                let signer = await IOSAppSigner.current()
+                print(try await signer.sign(app: app, udid: udid, workFolder: FileManager.default.temporaryDirectory
+                    .appendingPathComponent("aos-sign-\(UUID().uuidString)")))
+            case "install":
+                guard args.count > 2 else { fail("aosctl devices install APP") }
+                let result = await DeviceInstaller(paths: paths).installForAgent(path: args[2], source: "aosctl")
+                print(result.text)
+            default:
+                print(DeviceInstaller(paths: paths).statusText())
+            }
+            exit(0)
         case "latest":
             let info = try await RestoreImage.latestSupported()
             print("macOS \(info.osVersion) (\(info.buildVersion))\n\(info.url.absoluteString)")

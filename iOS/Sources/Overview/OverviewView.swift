@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// The pages the Overview pushes by value: the chats and a chat's page (the routines are pushed by their link).
+/// The pages the Overview pushes by value: the chats, a chat's page and the apps on this iPhone (the routines are
+/// pushed by their link).
 enum OverviewPage: Hashable {
     case chats
     case chat(String)
+    case apps
 }
 
 struct OverviewView: View {
@@ -13,8 +15,8 @@ struct OverviewView: View {
     @State private var path: [OverviewPage] = []
     /// The chats' actions, shared by the Chats page and a chat's page.
     @State private var chatActions = ActionState()
-    /// The demo opened the chats once (not again when coming back).
-    @State private var demoChatsOpened = false
+    /// The demo opened its page once (not again when coming back).
+    @State private var demoPageOpened = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -66,13 +68,18 @@ struct OverviewView: View {
                 switch page {
                 case .chats: ChatsPage(actions: chatActions)
                 case .chat(let id): ChatPage(id: id, actions: chatActions)
+                case .apps: AppsPage()
                 }
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .onAppear {
                 #if DEBUG
                 if model.isDemo, Demo.sheet == "settings" { showSettings = true }
-                if model.isDemo, Demo.sheet == "chats" || Demo.sheet == "chat", !demoChatsOpened { openDemoChats() }
+                if model.isDemo, Demo.sheet == "chats" || Demo.sheet == "chat", !demoPageOpened { openDemoChats() }
+                if model.isDemo, Demo.sheet == "apps", !demoPageOpened {
+                    demoPageOpened = true
+                    path = [.apps]
+                }
                 #endif
             }
         }
@@ -81,7 +88,7 @@ struct OverviewView: View {
     #if DEBUG
     /// `-AOSDemoSheet chats`: the Chats page; `chat`: the page of the chat that needs something (else the first).
     private func openDemoChats() {
-        demoChatsOpened = true
+        demoPageOpened = true
         Task {
             for _ in 0..<150 where model.connection?.chats == nil {
                 try? await Task.sleep(for: .milliseconds(100))
@@ -823,7 +830,8 @@ struct WorkspaceButtonLabel: View {
 // MARK: - aOS
 
 /// aOS on the Mac: its Claude Code session, its routines, the chats (a row that opens their page, with new chats from
-/// the Claude app; an older Mac: new chats and the count of kept conversations), Bitwarden.
+/// the Claude app; an older Mac: new chats and the count of kept conversations), the apps it puts on this iPhone (a
+/// row that opens their page, while that is on on the Mac), Bitwarden.
 struct AOSCard: View {
     @Environment(AppModel.self) private var model
     let connection: MacConnection
@@ -889,6 +897,17 @@ struct AOSCard: View {
                     OverviewRow(symbol: "bubble.left.and.bubble.right", title: String(localized: "Kept conversations"),
                                 detail: kept == 1 ? String(localized: "1 is reachable in the Claude app")
                                                   : String(localized: "\(kept) are reachable in the Claude app"))
+                }
+                // Apps agents put on this iPhone: the Mac's connection to it and the installs not done yet.
+                if let apps = connection.macStatus?.apps {
+                    NavigationLink(value: OverviewPage.apps) {
+                        OverviewRow(symbol: "apps.iphone", title: String(localized: "Apps"), detail: AppsText.overview(apps),
+                                    detailTint: apps.state == "notPaired" ? .orange : .secondary) {
+                            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
                 if let vault = connection.macStatus?.bitwarden {
                     OverviewRow(symbol: vault.state == "unlocked" ? "lock.open" : "lock", title: "Bitwarden",

@@ -51,6 +51,8 @@ Claude app (phone) ──Remote Control──▶ claude (pty) ◀── aos-sess
   (see "Staying awake, freezing and the hotspot").
 - **aos-tailnet** (Go, in Contents/MacOS) is aOS's own Tailscale node; aos-powerd runs it as the hidden user
   `_aostailnet` when the person chose "aOS sets up Tailscale" (see "Reaching the Mac on the go").
+- **aos-devices** (optional) is a LaunchAgent like aos-session, registered while Settings > Apps is on. It runs the
+  device worker (Python) that holds a tunnel to the person's iPhone (see "Installing apps on the iPhone").
 
 ## The session as a persistent agent (routines, reminders, notes)
 
@@ -406,6 +408,62 @@ the iPhone again (the code tells it the way).
   a whole test tailnet on this Mac, `Tailnet/build.sh testnet`): the app's real Tailnetkit node in the simulator
   signs in through a sign-in URL, dials the Mac node's port 22 by address and by name, logs in with the pinned host
   key, runs the companion over it, and finds the other ports closed.
+
+## Installing apps on the iPhone (Settings > Apps, since build 20)
+
+Max's idea (2026-11-10): agents build iPhone apps and aOS puts them on his iPhone at once, also when the iPhone is
+neither on the same network nor on a cable ("morphing software"). Measured on iOS 27.2 (2026-11-10 and 11):
+
+- iOS opens its RemotePairing port (TCP 49152, the door to CoreDevice, what Xcode and `devicectl` use over the
+  network) only while the iPhone is **associated with a Wi-Fi network**, any one. On cellular alone nothing answers:
+  not over Tailscale, not over a full-tunnel VPN (Tailscale exit node), not through a loopback VPN like SideStore's
+  LocalDevVPN (lockdownd 62078 refuses too), not to apps on the iPhone itself (the sandbox blocks 62078 for apps;
+  RemotePairing on 127.0.0.1 and on the hotspot address hangs up on a handshake from the iPhone itself).
+- A tunnel built while the port answers **survives the move to cellular**: over Tailscale the iPhone keeps its tailnet
+  address, so the TCP connections inside stay. Installed over such a tunnel on cellular: 3 to 7 s.
+
+So aOS **holds** the tunnel. Parts:
+
+- **Device worker** (`App/Resources/aos-devices-worker.py`, pymobiledevice3 11.50.3): finds the iPhone (the address
+  in `iphoneAddress`, else the iOS devices of the person's tailnet from `tailscale status --json`, not aOS's own
+  `aos-` nodes; the last address that worked first), tries the port every 15 s, and when it answers builds a
+  RemotePairing TCP tunnel with pymobiledevice3's userspace stack (no root, no utun: its no-root tunnel provider is
+  pointed at `create_core_device_tunnel_service_using_remotepairing(udid, address, 49152)`). Then a heartbeat
+  (`get_value DeviceName` through the tunnel, every `iphoneHeartbeat` s, default 30; three misses end it), a look at
+  the port every 30 s (answers: the iPhone is on Wi-Fi, else on cellular), and the jobs every 2 s. Its report is
+  `run/devices.json` (`DeviceStatus`: state, device, since, network, the last 10 tunnels with how long they held and
+  why they ended, the latest 30 jobs); `Devices/state.json` keeps addresses and tunnels across restarts.
+- **Jobs** (`Devices/Jobs/<id>.json`, `DeviceJob`, 0600): aOS copies the app into `Devices/Staging/<id>/` (an .ipa
+  is unpacked), signs the copy and writes the job `queued`; the worker installs it through the tunnel
+  (`InstallationProxyService.install_from_local`), sets `installing`, then `done` or `failed` (with the device's
+  error) and removes the copy. A refused app doesn't end the tunnel. Without a tunnel a job waits for the next one.
+- **Signing** (`IOSAppSigner`): the profiles in Xcode's folders (`security`'s CMS decoder in-process), the identities
+  of `security find-identity -v -p codesigning`; the profile must cover the bundle id and the iPhone and be valid, an
+  exact one before a wildcard, then the one that runs longest, with an identity whose certificate it lists.
+  Entitlements: `application-identifier` TEAM.id, the team, `get-task-allow` of the profile, `keychain-access-groups`
+  [TEAM.id] if the profile has groups; nothing the app asks for beyond that (a wildcard profile can't grant more).
+  Frameworks, dylibs and extensions first (deepest first; extensions with their own profile if one covers them),
+  then the app; `codesign --force --timestamp=none --generate-entitlement-der`. Xcode never manages signing for
+  this: that signs Max out of Xcode.
+- **Environment** (`DeviceRuntime`, `Devices/env`): uv 0.12.10 (Astral's release, SHA-256 pinned: it is only ad-hoc
+  signed) installs Python 3.13 (python-build-standalone, with OpenSSL: the tunnel's TLS-PSK needs it) and the
+  packages of `App/Resources/aos-devices-requirements.txt` with `--require-hashes`; `UV_NO_CONFIG`, cache and Pythons
+  inside `Devices/`. Set up when the person presses Set Up (about 80 MB); the SHA-256 of the requirements in
+  `env/.aos-requirements` says whether a new aOS needs it again.
+- **aos-devices** (LaunchAgent `dev.marquart.aos.devices`, KeepAlive) starts the worker with that Python and restarts
+  it (at most 5 times in 10 minutes). After an update of aOS the running worker keeps the old code while its tunnel
+  holds and moves to the new one the next time it has none: a restart would cost the tunnel, and a new one needs Wi-Fi.
+  The Mac stays awake while the tunnel is up (`reachabilityNeeded`): asleep it would lose it.
+- **Pairing**: once, over a cable: pymobiledevice3 `lockdown pair` (the iPhone's Trust dialog) and
+  `lockdown remotepairing --pair`; the record is pymobiledevice3's `~/.pymobiledevice3/remote_<udid>.plist`.
+  Developer Mode must be on.
+- **Agents**: the MCP tools `iphone_install(path, wait)` (a .app built for a device with `CODE_SIGNING_ALLOWED=NO`,
+  or an .ipa; waits up to 3 minutes, returns at once with "queued" while there is no tunnel) and `iphone_status`.
+  They don't count as workspace activity. Settings > Apps shows the connection, the installs and the signing, and
+  installs a chosen app; the iPhone shows the same under Overview > Apps (`apps` in `mac.status`).
+
+What ends a tunnel: a restart of the iPhone, Tailscale switched off on it, the Mac asleep or offline for long. It
+comes back the next time the iPhone is on any Wi-Fi. Open: how long it holds otherwise (measured from 2026-11-11).
 
 ## Signing in for the agent
 

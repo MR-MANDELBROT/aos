@@ -128,6 +128,17 @@ public final class WorkspaceController {
         if Self.isCompanion(request.op) {
             return await admitCompanion(request)
         }
+        // The iPhone's apps don't need the workspace: they must not open it or keep it open.
+        if request.op == "iphone_install" {
+            let result = await DeviceInstaller(paths: paths).installForAgent(path: request.path ?? "",
+                                                                             source: request.agent,
+                                                                             wait: request.wait ?? true)
+            onChange?()
+            return AgentResponse(id: request.id, ok: result.ok, text: result.text)
+        }
+        if request.op == "iphone_status" {
+            return AgentResponse(id: request.id, ok: true, text: DeviceInstaller(paths: paths).statusText())
+        }
         if signingIn && request.op != "status" {
             return AgentResponse.failure(request.id, "A sign-in is in progress. Wait for the result of sign_in, then continue.")
         }

@@ -12,6 +12,7 @@ struct SettingsView: View {
             Tab("Claude Code", systemImage: "iphone.radiowaves.left.and.right", value: "claude") { ReachableSettings().endsEditingOnClick() }
             Tab("Bitwarden", systemImage: "key.horizontal", value: "bitwarden") { BitwardenSettings().endsEditingOnClick() }
             Tab("iPhone", systemImage: "iphone", value: "iphone") { PhoneSettings().endsEditingOnClick() }
+            Tab("Apps", systemImage: "apps.iphone", value: "apps") { DeviceSettings().endsEditingOnClick() }
             Tab("Connection", systemImage: "point.3.connected.trianglepath.dotted", value: "connection") {
                 ConnectionSettings().endsEditingOnClick()
             }

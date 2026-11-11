@@ -44,16 +44,26 @@ public struct Paths: Sendable {
     public var bin: URL { root.appendingPathComponent("bin", isDirectory: true) }
     /// Bitwarden's own files for aOS's sign-in (BITWARDENCLI_APPDATA_DIR; the vault in it is encrypted by Bitwarden).
     public var bitwarden: URL { root.appendingPathComponent("Bitwarden", isDirectory: true) }
+    /// Installing apps on the iPhone (Docs/DESIGN.md, "Installing apps on the iPhone"): the Python environment of the
+    /// device worker, its install jobs and the apps staged for them.
+    public var devices: URL { root.appendingPathComponent("Devices", isDirectory: true) }
+    /// Install jobs (`DeviceJob`, one JSON file each); the worker updates their state.
+    public var deviceJobs: URL { devices.appendingPathComponent("Jobs", isDirectory: true) }
+    /// Signed copies of the apps the jobs install (removed once installed).
+    public var deviceStaging: URL { devices.appendingPathComponent("Staging", isDirectory: true) }
+    /// What the device worker reports (`DeviceStatus`).
+    public var deviceStatus: URL { run.appendingPathComponent("devices.json") }
 
     /// Creates the directories that must exist, with private permissions.
     public func prepare() throws {
         let fm = FileManager.default
-        for dir in [root, vm, restoreImages, run, keys, logs, exchange, fetched, session, bin, bitwarden, inbox] {
+        for dir in [root, vm, restoreImages, run, keys, logs, exchange, fetched, session, bin, bitwarden, inbox, devices,
+                    deviceJobs, deviceStaging] {
             try fm.createDirectory(at: dir, withIntermediateDirectories: true,
                                    attributes: [.posixPermissions: 0o700])
         }
         // The root and the key/run folders must stay private even if they existed before.
-        for dir in [root, keys, run, bin, bitwarden] {
+        for dir in [root, keys, run, bin, bitwarden, devices] {
             try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
         }
     }

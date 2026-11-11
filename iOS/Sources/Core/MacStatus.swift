@@ -142,6 +142,48 @@ struct MacStatus: Equatable, Sendable {
         var next: Item? { items.filter { $0.enabled && $0.next != nil }.min { $0.next! < $1.next! } }
     }
 
+    /// Installing apps on this iPhone (AOSKit `CompanionControl.apps`): the Mac's connection to the iPhone (a
+    /// CoreDevice tunnel) and the latest installs. States the phone doesn't know stay as they come.
+    struct Apps: Equatable, Sendable {
+        struct Job: Equatable, Sendable, Identifiable {
+            var id: String
+            var name: String
+            var bundleId: String
+            /// queued, installing, done, failed
+            var state: String
+            var created: Date?
+            /// "1.0 (2)"
+            var version: String?
+            /// Who asked: an agent's name, or "Mac".
+            var source: String?
+            var finished: Date?
+            var seconds: Double?
+            /// The iPhone's network while it installed: wifi, cellular
+            var network: String?
+            /// Why it failed.
+            var message: String?
+
+            /// Not installed yet: waiting for the connection, or going on now.
+            var isPending: Bool { state == "queued" || state == "installing" }
+        }
+        /// connected, searching, connecting, notPaired, starting, stopped, unknown
+        var state: String
+        /// Since when the connection holds (only while connected).
+        var since: Date?
+        /// wifi, cellular (only while connected)
+        var network: String?
+        /// The iPhone's name.
+        var device: String?
+        /// How long the previous connection held.
+        var previousSeconds: Int?
+        /// Newest first, at most 10.
+        var jobs: [Job] = []
+
+        var isConnected: Bool { state == "connected" }
+        var queued: Int { jobs.filter { $0.state == "queued" }.count }
+        var installing: Int { jobs.filter { $0.state == "installing" }.count }
+    }
+
     var power: Power?
     /// nil from an older aOS (it doesn't say).
     var display: Display?
@@ -153,6 +195,8 @@ struct MacStatus: Equatable, Sendable {
     var kept: Int?
     var bitwarden: Vault?
     var routines: Routines?
+    /// nil while installing apps on the iPhone is off on the Mac (or from an older aOS).
+    var apps: Apps?
 
     init(power: Power? = nil, display: Display? = nil, awake: Awake? = nil, workspace: Workspace? = nil,
          session: Session? = nil, newChats: NewChats? = nil, kept: Int? = nil, bitwarden: Vault? = nil) {
@@ -212,6 +256,19 @@ struct MacStatus: Equatable, Sendable {
                 return Routines.Sent(kind: i["kind"]?.string ?? "routine", name: i["name"]?.string ?? "", at: at)
             }
             routines = Routines(items: items, reminders: reminders, queued: r["queued"]?.int ?? 0, recent: recent)
+        }
+        if let a = o["apps"]?.object {
+            let jobs = (a["jobs"]?.array ?? []).compactMap { v -> Apps.Job? in
+                guard let j = v.object, let id = j["id"]?.string else { return nil }
+                let bundleId = j["bundleId"]?.string ?? ""
+                return Apps.Job(id: id, name: j["name"]?.string ?? bundleId, bundleId: bundleId,
+                                state: j["state"]?.string ?? "unknown", created: date(j["created"]),
+                                version: j["version"]?.string, source: j["source"]?.string, finished: date(j["finished"]),
+                                seconds: j["seconds"]?.number, network: j["network"]?.string, message: j["message"]?.string)
+            }
+            let previous = a["previousSeconds"]?.number.flatMap { abs($0) < 1e9 ? Int($0.rounded()) : nil }
+            apps = Apps(state: a["state"]?.string ?? "unknown", since: date(a["since"]), network: a["network"]?.string,
+                        device: a["device"]?.string, previousSeconds: previous, jobs: jobs)
         }
     }
 }
