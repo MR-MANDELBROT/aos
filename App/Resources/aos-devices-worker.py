@@ -27,12 +27,14 @@ import signal
 import subprocess
 import sys
 import time
+from contextlib import suppress
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
+from pymobiledevice3.lockdown import create_using_remote
 from pymobiledevice3.pair_records import iter_remote_paired_identifiers
-from pymobiledevice3.remote import userspace_tunnel
+from pymobiledevice3.remote import tunnel_service, userspace_tunnel
 from pymobiledevice3.remote.tunnel_service import create_core_device_tunnel_service_using_remotepairing
 from pymobiledevice3.services.installation_proxy import InstallationProxyService
 
@@ -47,6 +49,54 @@ PROBE_EVERY = 30.0  # seconds between looks at whether the iPhone is on Wi-Fi (i
 SEARCH_EVERY = 15.0  # seconds between attempts while no tunnel is up
 JOBS_KEPT = 30
 JOB_MAX_AGE = 7 * 24 * 3600
+INSTALL_ATTEMPTS = 3  # an install cut off by an outage goes back to the queue, at most this often
+
+# How long the tunnel rides out an outage (the iPhone between two networks, a dead spot) before it counts as gone.
+OUTAGE_SECONDS = 300
+KEEPALIVE_IDLE = 30  # the tunnel's own TCP connection: first probe after this much silence ...
+KEEPALIVE_INTERVAL = 15  # ... then a probe this often, until OUTAGE_SECONDS are used up
+INNER_RETRANSMITS = 12  # the connections inside the tunnel: about 5 minutes of backed-off retransmissions
+RETRY_EVERY = 10.0  # seconds between heartbeats while the iPhone doesn't answer
+GIVE_UP_AFTER = OUTAGE_SECONDS + 60  # no answer this long ends the tunnel (should pymobiledevice3 miss it)
+
+
+def tolerate_outages() -> None:
+    """Lets the tunnel survive the moments when the iPhone switches networks.
+
+    pymobiledevice3 tunes the tunnel for a cable: its TCP connection gives up after 12 s without an answer (keepalive
+    after 3 s, 3 probes 3 s apart), and each connection inside it after 6 retransmissions (seconds). When the iPhone
+    leaves a Wi-Fi network, Tailscale needs 20 to 30 s to find its new path (measured: the tunnel died at exactly
+    those switches and survived all faster ones). With these settings both layers wait about 5 minutes; a tunnel the
+    iPhone really dropped still ends at once, because the iPhone answers it with a reset as soon as it's back.
+    """
+    if getattr(tunnel_service, "_aos_tolerant", False):
+        return
+
+    class TolerantKeepalive:
+        def __init__(self, utils: Any) -> None:
+            self._utils = utils
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._utils, name)
+
+        def set_keepalive(self, sock: Any, *_: Any, **__: Any) -> None:
+            self._utils.set_keepalive(sock, after_idle_sec=KEEPALIVE_IDLE, interval_sec=KEEPALIVE_INTERVAL,
+                                      max_fails=(OUTAGE_SECONDS - KEEPALIVE_IDLE) // KEEPALIVE_INTERVAL)
+
+    tunnel_service.OSUTIL = TolerantKeepalive(tunnel_service.OSUTIL)
+    sysctls = userspace_tunnel.throughput_sysctls
+    userspace_tunnel.throughput_sysctls = lambda: {**sysctls(), "tcp.retransmit.max_count": INNER_RETRANSMITS}
+    tunnel_service._aos_tolerant = True
+
+
+async def reopen_lockdown(rsd: Any) -> None:
+    """A heartbeat cut off mid-request leaves the lockdown connection out of step; this opens a fresh one."""
+    old = rsd.lockdown
+    rsd.lockdown = await create_using_remote(
+        await rsd.start_lockdown_service("com.apple.mobile.lockdown.remote.trusted"), identifier=rsd.udid)
+    if old is not None:
+        with suppress(Exception):
+            await asyncio.wait_for(old.close(), 5)
 
 
 def now_iso() -> str:
@@ -218,7 +268,9 @@ class Worker:
         write_json(path, job)
         self.publish()
 
-    async def run_jobs(self, rsd: Any, network: str) -> None:
+    async def run_jobs(self, rsd: Any, network: str) -> bool:
+        """Installs the queued apps. False when the iPhone stopped answering during an install (that job is queued
+        again, up to INSTALL_ATTEMPTS times)."""
         for path, job in self.jobs():
             if job.get("state") != "queued":
                 continue
@@ -227,8 +279,10 @@ class Worker:
                 self.update_job(path, job, state="failed", message="The app to install is gone.", finished=now_iso())
                 continue
             log("installing", job.get("name"), job.get("bundleId"), "over the tunnel,", network)
-            self.update_job(path, job, state="installing", started=now_iso(), network=network)
+            attempts = int(job.get("attempts", 0)) + 1
+            self.update_job(path, job, state="installing", started=now_iso(), network=network, attempts=attempts)
             began = time.time()
+            finished = False
             try:
                 result = InstallationProxyService(lockdown=rsd).install_from_local(app)
                 if inspect.isawaitable(result):
@@ -236,16 +290,33 @@ class Worker:
                 seconds = round(time.time() - began, 1)
                 log("installed", job.get("name"), f"in {seconds}s")
                 self.update_job(path, job, state="done", message="", finished=now_iso(), seconds=seconds)
-            except Exception as error:  # the device refused the app, or the tunnel is gone
+                finished = True
+            except Exception as error:  # the device refused the app, or the connection dropped out under it
                 log("install failed", job.get("name"), type(error).__name__, error)
+                answers = await self.answers(rsd)
+                if not answers and attempts < INSTALL_ATTEMPTS:
+                    self.update_job(path, job, state="queued", message="", started=None)
+                    return False
                 self.update_job(path, job, state="failed", message=describe(error), finished=now_iso(),
                                 seconds=round(time.time() - began, 1))
-                # Still there? Otherwise the session ends here and the worker looks for the iPhone again.
-                await asyncio.wait_for(rsd.get_value(key="DeviceName"), 20)
+                finished = True
+                if not answers:
+                    return False
             finally:
                 staged = self.staging_dir / job["id"]
-                if staged.exists():
+                if finished and staged.exists():
                     shutil.rmtree(staged, ignore_errors=True)
+        return True
+
+    @staticmethod
+    async def answers(rsd: Any) -> bool:
+        """Whether the iPhone answers through the tunnel right now (over a fresh lockdown connection)."""
+        try:
+            await asyncio.wait_for(reopen_lockdown(rsd), 20)
+            await asyncio.wait_for(rsd.get_value(key="DeviceName"), 20)
+            return True
+        except Exception:
+            return False
 
     # MARK: The tunnel
 
@@ -271,21 +342,29 @@ class Worker:
         log(f"tunnel up to {device_name} (iOS {rsd.product_version}) via {name} {host} in {since - began:.1f}s")
         reason = "stopped"
         try:
-            last_beat = last_probe = time.time()
-            failures = 0
+            last_beat = last_probe = last_answer = time.time()
+            answering = True
             while not self.stopping:
+                if tunnel.rsd is None:  # the tunnel's own connection ended; pymobiledevice3 has torn it down
+                    reason = "connection lost"
+                    return
                 now = time.time()
-                if now - last_beat >= self.heartbeat_seconds():
+                if now - last_beat >= (self.heartbeat_seconds() if answering else RETRY_EVERY):
                     last_beat = now
                     try:
+                        if not answering:
+                            await asyncio.wait_for(reopen_lockdown(rsd), 20)
                         await asyncio.wait_for(rsd.get_value(key="DeviceName"), 20)
-                        failures = 0
+                        if not answering:
+                            log(f"the iPhone answers again after {int(time.time() - last_answer)}s")
+                        answering, last_answer = True, time.time()
                         self.publish(lastHeartbeat=now_iso())
                     except Exception as error:
-                        failures += 1
-                        log("heartbeat failed", failures, type(error).__name__, error)
-                        if failures >= 3:
-                            reason = f"no answer ({describe(error)})"
+                        if answering:
+                            log("no answer from the iPhone, waiting it out:", describe(error))
+                        answering = False
+                        if time.time() - last_answer > GIVE_UP_AFTER:
+                            reason = f"no answer for {int(time.time() - last_answer)}s ({describe(error)})"
                             return
                 if now - last_probe >= PROBE_EVERY:
                     last_probe = now
@@ -293,7 +372,9 @@ class Worker:
                     if network != self.status.get("network"):
                         log("iPhone now on", network, f"(tunnel up {int(now - since)}s)")
                         self.publish(network=network)
-                await self.run_jobs(rsd, self.status.get("network", "unknown"))
+                if answering and not await self.run_jobs(rsd, self.status.get("network", "unknown")):
+                    log("no answer from the iPhone during an install, waiting it out")
+                    answering, last_beat = False, time.time()
                 await asyncio.sleep(TICK)
         except Exception as error:
             reason = describe(error)
@@ -359,6 +440,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", required=True)
     args = parser.parse_args()
+    tolerate_outages()
     worker = Worker(Path(args.root))
     loop = asyncio.new_event_loop()
 
