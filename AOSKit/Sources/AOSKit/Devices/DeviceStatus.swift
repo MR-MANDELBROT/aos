@@ -44,6 +44,7 @@ public struct DeviceStatus: Codable, Sendable, Equatable {
     /// "wifi" while the iPhone's pairing port answers, "cellular" while it doesn't but the tunnel holds, "offline" while
     /// the iPhone answers no ping (the tunnel waits for it, sending nothing).
     public var network: String?
+    /// When the iPhone last answered through the tunnel (a check on Wi-Fi or an install).
     public var lastHeartbeat: Date?
     public var updated: Date?
     public var pid: Int32?

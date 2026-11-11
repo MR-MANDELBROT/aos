@@ -33,9 +33,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-from pymobiledevice3.lockdown import create_using_remote
 from pymobiledevice3.pair_records import iter_remote_paired_identifiers
 from pymobiledevice3.remote import tunnel_service, userspace_tunnel
+from pymobiledevice3.remote.remote_service_discovery import RemoteServiceDiscoveryService
 from pymobiledevice3.remote.tunnel_service import create_core_device_tunnel_service_using_remotepairing
 from pymobiledevice3.services.installation_proxy import InstallationProxyService
 
@@ -53,11 +53,13 @@ JOB_MAX_AGE = 7 * 24 * 3600
 INSTALL_ATTEMPTS = 3  # an install cut off by an outage goes back to the queue, at most this often
 
 # The tunnel rides out silence of any length (the iPhone in a dead spot, in flight mode, between two networks): see
-# tolerate_outages. It ends when the iPhone answers it with a reset (it restarted) or stops answering while it's online.
+# tolerate_outages. Nothing goes through it but checks on Wi-Fi and installs.
 INNER_RETRANSMITS = 12  # the connections inside the tunnel: about 5 minutes of backed-off retransmissions
-RETRY_EVERY = 10.0  # seconds between heartbeats while the iPhone is offline or doesn't answer
-MISSES_ONLINE = 3  # heartbeats in a row the iPhone doesn't answer while it's online: the tunnel is gone
+RETRY_EVERY = 10.0  # seconds between pings while the iPhone is offline, and between attempts at a waiting install
 OFFLINE_AFTER = 2  # pings in a row without an answer: the iPhone counts as offline
+WIFI_SETTLE = 20.0  # seconds on Wi-Fi before the tunnel is checked (joining, not passing by)
+RECHECK_ON_WIFI = 3600.0  # while the iPhone stays on Wi-Fi, the tunnel is checked again this often
+CHECK_MISSES = 2  # checks in a row on Wi-Fi without an answer: the tunnel is gone, and is built again at once
 
 
 def tolerate_outages() -> None:
@@ -69,11 +71,15 @@ def tolerate_outages() -> None:
     switches and survived all faster ones). And macOS drops any TCP connection whose data stays unanswered for about
     9 minutes (12 retransmissions, at most 64 s apart).
 
-    So the tunnel's connection has no keepalive at all, and the worker sends nothing through the tunnel unless a ping
-    past it (`reachable`) has just shown the iPhone online. While the iPhone is gone the connection is idle on this
-    end, and an idle TCP connection has no timeout: it holds for hours (the iPhone's end: Docs/DESIGN.md). A tunnel the
-    iPhone really dropped (it restarted) ends with the first heartbeat once it's back, because the iPhone answers it
-    with a reset.
+    A ping before each use isn't enough either: on a flaky network a heartbeat got through the ping and then stuck,
+    and the outage after it lasted more than 9 minutes (measured: the tunnel ended 10 minutes after that heartbeat).
+
+    So the tunnel's connection has no keepalive, no connection inside it stays open (`connect` opens one for each use;
+    the iPhone could probe an idle one while it's offline), and the worker sends nothing through it except:
+    a check when the iPhone has joined a Wi-Fi network (a lost tunnel is built again right there), and installs (on
+    cellular only after two pings in a row). Online, offline and the network come from pings and the pairing port,
+    beside the tunnel. An idle TCP connection has no timeout, so the tunnel holds for hours of silence on this end
+    (the iPhone's end: Docs/DESIGN.md).
     """
     if getattr(tunnel_service, "_aos_tolerant", False):
         return
@@ -106,14 +112,17 @@ async def reachable(host: str, timeout: int = 3) -> bool:
         return False
 
 
-async def reopen_lockdown(rsd: Any) -> None:
-    """A heartbeat cut off mid-request leaves the lockdown connection out of step; this opens a fresh one."""
-    old = rsd.lockdown
-    rsd.lockdown = await create_using_remote(
-        await rsd.start_lockdown_service("com.apple.mobile.lockdown.remote.trusted"), identifier=rsd.udid)
-    if old is not None:
-        with suppress(Exception):
-            await asyncio.wait_for(old.close(), 5)
+async def connect(base: Any) -> Any:
+    """A fresh connection to the iPhone's services through the tunnel (RemoteServiceDiscovery and lockdown), for one
+    use: the caller closes it with `disconnect`."""
+    rsd = RemoteServiceDiscoveryService(base.service.address, open_connection=base.open_connection)
+    await asyncio.wait_for(rsd.connect(), 20)
+    return rsd
+
+
+async def disconnect(rsd: Any) -> None:
+    with suppress(Exception):
+        await asyncio.wait_for(rsd.close(), 5)
 
 
 def now_iso() -> str:
@@ -190,7 +199,8 @@ class Worker:
     def settings(self) -> dict[str, Any]:
         return read_json(self.root / "settings.json") or {}
 
-    def heartbeat_seconds(self) -> float:
+    def ping_seconds(self) -> float:
+        """How often the worker pings the iPhone (beside the tunnel): the setting `iphoneHeartbeat`."""
         value = self.settings().get("iphoneHeartbeat", 30)
         try:
             return float(min(max(int(value), 10), 300))
@@ -285,9 +295,20 @@ class Worker:
         write_json(path, job)
         self.publish()
 
-    async def run_jobs(self, rsd: Any, host: str, network: str) -> bool:
-        """Installs the queued apps. False when the iPhone stopped answering during an install (that job is queued
-        again, up to INSTALL_ATTEMPTS times)."""
+    async def run_jobs(self, base: Any, host: str, network: str) -> bool:
+        """Installs the queued apps over one fresh connection. False when the iPhone stopped answering (the job
+        is queued again, up to INSTALL_ATTEMPTS times)."""
+        try:
+            rsd = await connect(base)
+        except Exception as error:
+            log("no connection through the tunnel for the installs:", describe(error))
+            return False
+        try:
+            return await self.install_queued(rsd, base, host, network)
+        finally:
+            await disconnect(rsd)
+
+    async def install_queued(self, rsd: Any, base: Any, host: str, network: str) -> bool:
         for path, job in self.jobs():
             if job.get("state") != "queued":
                 continue
@@ -310,7 +331,7 @@ class Worker:
                 finished = True
             except Exception as error:  # the device refused the app, or the connection dropped out under it
                 log("install failed", job.get("name"), type(error).__name__, error)
-                answers = await reachable(host) and await self.answers(rsd)
+                answers = await reachable(host) and await self.answers(base)
                 if not answers and attempts < INSTALL_ATTEMPTS:
                     self.update_job(path, job, state="queued", message="", started=None)
                     return False
@@ -326,17 +347,30 @@ class Worker:
         return True
 
     @staticmethod
-    async def answers(rsd: Any) -> bool:
-        """Whether the iPhone answers through the tunnel right now (over a fresh lockdown connection)."""
+    async def answers(base: Any) -> bool:
+        """Whether the iPhone answers through the tunnel right now (over a fresh connection, closed again)."""
         try:
-            await asyncio.wait_for(reopen_lockdown(rsd), 20)
+            rsd = await connect(base)
+        except Exception:
+            return False
+        try:
             await asyncio.wait_for(rsd.get_value(key="DeviceName"), 20)
             return True
         except Exception:
             return False
+        finally:
+            await disconnect(rsd)
 
     def has_queued_jobs(self) -> bool:
         return any(job.get("state") == "queued" for _, job in self.jobs())
+
+    @staticmethod
+    async def steady(host: str) -> bool:
+        """Two pings in a row, two seconds apart: the path holds right now (before an install on cellular)."""
+        if not await reachable(host):
+            return False
+        await asyncio.sleep(2)
+        return await reachable(host)
 
     async def check_online(self, host: str, since: float) -> bool:
         """Pings the iPhone past the tunnel and keeps track of whether it's online (status network "offline" after
@@ -346,7 +380,6 @@ class Worker:
                 log(f"the iPhone is online again after {int(time.time() - (self.offline_since or time.time()))}s;"
                     f" the tunnel is up {int(time.time() - since)}s")
                 self.online, self.offline_since = True, None
-                self.publish(network="wifi" if await self.port_open(host) else "cellular")
             self.silent = 0
             return True
         self.silent += 1
@@ -380,47 +413,57 @@ class Worker:
         log(f"tunnel up to {device_name} (iOS {rsd.product_version}) via {name} {host} in {since - began:.1f}s")
         reason = "stopped"
         self.online, self.silent, self.offline_since = True, 0, None
+        await disconnect(rsd)  # nothing stays open inside the tunnel (see tolerate_outages)
         try:
-            last_beat = last_probe = last_answer = time.time()
-            answering, misses = True, 0
+            last_ping = last_check = time.time()
+            wifi_since: Optional[float] = time.time()
+            checked_on_wifi, misses, next_install = True, 0, 0.0
             while not self.stopping:
                 if tunnel.rsd is None:  # the tunnel's own connection ended; pymobiledevice3 has torn it down
                     reason = "connection lost"
                     return
                 now = time.time()
-                due = self.heartbeat_seconds() if answering and self.online else RETRY_EVERY
-                waiting = answering and self.online and self.has_queued_jobs()
-                if now - last_beat >= due or waiting:
-                    last_beat = now
-                    # Nothing goes through the tunnel while the iPhone is gone (see tolerate_outages).
-                    if not await self.check_online(host, since):
-                        await asyncio.sleep(TICK)
-                        continue
-                    if not answering or not waiting:
-                        try:
-                            if not answering:
-                                await asyncio.wait_for(reopen_lockdown(rsd), 20)
-                            await asyncio.wait_for(rsd.get_value(key="DeviceName"), 20)
-                            if not answering:
-                                log(f"the iPhone answers through the tunnel again after {int(time.time() - last_answer)}s")
-                            answering, misses, last_answer = True, 0, time.time()
+                waiting = self.has_queued_jobs() and now >= next_install
+                if now - last_ping >= (self.ping_seconds() if self.online else RETRY_EVERY) or waiting:
+                    last_ping = now
+                    if await self.check_online(host, since):
+                        network = "wifi" if await self.port_open(host) else "cellular"
+                        if network != self.status.get("network"):
+                            log("iPhone now on", network, f"(tunnel up {int(now - since)}s)")
+                            self.publish(network=network)
+                        if network == "wifi":
+                            wifi_since = wifi_since or now
+                        else:
+                            wifi_since, checked_on_wifi = None, False
+                    else:
+                        wifi_since, checked_on_wifi = None, False
+                # Checks only on Wi-Fi: joined, not passing by, and a lost tunnel is built again right there.
+                if self.online and wifi_since and now - wifi_since >= WIFI_SETTLE \
+                        and ((not checked_on_wifi and now - last_check >= RETRY_EVERY) or now - last_check >= RECHECK_ON_WIFI):
+                    last_check, checked_on_wifi = now, True
+                    if await self.answers(tunnel.rsd or rsd):
+                        misses = 0
+                        self.publish(lastHeartbeat=now_iso())
+                    else:
+                        misses += 1
+                        checked_on_wifi = False
+                        log(f"the iPhone is on Wi-Fi but doesn't answer through the tunnel ({misses})")
+                        if misses >= CHECK_MISSES:
+                            reason = "no answer through the tunnel"
+                            return
+                # Installs: on Wi-Fi at once, on cellular after two pings in a row, offline not at all.
+                if waiting and not self.online:
+                    next_install = time.time() + RETRY_EVERY
+                elif waiting:
+                    wifi = self.status.get("network") == "wifi"
+                    if wifi or await self.steady(host):
+                        if await self.run_jobs(tunnel.rsd or rsd, host, self.status.get("network", "unknown")):
                             self.publish(lastHeartbeat=now_iso())
-                        except Exception as error:
-                            answering, misses = False, misses + 1
-                            log(f"the iPhone is online but doesn't answer through the tunnel ({misses}):", describe(error))
-                            if misses >= MISSES_ONLINE:
-                                reason = f"no answer through the tunnel ({describe(error)})"
-                                return
-                    if answering and self.has_queued_jobs():
-                        if not await self.run_jobs(rsd, host, self.status.get("network", "unknown")):
+                        else:
                             log("an install was cut off; it waits for the iPhone")
-                            answering, last_beat = False, time.time()
-                if self.online and now - last_probe >= PROBE_EVERY:
-                    last_probe = now
-                    network = "wifi" if await self.port_open(host) else "cellular"
-                    if network != self.status.get("network"):
-                        log("iPhone now on", network, f"(tunnel up {int(now - since)}s)")
-                        self.publish(network=network)
+                            next_install = time.time() + RETRY_EVERY
+                    else:
+                        next_install = time.time() + RETRY_EVERY
                 await asyncio.sleep(TICK)
         except Exception as error:
             reason = describe(error)

@@ -270,14 +270,14 @@ struct DeviceSettings: View {
             TextField("iPhone address", text: Binding(get: { model.settings.iphoneAddress },
                                                       set: { v in model.update { $0.iphoneAddress = v.trimmingCharacters(in: .whitespaces) } }),
                       prompt: Text("Found through Tailscale"))
-            Picker("Heartbeat", selection: Binding(get: { model.settings.iphoneHeartbeat },
+            Picker("Online check", selection: Binding(get: { model.settings.iphoneHeartbeat },
                                                     set: { v in model.update { $0.iphoneHeartbeat = v } })) {
                 ForEach([15, 30, 60, 120], id: \.self) { s in Text(verbatim: "\(s) s").tag(s) }
                 if ![15, 30, 60, 120].contains(model.settings.iphoneHeartbeat) {
                     Text(verbatim: "\(model.settings.iphoneHeartbeat) s").tag(model.settings.iphoneHeartbeat)
                 }
             }
-            Text("How often \(Brand.name) checks that the connection still holds. Rarely is enough; it costs the iPhone next to no battery.")
+            Text("How often \(Brand.name) pings your iPhone to know whether it's online. The connection itself stays quiet: \(Brand.name) uses it only for installs and for a check when the iPhone joins a Wi-Fi network, so it holds through hours without a network.")
                 .font(.caption).foregroundStyle(.secondary)
             Button("Reconnect") { model.reconnectDevices() }
                 .disabled(model.devices?.isFresh() != true)

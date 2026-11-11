@@ -3158,6 +3158,7 @@
       }
     },
     "Heartbeat" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3208,11 +3209,28 @@
       }
     },
     "How often %@ checks that the connection still holds. Rarely is enough; it costs the iPhone next to no battery." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wie oft %@ prüft, ob die Verbindung noch hält. Selten genügt, es kostet das iPhone kaum Akku."
+          }
+        }
+      }
+    },
+    "How often %@ pings your iPhone to know whether it's online. The connection itself stays quiet: %@ uses it only for installs and for a check when the iPhone joins a Wi-Fi network, so it holds through hours without a network." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie oft %@ dein iPhone anpingt, um zu wissen, ob es online ist. Die Verbindung selbst bleibt still: %@ nutzt sie nur für Installationen und für eine Prüfung, wenn das iPhone in ein WLAN kommt. So hält sie auch stundenlang ohne Netz."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "How often %1$@ pings your iPhone to know whether it's online. The connection itself stays quiet: %2$@ uses it only for installs and for a check when the iPhone joins a Wi-Fi network, so it holds through hours without a network."
           }
         }
       }
@@ -4825,6 +4843,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "online"
+          }
+        }
+      }
+    },
+    "Online check" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Online-Prüfung"
           }
         }
       }

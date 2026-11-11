@@ -34,7 +34,8 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     public var iphoneApps: Bool = false
     /// The iPhone's address (its tailnet address or name); empty: found through the Tailscale app.
     public var iphoneAddress: String = ""
-    /// Seconds between the tunnel's heartbeats (10 to 300).
+    /// Seconds between the worker's pings of the iPhone, beside the tunnel (10 to 300; the name is from when they
+    /// were heartbeats through it).
     public var iphoneHeartbeat: Int = 30
     /// The Apple developer team whose signing the setup set up (Settings > Apps, "Set Up Step by Step").
     public var iphoneTeam: String = ""
