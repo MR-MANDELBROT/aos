@@ -73,8 +73,16 @@ xcrun notarytool submit "$OUT/aOS-notarize.zip" --keychain-profile "$PROFILE" --
 grep -q "status: Accepted" "$OUT/notary-app.log" || die "notarization of the app failed"
 xcrun stapler staple "$APP"
 rm -f "$OUT/aOS-notarize.zip"
+# Every registered copy of aOS confuses the Local Network permission (it follows the executable's UUID): after the
+# install of build 21 macOS refused aOS the workspace until the archive's and the export's copies were unregistered.
+LSR=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+unregister_copies() {
+  find build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates "$OUT" -name aOS.app -maxdepth 6 -type d \
+    2>/dev/null | while read -r copy; do "$LSR" -u "$copy" 2>/dev/null || true; done
+}
 if [ "$APP_ONLY" = 1 ]; then
   spctl --assess --type execute -v "$APP"
+  unregister_copies
   say "done: $APP"
   exit 0
 fi
@@ -108,6 +116,7 @@ cat > "$OUT/appcast-item.xml" <<EOF
       <enclosure url="https://github.com/MR-MANDELBROT/aos/releases/download/v$VERSION/aOS-$VERSION.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
     </item>
 EOF
+unregister_copies
 shasum -a 256 "$DMG" | tee "$OUT/SHA256SUMS"
 say "done: $DMG"
 say "next: create the GitHub release v$VERSION with the DMG, add appcast-item.xml to site/appcast.xml"
