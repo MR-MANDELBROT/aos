@@ -218,12 +218,15 @@ public enum MCPTools {
     /Volumes/My Shared Files/Applications (read only; in Finder cmd+shift+g, type the path, return) if the user \
     shares them: they start fresh there, without the user's data and sign-ins, and App Store or licensed apps \
     often don't run.
-    The user's iPhone: iphone_install puts an iPhone app you built on it within seconds, at home or on the go, \
-    without a cable (\(Brand.name) keeps a tunnel to the iPhone). Build for a device (xcodebuild -destination \
+    The user's iPhone: whenever an app should go onto the user's iPhone (to try or test it, after a build they want \
+    to see), use iphone_install: it puts the app on it within seconds, at home or on the go, without a cable \
+    (\(Brand.name) keeps a tunnel to the iPhone). Not xcrun devicectl, ios-deploy, xcodebuild with the iPhone as \
+    destination, or asking the user to run it from Xcode. Build for a device (xcodebuild -destination \
     'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO, or an .ipa): \(Brand.name) signs it with the user's development profile. \
     Never let Xcode manage signing (-allowProvisioningUpdates or automatic signing): it signs the user out of Xcode. \
     iphone_status says whether the iPhone is reachable right now, what was installed, and which bundle ids the user's \
-    signing covers: give a new app a bundle id under one of them.
+    signing covers: give a new app a bundle id under one of them. "queued" means it waits for the tunnel and installs \
+    by itself once the iPhone is on any Wi-Fi: don't switch to another way.
     """
 
     static func schema(_ properties: [String: Any], required: [String] = []) -> [String: Any] {
@@ -364,7 +367,7 @@ public enum MCPTools {
             [
                 "name": "iphone_install",
                 "title": "Install an app on the iPhone",
-                "description": "Install an iPhone app on the user's iPhone: the absolute path of a .app built for a device (generic/platform=iOS) or of an .ipa. \(Brand.name) copies it, signs the copy with the user's development profile and installs it through its tunnel to the iPhone (seconds, on Wi-Fi or cellular). Without a tunnel right now it stays queued and installs as soon as the iPhone is on any Wi-Fi. The original isn't changed.",
+                "description": "Install an iPhone app on the user's iPhone, the way to put any app there (not xcrun devicectl or Xcode): the absolute path of a .app built for a device (generic/platform=iOS, CODE_SIGNING_ALLOWED=NO) or of an .ipa. \(Brand.name) copies it, signs the copy with the user's development profile and installs it through its tunnel to the iPhone (seconds, on Wi-Fi or cellular). Without a tunnel right now it stays queued and installs as soon as the iPhone is on any Wi-Fi. The original isn't changed.",
                 "inputSchema": schema([
                     "path": ["type": "string", "description": "Absolute path of the .app folder or the .ipa."],
                     "wait": ["type": "boolean", "default": true, "description": "Wait for the result (up to 3 minutes)."],
