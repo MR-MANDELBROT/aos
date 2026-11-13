@@ -15,7 +15,7 @@ import Security
 // Requests: {"op":"status"} {"op":"focus"} {"op":"fill","host":"...","kind":"username|password|code",
 // "username":"...","password":"...","code":"..."}. Answers never contain what was typed.
 
-let helperVersion = "9"
+let helperVersion = "10"
 let guestUser = "aos"
 
 func socketPath(home: String) -> String { "\(home)/Library/Application Support/AOSHelper/helper.sock" }
@@ -148,6 +148,22 @@ enum AX {
     }
 
     static func isEmpty(_ e: AXUIElement) -> Bool { ((attribute(e, kAXValueAttribute) as? String) ?? "").isEmpty }
+
+    /// How many characters the field holds, if it says: a text field shows its text, a password field (in Chrome)
+    /// its bullets or a count. Nil where it can't tell (a password field that shows nothing).
+    static func length(_ e: AXUIElement) -> Int? {
+        if let n = attribute(e, kAXNumberOfCharactersAttribute) as? Int, n > 0 || !isSecure(e) { return n }
+        let value = (attribute(e, kAXValueAttribute) as? String) ?? ""
+        if isSecure(e) && value.isEmpty { return nil }
+        return value.utf16.count
+    }
+
+    /// The selected range of a text field.
+    static func selection(_ e: AXUIElement) -> CFRange? {
+        guard let v = attribute(e, kAXSelectedTextRangeAttribute), CFGetTypeID(v) == AXValueGetTypeID() else { return nil }
+        var range = CFRange()
+        return AXValueGetValue(v as! AXValue, .cfRange, &range) ? range : nil
+    }
 }
 
 // MARK: Typing
@@ -201,6 +217,60 @@ enum Keyboard {
 
     static func selectAll() { commandPlus(0x00) }
     static func returnKey() { post(0x24) }
+    static func deleteKey() { post(0x33) }
+
+    static func wait(seconds: Double, until done: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(seconds)
+        while Date() < deadline {
+            if done() { return true }
+            usleep(30_000)
+        }
+        return done()
+    }
+
+    /// Empties the focused field before typing. Chrome runs Command-A as a menu command, which reaches the page after
+    /// keys sent behind it: typed right away, the first characters got selected and replaced by the next one (a user
+    /// name lost its first four). So only when there is something to remove, and typing starts once it's gone.
+    static func clear(_ field: AXUIElement) -> Bool {
+        switch AX.length(field) {
+        case 0?:
+            return true
+        case let n?:
+            selectAll()
+            _ = wait(seconds: 1) { AX.selection(field).map { $0.location == 0 && $0.length >= n } ?? false }
+            deleteKey()
+            return wait(seconds: 1) { AX.length(field) == 0 }
+        case nil:  // a password field that doesn't tell: give the menu command time
+            selectAll()
+            usleep(300_000)
+            deleteKey()
+            usleep(150_000)
+            return true
+        }
+    }
+
+    /// Whether `text` arrived in `field`: the text itself where the field shows it (pages may format it: case,
+    /// spaces, dashes, brackets don't count), else the number of characters.
+    static func arrived(_ text: String, in field: AXUIElement) -> Bool {
+        func plain(_ s: String) -> String { s.lowercased().filter { !" \t-()".contains($0) } }
+        if !AX.isSecure(field), let value = AX.attribute(field, kAXValueAttribute) as? String {
+            return plain(value) == plain(text)
+        }
+        guard let n = AX.length(field) else { return true }  // can't tell
+        return n == text.utf16.count
+    }
+
+    /// Types `text` into `field` (the focused one) and checks that all of it arrived; one more try if not. False:
+    /// the field is emptied again, the caller submits nothing.
+    static func enter(_ text: String, into field: AXUIElement) -> Bool {
+        for _ in 0..<2 {
+            guard clear(field) else { continue }
+            type(text)
+            if wait(seconds: 1.5, until: { arrived(text, in: field) }) { return true }
+        }
+        _ = clear(field)
+        return false
+    }
 }
 
 // MARK: Requests
@@ -373,9 +443,14 @@ func fill(_ r: [String: Any]) -> [String: Any] {
               CFEqual(now, field), let (_, u) = AX.topLevelWebArea(of: now), hostMatches(u, host) else { return false }
         return true
     }
+    /// Takes out what was typed, but only in that field (back in focus): keys never go to whatever has the focus now.
+    func takeBack(_ field: AXUIElement) {
+        guard AX.focus(field), let (_, now) = AX.chromeFocus(wait: 1), CFEqual(now, field) else { return }
+        _ = Keyboard.clear(field)
+    }
     func submit(_ field: AXUIElement, _ filled: [String]) -> [String: Any] {
         guard stillThere(field) else {
-            Keyboard.selectAll(); Keyboard.post(0x33)  // delete
+            takeBack(field)
             return ["ok": false, "error": "the focus moved while typing; nothing was submitted"]
         }
         Keyboard.returnKey()
@@ -385,10 +460,12 @@ func fill(_ r: [String: Any]) -> [String: Any] {
         return ["ok": false, "error": "a different field has the focus now"]
     }
     var filled: [String] = []
+    let notArrived = "the typed text didn't arrive in the field completely; it was emptied again and nothing was submitted"
     switch kind {
     case "code":
         guard let code, !code.isEmpty else { return ["ok": false, "error": "no code in the answer"] }
-        Keyboard.selectAll(); Keyboard.type(code); filled.append("code")
+        guard Keyboard.enter(code, into: element) else { return ["ok": false, "error": notArrived] }
+        filled.append("code")
         return submit(element, filled)
 
     case "password":
@@ -400,7 +477,8 @@ func fill(_ r: [String: Any]) -> [String: Any] {
                let before = fields[..<index].last(where: { !AX.isSecure($0) && AX.isEmpty($0) }),
                AX.focus(before) {
                 usleep(150_000)
-                Keyboard.type(username); filled.append("user name")
+                guard Keyboard.enter(username, into: before) else { return ["ok": false, "error": notArrived] }
+                filled.append("user name")
                 guard AX.focus(element) else { return ["ok": false, "error": "could not return to the password field"] }
                 usleep(150_000)
             }
@@ -409,12 +487,14 @@ func fill(_ r: [String: Any]) -> [String: Any] {
         guard let (_, now) = AX.chromeFocus(), CFEqual(now, element), AX.isSecure(now) else {
             return ["ok": false, "error": "the focus moved away from the password field"]
         }
-        Keyboard.selectAll(); Keyboard.type(password); filled.append("password")
+        guard Keyboard.enter(password, into: element) else { return ["ok": false, "filled": filled, "error": notArrived] }
+        filled.append("password")
         return submit(element, filled)
 
     default:  // username
         guard let username, !username.isEmpty else { return ["ok": false, "error": "no user name in the answer"] }
-        Keyboard.selectAll(); Keyboard.type(username); filled.append("user name")
+        guard Keyboard.enter(username, into: element) else { return ["ok": false, "error": notArrived] }
+        filled.append("user name")
         guard let password, !password.isEmpty else { return submit(element, filled) }
         // Same page: the next password field after the user name field. Otherwise submit and wait for the
         // password step on the same website.
@@ -425,7 +505,7 @@ func fill(_ r: [String: Any]) -> [String: Any] {
         }
         if target == nil {
             guard stillThere(element) else {
-                Keyboard.selectAll(); Keyboard.post(0x33)
+                takeBack(element)
                 return ["ok": false, "error": "the focus moved while typing; nothing was submitted"]
             }
             Keyboard.returnKey()
@@ -443,7 +523,8 @@ func fill(_ r: [String: Any]) -> [String: Any] {
               let (_, u2) = AX.topLevelWebArea(of: now), hostMatches(u2, host) else {
             return ["ok": false, "filled": filled, "error": "the password field is not on \(host) any more"]
         }
-        Keyboard.selectAll(); Keyboard.type(password); filled.append("password")
+        guard Keyboard.enter(password, into: field) else { return ["ok": false, "filled": filled, "error": notArrived] }
+        filled.append("password")
         return submit(field, filled)
     }
 }
