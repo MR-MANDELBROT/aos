@@ -23,10 +23,27 @@ codesign --verify --strict -R="$REQ" "$T/AOSHelper.app" || die "the helper is no
 
 UID_G="$(id -u "$GUEST_USER")"
 logged_in() { [ "$(stat -f %Su /dev/console)" = "$GUEST_USER" ]; }
+# Bootstrapping right after a bootout often fails while launchd still removes the old instance ("Bootstrap failed:
+# 5"), and then no helper ran until the next login (measured with build 21): so wait, retry, and say if it didn't.
 ensure_running() {
-  if logged_in && ! launchctl print "gui/$UID_G/$LABEL" >/dev/null 2>&1; then
+  logged_in || return 0
+  local i
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    launchctl print "gui/$UID_G/$LABEL" >/dev/null 2>&1 && return 0
     launchctl bootstrap "gui/$UID_G" "$PLIST" 2>/dev/null || true
-  fi
+    sleep 1
+  done
+  launchctl print "gui/$UID_G/$LABEL" >/dev/null 2>&1 && return 0
+  print -r -- "$(date '+%Y-%m-%d %H:%M:%S') helper did not start" >> "$LOG"
+  print -r -- "WARNING: the helper did not start; it starts at the next login" >&2
+}
+# Waits until launchd has let go of the old instance.
+gone() {
+  local i
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    launchctl print "gui/$UID_G/$LABEL" >/dev/null 2>&1 || return 0
+    sleep 0.5
+  done
 }
 # Owned by root, readable and runnable by the account (the kit unpacks with umask 077; older setups also created
 # /usr/local/libexec itself as 0700, which the account can't pass)
@@ -43,6 +60,7 @@ if [ -d "$LIBEXEC/AOSHelper.app" ] && diff -rq "$T/AOSHelper.app" "$LIBEXEC/AOSH
   exit 0
 fi
 launchctl bootout "gui/$UID_G/$LABEL" 2>/dev/null || true
+gone
 rm -rf "$LIBEXEC/AOSHelper.app"
 mv "$T/AOSHelper.app" "$LIBEXEC/AOSHelper.app"
 own
