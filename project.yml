@@ -129,7 +129,7 @@ targets:
         NSBonjourServices:
           - _aos-pair._tcp
         NSHumanReadableCopyright: "© 2026 Maximilian Marquart"
-        SUFeedURL: https://mr-mandelbrot.github.io/aos/appcast.xml
+        SUFeedURL: https://marquart.dev/aos/appcast.xml
         SUPublicEDKey: REPLACE_WITH_SPARKLE_PUBLIC_KEY
         SUEnableInstallerLauncherService: false
     postBuildScripts:

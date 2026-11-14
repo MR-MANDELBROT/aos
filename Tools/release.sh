@@ -113,7 +113,7 @@ cat > "$OUT/appcast-item.xml" <<EOF
       <sparkle:version>$BUILD</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
-      <enclosure url="https://github.com/MR-MANDELBROT/aos/releases/download/v$VERSION/aOS-$VERSION.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
+      <enclosure url="https://marquart.dev/aos/download/aOS-$VERSION.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
     </item>
 EOF
 unregister_copies

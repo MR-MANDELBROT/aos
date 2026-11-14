@@ -140,6 +140,7 @@ p { text-wrap: pretty; }
 .btn .i { width: 18px; height: 18px; stroke-width: 2; }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: var(--accent-hover); }
+.btn-soon, .btn-soon:hover { background: var(--accent); opacity: .6; cursor: default; }
 .btn-ghost { color: var(--accent); }
 .btn-ghost:hover { text-decoration: underline; }
 .btn:active { transform: scale(0.98); }

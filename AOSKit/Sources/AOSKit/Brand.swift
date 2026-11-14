@@ -12,8 +12,8 @@ public enum Brand {
     /// Account name inside the VM.
     public static let guestUser = "aos"
     public static let guestFullName = "aOS"
-    /// The product's website (GitHub Pages; German under de/).
-    public static let website = "https://mr-mandelbrot.github.io/aos/"
+    /// The product's website (marquart.dev/aos, from the website repo; German under de/).
+    public static let website = "https://marquart.dev/aos/"
 
     /// The website's iPhone section (where to get the iPhone app), in German for German speakers.
     public static var phoneAppPage: URL {
