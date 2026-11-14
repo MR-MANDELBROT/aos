@@ -188,6 +188,23 @@ charge, thermal state, external screens, whether Cloupi is on the Mac, and wheth
     minutes without anything turn Wi-Fi off and on (then after 10, 20, 40, 60 minutes), with a marker so an
     interrupted cycle never leaves Wi-Fi off. Nothing while Wi-Fi is off (the user's choice), while the Mac has an
     address, or with the lid open (the user is there).
+- **Claude offline although the network is there** (a stuck DNS cache; `DNSHealth.swift`, ported from Cloupi's
+  wake daemon, ~/cloupi/mac/DESIGN.md 34). After a network change or a long time offline, the system's way of
+  resolving names (getaddrinfo, dscacheutil, all through mDNSResponder) stopped resolving exactly
+  `api.anthropic.com` while other names resolved: Claude Code, its Remote Control and the iPhone's Claude app
+  ("connection failed") stayed offline until the Mac restarted (12.10.2026 for 35 minutes; 13.11.2026 for an hour:
+  Remote Control gave up after 10 minutes disconnected, and aOS waited, silently, for a name that didn't resolve).
+  Tailscale is the first resolver (accept-dns), and since it never changes with the network, mDNSResponder probably
+  never drops its cache. Now the app checks every minute, lid open or closed, with `dscacheutil` the way Claude Code
+  resolves: with the network up (an address, or `www.apple.com` resolves) and the API name failing twice in a row,
+  the helper (root) saves a diagnosis (`/Library/Logs/aOS/dns-diag-*.txt`, root:admin 0640, at most 10: route, dig
+  against the first resolver, the network's DNS server and 1.1.1.1, dns-sd, scutil --dns, mDNSResponder's last
+  minute) and flushes the cache (`dscacheutil -flushcache`, HUP to mDNSResponder); if that doesn't help within 2
+  minutes it restarts mDNSResponder once. At most two flushes and one restart per episode, then a flush an hour;
+  three checks in a row without a network end an episode. app.log names the signature ("the first resolver answers
+  directly: yes" with the system's way failing is the stuck cache) and, once it resolves again, how long after which
+  repair. Remote Control's wait now logs why (the name doesn't resolve, or no connection) when it starts and every 10
+  minutes, and when the network is back. Not while Cloupi's wake daemon runs (it does the same). Helper version 5.
 - **Cloupi**: when its wake daemon is on the Mac (`/Library/Application Support/cloupi-wake`,
   `/Library/LaunchDaemons/de.cloupi.waked.plist`, or launchd knows `system/de.cloupi.waked`), it owns sleep and Wi-Fi.
   aOS holds no assertion and freezes nothing, the helper refuses and never touches pmset or Wi-Fi, and the settings

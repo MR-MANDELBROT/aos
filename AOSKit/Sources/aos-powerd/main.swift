@@ -468,6 +468,9 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
             switch step {
             case .restartAirportd: return self.restartAirportd(reason: "network care")
             case .cycleWiFi: return self.cycleWiFi()
+            case .flushDNS: return DNSRepair.flush(diagnosis: false)
+            case .flushDNSWithDiagnosis: return DNSRepair.flush(diagnosis: true)
+            case .restartDNS: return DNSRepair.restartResolver()
             }
         }
     }
@@ -721,6 +724,90 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         if on { try? FileManager.default.removeItem(at: wifiMarker) }
         log("Wi-Fi off and on (network care): \(on ? "on again" : "still off, marker kept")")
         return HelperReply(ok: on, message: on ? "" : "Wi-Fi didn't come back on")
+    }
+}
+
+/// A stuck DNS cache (DNSHealth.swift, Docs/DESIGN.md): the app notices, the helper flushes the cache or restarts
+/// mDNSResponder, after saving a diagnosis to /Library/Logs/aOS (root:admin 0640, at most 10 files). Ported from
+/// Cloupi's wake daemon.
+enum DNSRepair {
+    static let api = DNSHealthPolicy.apiName
+    static let control = DNSHealthPolicy.controlName
+
+    static func resolves(_ name: String) -> Bool {
+        DNSHealthPolicy.resolved(run("/usr/bin/dscacheutil", ["-q", "host", "-a", "name", name], timeout: 6).output)
+    }
+
+    /// Does the first resolver answer directly, past mDNSResponder's cache? "Directly yes, the system's way no" is
+    /// the signature of the stuck cache.
+    static func answersDirectly(_ name: String) -> Bool {
+        let r = run("/usr/bin/dig", ["+short", "+time=2", "+tries=1", name], timeout: 6)
+        return r.ok && r.output.split(whereSeparator: { $0.isNewline }).contains { line in
+            (line.contains(".") && line.allSatisfy { $0.isNumber || $0 == "." }) || line.contains(":")
+        }
+    }
+
+    static func facts() -> String {
+        "\(control) \(resolves(control) ? "resolves" : "doesn't resolve"), the first resolver answers directly: "
+            + (answersDirectly(api) ? "yes" : "no")
+    }
+
+    static func flush(diagnosis: Bool) -> HelperReply {
+        let before = facts()
+        let file = diagnosis ? saveDiagnosis() : ""
+        let f = run("/usr/bin/dscacheutil", ["-flushcache"], timeout: 10)
+        let h = run("/usr/bin/killall", ["-HUP", "mDNSResponder"], timeout: 10)
+        Thread.sleep(forTimeInterval: 2)
+        let ok = resolves(api)
+        let line = "DNS cache flushed (dscacheutil \(f.ok ? "ok" : "failed"), HUP \(h.ok ? "ok" : "failed")). Before: \(before). "
+            + "After: \(api) \(ok ? "resolves" : "still doesn't resolve")\(file.isEmpty ? "" : ", diagnosis \(file)")"
+        log(line)
+        return HelperReply(ok: ok, message: line)
+    }
+
+    /// Ends mDNSResponder; launchd starts it again with the next lookup.
+    static func restartResolver() -> HelperReply {
+        let before = facts()
+        let file = saveDiagnosis()
+        let k = run("/usr/bin/killall", ["mDNSResponder"], timeout: 10)
+        Thread.sleep(forTimeInterval: 4)
+        let ok = resolves(api)
+        let line = "mDNSResponder restarted (killall \(k.ok ? "ok" : "failed")). Before: \(before). "
+            + "After: \(api) \(ok ? "resolves" : "still doesn't resolve")\(file.isEmpty ? "" : ", diagnosis \(file)")"
+        log(line)
+        return HelperReply(ok: ok, message: line)
+    }
+
+    /// The state before the repair, so an episode can be explained afterwards. Fixed commands, each with a time limit.
+    static func saveDiagnosis() -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyyMMdd-HHmmss"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        let dir = logURL.deletingLastPathComponent()
+        let path = dir.appendingPathComponent("dns-diag-\(f.string(from: Date())).txt").path
+        let script = """
+        limit() { /usr/bin/perl -e 'alarm shift; exec @ARGV' "$@"; }
+        echo "== time"; date
+        echo "== route"; limit 4 /sbin/route -n get default
+        echo "== dscacheutil \(api)"; limit 6 /usr/bin/dscacheutil -q host -a name \(api)
+        echo "== dscacheutil \(control)"; limit 6 /usr/bin/dscacheutil -q host -a name \(control)
+        echo "== dig, first resolver"; limit 5 /usr/bin/dig +noall +comments +answer +time=2 +tries=1 \(api)
+        dhcp=$(limit 4 /usr/sbin/ipconfig getoption en0 domain_name_server)
+        echo "== dig, the network's DNS server ($dhcp)"; [ -n "$dhcp" ] && limit 5 /usr/bin/dig +noall +comments +answer +time=2 +tries=1 \(api) "@$dhcp"
+        echo "== dig 1.1.1.1"; limit 5 /usr/bin/dig +noall +comments +answer +time=2 +tries=1 \(api) @1.1.1.1
+        echo "== dns-sd -G (a cached negative answer shows here)"; /usr/bin/dns-sd -G v4v6 \(api) & p=$!; sleep 3; kill $p 2>/dev/null; wait $p 2>/dev/null
+        echo "== scutil --dns"; limit 5 /usr/sbin/scutil --dns | head -60
+        echo "== mDNSResponder, last 60 s"
+        limit 20 /usr/bin/log show --last 60s --info --style compact --predicate 'process == "mDNSResponder"' 2>&1 | tail -400
+        """
+        let r = run("/bin/sh", ["-c", script], timeout: 70)
+        guard FileManager.default.createFile(atPath: path, contents: Data(r.output.utf8),
+                                             attributes: [.posixPermissions: 0o640]) else { return "" }
+        chown(path, 0, 80)  // group admin: readable without sudo
+        let names = ((try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? [])
+            .filter { $0.hasPrefix("dns-diag-") }.sorted()
+        for name in names.dropLast(10) { try? FileManager.default.removeItem(atPath: dir.appendingPathComponent(name).path) }
+        return path
     }
 }
 

@@ -72,6 +72,12 @@ final class PowerController: ObservableObject {
     private var hotspotRestoredOnce = false
     private var hotspotBusy = false
     private var hotspotRetryAfter = Date.distantPast
+    /// A stuck DNS cache (DNSHealth.swift): checked every minute, lid open or closed.
+    private var dns = DNSHealthState()
+    private var dnsBusy = false
+    private var lastDNSCheck = Date.distantPast
+    private var dnsAnnounced = false
+    private var dnsLastRepair: (what: String, at: Double, helped: Bool)?
 
     /// Freeze only after the lid has been closed (and no input came) for this long.
     static let freezeAfterSeconds: TimeInterval = 20
@@ -265,6 +271,7 @@ final class PowerController: ObservableObject {
             network = NetworkMemory()
         }
         leaveHotspotTick(now: now, enabled: settings.leaveHotspot)
+        dnsTick(now: now, cloupi: cloupi)
         // macOS 27 doesn't let apps (not even the helper as root) change the hotspot settings: aOS only explains
         // where the person sets them (HotspotHint); `updateHotspot` stays for a macOS that allows it again.
     }
@@ -568,6 +575,73 @@ final class PowerController: ObservableObject {
             network.cyclesInOutage += 1
             log("network care: Wi-Fi off and on\(ok ? "" : ", failed")")
         }
+    }
+
+    // MARK: A stuck DNS cache (lid open or closed)
+
+    /// Every minute: does `api.anthropic.com` resolve the way Claude Code resolves it? With the network up and that
+    /// failing twice in a row, the helper flushes the cache, later restarts mDNSResponder (DNSHealthPolicy). Cloupi's
+    /// wake daemon does the same where it runs.
+    private func dnsTick(now: Date, cloupi: Bool) {
+        guard !cloupi, !dnsBusy, now.timeIntervalSince(lastDNSCheck) >= DNSHealthPolicy.checkIntervalSec else { return }
+        lastDNSCheck = now
+        let hasAddress = !WiFiRadio.ipv4().isEmpty || WiFiRadio.onlineElsewhere()
+        // Offline and no episode running: no lookups (they would only fail).
+        guard hasAddress || dns.failingSince != nil else { return }
+        dnsBusy = true
+        let helperReady = helperStatus == .enabled
+        let helper = self.helper
+        Task.detached(priority: .utility) {
+            let api = await DNSHealthPolicy.systemResolves(DNSHealthPolicy.apiName)
+            let control = api ? true : await DNSHealthPolicy.systemResolves(DNSHealthPolicy.controlName)
+            let netUp = hasAddress || control
+            let t = now.timeIntervalSince1970
+            let action: DNSHealAction = await MainActor.run { [weak self] in
+                guard let self else { return .none }
+                return self.noteDNS(now: t, netUp: netUp, apiResolves: api, controlResolves: control)
+            }
+            guard action != .none, helperReady else {
+                await MainActor.run { [weak self] in self?.dnsBusy = false }
+                return
+            }
+            let firstFlush = await MainActor.run { [weak self] in (self?.dns.flushesInEpisode ?? 0) == 1 }
+            let step: PowerHelperService.Recovery = action == .restartResolver ? .restartDNS
+                : (firstFlush ? .flushDNSWithDiagnosis : .flushDNS)
+            let reply = await helper.recover(step)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                self.dnsBusy = false
+                self.dnsLastRepair = (action == .flush ? "flushing the cache" : "restarting mDNSResponder",
+                                      Date().timeIntervalSince1970, reply.ok)
+                self.log("DNS: \(reply.message.isEmpty ? "\(step.rawValue) failed" : reply.message)")
+            }
+        }
+    }
+
+    /// Books a check and logs the changes; returns what to do.
+    private func noteDNS(now t: Double, netUp: Bool, apiResolves: Bool, controlResolves: Bool) -> DNSHealAction {
+        let since = dns.failingSince
+        let action = DNSHealthPolicy.note(now: t, netUp: netUp, apiResolves: apiResolves, state: &dns)
+        if apiResolves {
+            if let since, dnsAnnounced {
+                let how = dnsLastRepair.map { "\(Int(t - $0.at)) s after \($0.what), which \($0.helped ? "helped at once" : "didn't help at first")" }
+                    ?? "by itself"
+                log("DNS: \(DNSHealthPolicy.apiName) resolves again after \(Int(t - since)) s (\(how))")
+            }
+            dnsAnnounced = false
+            dnsLastRepair = nil
+        } else if dns.failingSince == nil {
+            dnsAnnounced = false  // ended by staying offline
+            dnsLastRepair = nil
+        } else if action != .none && !dnsAnnounced {
+            dnsAnnounced = true
+            log("DNS: the network is up (\(DNSHealthPolicy.controlName) \(controlResolves ? "resolves" : "doesn't resolve")), "
+                + "but \(DNSHealthPolicy.apiName) doesn't: Claude Code, its Remote Control and the iPhone's Claude app are offline")
+        }
+        if action != .none, helperStatus != .enabled {
+            log("DNS: would \(action == .flush ? "flush the cache" : "restart mDNSResponder"), but aOS's helper isn't allowed")
+        }
+        return action
     }
 
     // MARK: Leaving the hotspot (lid open or closed)

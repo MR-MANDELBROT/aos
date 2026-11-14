@@ -36,7 +36,8 @@ public enum PowerHelperService {
     /// Xcode signs a command line tool with its file name as identifier.
     public static let helperIdentifier = "aos-powerd"
     /// Bumped when the interface changes (4: the tailnet node).
-    public static let version = 4
+    /// 5: the DNS steps of `recover` (flushDNS, flushDNSWithDiagnosis, restartDNS).
+    public static let version = 5
 
     /// Only aOS may talk to the helper.
     public static var appRequirement: String {
@@ -48,7 +49,9 @@ public enum PowerHelperService {
         "anchor apple generic and identifier \"\(helperIdentifier)\" and certificate leaf[subject.OU] = \"\(teamID)\""
     }
 
-    public enum Recovery: String, Sendable { case restartAirportd, cycleWiFi }
+    /// restartAirportd, cycleWiFi: network care with the lid closed. flushDNS, flushDNSWithDiagnosis, restartDNS: a
+    /// stuck DNS cache (DNSHealth.swift), lid open or closed. Older helpers answer the DNS steps with "unknown step".
+    public enum Recovery: String, Sendable { case restartAirportd, cycleWiFi, flushDNS, flushDNSWithDiagnosis, restartDNS }
 }
 
 public struct HelperStatus: Codable, Equatable, Sendable {
@@ -211,7 +214,9 @@ public final class PowerHelperClient: @unchecked Sendable {
     }
 
     public func recover(_ step: PowerHelperService.Recovery) async -> HelperReply {
-        await call(timeout: 45) { $0.recover(step.rawValue, reply: $1) }
+        // A diagnosis before a DNS step takes up to a minute.
+        let timeout: TimeInterval = step == .cycleWiFi || step == .restartAirportd ? 45 : 100
+        return await call(timeout: timeout) { $0.recover(step.rawValue, reply: $1) }
     }
 }
 

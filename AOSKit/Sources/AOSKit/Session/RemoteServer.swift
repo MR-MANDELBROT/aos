@@ -51,6 +51,9 @@ public final class RemoteServer: @unchecked Sendable {
     private var quickExits = 0
     private var nextStart = Date.distantPast
     private var recentOutput = ""
+    /// Waiting for the network: since when, and when it was last logged (the state alone is silent).
+    private var waitingSince: Date?
+    private var lastWaitLog = Date.distantPast
     private var status = RemoteServerStatus(state: .off, detail: "", pid: nil, folder: "", since: Date())
 
     public init(paths: Paths) { self.paths = paths }
@@ -109,9 +112,23 @@ public final class RemoteServer: @unchecked Sendable {
             set(.missingClaude, "Claude Code is not installed")
             return
         }
-        guard Network.reachable(host: "api.anthropic.com", port: 443) else {
+        let reach = Network.probe(host: "api.anthropic.com", port: 443)
+        guard reach == .ok else {
+            // Logged when it starts and every 10 minutes: the Claude app shows "connection failed" meanwhile.
+            if waitingSince == nil { waitingSince = Date() }
+            if Date().timeIntervalSince(lastWaitLog) >= 600 {
+                lastWaitLog = Date()
+                let why = reach == .noName ? "api.anthropic.com doesn't resolve (no network, or a stuck DNS cache)"
+                    : "no connection to api.anthropic.com"
+                log("remote: waiting for the network for \(Int(Date().timeIntervalSince(waitingSince!))) s: \(why)")
+            }
             set(.waitingForNetwork, "")
             return
+        }
+        if let since = waitingSince {
+            log("remote: the network is back after \(Int(Date().timeIntervalSince(since))) s")
+            waitingSince = nil
+            lastWaitLog = .distantPast
         }
         start(claude: claude.path, folder: wanted)
     }

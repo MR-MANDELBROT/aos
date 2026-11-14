@@ -597,10 +597,18 @@ public typealias TCPCheck = Network
 /// Is the host reachable (DNS and TCP)? Waiting for this avoids starting Claude Code without network.
 public enum Network {
     public static func reachable(host: String, port: UInt16, timeout: Int32 = 5) -> Bool {
+        probe(host: host, port: port, timeout: timeout) == .ok
+    }
+
+    public enum Reach: String, Sendable { case ok, noName, noConnection }
+
+    /// Why `host` isn't reachable: its name doesn't resolve (the network is down, or a stuck DNS cache: DNSHealth),
+    /// or it resolves but no connection comes up.
+    public static func probe(host: String, port: UInt16, timeout: Int32 = 5) -> Reach {
         var hints = addrinfo(ai_flags: 0, ai_family: AF_UNSPEC, ai_socktype: SOCK_STREAM, ai_protocol: 0,
                              ai_addrlen: 0, ai_canonname: nil, ai_addr: nil, ai_next: nil)
         var res: UnsafeMutablePointer<addrinfo>?
-        guard getaddrinfo(host, String(port), &hints, &res) == 0, let first = res else { return false }
+        guard getaddrinfo(host, String(port), &hints, &res) == 0, let first = res else { return .noName }
         defer { freeaddrinfo(res) }
         var ai: UnsafeMutablePointer<addrinfo>? = first
         while let a = ai {
@@ -610,11 +618,11 @@ public enum Network {
                 setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
                 let ok = connect(fd, a.pointee.ai_addr, a.pointee.ai_addrlen) == 0
                 close(fd)
-                if ok { return true }
+                if ok { return .ok }
             }
             ai = a.pointee.ai_next
         }
-        return false
+        return .noConnection
     }
 }
 
