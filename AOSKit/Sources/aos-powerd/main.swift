@@ -683,11 +683,15 @@ final class PowerDaemon: NSObject, NSXPCListenerDelegate, PowerHelperXPC {
         let fromHotspot = NetworkCarePolicy.isHotspotAddress(WiFiRadio.ipv4())
         let r = run("/usr/sbin/networksetup", ["-setairportnetwork", WiFiRadio.interfaceName, name], timeout: 25)
         // networksetup sometimes reports "Failed to join" and the Mac is connected two seconds later (Cloupi saw it
-        // on this Mac): the address decides.
-        for _ in 0..<10 {
+        // on this Mac): the address decides. A network with a sign-in of its own (eduroam: 802.1X) authenticates only
+        // after joining and gets its address 30 to 40 s after networksetup started (13.11.2026: eapolclient after
+        // 43 s); 10 s were too short, and the join counted as failed although the Mac was on eduroam a moment later.
+        let started = Date()
+        for _ in 0..<45 {
             let ip = WiFiRadio.ipv4()
             if !ip.isEmpty, !(fromHotspot && NetworkCarePolicy.isHotspotAddress(ip)) {
-                log("joined \(name) (\(NetworkCarePolicy.isHotspotAddress(ip) ? "hotspot address" : "address \(ip)"))")
+                log("joined \(name) (\(NetworkCarePolicy.isHotspotAddress(ip) ? "hotspot address" : "address \(ip)"), "
+                    + "\(Int(Date().timeIntervalSince(started))) s after networksetup)")
                 return HelperReply(ok: true, message: ip)
             }
             Thread.sleep(forTimeInterval: 1)

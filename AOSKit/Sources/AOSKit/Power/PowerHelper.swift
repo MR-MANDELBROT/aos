@@ -37,7 +37,8 @@ public enum PowerHelperService {
     public static let helperIdentifier = "aos-powerd"
     /// Bumped when the interface changes (4: the tailnet node).
     /// 5: the DNS steps of `recover` (flushDNS, flushDNSWithDiagnosis, restartDNS).
-    public static let version = 5
+    /// 6: `join` waits up to 45 s for the address (eduroam), so its call may take 90 s.
+    public static let version = 6
 
     /// Only aOS may talk to the helper.
     public static var appRequirement: String {
@@ -163,7 +164,7 @@ public final class PowerHelperClient: @unchecked Sendable {
     public func restoreHotspot() async -> HelperReply {
         await call(timeout: 90) { $0.applyHotspotJoin("restore", reply: $1) }
     }
-    public func join(network: String) async -> HelperReply { await call(timeout: 60) { $0.join(network: network, reply: $1) } }
+    public func join(network: String) async -> HelperReply { await call(timeout: 90) { $0.join(network: network, reply: $1) } }
     /// Bitwarden through the helper (`HelperBitwardenRunner(send:)` uses this).
     public func vault(_ request: VaultRequest) async -> VaultReply {
         await withCheckedContinuation { (continuation: CheckedContinuation<VaultReply, Never>) in
