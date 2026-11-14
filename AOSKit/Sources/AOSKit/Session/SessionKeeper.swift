@@ -158,6 +158,9 @@ public final class SessionKeeper: @unchecked Sendable {
         var stopping = false
         /// Ended to be started again at once (`restart`).
         var restart = false
+        /// Its Remote Control in the transcript (RemoteControlWatch.swift), and the restarts it took to keep it up.
+        var remoteControl: RemoteControlTail?
+        var remoteControlHealth = RemoteControlHealth()
         init(id: String) { self.id = id }
     }
 
@@ -304,11 +307,16 @@ public final class SessionKeeper: @unchecked Sendable {
         let wantedIds = Set(wanted.map(\.0.id))
         let live = ClaudeConversations.live()
 
-        // Not wanted any more: end them
+        // Not wanted any more: end them. One that ended already is forgotten; one that is ending stays until its exit
+        // is read (`exited`), without being ended again.
         for (id, k) in kept where !wantedIds.contains(id) {
-            log("keeper: no longer kept: \(id)")
-            terminate(k)
             entries[id] = nil
+            if k.pid == 0 {
+                kept[id] = nil
+            } else if !k.stopping {
+                log("keeper: no longer kept: \(id)")
+                terminate(k)
+            }
         }
         for id in entries.keys where !wantedIds.contains(id) { entries[id] = nil }
 
@@ -330,6 +338,7 @@ public final class SessionKeeper: @unchecked Sendable {
                 } else if entries[c.id] == nil {
                     set(c, pinned, .running, "", pid: ours.pid)
                 }
+                watchRemoteControl(c, ours)
                 continue
             }
             if let seen = lastForeign[c.id], Date().timeIntervalSince(seen) < Self.handBackDelay {
@@ -348,6 +357,20 @@ public final class SessionKeeper: @unchecked Sendable {
             start(c, pinned: pinned, previous: ours)
         }
         writeStatus(enabled: true)
+    }
+
+    /// Remote Control lost for good (RemoteControlWatch.swift): the process starts again with the same conversation.
+    private func watchRemoteControl(_ c: ClaudeConversation, _ k: Kept) {
+        guard !k.stopping, let tail = k.remoteControl else { return }
+        let id = ClaudeRegistry.entry(pid: k.pid)?.sessionId.flatMap { UUID(uuidString: $0) != nil ? $0 : nil } ?? c.id
+        let last = tail.poll(id: id)
+        guard RemoteControlPolicy.shouldRestart(last: last, now: Date(), apiUp: { networkUp() },
+                                                health: &k.remoteControlHealth),
+              case .lost(let at, let reason)? = last else { return }
+        log("keeper: \"\(c.title)\" lost Remote Control \(Int(Date().timeIntervalSince(at))) s ago (\(reason)), "
+            + "restarting it (\(k.remoteControlHealth.restarts). time)")
+        k.restart = true
+        terminate(k)
     }
 
     private func where_(_ entrypoint: String) -> String {
@@ -391,6 +414,7 @@ public final class SessionKeeper: @unchecked Sendable {
         k.startedAt = Date()
         k.recent = ""
         k.stopping = false
+        k.remoteControl = RemoteControlTail(since: k.startedAt)
         kept[c.id] = k
         saveChildren()
         log("keeper: started \"\(c.title)\" (\(c.id), pid \(pid)) in \(c.cwd)")

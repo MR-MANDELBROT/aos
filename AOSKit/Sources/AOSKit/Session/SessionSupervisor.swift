@@ -37,6 +37,12 @@ public final class SessionSupervisor: @unchecked Sendable {
     private var folder: URL?
     private var messenger: SessionMessenger
     private var messageTimer: DispatchSourceTimer?
+    /// Its Remote Control in the transcript (RemoteControlWatch.swift), the restarts it took, and whether the running
+    /// process is being ended for that.
+    private var remoteControl: RemoteControlTail?
+    private var remoteControlHealth = RemoteControlHealth()
+    private var remoteControlRestart = false
+    private var remoteControlTimer: DispatchSourceTimer?
     public var log: (String) -> Void = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) } {
         didSet { messenger.log = log }
     }
@@ -108,6 +114,26 @@ public final class SessionSupervisor: @unchecked Sendable {
         t.setEventHandler { [weak self] in self?.messenger.tick() }
         t.resume()
         messageTimer = t
+        let rc = DispatchSource.makeTimerSource(queue: queue)
+        rc.schedule(deadline: .now() + 30, repeating: 30, leeway: .seconds(5))
+        rc.setEventHandler { [weak self] in self?.watchRemoteControl() }
+        rc.resume()
+        remoteControlTimer = rc
+    }
+
+    /// Remote Control lost for good: the session starts again with the same conversation (not counted as a crash).
+    private func watchRemoteControl() {
+        guard child > 0, !remoteControlRestart, status.state == .running, let tail = remoteControl,
+              let id = ClaudeRegistry.entry(pid: child)?.sessionId, UUID(uuidString: id) != nil else { return }
+        let last = tail.poll(id: id)
+        guard RemoteControlPolicy.shouldRestart(last: last, now: Date(),
+                                                apiUp: { Network.reachable(host: "api.anthropic.com", port: 443) },
+                                                health: &remoteControlHealth),
+              case .lost(let at, let reason)? = last else { return }
+        log("session: lost Remote Control \(Int(Date().timeIntervalSince(at))) s ago (\(reason)), restarting it "
+            + "(\(remoteControlHealth.restarts). time)")
+        remoteControlRestart = true
+        kill(child, SIGTERM)
     }
 
     /// The conversation the session continues (run/session-conversation.json): its own, in its folder; never just
@@ -244,6 +270,7 @@ public final class SessionSupervisor: @unchecked Sendable {
         master = fd
         startedAt = Date()
         recentText = ""
+        remoteControl = RemoteControlTail(since: startedAt)
         setStatus(.starting)
         recentStarts.append(Date())
         messenger.sessionStarted()
@@ -309,9 +336,18 @@ public final class SessionSupervisor: @unchecked Sendable {
         if master >= 0 { close(master); master = -1 }
         child = 0
         let lived = Date().timeIntervalSince(startedAt)
-        quickExits = lived < 60 ? quickExits + 1 : 0
         status.restarts += 1
         log("session: claude exited (status \(code)) after \(Int(lived)) s")
+        if remoteControlRestart {
+            // Ended for its Remote Control: back at once, with the same conversation (this start doesn't count
+            // towards "twice in 30 minutes, start a fresh conversation").
+            remoteControlRestart = false
+            if !recentStarts.isEmpty { recentStarts.removeLast() }
+            setStatus(.restarting, "Remote Control was lost")
+            queue.asyncAfter(deadline: .now() + 2) { [weak self] in self?.launch() }
+            return
+        }
+        quickExits = lived < 60 ? quickExits + 1 : 0
         if quickExits >= 5 {
             setStatus(.failed, "Claude Code keeps exiting; open the session in \(Brand.name) to see why")
             return  // the app restarts it (restart command over the socket)
