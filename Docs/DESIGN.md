@@ -131,6 +131,24 @@ the keeper, when "keep conversations reachable" is on:
   socket; the keeper ends its copy like a closed terminal and starts it again at once (a conversation that kept exiting
   gets its next try now). `run/keeper.json` says `"commands": ["restart"]`: an aos-session from before this (it keeps
   running after an update until the Mac restarts) would take the command as typing, so the app sends it only then.
+- **Remote Control that stays gone** (`RemoteControlWatch.swift`; for each kept conversation every 15 s, and for aOS's
+  own session every 30 s): Claude Code notes in the transcript when Remote Control is up (`system`, subtype
+  `bridge_status`, "/remote-control is active") and when it is lost ("Remote Control disconnected — <reason>").
+  After some losses it reconnects by itself within seconds or minutes (a new "active" follows); after others the
+  process stays without Remote Control and the chat is missing or frozen in the Claude app until the process starts
+  again (2026-11-14: "the server no longer reports this session … (code 4090)" at 20:06, back only when an update
+  restarted the keeper at 20:45). `RemoteControlTail` reads the transcript of the process's conversation (its id from
+  the registry) from where it read before, at first at most the last 8 MB, only records from the process's start on,
+  and parses only lines that carry one of the two markers. A loss older than 120 s with Anthropic reachable starts the
+  process again with the same conversation: the keeper like a restart from the phone, the supervisor with SIGTERM and
+  a start 2 s later that doesn't count as a quick exit or towards "twice in 30 minutes, a fresh conversation". Not for
+  "ended or archived from another device" (the person did it) or "another connection took over" (another process
+  serves it; never twice handles that). Brakes: at most 3 restarts in a row, the 2nd at least 10 minutes and the 3rd
+  30 minutes after the one before; when the server no longer knows the session only one (the person may really have
+  deleted it); 10 minutes with Remote Control up and the count starts from zero.
+- **Forgetting ended ones**: one that isn't wanted any more is ended once and forgotten after its exit. Before
+  2026-11-14 an ended one stayed in the keeper's table, and every evaluation logged "no longer kept" for it again
+  (43,000 lines in session.log).
 - Status in `run/keeper.json`; the app's settings (Claude Code tab) list the conversations with their state, pin and
   exclude, and why one isn't kept (`SessionKeeper.reason`, the same rules as the selection). The iPhone's Overview
   has the same list (Docs/COMPANION.md, "Chats").
@@ -215,7 +233,10 @@ charge, thermal state, external screens, whether Cloupi is on the Mac, and wheth
 it is connected to for a better one. While the Mac has an iPhone hotspot address (172.20.10.x), aOS looks every 2
 minutes by name for the known networks that aren't hotspots (macOS's order, first 12), takes the first one found with
 at least -75 dBm and joins it through the helper; the helper counts the join only once the address is outside the
-hotspot. A failed join rests like in network care.
+hotspot, and waits up to 45 s for it: eduroam (802.1X) authenticates only after joining and had its address 30 to
+40 s after networksetup started. Until 2026-11-14 the helper waited 10 s, so five joins of eduroam in five days counted
+as failed although the Mac was on eduroam a moment later (and after one of them stayed on the hotspot for another
+try, a minute without network each time). A failed join rests like in network care.
 
 **Updating aOS with the lid closed**: the helper exits when its program file is replaced. While it holds the Mac with
 a valid lease it hands the hold over instead of releasing it: the marker gets `handover` (the lease, at least 5
