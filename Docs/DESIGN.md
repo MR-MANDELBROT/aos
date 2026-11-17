@@ -722,6 +722,30 @@ settings every 2 s and reports run/remote.json. Learned while testing it:
 - Website sign-ins when the workspace closes: all sign out, all except a list (default: Google, fewer captchas), or
   none. Chrome policies: DefaultCookiesSetting 4 (session only) with CookiesAllowedForUrls for the list, or 1 (kept)
   for none. Applies at the next start of the workspace.
+- **Sign out of all websites now** (since 2026-11-17; Settings > Workspace and the iPhone's workspace card, both ask
+  first): for "stay signed in", where the workspace keeps its sign-ins and is suspended instead of shut down.
+  `signout.sh` (root, maintenance key) quits Chrome and Safari of the account in order, then removes their site
+  data: cookies, local and session storage, IndexedDB, service workers, saved tabs, Safari's cookies and website
+  data. Chrome's preferences (the search engine choice) stay; programs signed in by hand stay. While the workspace
+  isn't running, `VMState.signOutPending` is set and `bootAndPrepare` does it at the next start, before anyone gets
+  the screen; a failure keeps the flag (the next start tries again).
+
+## A slow workspace
+
+Found 2026-11-17 (Claude Code found the workspace sluggish, sometimes hanging): the workspace's 4 GB are memory of the
+Mac, and a 16 GB Mac with other heavy work (Gradle daemons, a large web page, builds) had 7.9 GB compressed and 6.7 of
+8 GB swap used. macOS then swaps parts of the guest out, and the guest stalls while they come back: Chrome stopped
+answering accessibility requests, the guest needed 123 s to power off. The Mac itself was not throttled (no low power
+mode, no thermal pressure), and the freezer never touches aOS or the VM.
+- Every input and screenshot call answers within 45 s (`WorkspaceController.withDeadline`): before, a stalled screen
+  connection or guest left the agent waiting without end (the MCP socket has no timeout). The agent gets "didn't
+  answer within 45 s", the work itself may still finish.
+- Calls over 8 s are logged with the Mac's memory (`HostMemory`: kern.memorystatus_level and swap), and opening
+  the workspace notes it when the Mac is short of memory (under 20 % free or swap over 80 % full).
+- The screenshot after an input reconnects the screen once on a timeout, like a plain screenshot.
+- While a lease runs, aOS holds a user-initiated activity (no App Nap, no timer coalescing for its screen connection).
+- Opening is a cold boot (32 to 55 s) whenever sign-ins expire on close (the shutdown makes Chrome clear them);
+  with "stay signed in" the workspace is suspended and resumes instead (not yet measured).
 
 ## Two traps found on the way
 

@@ -11,7 +11,20 @@ public final class WorkspaceController {
     public private(set) var provisioner: Provisioner
     public private(set) var settings: AgentSettings
     var rfb: RFBClient?
-    var lease: (until: Date, purpose: String)?
+    var lease: (until: Date, purpose: String)? {
+        didSet {
+            // While an agent uses the workspace, macOS must not slow aOS down (App Nap, timer coalescing): its screen
+            // connection and the agent's calls run through this process.
+            if lease != nil, leaseActivity == nil {
+                leaseActivity = ProcessInfo.processInfo.beginActivity(
+                    options: [.userInitiated, .idleSystemSleepDisabled], reason: "An agent uses the workspace")
+            } else if lease == nil, let activity = leaseActivity {
+                ProcessInfo.processInfo.endActivity(activity)
+                leaseActivity = nil
+            }
+        }
+    }
+    private var leaseActivity: NSObjectProtocol?
     private var lastActivity = Date()
     private var idleTimer: Timer?
     private var busy = false
@@ -168,7 +181,18 @@ public final class WorkspaceController {
             case "sign_in":
                 return try await signIn(request)
             default:
-                return try await input(request)
+                // Input and screenshots: an answer within 45 s in any case (a stalled guest or screen connection
+                // must not leave the agent waiting without end), and a note in the log when one is slow.
+                let started = Date()
+                let op = request.op
+                do {
+                    let r = try await Self.withDeadline(Self.inputDeadline, op: op) { try await self.input(request) }
+                    noteSlow(op, since: started)
+                    return r
+                } catch {
+                    noteSlow(op, since: started)
+                    throw error
+                }
             }
         } catch {
             log("\(request.op): \(error.localizedDescription)")
@@ -215,7 +239,8 @@ public final class WorkspaceController {
         let ip = try await bootAndPrepare(reason: purpose)
         let client = try await connectScreen(ip: ip, timeout: 120)
         lease = (Date().addingTimeInterval(Double(minutes * 60)), purpose)
-        log("open for \"\(purpose)\", \(minutes) min")
+        let memory = HostMemory.read()
+        log("open for \"\(purpose)\", \(minutes) min" + (memory.tight ? " (the Mac is short of memory: \(memory.summary); the workspace may be slow)" : ""))
         let image = agentView(try await client.screenshot())
         return try picture(request.id, "Workspace open for \(minutes) min. Screen \(image.width)x\(image.height) pixels; coordinates are pixels in this picture.", image)
     }
@@ -248,7 +273,49 @@ public final class WorkspaceController {
                 log("workspace preparation failed (continuing): \(error.localizedDescription)")
             }
         }
+        if signOutPending {
+            do {
+                try await provisioner.signOutWebsites(host: ip)
+                try? host.bundle.updateState { $0.signOutPending = nil }
+                log("signed the workspace out of all websites, as asked while it was closed")
+            } catch {
+                log("signing out of all websites failed (next start tries again): \(error.localizedDescription)")
+            }
+        }
         return ip
+    }
+
+    /// The person asked to sign out of all websites while the workspace was closed: done at its next start.
+    public var signOutPending: Bool { (try? host.bundle.loadState())?.signOutPending == true }
+
+    public enum SignOutResult: Equatable, Sendable {
+        case done
+        /// The workspace isn't running: it happens at its next start, before anyone gets the screen.
+        case atNextStart
+        case failed(String)
+    }
+
+    /// Signs the workspace out of every website (the Mac app's button, the iPhone's): at once while it runs (its
+    /// browsers quit, also under an agent that uses it), else at its next start. Programs signed in by hand stay.
+    public func signOutOfAllWebsites(from: String) async -> SignOutResult {
+        guard setupComplete else { return .failed(WorkspaceError.notSetUp.localizedDescription) }
+        guard host.phase == .running, let ip = try? host.guestAddress() else {
+            try? host.bundle.updateState { $0.signOutPending = true }
+            log("\(from) signs the workspace out of all websites: at its next start (it isn't running)")
+            return .atNextStart
+        }
+        log("\(from) signs the workspace out of all websites")
+        do {
+            try? await provisioner.updateIfNeeded(host: ip) { [weak self] line in Task { @MainActor in self?.log(line) } }
+            try await provisioner.signOutWebsites(host: ip)
+            try? host.bundle.updateState { $0.signOutPending = nil }
+            log("signed the workspace out of all websites")
+            return .done
+        } catch {
+            try? host.bundle.updateState { $0.signOutPending = true }
+            log("signing out of all websites failed (the next start tries again): \(error.localizedDescription)")
+            return .failed(error.localizedDescription)
+        }
     }
 
     /// After a cold boot the account logs in by itself. If the workspace waits at the login window instead (its
@@ -438,6 +505,39 @@ public final class WorkspaceController {
         return Int((v / scale).rounded())
     }
 
+    /// The longest an input or screenshot call may take before the agent gets an answer.
+    static let inputDeadline: TimeInterval = 45
+
+    /// Runs `body`, but answers after `seconds` at the latest (`slow`); the work itself may still finish later.
+    nonisolated static func withDeadline<T: Sendable>(_ seconds: TimeInterval, op: String,
+                                   _ body: @escaping @MainActor () async throws -> T) async throws -> T {
+        let once = ResumeOnce()
+        return try await withCheckedThrowingContinuation { (c: CheckedContinuation<T, Error>) in
+            let work = Task { @MainActor in
+                do {
+                    let value = try await body()
+                    if once.claim() { c.resume(returning: value) }
+                } catch {
+                    if once.claim() { c.resume(throwing: error) }
+                }
+            }
+            Task {
+                try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                if once.claim() {
+                    work.cancel()
+                    c.resume(throwing: WorkspaceError.slow(op, Int(seconds)))
+                }
+            }
+        }
+    }
+
+    /// Logs a call that took more than 8 s, with the Mac's memory (the usual reason, see HostMemory).
+    private func noteSlow(_ op: String, since started: Date) {
+        let took = Date().timeIntervalSince(started)
+        guard took > 8 else { return }
+        log("\(op) took \(Int(took)) s (Mac memory: \(HostMemory.read().summary))")
+    }
+
     private func input(_ request: AgentRequest) async throws -> AgentResponse {
         let client = try requireLease()
         var done = ""
@@ -490,7 +590,7 @@ public final class WorkspaceController {
         }
         if request.image == false { return AgentResponse(id: request.id, ok: true, text: done + leaseNote()) }
         try await Task.sleep(nanoseconds: 350_000_000)
-        return try picture(request.id, done, agentView(try await client.screenshot()))
+        return try picture(request.id, done, agentView(try await screenshotReconnecting(client)))
     }
 
     /// Text without a key symbol goes through the guest's clipboard: set over SSH, pasted with cmd+v.
@@ -561,6 +661,7 @@ public final class WorkspaceController {
 public enum WorkspaceError: LocalizedError {
     case notSetUp, needsPurpose, notOpen, screenUnavailable, helpUnavailable, approvalUnavailable, declined, localNetworkDenied
     case missing(String)
+    case slow(String, Int)
     case unknownOperation(String)
     case helperNotAllowed
     case noSignInField(String?)
@@ -576,6 +677,8 @@ public enum WorkspaceError: LocalizedError {
         case .localNetworkDenied: return "macOS doesn't let \(Brand.name) reach its workspace yet. The user has to allow \(Brand.name) under System Settings > Privacy & Security > Local Network. Tell the user."
         case .helpUnavailable: return "Asking the user for help is not available right now. Tell the user in the chat what you need."
         case .missing(let p): return "Missing parameter \(p)."
+        case .slow(let op, let seconds):
+            return "The workspace didn't answer \(op) within \(seconds) s (it is busy, or the Mac is short of memory). Wait a moment, then take a screenshot to see where it stands."
         case .unknownOperation(let op): return "Unknown operation \(op)."
         case .helperNotAllowed:
             return "Signing in isn't set up in the workspace yet: the user has to allow the \(Brand.name) helper once (\(Brand.name) settings > Workspace). Tell the user; until then ask them to sign in with ask_user_for_help."
@@ -583,4 +686,11 @@ public enum WorkspaceError: LocalizedError {
             return "No sign-in field has the focus. Click into the user name, email, password or code field of the sign-in form in Chrome first, then call sign_in again.\(detail.map { " (\($0))" } ?? "")"
         }
     }
+}
+
+/// Lets exactly one of several racers resume a continuation (`withDeadline`).
+final class ResumeOnce: @unchecked Sendable {
+    private let lock = NSLock()
+    private var used = false
+    func claim() -> Bool { lock.lock(); defer { lock.unlock() }; if used { return false }; used = true; return true }
 }

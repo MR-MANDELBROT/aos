@@ -284,7 +284,10 @@ with `error` (English) and `code`, which the phone says in its own words.
   (`awake.helper` says so).
 - `workspace.start` (`not-set-up` before the setup is done; started without an agent lease: the agent's tools still
   need its own `workspace_open`), `workspace.stop` (closes it like the agent's `workspace_close`, also when an agent
-  has it: the phone asks first).
+  has it: the phone asks first), `workspace.sign-out` (since 2026-11-17: signs the workspace out of every website,
+  at once while it runs, else at its next start; answers `"signOut": "done"` or `"atNextStart"`, `sign-out-failed`
+  when it didn't work; the phone asks first and shows the button only when `hello` lists the feature).
+  `mac.status`'s `workspace` says `signIns` (`kept`, `some`, `expire`) and `signOutPending`.
 - `bitwarden.lock`, `session.restart` (`no-session` when aOS's background process isn't running).
 
 ### Chats (since 2026-11-09)

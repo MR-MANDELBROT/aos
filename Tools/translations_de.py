@@ -969,5 +969,15 @@ DE.update({
 DE.update({
     'Online check': 'Online-Prüfung',
     "How often %@ pings your iPhone to know whether it's online. The connection itself stays quiet: %@ uses it only for installs and for a check when the iPhone joins a Wi-Fi network, so it holds through hours without a network.": 'Wie oft %@ dein iPhone anpingt, um zu wissen, ob es online ist. Die Verbindung selbst bleibt still: %@ nutzt sie nur für Installationen und für eine Prüfung, wenn das iPhone in ein WLAN kommt. So hält sie auch stundenlang ohne Netz.',
+    "Sign out of all websites now": "Jetzt überall abmelden",
+    "Signing Out …": "Wird abgemeldet …",
+    "Sign Out …": "Abmelden …",
+    "Sign the workspace out of all websites?": "Arbeitsplatz auf allen Websites abmelden?",
+    "Sign Out of All Websites": "Auf allen Websites abmelden",
+    "Chrome and Safari in the workspace quit and forget every sign-in, also Google. If your agent is using the workspace, its browser closes. Programs you signed in to yourself stay signed in.": "Chrome und Safari im Arbeitsplatz werden beendet und vergessen jede Anmeldung, auch bei Google. Nutzt dein Agent den Arbeitsplatz gerade, schließt sich sein Browser. Programme, bei denen du dich selbst angemeldet hast, bleiben angemeldet.",
+    "Happens when the workspace starts next, before anyone uses it.": "Passiert beim nächsten Start des Arbeitsplatzes, bevor ihn jemand nutzt.",
+    "Chrome and Safari in the workspace forget every sign-in. Also from your iPhone.": "Chrome und Safari im Arbeitsplatz vergessen jede Anmeldung. Geht auch vom iPhone aus.",
+    "Signed out of all websites.": "Auf allen Websites abgemeldet.",
+    "The workspace is closed: it signs out when it starts next, before anyone uses it.": "Der Arbeitsplatz ist geschlossen: Er meldet sich beim nächsten Start ab, bevor ihn jemand nutzt.",
+    "Didn't work: %@. The next start tries again.": "Hat nicht geklappt: %@. Der nächste Start versucht es noch einmal.",
 })
-

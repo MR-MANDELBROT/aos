@@ -319,6 +319,8 @@ final class MockCompanionServer: @unchecked Sendable {
                 }
             case .bitwardenLock:
                 set("bitwarden", "state", .string("locked"))
+            case .workspaceSignOut:
+                if status["workspace"]?.object?["state"]?.string == "stopped" { set("workspace", "signOutPending", .bool(true)) }
             case .sessionRestart:
                 set("session", "state", .string("restarting"))
             case .displayOff:

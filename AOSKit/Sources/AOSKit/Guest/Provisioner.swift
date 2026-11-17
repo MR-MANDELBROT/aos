@@ -79,6 +79,13 @@ public struct Provisioner: Sendable {
         try await root.run("/bin/zsh -f \(GuestKit.libexec)/prepare.sh", timeout: 180, what: "workspace preparation")
     }
 
+    /// Signs the account out of every website: its browsers quit and their site data goes (Resources/Guest/signout.sh).
+    public func signOutWebsites(host: String) async throws {
+        let root = maintenance(host: host)
+        try await root.waitUntilReachable(timeout: 180)
+        try await root.run("/bin/zsh -f \(GuestKit.libexec)/signout.sh", timeout: 90, what: "signing out of websites")
+    }
+
     // MARK: The workspace helper's permission
 
     /// The helper's state (nil: not installed yet or not answering).

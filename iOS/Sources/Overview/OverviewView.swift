@@ -660,6 +660,8 @@ struct WorkspaceCard: View {
     let connection: MacConnection
     @State private var actions = ActionState()
     @State private var confirmClose = false
+    @State private var confirmSignOut = false
+    @State private var signOutNote: String?
 
     var body: some View {
         GlassCard {
@@ -694,6 +696,7 @@ struct WorkspaceCard: View {
                     }
                 }
                 if live { buttons }
+                if live, canSignOut { signOutRow }
                 ProblemLine(text: actions.problem ?? connection.workspaceTimeout?.timeoutText)
             }
         }
@@ -707,6 +710,41 @@ struct WorkspaceCard: View {
             } else {
                 Text("Programs in the workspace end; sign-ins on websites expire as set on the Mac.")
             }
+        }
+    }
+
+    /// This Mac can sign the workspace out of all websites (newer aOS), and the workspace is set up.
+    private var canSignOut: Bool {
+        connection.hello?.features.contains(MacAction.workspaceSignOut.rawValue) == true
+            && connection.macStatus?.workspace?.setupComplete != false
+    }
+
+    @ViewBuilder private var signOutRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(role: .destructive) {
+                confirmSignOut = true
+            } label: {
+                WorkspaceButtonLabel(title: String(localized: "Sign Out of All Websites"), systemImage: "person.crop.circle.badge.xmark",
+                                     busy: actions.running == .workspaceSignOut, busyText: String(localized: "Signing Out"))
+            }
+            .buttonStyle(.glass)
+            .disabled(actions.running != nil || connection.workspaceOperation != nil)
+            if let note = signOutNote ?? (connection.macStatus?.workspace?.signOutPending == true
+                                          ? String(localized: "Signs out when the workspace starts next, before anyone uses it.") : nil) {
+                Text(note).font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+        .confirmationDialog("Sign the workspace out of all websites?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+            Button("Sign Out of All Websites", role: .destructive) {
+                signOutNote = nil
+                actions.run(.workspaceSignOut, on: connection) { result in
+                    signOutNote = result.signOut == "atNextStart"
+                        ? String(localized: "The workspace is closed: it signs out when it starts next, before anyone uses it.")
+                        : String(localized: "Signed out of all websites.")
+                }
+            }
+        } message: {
+            Text("Chrome and Safari in the workspace forget every sign-in, also Google. If your agent is using it, its browser closes. Programs you signed in to yourself stay signed in.")
         }
     }
 

@@ -41,6 +41,9 @@ public struct VMState: Codable, Sendable, Equatable {
     /// The account's password was made by the helper and never was a file of the user (a new workspace, or one whose
     /// password was replaced after the helper took it over).
     public var passwordFromHelper: Bool?
+    /// The person asked to sign out of all websites while the workspace wasn't running: done at its next start,
+    /// before anyone gets the screen.
+    public var signOutPending: Bool?
 }
 
 public enum VMBundleError: LocalizedError {

@@ -13,6 +13,8 @@ enum MacAction: String, Sendable, CaseIterable {
     case batteryLimit = "mac.battery-limit"
     case workspaceStart = "workspace.start"
     case workspaceStop = "workspace.stop"
+    /// Sign the workspace out of every website (at once, or at its next start).
+    case workspaceSignOut = "workspace.sign-out"
     case bitwardenLock = "bitwarden.lock"
     case sessionRestart = "session.restart"
     /// The session's routines: add or change one (JSON), delete one, send one now (its id).
@@ -88,6 +90,10 @@ struct MacStatus: Equatable, Sendable {
         var purpose: String?
         var until: Date?
         var error: String?
+        /// Whether websites stay signed in after it closes: kept, some, expire (nil: a Mac that doesn't say).
+        var signIns: String? = nil
+        /// A sign-out of all websites waits for its next start.
+        var signOutPending: Bool = false
     }
 
     struct Session: Equatable, Sendable {
@@ -227,7 +233,8 @@ struct MacStatus: Equatable, Sendable {
         }
         if let w = o["workspace"]?.object {
             workspace = Workspace(state: w["state"]?.string ?? "stopped", setupComplete: w["setupComplete"]?.bool ?? true,
-                                  purpose: w["purpose"]?.string, until: date(w["until"]), error: w["error"]?.string)
+                                  purpose: w["purpose"]?.string, until: date(w["until"]), error: w["error"]?.string,
+                                  signIns: w["signIns"]?.string, signOutPending: w["signOutPending"]?.bool ?? false)
         }
         if let s = o["session"]?.object {
             session = Session(enabled: s["enabled"]?.bool ?? true, state: s["state"]?.string, detail: s["detail"]?.string,
@@ -303,17 +310,21 @@ struct MacActionResult: Equatable, Sendable {
     var sleepsIn: Double?
     /// The chats ops: the list as it is now.
     var chats: ChatList?
+    /// workspace.sign-out: "done", or "atNextStart" (the workspace was closed).
+    var signOut: String?
 
-    init(status: MacStatus? = nil, sleepsIn: Double? = nil, chats: ChatList? = nil) {
+    init(status: MacStatus? = nil, sleepsIn: Double? = nil, chats: ChatList? = nil, signOut: String? = nil) {
         self.status = status
         self.sleepsIn = sleepsIn
         self.chats = chats
+        self.signOut = signOut
     }
 
     init(_ r: CompanionResponse) {
         status = r.body["status"]?.object.map(MacStatus.init)
         sleepsIn = r.body["sleeping"]?.bool == true ? (r.body["after"]?.number ?? 0) : nil
         chats = r.body["chats"]?.object.map(ChatList.init)
+        signOut = r.body["signOut"]?.string
     }
 }
 
@@ -335,6 +346,7 @@ struct MacRefusal: Error, Equatable, Sendable {
         case "not-kept": String(localized: "aOS doesn't run this chat on the Mac right now, so there is nothing to restart.")
         case "chat-running": String(localized: "Stop it first, or close it in the Claude app.")
         case "not-found": String(localized: "This chat isn't on the Mac any more.")
+        case "sign-out-failed": String(localized: "Signing out didn't work. The workspace tries again when it starts next.")
         default: message.isEmpty ? String(localized: "aOS on the Mac said no.") : message
         }
     }

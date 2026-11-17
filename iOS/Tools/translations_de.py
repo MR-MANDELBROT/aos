@@ -993,4 +993,12 @@ DE.update({
     'Installing': 'Wird installiert',
     '%lld s': '%lld s',
     'on cellular': 'im Mobilfunk',
+    "Sign Out of All Websites": "Auf allen Websites abmelden",
+    "Signing Out": "Wird abgemeldet",
+    "Signs out when the workspace starts next, before anyone uses it.": "Meldet sich beim nächsten Start des Arbeitsplatzes ab, bevor ihn jemand nutzt.",
+    "The workspace is closed: it signs out when it starts next, before anyone uses it.": "Der Arbeitsplatz ist geschlossen: Er meldet sich beim nächsten Start ab, bevor ihn jemand nutzt.",
+    "Signed out of all websites.": "Auf allen Websites abgemeldet.",
+    "Sign the workspace out of all websites?": "Arbeitsplatz auf allen Websites abmelden?",
+    "Chrome and Safari in the workspace forget every sign-in, also Google. If your agent is using it, its browser closes. Programs you signed in to yourself stay signed in.": "Chrome und Safari im Arbeitsplatz vergessen jede Anmeldung, auch bei Google. Nutzt dein Agent ihn gerade, schließt sich sein Browser. Programme, bei denen du dich selbst angemeldet hast, bleiben angemeldet.",
+    "Signing out didn't work. The workspace tries again when it starts next.": "Abmelden hat nicht geklappt. Der Arbeitsplatz versucht es beim nächsten Start noch einmal.",
 })

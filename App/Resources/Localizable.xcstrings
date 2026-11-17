@@ -1779,6 +1779,26 @@
         }
       }
     },
+    "Chrome and Safari in the workspace forget every sign-in. Also from your iPhone." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chrome und Safari im Arbeitsplatz vergessen jede Anmeldung. Geht auch vom iPhone aus."
+          }
+        }
+      }
+    },
+    "Chrome and Safari in the workspace quit and forget every sign-in, also Google. If your agent is using the workspace, its browser closes. Programs you signed in to yourself stay signed in." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chrome und Safari im Arbeitsplatz werden beendet und vergessen jede Anmeldung, auch bei Google. Nutzt dein Agent den Arbeitsplatz gerade, schließt sich sein Browser. Programme, bei denen du dich selbst angemeldet hast, bleiben angemeldet."
+          }
+        }
+      }
+    },
     "Claude Code" : {
       "localizations" : {
         "de" : {
@@ -2532,6 +2552,16 @@
         }
       }
     },
+    "Didn't work: %@. The next start tries again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hat nicht geklappt: %@. Der nächste Start versucht es noch einmal."
+          }
+        }
+      }
+    },
     "Don't Allow" : {
       "localizations" : {
         "de" : {
@@ -3153,6 +3183,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zum Arbeitsplatz"
+          }
+        }
+      }
+    },
+    "Happens when the workspace starts next, before anyone uses it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passiert beim nächsten Start des Arbeitsplatzes, bevor ihn jemand nutzt."
           }
         }
       }
@@ -6199,6 +6239,26 @@
         }
       }
     },
+    "Sign Out of All Websites" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf allen Websites abmelden"
+          }
+        }
+      }
+    },
+    "Sign out of all websites now" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt überall abmelden"
+          }
+        }
+      }
+    },
     "Sign out of Tailscale?" : {
       "localizations" : {
         "de" : {
@@ -6225,6 +6285,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "„Abmelden“ nimmt diesen Mac aus dem Tailnet und löscht seine Tailscale-Schlüssel. Die Schlüssel verwahrt der Hintergrunddienst von %@, wo kein anderes Programm von dir sie lesen kann."
+          }
+        }
+      }
+    },
+    "Sign the workspace out of all websites?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz auf allen Websites abmelden?"
           }
         }
       }
@@ -6311,6 +6381,16 @@
         }
       }
     },
+    "Signed out of all websites." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf allen Websites abgemeldet."
+          }
+        }
+      }
+    },
     "Signing" : {
       "localizations" : {
         "de" : {
@@ -6367,6 +6447,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das Signieren wird geprüft, sobald ein iPhone gekoppelt ist."
+          }
+        }
+      }
+    },
+    "Signing Out …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird abgemeldet …"
           }
         }
       }
@@ -7176,6 +7266,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Arbeitsplatz ist nicht gestartet"
+          }
+        }
+      }
+    },
+    "The workspace is closed: it signs out when it starts next, before anyone uses it." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Arbeitsplatz ist geschlossen: Er meldet sich beim nächsten Start ab, bevor ihn jemand nutzt."
           }
         }
       }

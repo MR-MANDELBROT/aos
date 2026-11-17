@@ -33,6 +33,9 @@ struct SettingsView: View {
 struct GeneralSettings: View {
     @EnvironmentObject var model: AppModel
     @State private var confirmReset = false
+    @State private var confirmSignOut = false
+    @State private var signingOut = false
+    @State private var signOutResult: String?
     @State private var resetting = false
 
     var body: some View {
@@ -49,6 +52,21 @@ struct GeneralSettings: View {
                     StaySignedInList()
                 }
                 Text(signOutText).font(.caption).foregroundStyle(.secondary)
+                LabeledContent {
+                    Button(signingOut ? "Signing Out …" : "Sign Out …", role: .destructive) { confirmSignOut = true }
+                        .disabled(signingOut)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sign out of all websites now")
+                        Text(signOutNowText).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                .confirmationDialog("Sign the workspace out of all websites?", isPresented: $confirmSignOut,
+                                    titleVisibility: .visible) {
+                    Button("Sign Out of All Websites", role: .destructive) { signOutNow() }
+                } message: {
+                    Text("Chrome and Safari in the workspace quit and forget every sign-in, also Google. If your agent is using the workspace, its browser closes. Programs you signed in to yourself stay signed in.")
+                }
                 Toggle(isOn: binding(\.shareApplications)) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Programs of this Mac in the workspace")
@@ -135,6 +153,28 @@ struct GeneralSettings: View {
             Text("Everything in the workspace is deleted: files, programs and sign-ins. Your Mac and your Exchange folder stay as they are.")
         }
         .onAppear { Task { await model.checkHelper() } }
+    }
+
+    var signOutNowText: String {
+        if let signOutResult { return signOutResult }
+        if model.workspace.signOutPending {
+            return String(localized: "Happens when the workspace starts next, before anyone uses it.")
+        }
+        return String(localized: "Chrome and Safari in the workspace forget every sign-in. Also from your iPhone.")
+    }
+
+    func signOutNow() {
+        signingOut = true
+        signOutResult = nil
+        Task {
+            let r = await model.workspace.signOutOfAllWebsites(from: "the Mac")
+            signingOut = false
+            switch r {
+            case .done: signOutResult = String(localized: "Signed out of all websites.")
+            case .atNextStart: signOutResult = String(localized: "The workspace is closed: it signs out when it starts next, before anyone uses it.")
+            case .failed(let message): signOutResult = String(localized: "Didn't work: \(message). The next start tries again.")
+            }
+        }
     }
 
     var signOutText: String {

@@ -208,6 +208,8 @@ public enum CompanionControl {
     public static let batteryLimit = "companion.mac.battery-limit"
     public static let workspaceStart = "companion.workspace.start"
     public static let workspaceStop = "companion.workspace.stop"
+    /// Sign the workspace out of every website (at once, or at its next start).
+    public static let workspaceSignOut = "companion.workspace.sign-out"
     public static let bitwardenLock = "companion.bitwarden.lock"
     public static let sessionRestart = "companion.session.restart"
     /// The session's routines: add or change one (JSON in `text`), delete one, send one now (its id in `text`).
@@ -241,7 +243,7 @@ public enum CompanionControl {
                                               chatsStart, chatsStop, chatsDelete]
 
     public static let ops: Set<String> = Set([status, sleep, displayOff, displayOn, stayAwake, batteryLimit, workspaceStart,
-                                              workspaceStop, bitwardenLock, sessionRestart, routineSet, routineDelete,
+                                              workspaceStop, workspaceSignOut, bitwardenLock, sessionRestart, routineSet, routineDelete,
                                               routineRun]).union(chatOps)
 
     /// What this Mac offers the phone beyond the first version (`hello` lists it): these ops and the terminal
@@ -318,6 +320,13 @@ extension WorkspaceController {
             workspace["until"] = iso.string(from: lease.until)
         }
         if let error = host.lastError, host.phase == .error { workspace["error"] = error }
+        // Whether websites stay signed in after it closes (all, some, none), and a sign-out waiting for its next start
+        workspace["signIns"] = switch settings.signOutWebsites {
+        case .none: "kept"
+        case .allExcept: "some"
+        case .all: "expire"
+        }
+        if signOutPending { workspace["signOutPending"] = true }
         result["workspace"] = workspace
         var session: [String: Any] = ["enabled": settings.sessionEnabled]
         if let s = SessionSupervisor.readStatus(paths: paths) {
@@ -437,6 +446,13 @@ extension WorkspaceController {
                 Task { @MainActor [weak self] in _ = await self?.close() }
             }
             return done()
+
+        case CompanionControl.workspaceSignOut:
+            switch await signOutOfAllWebsites(from: from) {
+            case .done: return done(["signOut": "done"])
+            case .atNextStart: return done(["signOut": "atNextStart"])
+            case .failed(let message): return AgentResponse(id: r.id, ok: false, text: message, code: "sign-out-failed")
+            }
 
         case CompanionControl.bitwardenLock:
             log("\(from) locks Bitwarden")
