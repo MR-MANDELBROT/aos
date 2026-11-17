@@ -638,7 +638,10 @@ public final class WorkspaceController {
             waited += 1
         }
         guard host.isRunning else { return "Workspace closed." }
-        if settings.expireSignIns, let ip = try? host.guestAddress() {
+        // Sign-ins expire (all, or all but some): an orderly shutdown, Chrome clears them when it quits. Kept: the
+        // workspace is suspended. (`signOutWebsites`, not the older `expireSignIns`: that one stayed true after the
+        // choice "stay signed in", and the workspace was shut down every time.)
+        if settings.signOutWebsites != .none, let ip = try? host.guestAddress() {
             log("shutting the workspace down (sign-ins expire)")
             host.expectStop()
             try? await provisioner.shutdown(host: ip)

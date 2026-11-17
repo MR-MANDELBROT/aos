@@ -745,7 +745,13 @@ mode, no thermal pressure), and the freezer never touches aOS or the VM.
 - The screenshot after an input reconnects the screen once on a timeout, like a plain screenshot.
 - While a lease runs, aOS holds a user-initiated activity (no App Nap, no timer coalescing for its screen connection).
 - Opening is a cold boot (32 to 55 s) whenever sign-ins expire on close (the shutdown makes Chrome clear them);
-  with "stay signed in" the workspace is suspended and resumes instead (not yet measured).
+  with "stay signed in" the workspace is suspended and resumes instead (not yet measured). Until build 26 the close
+  looked at the older `expireSignIns` (still true after choosing "stay signed in") and shut the workspace down
+  every time.
+- One-time codes in boxes (Apple: six boxes, the page moves the focus on after each digit): the helper (version
+  11) counts the code as arrived when the boxes from the focused one on hold it together, or when the page took it
+  and the field is gone. Before, it read only the first box, emptied it again and every Apple sign-in failed at
+  the code (2026-11-17, four times in one night).
 
 ## Two traps found on the way
 

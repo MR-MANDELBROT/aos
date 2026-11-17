@@ -15,7 +15,7 @@ import Security
 // Requests: {"op":"status"} {"op":"focus"} {"op":"fill","host":"...","kind":"username|password|code",
 // "username":"...","password":"...","code":"..."}. Answers never contain what was typed.
 
-let helperVersion = "10"
+let helperVersion = "11"
 let guestUser = "aos"
 
 func socketPath(home: String) -> String { "\(home)/Library/Application Support/AOSHelper/helper.sock" }
@@ -260,6 +260,23 @@ enum Keyboard {
         return n == text.utf16.count
     }
 
+    /// A one-time code typed from `field` on: in that field, or one character per box over the boxes that follow
+    /// it (Apple's six boxes: the page moves the focus on after each digit, so the first box holds only one).
+    static func codeArrived(_ code: String, from field: AXUIElement, in area: AXUIElement) -> Bool {
+        func plain(_ s: String) -> String { s.lowercased().filter { !" \t-()".contains($0) } }
+        if arrived(code, in: field) { return true }
+        let fields = AX.fields(in: area)
+        guard let i = fields.firstIndex(where: { CFEqual($0, field) }) else { return false }
+        let want = plain(code)
+        var joined = ""
+        for f in fields[i...] {
+            guard let v = AX.attribute(f, kAXValueAttribute) as? String, !v.isEmpty else { break }
+            joined += plain(v)
+            if joined.count >= want.count { break }
+        }
+        return joined == want
+    }
+
     /// Types `text` into `field` (the focused one) and checks that all of it arrived; one more try if not. False:
     /// the field is emptied again, the caller submits nothing.
     static func enter(_ text: String, into field: AXUIElement) -> Bool {
@@ -464,9 +481,29 @@ func fill(_ r: [String: Any]) -> [String: Any] {
     switch kind {
     case "code":
         guard let code, !code.isEmpty else { return ["ok": false, "error": "no code in the answer"] }
-        guard Keyboard.enter(code, into: element) else { return ["ok": false, "error": notArrived] }
+        guard Keyboard.clear(element) else { return ["ok": false, "error": notArrived] }
+        Keyboard.type(code)
+        // In one field, or spread over one box per digit; a page that takes the code by itself (Apple) may have
+        // moved on already: the field is gone then.
+        var gone = false
+        let ok = Keyboard.wait(seconds: 2.5) {
+            if Keyboard.codeArrived(code, from: element, in: area) { return true }
+            gone = !AX.fields(in: area).contains { CFEqual($0, element) }
+            return gone
+        }
+        guard ok else {
+            takeBack(element)
+            return ["ok": false, "error": notArrived]
+        }
         filled.append("code")
-        return submit(element, filled)
+        if gone { return ["ok": true, "filled": filled, "submitted": true, "host": host] }
+        if Keyboard.arrived(code, in: element) { return submit(element, filled) }
+        // Boxes: the focus is in the last one now. Return there submits, if the page didn't already.
+        if let front = AX.frontChrome(), front.pid == chrome.pid, let (_, now) = AX.chromeFocus(wait: 1),
+           let (_, u) = AX.topLevelWebArea(of: now), hostMatches(u, host) {
+            Keyboard.returnKey()
+        }
+        return ["ok": true, "filled": filled, "submitted": true, "host": host]
 
     case "password":
         guard let password, !password.isEmpty else { return ["ok": false, "error": "no password in the answer"] }
