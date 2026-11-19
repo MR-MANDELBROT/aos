@@ -1,0 +1,5 @@
+# Built by Android/Tools/go-android.sh (like the iPhone's xcframeworks, not checked in); the patch, the script and the
+# README are.
+*.aar
+*-sources.jar
+*.source

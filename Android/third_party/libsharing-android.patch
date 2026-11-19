@@ -1,0 +1,122 @@
+aOS's Android changes to Open Screen Sharing's Go library (libsharing), GPL-3.0 like Open Screen Sharing (LICENSE and
+COPYING in iOS/ThirdParty/OpenScreenSharing). Android/Tools/go-android.sh applies them after aOS's own patch
+(iOS/ThirdParty/OpenScreenSharing/libsharing-aos.patch) to a copy of the source before it builds aosgo.aar (libsharing
+and aOS's Tailnet/mobile in one Go library); the checkout stays as it is. Made on 2026-11-19 against Max's fork of
+Open Screen Sharing (branch autofill-passwort, 8b19fc9). Each change is marked "aOS:".
+
+- internal/aosandroid, libsharing/aos_android.go, android/java/.../DirectFramebuffer.java: the framebuffer for
+  Session.AttachFramebuffer. Java has no pointers, so the app allocates a direct ByteBuffer (DirectFramebuffer) and a
+  JNI function in the Go library (DirectFramebuffer.address) tells its address; go-android.sh compiles the Java class
+  into the aar's classes.jar. Tested in the emulator: libsharing writes a plain RFB server's picture into it.
+- internal/rfb/media/socket.go: unix.SO_REUSEPORT instead of syscall.SO_REUSEPORT, which package syscall lacks for
+  linux/amd64 (the Android emulator). The same value on Apple's systems.
+
+diff -ruN a/android/java/dev/marquart/aos/libsharing/DirectFramebuffer.java b/android/java/dev/marquart/aos/libsharing/DirectFramebuffer.java
+--- a/android/java/dev/marquart/aos/libsharing/DirectFramebuffer.java	1970-01-01 01:00:00
++++ b/android/java/dev/marquart/aos/libsharing/DirectFramebuffer.java	2026-11-19 19:55:39
+@@ -0,0 +1,52 @@
++// aOS: part of aOS's Android patch to Open Screen Sharing (GPL-3.0, Android/third_party/libsharing-android.patch in
++// aOS). Based on Open Screen Sharing by nekohasekai, GPL-3.0; not part of the original.
++
++package dev.marquart.aos.libsharing;
++
++import java.nio.ByteBuffer;
++import java.nio.ByteOrder;
++
++/**
++ * aOS: a framebuffer for {@link Session#attachFramebuffer}, the Android counterpart of the iPhone app's CVPixelBuffer:
++ * a direct ByteBuffer whose memory libsharing writes the remote screen into.
++ *
++ * <p>Pixels: 4 bytes each, in memory order B, G, R, X (X undefined: draw opaque), rows {@link #bytesPerRow} apart, the
++ * top row first. libsharing writes while it decodes; after {@code SessionHandler.onFramebufferUpdate(update)} the
++ * rectangle update.getX(), getY(), getWidth(), getHeight() is complete and the renderer may upload it (for example
++ * glTexSubImage2D as GL_RGBA with a .bgra swizzle in the shader, or GL_BGRA_EXT where available).
++ *
++ * <p>Lifetime: libsharing keeps writing into the attached framebuffer until another one was attached (the next
++ * {@code onFramebufferResize}) or the session reported {@code StateDisconnected}. Keep a reference to this object
++ * until then: its memory goes away with it.
++ */
++public final class DirectFramebuffer {
++    public final int width;
++    public final int height;
++    public final int bytesPerRow;
++    /** The pixels (capacity bytesPerRow * height), zero at first. */
++    public final ByteBuffer pixels;
++    private final long address;
++
++    /** A zeroed framebuffer of width x height pixels, 4 * width bytes per row. */
++    public DirectFramebuffer(int width, int height) {
++        if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
++            throw new IllegalArgumentException("framebuffer size " + width + "x" + height);
++        }
++        this.width = width;
++        this.height = height;
++        this.bytesPerRow = width * 4;
++        this.pixels = ByteBuffer.allocateDirect(bytesPerRow * height).order(ByteOrder.LITTLE_ENDIAN);
++        go.Seq.touch(); // loads the Go library, which holds address()
++        this.address = address(pixels);
++        if (address == 0) {
++            throw new IllegalStateException("the framebuffer's memory has no address");
++        }
++    }
++
++    /** Hands this framebuffer to the session; call it from SessionHandler.onFramebufferResize with that size. */
++    public void attachTo(Session session) throws Exception {
++        session.attachFramebuffer(address, width, height, bytesPerRow);
++    }
++
++    private static native long address(ByteBuffer buffer);
++}
+diff -ruN a/internal/aosandroid/directbuffer_android.go b/internal/aosandroid/directbuffer_android.go
+--- a/internal/aosandroid/directbuffer_android.go	1970-01-01 01:00:00
++++ b/internal/aosandroid/directbuffer_android.go	2026-11-19 19:45:24
+@@ -0,0 +1,25 @@
++// aOS: the Android app's way to hand libsharing a framebuffer. The iPhone app passes the address of a CVPixelBuffer
++// to Session.AttachFramebuffer; Java has no pointers, so the app allocates a direct ByteBuffer
++// (dev.marquart.aos.libsharing.DirectFramebuffer, android/java in this module) and this JNI function tells it the
++// buffer's address. Part of aOS's Android patch to Open Screen Sharing (GPL-3.0,
++// Android/third_party/libsharing-android.patch in aOS).
++
++package aosandroid
++
++/*
++#include <jni.h>
++
++static inline jlong aos_direct_buffer_address(JNIEnv *env, jobject buffer) {
++	if (buffer == NULL) return 0;
++	return (jlong)(intptr_t)(*env)->GetDirectBufferAddress(env, buffer);
++}
++*/
++import "C"
++
++// Java_dev_marquart_aos_libsharing_DirectFramebuffer_address is DirectFramebuffer.address(ByteBuffer): the
++// address of a direct buffer's memory, or 0 for a buffer that isn't direct.
++//
++//export Java_dev_marquart_aos_libsharing_DirectFramebuffer_address
++func Java_dev_marquart_aos_libsharing_DirectFramebuffer_address(env *C.JNIEnv, _ C.jclass, buffer C.jobject) C.jlong {
++	return C.aos_direct_buffer_address(env, buffer)
++}
+diff -ruN a/internal/rfb/media/socket.go b/internal/rfb/media/socket.go
+--- a/internal/rfb/media/socket.go	2026-11-19 19:44:24
++++ b/internal/rfb/media/socket.go	2026-11-19 19:46:02
+@@ -32,7 +32,9 @@
+ 			err := raw.Control(func(fd uintptr) {
+ 				optionErr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+ 				if optionErr == nil {
+-					optionErr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEPORT, 1)
++					// aOS: unix.SO_REUSEPORT (the same value on Apple's systems): package syscall has none for
++					// linux/amd64, the Android emulator. Part of aOS's Android patch (GPL-3.0).
++					optionErr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_REUSEPORT, 1)
+ 				}
+ 			})
+ 			return E.Errors(err, optionErr)
+diff -ruN a/libsharing/aos_android.go b/libsharing/aos_android.go
+--- a/libsharing/aos_android.go	1970-01-01 01:00:00
++++ b/libsharing/aos_android.go	2026-11-19 19:45:24
+@@ -0,0 +1,6 @@
++// aOS: links the JNI function DirectFramebuffer.address (internal/aosandroid) into the Android library. Part of aOS's
++// Android patch to Open Screen Sharing (GPL-3.0, Android/third_party/libsharing-android.patch in aOS).
++
++package libsharing
++
++import _ "github.com/nekohasekai/open-screen-sharing/internal/aosandroid"
