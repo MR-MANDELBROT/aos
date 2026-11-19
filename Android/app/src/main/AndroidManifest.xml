@@ -7,6 +7,24 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- NSD (Bonjour): the pairing listener `_aos-pair._tcp` and the Mac's `_ssh._tcp`. -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <!-- The terminal: a foreground service keeps the connection while a terminal on the Mac is open
+         (terminal/TerminalKeepAliveService.kt), with its notification. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- The UI: the pairing code's QR scanner (on the phone, nothing leaves it), the screen lock before approvals and
+         for "Unlock to open aOS", notifications for requests while the app is in the background. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- Tailscale's sign-in page opens in a Custom Tab. -->
+    <queries>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
 
     <application
         android:name=".AosApp"
@@ -14,8 +32,11 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
         android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.NoActionBar">
+        android:theme="@style/Theme.AOS">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -33,5 +54,14 @@
                 <data android:scheme="aos-pair" />
             </intent-filter>
         </activity>
+        <!-- Keeps the SSH connection to the Mac while a terminal is open and the app is in the background. -->
+        <service
+            android:name=".terminal.TerminalKeepAliveService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps the person's open SSH terminal session to their own Mac connected while the app is in the background; the notification shows it and ends it." />
+        </service>
     </application>
 </manifest>

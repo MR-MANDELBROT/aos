@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AOS" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/aos_background</item>
+        <item name="android:colorAccent">@color/brand_indigo</item>
+    </style>
+    <color name="brand_indigo">#8C90FF</color>
+    <color name="aos_background">#000000</color>
+</resources>

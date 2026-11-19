@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The window behind Compose (start, transitions): the grouped background of the app. -->
+    <style name="Theme.AOS" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/aos_background</item>
+        <item name="android:colorAccent">@color/brand_indigo</item>
+    </style>
+    <color name="brand_indigo">#4D51E0</color>
+    <color name="brand_mint">#3DD9B4</color>
+    <color name="aos_background">#F2F2F7</color>
+    <color name="icon_background_top">#6066F5</color>
+    <color name="icon_background_bottom">#7840D2</color>
+</resources>

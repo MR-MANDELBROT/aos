@@ -42,6 +42,12 @@ data class AppSettings(
     val deviceName: String? = null,
     /** Keep the connection this long after the app leaves the foreground (iOS: 25 s). */
     val backgroundGraceSeconds: Int = 25,
+    /** "Unlock to open aOS" (biometrics or the screen lock), at start and after `autoLockMinutes` in the background. */
+    val requireUnlock: Boolean = false,
+    /** Minutes in the background before the app locks again; 0 locks right away. */
+    val autoLockMinutes: Int = 5,
+    /** The app asked for the notification permission once (Android 13+); it doesn't ask again by itself. */
+    val notificationsAsked: Boolean = false,
 )
 
 interface SettingsStore {

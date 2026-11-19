@@ -653,6 +653,35 @@ class MacConnection(
         true
     } ?: false
 
+    // The demo (debug builds, ui/demo): "connected", with the Mac in memory
+
+    /** Runs against `server` instead of the network: connected at once, the companion as usual (hello, subscribe,
+     *  status, events), no SSH (the terminal and the screens have none). For screenshots without a Mac. */
+    fun startDemo(server: dev.marquart.aos.companion.MockCompanionServer) {
+        scope.launch {
+            if (loop != null) return@launch
+            loop = scope.launch {
+                val host = _mac.value.lastHost ?: _mac.value.hosts.firstOrNull() ?: "localhost"
+                _state.value = State.Connected(host, SSHRoute.Host(host))
+                _companionState.value = CompanionState.Starting
+                val client = CompanionClient(server.makeTransport(), signer)
+                client.start()
+                _companion.value = client
+                try {
+                    _hello.value = client.hello(appVersion, deviceName)
+                    client.subscribe()
+                    setWorkspace(client.status())
+                    _companionState.value = CompanionState.Ready
+                    client.events.collect { handle(it) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    _companionState.value = CompanionState.Unavailable(companionMessage(e))
+                }
+            }
+        }
+    }
+
     // Text (English; the UI words these itself where it wants)
 
     fun message(error: SshConnectException): String = when (error) {

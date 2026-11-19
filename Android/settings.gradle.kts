@@ -10,6 +10,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Termux's terminal-emulator and terminal-view (Apache-2.0), built by JitPack from a release tag; nothing
+        // else comes from there.
+        maven("https://jitpack.io") {
+            content { includeGroup("com.github.termux.termux-app") }
+        }
     }
 }
 rootProject.name = "aOS"

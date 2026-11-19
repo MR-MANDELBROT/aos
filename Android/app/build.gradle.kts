@@ -27,6 +27,8 @@ android {
     }
 
     sourceSets.getByName("main").kotlin.directories.add(if (hasAosgo) "src/tailnet/kotlin" else "src/notailnet/kotlin")
+    // The screen's session engine: libsharing from the Go library (dev.marquart.aos.screen), else a stand-in.
+    sourceSets.getByName("main").kotlin.directories.add(if (hasAosgo) "src/libsharing/kotlin" else "src/nolibsharing/kotlin")
 
     buildTypes {
         release {
@@ -88,6 +90,14 @@ dependencies {
     implementation(libs.sshd.core)
     implementation(libs.eddsa)
     implementation(libs.slf4j.nop)
+    // The terminal: Termux's emulator and view, fed from the SSH channel (dev.marquart.aos.terminal).
+    implementation(libs.termux.terminal.view)
+    implementation(libs.termux.terminal.emulator)
+    // The UI (dev.marquart.aos.ui): icons, biometric prompts, Custom Tabs, the pairing code's QR scanner.
+    implementation(libs.androidx.compose.material.icons)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.browser)
+    implementation(libs.zxing.embedded)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.kotlinx.coroutines.test)

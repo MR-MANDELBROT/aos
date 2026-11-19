@@ -17,6 +17,8 @@ import dev.marquart.aos.ssh.SshConnector
 import dev.marquart.aos.store.DataStoreMacStore
 import dev.marquart.aos.store.DataStoreSettingsStore
 import dev.marquart.aos.store.KeystoreSecretStore
+import dev.marquart.aos.ui.lock.AppLock
+import dev.marquart.aos.ui.notify.RequestNotifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,9 +34,18 @@ class AosApp : Application() {
         SshConnector.useHomeFolder(java.io.File(noBackupFilesDir, "ssh-home"))
         graph = AppGraph(this)
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner) = graph.model.onForeground()
-            override fun onStop(owner: LifecycleOwner) = graph.model.onBackground()
+            override fun onStart(owner: LifecycleOwner) {
+                graph.lock.onForeground()
+                graph.notifier.clear()
+                graph.model.onForeground()
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                graph.lock.onBackground()
+                graph.model.onBackground()
+            }
         })
+        graph.notifier.start()
         graph.network.start()
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch { graph.model.load() }
     }
@@ -60,6 +71,12 @@ class AppGraph(app: Application) {
         keys = keys, macStore = macStore, settings = settings, connector = connector, pairingClient = pairingClient,
         network = network, tailnet = tailnet, defaultDeviceName = deviceName(app), appVersion = BuildConfig.VERSION_NAME,
     )
+
+    /** "Unlock to open aOS" (ui/lock). */
+    val lock = AppLock(settings)
+
+    /** Requests that come while the app is in the background (ui/notify). */
+    val notifier = RequestNotifier(app, model)
 
     private fun deviceName(app: Application): String =
         Settings.Global.getString(app.contentResolver, Settings.Global.DEVICE_NAME)?.takeIf { it.isNotBlank() }

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Terminal tab (dev.marquart.aos.terminal); wording as on the iPhone. German: values-de/strings_terminal.xml. -->
+<resources>
+    <string name="term_title">Terminal</string>
+    <string name="term_new_session">New Session</string>
+    <string name="term_new_session_footer">Starts another shell on %1$s. The others keep running.</string>
+    <string name="term_sessions_header">Sessions on the Mac</string>
+    <string name="term_sessions_footer">They keep running when the connection drops, also with the app closed, and this phone picks up where it left off. End the ones you no longer need.</string>
+    <string name="term_no_sessions">No sessions on the Mac. New Session starts one.</string>
+    <string name="term_no_mac">No Mac yet</string>
+    <string name="term_no_mac_text">Pair your Mac to open a terminal on it.</string>
+    <string name="term_connecting_mac">Connecting to the Mac …</string>
+    <string name="term_mac_sleeping_since">The Mac is sleeping since %1$s. The sessions continue when it wakes.</string>
+    <string name="term_mac_unreachable_sessions">The Mac isn\'t reachable right now. The sessions keep running there.</string>
+    <string name="term_update_aos_list">Update aOS on the Mac to keep terminals when the connection drops.</string>
+    <string name="term_open_here_phone">Open on this phone</string>
+    <string name="term_open_on_mac">Open in a terminal on the Mac</string>
+    <string name="term_open_elsewhere">Open on another device</string>
+    <string name="term_open_elsewhere_from">Open on another device (%1$s)</string>
+    <string name="term_not_open">Not open anywhere</string>
+    <string name="term_not_open_since">Not open anywhere since %1$s</string>
+    <string name="term_place">%1$s in %2$s</string>
+    <string name="term_open_session">Open Session</string>
+    <string name="term_end_session">End Session</string>
+    <string name="term_end">End</string>
+    <string name="term_end_confirm_title">End this session?</string>
+    <string name="term_end_confirm_text">The shell on the Mac ends, and so do the programs running in it.</string>
+    <string name="term_cancel">Cancel</string>
+    <string name="term_switch_session">Switch Session</string>
+    <string name="term_sessions_keep_running">Sessions keep running on the Mac until you end them.</string>
+    <string name="term_settings">Terminal settings</string>
+    <string name="term_done">Done</string>
+    <string name="term_back">Back</string>
+    <string name="term_more">More</string>
+
+    <!-- The terminal and its states -->
+    <string name="term_connecting">Connecting …</string>
+    <string name="term_reconnecting">Reconnecting … The session keeps running on the Mac.</string>
+    <string name="term_mac_sleeping">The Mac is sleeping. The session continues when it wakes.</string>
+    <string name="term_taken">This session is open on another device now. It keeps running on the Mac.</string>
+    <string name="term_shell_ended">The shell ended.</string>
+    <string name="term_session_was_ended">The session was ended.</string>
+    <string name="term_session_ended">The session ended.</string>
+    <string name="term_open_it_here">Open It Here</string>
+    <string name="term_connect_again">Connect again</string>
+    <string name="term_try_again">Try again</string>
+    <string name="term_doesnt_start">The terminal on the Mac doesn\'t start.</string>
+    <string name="term_session_was_new">The session on the Mac had ended. This is a new one.</string>
+    <string name="term_update_aos">Update aOS on the Mac to keep this terminal when the connection drops.</string>
+    <string name="term_aos_missing">aOS isn\'t on the Mac where it was paired: this terminal ends with the connection.</string>
+    <string name="term_mac_unreachable">The Mac isn\'t reachable right now. The session keeps running there.</string>
+    <string name="term_screen_copied">Screen copied</string>
+    <string name="term_output_copied">Output copied</string>
+    <string name="term_no_output">No output to copy</string>
+    <string name="term_copied">Copied</string>
+    <string name="term_link_copied">Link copied</string>
+    <string name="term_font_size_notice">%1$d pt · %2$d × %3$d</string>
+    <string name="term_paste_lines_title">Paste %1$d lines?</string>
+    <string name="term_paste_lines_text">The shell runs each line as soon as it arrives.</string>
+    <string name="term_paste">Paste</string>
+    <string name="term_copy">Copy</string>
+    <string name="term_copy_screen">Copy Screen</string>
+    <string name="term_copy_last_output">Copy Last Output</string>
+    <string name="term_open_link">Open Link</string>
+    <string name="term_copy_link">Copy Link</string>
+    <string name="term_text_size">Text Size</string>
+    <string name="term_smaller_text">Smaller Text</string>
+    <string name="term_default_text_size">Default Text Size</string>
+    <string name="term_bigger_text">Bigger Text</string>
+    <string name="term_show_keyboard">Show Keyboard</string>
+    <string name="term_hide_keyboard">Hide Keyboard</string>
+    <string name="term_keep_screen_on">Keep Screen On</string>
+
+    <!-- The key bar -->
+    <string name="term_keys">Terminal keys</string>
+    <string name="term_key_escape">Escape</string>
+    <string name="term_key_control">Control</string>
+    <string name="term_key_alt">Alt</string>
+    <string name="term_key_tab">Tab</string>
+    <string name="term_key_shift_tab">Shift Tab</string>
+    <string name="term_key_home">Home</string>
+    <string name="term_key_end">End</string>
+    <string name="term_key_page_up">Page Up</string>
+    <string name="term_key_page_down">Page Down</string>
+    <string name="term_key_delete_forward">Delete Forward</string>
+    <string name="term_key_up">Up Arrow</string>
+    <string name="term_key_down">Down Arrow</string>
+    <string name="term_key_left">Left Arrow</string>
+    <string name="term_key_right">Right Arrow</string>
+    <string name="term_arrow_pad">Arrow pad</string>
+    <string name="term_arrow_pad_hint">Swipe up, down, left or right to send arrow keys</string>
+    <string name="term_modifier_off">Off</string>
+    <string name="term_modifier_once">On for the next key</string>
+    <string name="term_modifier_locked">Locked</string>
+    <string name="term_modifier_hint">Double tap to keep it on</string>
+
+    <!-- Settings > Terminal -->
+    <string name="term_settings_keys">Keys</string>
+    <string name="term_settings_arrow_keys">Arrow keys</string>
+    <string name="term_settings_four_keys">Four keys</string>
+    <string name="term_settings_swipe">Swipe for arrow keys</string>
+    <string name="term_settings_keys_footer">The arrows sit in the middle of the key bar; the whole bar scrolls. Swiping on the terminal works like the pad: sideways for ← and →, a quick flick up or down for ↑ and ↓ while the terminal shows its end (slower drags scroll back). Keep your finger down to repeat.</string>
+    <string name="term_settings_screen_on_footer">While a terminal is open and connected.</string>
+    <string name="term_settings_background">In the background</string>
+    <string name="term_settings_keep_connected">Keep connected in the background</string>
+    <string name="term_settings_background_footer">Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. With this on, aOS keeps its connection while a terminal is open and the app is in the background, and shows a notification with a button to end the session. Off: the connection goes 25 seconds after you leave the app.</string>
+    <string name="term_settings_notifications_off">Notifications for aOS are off, so the notification for open terminals doesn\'t show. The connection is kept anyway.</string>
+
+    <!-- The notification while a terminal is open -->
+    <string name="term_channel_name">Open terminals</string>
+    <string name="term_channel_description">Shows while a terminal on your Mac is open, with a button to end it.</string>
+    <string name="term_notification_title">Terminal on %1$s</string>
+    <string name="term_notification_connected">Connected, kept on the Mac</string>
+    <string name="term_notification_reconnecting">Reconnecting, kept on the Mac</string>
+    <string name="term_notification_connecting">Connecting, kept on the Mac</string>
+    <string name="term_notification_end">End Session</string>
+</resources>

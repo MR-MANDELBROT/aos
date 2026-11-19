@@ -1,5 +1,6 @@
 package dev.marquart.aos.model
 
+import dev.marquart.aos.companion.MockCompanionServer
 import dev.marquart.aos.connection.MacConnection
 import dev.marquart.aos.connection.NetworkMonitor
 import dev.marquart.aos.connection.TailnetDialer
@@ -12,6 +13,7 @@ import dev.marquart.aos.core.HelpRequest
 import dev.marquart.aos.core.PairedMac
 import dev.marquart.aos.core.PairingLink
 import dev.marquart.aos.core.PairingRequest
+import dev.marquart.aos.core.ScreenTarget
 import dev.marquart.aos.core.SignInRequest
 import dev.marquart.aos.core.SignInResult
 import dev.marquart.aos.keys.DeviceKey
@@ -59,6 +61,8 @@ class AppModel(
     private val defaultDeviceName: String,
     private val appVersion: String,
     private val connectionTiming: MacConnection.Timing = MacConnection.Timing(),
+    /** Debug builds' demo (ui/demo): the Mac is this server in memory, nothing goes to the network. */
+    val demo: MockCompanionServer? = null,
 ) {
     /** Something the agent asks the person to decide: a sign-in or opening the workspace. */
     sealed class Question {
@@ -140,6 +144,50 @@ class AppModel(
     /** Everything that waits for the person (for a badge). */
     val waitingCount: Int get() = _questions.value.size + _helpRequests.value.size
 
+    // What the tabs ask of each other (iOS: AppModel.tab, screenTarget, openTerminal). The UI shows `tab`; the Screen
+    // tab and the Terminal tab handle their requests once and clear them.
+
+    enum class Tab { OVERVIEW, TERMINAL, SCREEN, SETTINGS }
+
+    private val _tab = MutableStateFlow(Tab.OVERVIEW)
+    private val _screenRequest = MutableStateFlow<ScreenTarget?>(null)
+    private val _terminalRequest = MutableStateFlow<Long?>(null)
+
+    /** The tab on screen. */
+    val tab: StateFlow<Tab> = _tab.asStateFlow()
+
+    /** A screen someone asked to see (the Overview's "Show the screen", a help request the person opened): the Screen
+     *  tab connects it, as after a tap there, and calls `screenRequestHandled()`. */
+    val screenRequest: StateFlow<ScreenTarget?> = _screenRequest.asStateFlow()
+
+    /** "Open Terminal" (Claude Code on the Mac needs a sign-in): the Terminal tab opens the Mac's terminal in a new
+     *  session there and calls `terminalRequestHandled()`. The value is when it was asked (each request is new). */
+    val terminalRequest: StateFlow<Long?> = _terminalRequest.asStateFlow()
+
+    fun selectTab(tab: Tab) {
+        _tab.value = tab
+    }
+
+    /** The Screen tab with this screen. */
+    fun showScreen(target: ScreenTarget) {
+        _screenRequest.value = target
+        _tab.value = Tab.SCREEN
+    }
+
+    fun screenRequestHandled() {
+        _screenRequest.value = null
+    }
+
+    /** The Terminal tab with the Mac's terminal in a new session there. */
+    fun openNewTerminal() {
+        _terminalRequest.value = System.currentTimeMillis()
+        _tab.value = Tab.TERMINAL
+    }
+
+    fun terminalRequestHandled() {
+        _terminalRequest.value = null
+    }
+
     private val deferred = HashSet<String>()
     private var pruneJob: Job? = null
     private var backgroundJob: Job? = null
@@ -178,24 +226,32 @@ class AppModel(
         connection.onEvent = { handle(it) }
         connection.onMacChanged = { changed -> scope.launch { update(changed) } }
         _connection.value = connection
-        if (!inBackground) connection.start()
+        if (demo != null) connection.startDemo(demo) else if (!inBackground) connection.start()
     }
 
     /** The app came to the foreground: connect again (a connection that looks alive is checked). */
     fun onForeground() {
+        if (demo != null) return
         inBackground = false
         backgroundJob?.cancel()
         backgroundJob = null
         _connection.value?.start()
     }
 
+    /** Something keeps the app running in the background and needs the connection (the terminal's foreground service
+     *  while a terminal is open, terminal/TerminalKeepAliveService.kt): while it says so, the connection stays after
+     *  the grace period (iOS: `keepAlive.holdsInBackground`). Asked every 5 s. */
+    @Volatile var holdsConnectionInBackground: () -> Boolean = { false }
+
     /** The app left the foreground: keep the connection for a short while (a quick switch to another app), then let it
-     *  go; a fresh connection on return is better than a dead one. */
+     *  go; a fresh connection on return is better than a dead one. Not while `holdsConnectionInBackground`. */
     fun onBackground() {
+        if (demo != null) return
         inBackground = true
         backgroundJob?.cancel()
         backgroundJob = scope.launch {
             delay(settings.current().backgroundGraceSeconds * 1000L)
+            while (holdsConnectionInBackground()) delay(BACKGROUND_HOLD_CHECK_MILLIS)
             _connection.value?.stop()
         }
     }
@@ -280,6 +336,7 @@ class AppModel(
                         _helpRequests.value = _helpRequests.value + event.request
                         // Shown on the Screen tab; the workspace connects when the person taps it.
                         _activeHelp.value = event.request
+                        _tab.value = Tab.SCREEN
                     }
                 }
                 is CompanionEvent.HelpClosed -> {
@@ -325,6 +382,7 @@ class AppModel(
     /** The help request the Screen tab shows (the overview's banner was tapped). */
     fun showHelp(request: HelpRequest) {
         _activeHelp.value = request
+        showScreen(ScreenTarget.WORKSPACE)
     }
 
     /** The question sheet closed (answered, declined, "Later" or swiped away). A question that is still open stays in
@@ -375,5 +433,6 @@ class AppModel(
     companion object {
         const val SETTLED_SHOWN_MILLIS = 1_600L
         const val NEXT_QUESTION_MILLIS = 450L
+        const val BACKGROUND_HOLD_CHECK_MILLIS = 5_000L
     }
 }

@@ -45,6 +45,8 @@ class TestSshServer private constructor(
     private val server: SshServer,
     val companion: MockCompanionServer,
     val hostKeyLine: String,
+    /** The Mac's terminal sessions with state (attach, drop, take over); null: the fixed answers below. */
+    val terms: FakeTermSessions? = null,
 ) {
     val port: Int get() = server.port
     val hostKeyFingerprint: String = SSHKeyFormat.fingerprint(hostKeyLine)!!
@@ -57,7 +59,8 @@ class TestSshServer private constructor(
         const val COMPANION_PATH = CompanionCommand.DEFAULT_PATH
 
         fun start(allowedKey: DeviceKey?, username: String = "max",
-                  companion: MockCompanionServer = MockCompanionServer(keepsSecrets = true)): TestSshServer {
+                  companion: MockCompanionServer = MockCompanionServer(keepsSecrets = true),
+                  terms: FakeTermSessions? = null): TestSshServer {
             val hostKey = KeyUtils.generateKeyPair("ssh-ed25519", 256)
             val server = SshServer.setUpDefaultServer()
             server.host = "127.0.0.1"
@@ -73,7 +76,7 @@ class TestSshServer private constructor(
             server.setCommandFactory { _, command -> MacCommand(command, test) }
             server.shellFactory = ShellFactory { EchoShell(test) }
             server.start()
-            test = TestSshServer(server, companion, PublicKeyEntry.toString(hostKey.public))
+            test = TestSshServer(server, companion, PublicKeyEntry.toString(hostKey.public), terms)
             return test
         }
     }
@@ -98,6 +101,7 @@ class TestSshServer private constructor(
             val term = env.env["TERM"]
             test.record(if (term != null) "pty-exec $term ${env.env["COLUMNS"]}x${env.env["LINES"]} $command" else "exec $command")
             val quoted = CompanionCommand.shellQuoted(COMPANION_PATH)
+            if (test.terms != null && command.startsWith("$quoted term ")) return heldTerm(channel, env)
             when {
                 command == CompanionCommand.serve(COMPANION_PATH) -> serveCompanion()
                 command.endsWith("' serve") -> {
@@ -139,6 +143,34 @@ class TestSshServer private constructor(
                 } catch (_: IOException) {
                 }
                 try { exit.onExit(0) } catch (_: Exception) {}
+            }
+        }
+
+        /** `term ...` played by FakeTermSessions: its bytes out, typed bytes in, the channel's end as it says. */
+        private fun heldTerm(channel: ChannelSession?, env: Environment) {
+            env.addSignalListener({ _, _ -> test.record("size ${env.env["COLUMNS"]}x${env.env["LINES"]}") }, Signal.WINCH)
+            val attached = FakeTermSessions.Attached(
+                write = { data -> try { synchronized(output) { output.write(data); output.flush() } } catch (_: IOException) {} },
+                error = { data -> try { error.write(data); error.flush() } catch (_: IOException) {} },
+                close = { status ->
+                    try {
+                        // Without a status the connection just goes (the network dropped).
+                        if (status == null) channel?.close(false) else exit.onExit(status)
+                    } catch (_: Exception) {
+                    }
+                },
+            )
+            if (!test.terms!!.handle(command, COMPANION_PATH, attached)) return
+            thread(isDaemon = true, name = "test-term-input") {
+                val buffer = ByteArray(4096)
+                try {
+                    while (true) {
+                        val n = input.read(buffer)
+                        if (n < 0) break
+                        test.terms!!.input(buffer.copyOf(n), attached)
+                    }
+                } catch (_: IOException) {
+                }
             }
         }
 

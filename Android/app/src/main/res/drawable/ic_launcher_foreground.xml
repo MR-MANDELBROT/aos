@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app icon's shapes (App/Resources/AppIcon.icon/Assets/spark.svg and mini.svg, 1024 units) in the 72dp that a
+     launcher shows of the 108dp adaptive icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="18" android:translateY="18" android:scaleX="0.0703125" android:scaleY="0.0703125">
+        <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+            android:pathData="M512,117Q650,374 907,512Q650,650 512,907Q374,650 117,512Q374,374 512,117Z M385,396h254a22,22 0,0 1,22 22v150a22,22 0,0 1,-22 22h-254a22,22 0,0 1,-22 -22v-150a22,22 0,0 1,22 -22Z M353,601h318a13,13 0,0 1,13 13v1a13,13 0,0 1,-13 13h-318a13,13 0,0 1,-13 -13v-1a13,13 0,0 1,13 -13Z" />
+        <path android:fillColor="#FF5CF5CD"
+            android:pathData="M806,146Q824.4,219.6 898,238Q824.4,256.4 806,330Q787.6,256.4 714,238Q787.6,219.6 806,146Z" />
+    </group>
+</vector>

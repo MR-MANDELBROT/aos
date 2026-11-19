@@ -38,8 +38,19 @@ Android/
                              NsdServiceDiscovery (NsdManager)
       store/                 MacStore, SettingsStore (DataStore), SecretStore (AES-GCM with a Keystore key)
       model/AppModel.kt      the state holder the UI binds to
-      ui/PlaceholderScreen.kt   placeholder (connection state, pair from a link); the UI agent replaces it
+      terminal/              the Terminal tab (see "The terminal" below): MacTerminal (the session state machine),
+                             TerminalHost (Termux's TerminalView), TerminalKeyBar, TerminalTab, TerminalKeys (pure
+                             input logic), TerminalController, TerminalKeepAliveService, TerminalSettings
+      ui/                    the UI (Compose, Material 3, brand colors): AosRoot (tabs Overview, Terminal, Screen,
+                             Settings; the question sheet; pairing; the lock), overview/ (Mac, requests, workspace,
+                             aOS card; chats, apps, routines), signin/ (sign-ins and approvals in one sheet), pairing/
+                             (QR scanner: ZXing), settings/ (paired Mac, connection with aOS's Tailscale, lock,
+                             notifications, key, acknowledgements; SettingsSlots for the terminal's and the screen's),
+                             lock/ (AppLock, Biometrics), notify/ (RequestNotifier), tabs/ (the Terminal and Screen
+                             tabs' slots), demo/ (debug builds: sample data from intent extras, see Demo.kt),
+                             texts as data (Txt, ErrorText, ConnectionText; strings_ui.xml, values-de)
       AosApp.kt, MainActivity.kt   AppGraph (the wiring), foreground/background, aos-pair:// links
+    src/main/kotlin/com/termux/terminal/RemoteTerminalSessions.kt   the one file in Termux's package (see below)
     src/tailnet/             EmbeddedTailnet: tailnetkit (third_party/aosgo) as the TailnetDialer
     src/notailnet/           NoTailnet, when the Go library isn't there
     src/test/                JVM tests: in-process MINA SSH server as the Mac, fake pairing listener, live check
@@ -193,6 +204,78 @@ signing in (`state.authURL()` in a Custom Tab while `needsLogin()`), Settings > 
 `KeyProvider` (the two keys), `MacStore`, `SettingsStore`, `SecretStore` (e.g. the Mac's screen login, encrypted with
 a Keystore AES key; biometric gating is the UI's). Each has an in-memory version for tests.
 
+## The terminal (dev.marquart.aos.terminal)
+
+The iPhone's terminal (iOS/NOTES.md, "The terminal"; Docs/COMPANION.md, "Terminal sessions") on Android, with the same
+behavior and wording. Entry points for the UI:
+
+```kotlin
+@Composable fun TerminalTab(model: AppModel, modifier: Modifier = Modifier)   // the tab: session list and terminal
+@Composable fun TerminalSettingsSection(modifier: Modifier = Modifier)        // Settings > Terminal (no arguments)
+@Composable fun terminalIsShown(model: AppModel): Boolean                     // a terminal is on screen (hide the tab bar)
+```
+
+`TerminalTab` also handles `model.terminalRequest` ("Open Terminal" from the Overview: a new session, shown) and the
+notification's tap (`model.selectTab(TERMINAL)` and the terminal shown). It works with the demo's own model as well
+(`model.demo`: sample sessions and output, no service, no permission prompt).
+
+**Emulator and view.** Termux's terminal-emulator and terminal-view 0.118.3 (Apache-2.0, JitPack, only that group from
+there: settings.gradle.kts). Termux's `TerminalSession` is final and runs a local process through JNI, so
+`com.termux.terminal.RemoteTerminalSessions` (the only file in Termux's package, it needs package access) makes a
+session that runs nothing: its emulator is the one `MacTerminal` feeds from the SSH channel, it is there before the view
+asks (so no process is ever started), the pty descriptor is -1 (the view's window size ioctl does nothing), and what the
+view types goes through the session's input queue to `MacTerminal.send`. Size changes reach the Mac through
+`TerminalViewClient.onEmulatorSet` (`channel.resize`). Scrollback 2000 lines; colors follow light and dark; pinch
+changes the font size by a point per step (8 to 28, "13 pt · 80 × 24"); a long press on a web address offers Open Link
+and Copy Link, anywhere else Termux selects (Copy, Paste, More: Copy Screen, Copy Last Output); pasting asks first
+when lines would run (no bracketed paste) and strips control characters (`PasteEncoder`).
+
+**Sessions.** `MacTerminal` is TerminalSession.swift's state machine: `term attach --id --have --client <phone id>`,
+bytes counted after the start note, Reconnecting while the connection is gone (it attaches again by itself, polling the
+app's connection every 0.4 s), "Mac sleeping" when `sleepingSince` is set, taken/replaced/exited/ended/lost, Open It
+Here / New Session, one attach at a time, a round counter that drops the output of older channels, the session id per
+Mac in `TerminalSettings` (SharedPreferences "terminal"), status 2 and 127 a plain shell with a note, status 1 the Mac's
+own text without retrying. It runs on the main thread (the emulator is read while drawing); one `MacTerminal` per Mac
+lives in `TerminalController` for the process, so the screen survives leaving the tab.
+
+**Keys.** `TerminalKeyBar` (Compose): the iPhone's row (KeyBarLayout: arrows in the middle, equal keys of at least
+46 dp, snapping), swipe pad or four arrow keys (setting), Esc, Ctrl, Tab, Alt, Shift-Tab, paste, Home, End, PgUp, PgDn,
+forward delete, F1 to F12, sticky / locked / held modifiers (`StickyModifiers`, also for the keyboard's letters,
+Backspace and Return), repeat while held, haptics. Swiping on the terminal sends arrows with the iOS rule
+(`TerminalSwipe`: sideways always, up and down only as a quick flick at the end, repeat while held, never for two
+fingers, while selecting, or within 24 dp of either screen edge, where Android's back gesture lives). The key bar shows
+whenever the terminal does (not only with the on-screen keyboard: the pad and Esc help with a hardware keyboard too).
+
+### The terminal in the background
+
+This replaces the iPhone's Live Activity and its location trick. While a terminal is open (connecting, connected or
+reconnecting) and "Keep connected in the background" is on (default), `TerminalController` runs
+`TerminalKeepAliveService`, a foreground service of type `specialUse` (no daily limit, unlike `dataSync` on Android 15+;
+the manifest gives the reason in `PROPERTY_SPECIAL_USE_FGS_SUBTYPE`) with a quiet notification: "Terminal on <Mac>",
+"Connected, kept on the Mac" or "Reconnecting, kept on the Mac", a chronometer, End Session (ends the session on the
+Mac, as the Live Activity's button does) and a tap that opens the terminal. It never shows the terminal's content. It
+is started from the foreground (Android forbids it from the background) and stopped when the terminals close or the
+setting goes off. The notification needs POST_NOTIFICATIONS (Android 13+), asked once when a terminal opens; without
+it the service still runs, and the settings say so.
+
+The hook in the app model: `AppModel.holdsConnectionInBackground: () -> Boolean`. `onBackground()` waits the usual 25 s,
+then keeps the connection while that says true (checked every 5 s), as iOS waits on `keepAlive.holdsInBackground`.
+`TerminalController` sets it to "the service is running". Tested in `TerminalBackgroundTests`.
+
+Not done: no wake lock (in deep Doze the CPU may sleep and the keepalives wait; on wake the connection is checked and
+the terminal attaches again with `--have`, so nothing is lost but time).
+
+### Tests
+
+`TerminalKeyTests.kt` (33: key encoding, sticky modifiers, paste, arrow pad, swipe rule, key bar layout, links and
+last output), `MacTerminalTests` (13, against the in-process SSH server with `FakeTermSessions`, a port of iOS's: attach,
+drop and come back with `--have`, relaunch, this phone again, another device takes it, new session and switching,
+one attach at a time, status 2, 127 and 1, resize, modifiers, paste, the Mac asleep), `TerminalBackgroundTests` (1).
+`TestSshServer.start(..., terms = FakeTermSessions())` turns the held sessions on; without it the fixed answers stay.
+`LiveTerminalTests` runs with the live link like `LiveMacTests` (README "Live check"): a real `aos-companion term
+attach` session through the test sshd, resize, a dropped connection and the missed output, the list naming this phone,
+End Session. Checked on 2026-11-19 against this Mac.
+
 ## Decisions and what was learned
 
 - **SSH library: Apache MINA SSHD 2.19.0** (Apache-2.0, released 2026-06-30). The phone's key is offered as an SSH agent
@@ -222,6 +305,6 @@ a Keystore AES key; biometric gating is the UI's). Each has an in-memory version
   writes to the keychain carries aosctl's partition, which aOS ignores (Docs/COMPANION.md, "Signed requests"). So the
   signed requests ran against the in-process Mac (which checks like `CompanionGate`) and AOSKit's reference vectors,
   not against the running aOS. A real pairing with the app ("Pair" in aOS) would show it.
-- Background: the app keeps the connection 25 s after leaving the foreground, as the iPhone does; a foreground service
-  for open terminals (Android's equivalent of the iPhone's location keep-alive) is the terminal's to decide.
+- Background: the app keeps the connection 25 s after leaving the foreground, as the iPhone does, and as long as a
+  terminal is open (the terminal's foreground service, "The terminal in the background").
 - `MockCompanionServer`'s chats keeper and routines are simpler than the iPhone's.

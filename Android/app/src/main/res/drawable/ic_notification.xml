@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The status bar's icon for requests: the app icon's spark with the laptop. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="1024" android:viewportHeight="1024">
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="M512,117Q650,374 907,512Q650,650 512,907Q374,650 117,512Q374,374 512,117Z M385,396h254a22,22 0,0 1,22 22v150a22,22 0,0 1,-22 22h-254a22,22 0,0 1,-22 -22v-150a22,22 0,0 1,22 -22Z M353,601h318a13,13 0,0 1,13 13v1a13,13 0,0 1,-13 13h-318a13,13 0,0 1,-13 -13v-1a13,13 0,0 1,13 -13Z" />
+</vector>

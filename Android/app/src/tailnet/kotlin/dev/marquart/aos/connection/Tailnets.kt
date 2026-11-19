@@ -76,6 +76,20 @@ class EmbeddedTailnet(private val dir: File, private val hostname: String) : Tai
         }
     }
 
+    /** Asks the node for a new sign-in URL (it comes with the next state); the UI opens it. */
+    fun login() {
+        val current = synchronized(this) { node } ?: return setUp()
+        thread(name = "aos-tailnet-login", isDaemon = true) { try { current.login() } catch (_: Exception) {} }
+    }
+
+    /** Stops the node and starts it again (Settings > Connection, "Reconnect"). */
+    fun reconnect() {
+        val current = synchronized(this) { node.also { node = null } }
+        current?.close()
+        _state.value = null
+        setUp()
+    }
+
     /** Leaves the tailnet; the node's state is deleted. */
     fun signOut() {
         val current = synchronized(this) { node.also { node = null } }
