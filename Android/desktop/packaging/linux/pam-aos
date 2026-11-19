@@ -1,0 +1,2 @@
+# aOS: "Confirm approvals with the password of your account" checks the password of the user running aOS.
+@include common-auth

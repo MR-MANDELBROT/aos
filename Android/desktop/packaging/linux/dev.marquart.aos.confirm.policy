@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<!-- aOS asks the person to confirm it is them before a sign-in or an approval goes to the Mac (the desktop's
+     setting "Confirm approvals with: the system's dialog"). auth_self: the person's own password, every time. -->
+<policyconfig>
+  <vendor>aOS</vendor>
+  <vendor_url>https://marquart.dev/aos</vendor_url>
+  <action id="dev.marquart.aos.confirm">
+    <description>Confirm a sign-in or an approval in aOS</description>
+    <description xml:lang="de">Eine Anmeldung oder Freigabe in aOS bestätigen</description>
+    <message>aOS needs to confirm it's you before it sends this to your Mac</message>
+    <message xml:lang="de">aOS muss bestätigen, dass du es bist, bevor es das an deinen Mac schickt</message>
+    <defaults>
+      <allow_any>auth_self</allow_any>
+      <allow_inactive>auth_self</allow_inactive>
+      <allow_active>auth_self</allow_active>
+    </defaults>
+  </action>
+</policyconfig>

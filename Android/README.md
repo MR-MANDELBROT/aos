@@ -6,80 +6,121 @@ connection to the Mac, stores and the state the UI binds to. The terminal, the U
 
 ## Layout
 
+Since 2026-11-19 the app is split so the desktop app (`desktop/`, Windows and Linux) shares everything it can with
+Android: `:core` (protocol), `:shared` (the app without UI, plain JVM), `shared-ui/` (the Compose UI, compiled into
+both apps), and the two apps with their platform pieces.
+
 ```
 Android/
   settings.gradle.kts, build.gradle.kts, gradle/libs.versions.toml, gradle.properties, gradlew
   core/                      :core, pure Kotlin (JVM, kotlinx-serialization), no Android
     src/main/kotlin/dev/marquart/aos/core/
-      Bytes.kt               base64 / base64url / hex, SHA-256, HMAC, constant-time compare
-      P256.kt                P-256 keys (X9.63), raw r||s <-> DER, P256Signer (+ SoftwareP256Signer)
-      SSHKeyFormat.kt        OpenSSH key lines, blobs, SHA256 fingerprints, phone id
-      PairingLink.kt         aos-pair:// parsing (v1; v2, v3, ... = "update the app"), ReachWay (w), t, tn
-      Pairing.kt             PairingRequest (v2 proof; v1 proof for its vector), PairingResponse (answer HMAC)
-      Json.kt                lenient JSON accessors, sorted-key writing like Swift's JSONEncoder
-      CompanionProtocol.kt   requests, events, answers, CompanionAuth/CompanionSignature/CompanionSigner,
-                             MacSideSignature (how the Mac rebuilds what was signed), LineSplitter (1 MiB lines)
-      ScreenSeal.kt          ECDH + HKDF-SHA256 + AES-GCM, byte for byte AOSKit's (sealed workspace login)
-      MacStatus.kt           MacAction, MacStatus, MacOffer, MacActionResult, MacRefusal, WorkspaceOperation
-      Chats.kt               ChatList, ChatOffer
-      ConnectionPlan.kt      PairedMac, SSHRoute, ConnectionPlan (route order), TailnetAddress, Iso8601
-      TerminalAttach.kt      TermNote / TermNoteFilter (ESC ] 7730 ; JSON BEL), TermAttach commands, MacTermSession
-    src/test/                the iOS unit tests with the same vectors (JUnit 5)
-  app/                       :app, dev.marquart.aos (minSdk 29, targetSdk 36, compileSdk 37, Compose Material 3)
+      Bytes.kt, P256.kt, SSHKeyFormat.kt, PairingLink.kt, Pairing.kt, Json.kt, CompanionProtocol.kt, ScreenSeal.kt,
+      MacStatus.kt, Chats.kt, ConnectionPlan.kt, TerminalAttach.kt     (see the files; unchanged by the split)
+    src/test/                the iOS unit tests with the same vectors
+  shared/                    :shared, the app without UI, plain Kotlin on the JVM (Android and the desktop use it)
     src/main/kotlin/dev/marquart/aos/
-      keys/                  DeviceKey, KeyProvider: AndroidKeystoreKeys (StrongBox, else TEE), MemoryKeys,
-                             KeystoreOrMemoryKeys (the Keystore, memory where it fails), KeystoreSigner
-      ssh/                   SshConnector + SshConnection (Apache MINA SSHD), SessionChannel (exec, PTY),
-                             DirectTcpipChannel, LocalForwarder, PairingClient, DeviceKeyAgent (the key as an agent)
-      companion/             CompanionClient (coroutines), CompanionTransport/ExecTransport, CompanionError,
-                             MockCompanionServer (the Mac in memory: tests, a demo)
-      connection/            MacConnection (reconnecting, StateFlows), interfaces TailnetDialer, NetworkMonitor,
-                             ServiceDiscovery; Android: AndroidNetworkMonitor (ConnectivityManager),
-                             NsdServiceDiscovery (NsdManager)
-      store/                 MacStore, SettingsStore (DataStore), SecretStore (AES-GCM with a Keystore key)
+      ssh/                   SshConnector + SshConnection (Apache MINA SSHD), SessionChannel, LocalForwarder,
+                             PairingClient, DeviceKeyAgent (the key as an in-process agent)
+      companion/             CompanionClient, CompanionTransport/ExecTransport, CompanionError, MockCompanionServer
+      connection/            MacConnection; the platform interfaces (Network.kt): TailnetDialer, NetworkMonitor,
+                             ServiceDiscovery (+ NoTailnet, NoDiscovery, FixedNetworkMonitor)
+      keys/Keys.kt           DeviceKey, KeyStorage (Android's, Windows' TPM/software, Linux' file), KeyProvider, MemoryKeys
+      store/Stores.kt        MacStore, SettingsStore (AppSettings), SecretStore, the in-memory ones
       model/AppModel.kt      the state holder the UI binds to
-      terminal/              the Terminal tab (see "The terminal" below): MacTerminal (the session state machine),
-                             TerminalHost (Termux's TerminalView), TerminalKeyBar, TerminalTab, TerminalKeys (pure
-                             input logic), TerminalController, TerminalKeepAliveService, TerminalSettings
-      ui/                    the UI (Compose, Material 3, brand colors): AosRoot (tabs Overview, Terminal, Screen,
-                             Settings; the question sheet; pairing; the lock), overview/ (Mac, requests, workspace,
-                             aOS card; chats, apps, routines), signin/ (sign-ins and approvals in one sheet), pairing/
-                             (QR scanner: ZXing), settings/ (paired Mac, connection with aOS's Tailscale, lock,
-                             notifications, key, acknowledgements; SettingsSlots for the terminal's and the screen's),
-                             lock/ (AppLock, Biometrics), notify/ (RequestNotifier), tabs/ (the Terminal and Screen
-                             tabs' slots), demo/ (debug builds: sample data from intent extras, see Demo.kt),
-                             texts as data (Txt, ErrorText, ConnectionText; strings_ui.xml, values-de)
-      AosApp.kt, MainActivity.kt   AppGraph (the wiring), foreground/background, aos-pair:// links
-    src/main/kotlin/com/termux/terminal/RemoteTerminalSessions.kt   the one file in Termux's package (see below)
-    src/tailnet/             EmbeddedTailnet: tailnetkit (third_party/aosgo) as the TailnetDialer
-    src/notailnet/           NoTailnet, when the Go library isn't there
-    src/test/                JVM tests: in-process MINA SSH server as the Mac, fake pairing listener, live check
-    src/androidTest/         on a phone or emulator: a Keystore key logging in over SSH
-  third_party/               the Go library (aosgo.aar: libsharing + tailnetkit), its own README.md
-Tools/android.sh             runs ./gradlew here with JAVA_HOME and ANDROID_HOME set
+      terminal/              MacTerminal (the session state machine) over TerminalScreen (the emulator interface:
+                             Termux on Android, JediTerm on the desktop), TerminalKeys (pure input logic),
+                             MacSessionList (`term list`), TerminalDemo
+      screen/                RemoteSession (the screen engine's interface), Routing, Keyboard, Keys (keysyms, MacKey),
+                             Gestures, VideoStream (parameter sets, Annex B), SampledPixels
+    src/testFixtures/        the in-process Mac for tests (TestSshServer, FakeTermSessions, FakePairingListener,
+                             waitUntil, testKey): used by :shared's, :app's and :desktop's tests
+    src/test/                SSH, companion, connection, model, pairing, terminal keys, routing, gestures, video, live
+  shared-ui/                 the Compose UI both apps compile in (a source folder, not a Gradle module)
+    src/main/kotlin/dev/marquart/aos/
+      ui/                    AosRoot (tabs; `rail = true`: a navigation rail for wide windows), AosUi, Txt, Errors,
+                             components/, theme/, overview/, signin/ (sheets), settings/ (SettingsSlots: terminal,
+                             screen, device), pairing/PairingScreen (camera through Platform.pairingScanner), lock/AppLock,
+                             tailnet/TailnetControl, demo/Demo (sample data; Android's intent and the desktop's
+                             arguments set DemoOptions)
+      ui/platform/Platform.kt   what the UI asks of the device (see "Shared UI" below)
+      screen/                SessionModel (a screen session's state and input), ScreenController + ScreenHub,
+                             ScreenStore (KeyValues), DemoScreenServer (RFB in the app), ScreenTexts
+    src/main/res/            the UI's strings (values, values-de: strings_ui, strings_terminal, strings_screen,
+                             app_name), the icon art, the license texts: Android's resources, the desktop's tables
+    src/test/                UI text, routine schedule, app lock tests (run in both apps' tests)
+  app/                       :app, Android (minSdk 29, targetSdk 36, compileSdk 37); adds shared-ui's sources and res
+    src/main/kotlin/dev/marquart/aos/
+      ui/platform/           AndroidPlatform (Custom Tabs, clipboard, biometrics, notification permission, back,
+                             the QR camera), Resources.kt (Android's side of the shared declarations)
+      ui/lock/Biometrics, ui/notify/RequestNotifier, ui/pairing/QrScanner + CameraBox, ui/tabs/TabSlots,
+      ui/demo/DemoIntent     Android only
+      keys/AndroidKeys.kt    AndroidKeystoreKeys (StrongBox, else TEE), KeystoreSigner, KeystoreOrMemoryKeys
+      store/AndroidStores.kt DataStore stores, KeystoreSecretStore
+      connection/            AndroidNetworkMonitor, NsdServiceDiscovery
+      terminal/              TermuxScreen (Termux's emulator as TerminalScreen), TerminalTab, TerminalHost,
+                             TerminalKeyBar, TerminalController, TerminalKeepAliveService, TerminalSettings
+      screen/                ScreenPlatform.kt (Android's side of the shared screen code: Bitmap, Handler, MediaCodec's
+                             VideoDecoder in Video.kt), ScreenTab, SessionScreen, RemoteScreenView, ScreenRenderer
+                             (GLES), AndroidKeys, MacLoginLock, ScreenSettingsSection
+    src/tailnet|notailnet, src/libsharing|nolibsharing   with or without third_party/aosgo/aosgo.aar
+  desktop/                   :desktop, Windows and Linux (Compose Multiplatform 1.12.2, JVM 17+; runs on macOS too)
+    see "The desktop app" below
+  third_party/               aosgo/ (Android's Go library), aosgo-desktop/ (the desktop's, JNA binding), READMEs
+Tools/android.sh             runs ./gradlew here with JAVA_HOME and ANDROID_HOME set (repo root Tools/)
+Tools/desktop.sh             the desktop packages (repo root Tools/)
 ```
+
+### Shared UI: how one source compiles for both
+
+`shared-ui/src/main/kotlin` is added as a source folder to `:app` and `:desktop` (saldo's proven setup). What differs:
+
+1. `ui.platform.Platform` (interface, set at start: `AndroidPlatform` in AosApp, `DesktopPlatform` in desktop Main):
+   web pages, clipboard, share, the person's confirmation (`confirmPresence`: biometrics, Windows Hello, polkit, PAM),
+   notifications, back, "is the app active", the pairing camera.
+2. Files with the same declarations in both apps, in the same package (`expect`/`actual` without the keywords; a
+   signature that differs breaks the other app's build): `ui/platform/Resources.kt` (`PlatformContext`,
+   `platformContext()`, `stringResource`, `pluralStringResource`, `painterResource`, `text/quantityText/rawText/locale/
+   relativeTime`), `ui/tabs/TabSlots.kt` (the Terminal and Screen tabs, settings slots), `screen/ScreenPlatform.kt`
+   (`PlatformBitmap`, `VideoSurface`, `VideoDecoder`/`DecoderSupport`, `postToMain`, `ScreenLog`, `ScreenImages`,
+   `DemoPicture`).
+3. `R`: Android's generated one; on the desktop `desktop/build.gradle.kts` (`generateAosResources`) reads the same XML
+   (shared-ui/src/main/res, then desktop/src/main/res, which wins: strings_desktop.xml and strings_wording.xml with
+   "this computer" where Android says "this phone") and writes `dev.marquart.aos.R` and string tables.
+
+Strings stay in Android's XML (English `values`, German `values-de`); the desktop picks German when the system's
+language is German (`AOS_LANG=en|de` or `--lang=` to choose).
 
 ## Build and test
 
 ```sh
 Tools/android.sh :core:test                    # 73 tests
-Tools/android.sh :app:testDebugUnitTest        # 50 tests (+ the live check, skipped without a link)
+Tools/android.sh :shared:test                  # 116 tests (+ LiveMacTests, skipped without a link)
+Tools/android.sh :app:testDebugUnitTest        # 70 tests (MacTerminalTests with Termux, screen, UI texts; + LiveTerminalTests)
 Tools/android.sh :app:assembleDebug            # app/build/outputs/apk/debug/app-debug.apk
-Tools/android.sh :app:connectedDebugAndroidTest   # on a running emulator or phone (KeystoreSshTest)
+Tools/android.sh :desktop:test                 # 38 tests (desktop pieces, JediTerm terminal, the Go library's screen
+                                               #   session on this Mac, the shared UI tests again; + LiveDesktopTests)
+Tools/android.sh :desktop:runDesktop -Paos.args="--demo"        # the desktop app on this Mac with sample data
+Tools/android.sh :desktop:runDesktop -Paos.args="--shots=$PWD/../build/desktop-screenshots"   # the screenshots
+Tools/desktop.sh                               # the desktop packages (see "The desktop app")
 Tools/android.sh --stop                        # the daemon, when done (the Mac is short of memory)
 ```
 
-`gradle.properties` keeps Gradle small (`-Xmx2g`, no parallel work, the Kotlin compiler in-process).
+`gradle.properties` keeps Gradle small (`-Xmx2g`, no parallel work, the Kotlin compiler in-process). After moving
+files, Android's built-in Kotlin compile sometimes keeps old test classes: `--rerun` on the compile task fixes it.
 
 The Go library: `app/build.gradle.kts` takes `third_party/aosgo/aosgo.aar` when it is there (built by
 `Tools/go-android.sh`, see `third_party/README.md`) and then compiles `src/tailnet`; without it `src/notailnet`, and
 everything else builds the same. `-Paos.withoutGo=true` builds as if it were missing. ABIs: arm64-v8a and x86_64 (what
-the aar has). The aar is GPL-3.0 (libsharing), and so is an app that ships it: see `third_party/README.md`.
+the aar has). The aar is GPL-3.0 (libsharing), and so is an app that ships it: see `third_party/README.md`. The
+desktop does the same with `third_party/aosgo-desktop/kotlin/AosGo.kt` (src/aosgo or src/noaosgo).
 
 ### Live check against the real Mac side
 
-`LiveMacTests` pairs with aOS's real pairing listener and uses a throwaway OpenSSH on 127.0.0.1:2222 with its own
-`authorized_keys` (nothing of `~/.ssh` is touched), the real `aos-companion` and aOS:
+`LiveMacTests` (:shared), `LiveTerminalTests` (:app) and `LiveDesktopTests` (:desktop: key files, file stores, JmDNS,
+the polling network monitor, a held session in JediTerm) pair with aOS's real pairing listener and use a throwaway
+OpenSSH on 127.0.0.1:2222 with its own `authorized_keys` (nothing of `~/.ssh` is touched), the real `aos-companion`
+and aOS:
 
 ```sh
 L=<an empty folder, 0700>
@@ -88,8 +129,10 @@ ssh-keygen -q -t ed25519 -N "" -f $L/host_ed25519 && touch $L/authorized_keys &&
 # PasswordAuthentication no, KbdInteractiveAuthentication no, UsePAM no, StrictModes no, PidFile $L/sshd.pid
 /usr/sbin/sshd -f $L/sshd_config
 aosctl pair-test $L/authorized_keys 2222 "$(ssh-keygen -lf $L/host_ed25519.pub | awk '{print $2}')" 127.0.0.1 \
-  /Applications/aOS.app/Contents/MacOS/aos-companion          # prints LINK aos-pair://...
-Tools/android.sh :app:testDebugUnitTest --tests '*LiveMacTests*' -Paos.live.link='aos-pair://...'
+  /Applications/aOS.app/Contents/MacOS/aos-companion          # prints LINK aos-pair://... (one link per test run)
+Tools/android.sh :shared:test --tests '*LiveMacTests*' -Paos.live.link='aos-pair://...'
+Tools/android.sh :app:testDebugUnitTest --tests '*LiveTerminalTests*' -Paos.live.link='aos-pair://...'
+Tools/android.sh :desktop:test --tests '*LiveDesktopTests*' -Paos.live.link='aos-pair://...'
 kill $(cat $L/sshd.pid)
 security delete-generic-password -s dev.marquart.aos.phonekeys -a <the phone id the test printed>
 ```
@@ -99,7 +142,7 @@ the test phone's signing key in the login keychain; the last line removes it.
 
 ## The interfaces later agents plug into
 
-All of these are in `app/src/main/kotlin/dev/marquart/aos/`. `AosApp.graph` (`AppGraph`) holds one of each.
+All of these are in `shared/src/main/kotlin/dev/marquart/aos/` (the UI in `shared-ui/`). `AosApp.graph` (`AppGraph`) holds one of each on Android, `DesktopGraph` on the desktop.
 
 ### The UI: `model.AppModel`
 
@@ -276,6 +319,83 @@ one attach at a time, status 2, 127 and 1, resize, modifiers, paste, the Mac asl
 attach` session through the test sshd, resize, a dropped connection and the missed output, the list naming this phone,
 End Session. Checked on 2026-11-19 against this Mac.
 
+## The desktop app (Windows, Linux)
+
+`desktop/` (:desktop): the same app for Windows and Linux, Compose Multiplatform 1.12.2 on the JVM (17+; the packages
+bring Temurin 21), the model and connection from :shared, the UI from shared-ui (the tabs in a navigation rail). It
+runs on macOS too, for development, the demo and the screenshots.
+
+```
+desktop/
+  build.gradle.kts           shared-ui as a source folder, generateAosResources (R and string tables from the XML),
+                             jar-<target> per system (Skia's native part for that system only), runDesktop
+  src/main/kotlin/dev/marquart/aos/
+    desktop/Main.kt          window, tray, single instance, arguments (aos-pair:// link, --background, --demo, --shots)
+    desktop/DesktopGraph.kt  the wiring (Android: AppGraph)
+    desktop/Os.kt            the app's folder: Windows %APPDATA%\aOS, Linux $XDG_CONFIG_HOME/aos, macOS ~/Library/
+                             Application Support/aOS (AOS_HOME or -Daos.home elsewhere); 0700 folders, 0600 files
+    desktop/DesktopStrings.kt  the string tables (German when the system is German; AOS_LANG / --lang)
+    desktop/keys/            CngKeys (Windows), FileKeys + SecretServiceSealer (Linux, macOS)
+    desktop/native/          JNA: Cng (ncrypt.dll), Dpapi, WinHello (UserConsentVerifier through WinRT), LibSecret,
+                             Pam, Polkit (pkcheck)
+    desktop/store/           FileMacStore, FileSettingsStore, DesktopSecretStore (DPAPI / Secret Service / plain), Prefs
+    desktop/connection/      PollingNetworkMonitor (interfaces every 3 s), JmdnsDiscovery (_aos-pair._tcp, _ssh._tcp)
+    desktop/system/          Presence (the confirmation), DesktopSettings + Settings section, Tray, Notifier,
+                             Autostart, UrlScheme, SingleInstance, PasswordPrompt
+    desktop/terminal/        JediTermScreen (JediTerm as TerminalScreen), DesktopTerminals, DesktopTerminalTab
+    desktop/screen/          DesktopScreenTab, RemoteScreen (Skia from the framebuffer), DesktopKeys (AWT to Mac keys)
+    screen/ScreenPlatform.kt, ui/platform/{Resources,DesktopPlatform}.kt, ui/tabs/TabSlots.kt   the shared declarations
+  src/aosgo/ | src/noaosgo/  GoLibrary: the screen engine and aOS's Tailscale through third_party/aosgo-desktop's
+                             binding (AosGo.kt), or none (built without it, -Paos.withoutGo=true)
+  src/main/res/              strings_desktop.xml (the desktop's own), strings_wording.xml ("this computer")
+  packaging/                 linux/ (start script with libjsig, polkit action, PAM service), windows/setup.nsi
+  src/test/                  DesktopPiecesTests, DesktopTerminalTests, GoScreenTests, LiveDesktopTests
+```
+
+What it does, per system:
+
+| | Windows | Linux | macOS (development) |
+|---|---|---|---|
+| Keys (SSH, companion) | CNG, non-exportable P-256: TPM (Microsoft Platform Crypto Provider), else the Software Key Storage Provider; signs through MINA's in-process agent like Android | key files `keys/*.key` (0600), the scalar AES-GCM sealed with a key in the Secret Service (libsecret) when there is one, else plain (Settings says so) | plain key files |
+| Secrets (the Mac's screen login) | DPAPI (CryptProtectData, current user) | Secret Service key (as above), else plain 0600 | plain 0600 |
+| Confirming approvals and the lock (a setting) | Windows Hello (UserConsentVerifier, `RequestVerificationForWindowAsync`), or off | polkit dialog (`pkcheck`, action `dev.marquart.aos.confirm` with auth_self from the .deb, else `org.freedesktop.policykit.exec`), the account's password in aOS (PAM, service `aos` from the .deb, else `login`), or off | off |
+| Pairing | paste the aos-pair:// link (no camera); aos-pair:// opens aOS: the installer and the app itself register it (HKCU\Software\Classes) | .desktop file with `MimeType=x-scheme-handler/aos-pair` (the .deb's in /usr/share/applications, else the app writes ~/.local/share/applications and runs xdg-mime) | paste |
+| In the background | tray icon (state, Open, Quit), stays connected while in the tray, toasts for sign-ins, approvals and help (a click opens the request), start at login (HKCU Run) | tray where the desktop has one (KDE; GNOME needs an extension), notify-send notifications with an Open action, XDG autostart | tray in the menu bar |
+| Terminal | JediTerm (JetBrains, LGPL-3.0/Apache-2.0, used under Apache-2.0) in a SwingPanel, fed by the shared MacTerminal: attach, reconnect with `--have`, notes, sessions list, new/switch/end, copy screen and last output, text size; JediTerm's own keyboard, selection, copy/paste (Ctrl+Shift+C/V, right-click) | same | same |
+| Screen | libsharing through the Go library (JNA), standard mode: framebuffer updates (dirty rows) into a Skia bitmap, the Mac's cursor image, mouse, wheel, keyboard by position (AWT key codes to Mac key codes and keysyms; Windows key = ⌘, plus a ⌘ button), clipboard sync, Mission Control; the workspace's display follows the window | same | same (with out/darwin-arm64) |
+| Network | interfaces polled every 3 s (a changed set is a new network), Tailscale app = an interface with a tailnet address; JmDNS for Bonjour; aOS's own Tailscale through tailnetkit when the Go library is there | same | same |
+
+High performance video is not played on the desktop: no HEVC/H.264 decoder in the JVM without native code
+(`DecoderSupport` offers none, so sessions stay in standard mode). Possible later: FFmpeg through JNA or a Go decoder.
+
+**Packages** (`Tools/desktop.sh`, results in the repository's build/): `aOS-windows-x64.zip`, `aOS-windows-arm64.zip`
+(folder with aOS.bat), `aOS-Setup-x64.exe`, `aOS-Setup-arm64.exe` (NSIS, per user, no admin), `aOS-linux-x64.tar.gz`,
+`aOS-linux-arm64.tar.gz`, `aos_0.1.0_amd64.deb`, `aos_0.1.0_arm64.deb`. Each brings Temurin 21's JRE for its system
+(pinned URL and SHA-256 in the script, cached in build/desktop-jre) and the Go library from
+`third_party/aosgo-desktop/out/<target>`. Sizes 107 to 147 MB: the jar alone is about 85 MB (Compose, Skia, the
+material icons); shrinking it (ProGuard, or only the icons used) is open. Nothing is signed (SmartScreen warns).
+
+The Go library in a JVM (Linux): Go's runtime installs signal handlers; the Linux start script preloads the bundled
+runtime's libjsig.so so the JVM's and Go's handlers chain (the JDK's documented way). Not yet seen on a real Linux.
+
+**The demo and the screenshots**: `--demo` with `--demo.<option>=<value>` (Demo.kt's options) opens a window with
+sample data; `--shots=<folder>` renders the main pages off screen (ImageComposeScene; the terminal by painting the
+JediTerm widget) into PNGs: build/desktop-screenshots.
+
+**Tests on this Mac** (`:desktop:test`, 38): key files (0600, sealed and plain, a broken or foreign file refused),
+stores, every string in both languages and the desktop's wording, no dashes in the German desktop texts, relative
+times, WinRT's parameterized IID rule (checked against IAsyncOperation<bool>), CNG's key blob, the keyboard mapping,
+the network path, the single instance's hand-over (and a wrong token refused), the shared MacTerminal with JediTerm
+against the in-process SSH server (attach, echo, drop and come back with nothing twice), a libsharing session through
+the Go library against the demo's RFB server (picture, click, key), the shared UI tests. Live (2026-11-19, this Mac,
+README "Live check"): pairing with aOS's pairing listener, SSH, a real `aos-companion term attach` session in JediTerm
+with resize, a dropped connection and the missed output, End Session; the companion said NeedsPairing as for Android
+(aosctl's keychain partition, see Open points).
+
+Not run on Windows or Linux yet: CNG/TPM keys, DPAPI, Windows Hello, the registry, toasts, libsecret, polkit, PAM,
+notify-send, the tray there, JmDNS on those networks, the Go library's .dll/.so loading (`~/VMs/Windows` is the
+place for the first Windows run).
+
 ## Decisions and what was learned
 
 - **SSH library: Apache MINA SSHD 2.19.0** (Apache-2.0, released 2026-06-30). The phone's key is offered as an SSH agent
@@ -308,3 +428,9 @@ End Session. Checked on 2026-11-19 against this Mac.
 - Background: the app keeps the connection 25 s after leaving the foreground, as the iPhone does, and as long as a
   terminal is open (the terminal's foreground service, "The terminal in the background").
 - `MockCompanionServer`'s chats keeper and routines are simpler than the iPhone's.
+- The desktop app on real Windows and Linux (see "The desktop app": everything system-specific is built and unit
+  tested only as far as this Mac allows).
+- aOS on the Mac shows the pairing link only as a QR code: the desktop needs it as text (a "Copy Link" button next to
+  the QR code in App/Sources/Views/PhoneSettings.swift, PairingView; and its wording "on your iPhone" for computers).
+  The desktop's pairing page already says the link is next to the QR code.
+

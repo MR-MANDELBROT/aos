@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The desktop's wording where the shared strings say "phone" (shared-ui/src/main/res): these win on the desktop. -->
+<resources>
+    <string name="mac_pair_again_explain">aOS on the Mac now takes requests only when this computer signs them, with a key it gets when you pair. Show the pairing code on the Mac and paste its link here.</string>
+    <string name="mac_sleep_explain">This computer loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile.</string>
+    <string name="promise_ssh">This computer talks to your Mac over SSH with a key that never leaves it.</string>
+    <string name="welcome_title">aOS on your computer</string>
+    <string name="signin_needs_screen_lock">Confirming isn\'t available on this computer. Set up Windows Hello, or choose another way in Settings &gt; This computer.</string>
+    <string name="pair_newer_code">This code is from a newer aOS. Update aOS on this computer.</string>
+    <string name="pair_fact_key">This computer makes its own key. Only its public half goes to the Mac.</string>
+    <string name="pair_only_own_mac">Pair only with your own Mac. aOS on the Mac adds this computer\'s key to your user\'s SSH keys there.</string>
+    <string name="pair_how_reached">How this computer reaches it</string>
+    <string name="pair_way_aos">On the go through aOS\'s own Tailscale. After pairing, set it up on this computer too, with the same Tailscale account.</string>
+    <string name="pair_way_app">On the go through the Tailscale app. This computer needs it too, signed in with the same account (or aOS\'s own Tailscale, in Settings &gt; Connection).</string>
+    <string name="pair_way_lan">Only on the same network: elsewhere this computer doesn\'t reach the Mac.</string>
+    <string name="pair_key_footer">This computer accepts the Mac only with exactly this key, now and later.</string>
+    <string name="pair_device_name">Name of this computer</string>
+    <string name="pair_done_text">This computer now reaches your Mac by itself whenever aOS runs.</string>
+    <string name="pair_error_unreachable">The Mac didn\'t answer. Check that this computer is on the same network as the Mac and that the pairing code is still shown.</string>
+    <string name="pair_error_invalid_answer">The Mac\'s answer wasn\'t understood. Update aOS on the Mac and on this computer.</string>
+    <string name="error_pair_again">Pair again to keep approving from this computer.</string>
+    <string name="error_update_mac">Update aOS on the Mac to see the workspace from this computer.</string>
+    <string name="conn_not_accepted">The Mac no longer accepts this computer. Pair again in aOS on the Mac.</string>
+    <string name="conn_unreachable_set_up_aos">The Mac isn\'t reachable. Elsewhere, set up aOS\'s Tailscale on this computer: Settings &gt; Connection.</string>
+    <string name="conn_unreachable_aos_off">The Mac isn\'t reachable, and aOS\'s Tailscale on this computer isn\'t connected (Settings &gt; Connection).</string>
+    <string name="conn_unreachable_switch_on">The Mac isn\'t reachable. Elsewhere, switch on Tailscale on this computer (the Tailscale app, or aOS\'s Tailscale in Settings &gt; Connection).</string>
+    <string name="settings_this_phone">This computer</string>
+    <string name="settings_ssh_key">SSH key of this computer</string>
+    <string name="mac_unpair_footer">This computer forgets the Mac. To remove its key from the Mac too, open aOS on the Mac and remove it from the paired devices.</string>
+    <string name="mac_unpair_explain">Sign-in requests and help requests from this Mac no longer reach this computer.</string>
+    <string name="key_public_footer">To log in to another computer with this computer\'s key, add this line to ~/.ssh/authorized_keys there. The public key isn\'t secret.</string>
+    <string name="about_passwords_1">They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden\'s own command line tool; this computer never talks to Bitwarden.</string>
+    <string name="about_passwords_3">aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither this computer nor the Mac keeps it.</string>
+    <string name="about_connection_1">This computer reaches your Mac over SSH (the Mac\'s Remote Login), with a key made on this computer that never leaves it. The Mac\'s key is checked every time.</string>
+    <string name="about_screen_2">The Mac account name and password for its screen stay on this computer, encrypted, and only go to the Mac\'s screen sharing.</string>
+    <string name="ack_tailscale">aOS\'s own Tailscale on this computer is Tailscale\'s open source code (tailscale.com), under the BSD 3-Clause License.</string>
+    <string name="ack_apache_list">Apache MINA SSHD, Compose Multiplatform, Kotlin and kotlinx, JNA, JmDNS, and JediTerm by JetBrains (dual licensed LGPL-3.0 or Apache-2.0, used under Apache-2.0).</string>
+    <string name="conn_footer">This computer tries the same network first, then the tailnet, then the Mac\'s name on the network.</string>
+    <string name="conn_tailscale_app">Tailscale app on this computer</string>
+    <string name="conn_app_footer">Your Mac uses the Tailscale app. On this computer the Tailscale app, signed in with the same account, reaches it too; so does aOS\'s own Tailscale below.</string>
+    <string name="conn_node_header">aOS\'s Tailscale on this computer</string>
+    <string name="conn_node_footer">No VPN and no Tailscale app needed. aOS only reaches your Mac through it, and nothing on this computer is reachable in your tailnet. Its keys stay in aOS\'s folder on this computer.</string>
+    <string name="conn_node_can">aOS can bring Tailscale along on this computer too: no VPN, no extra app. You sign in once with your Tailscale account, the same as on the Mac.</string>
+    <string name="conn_needs_approval">Signed in. The tailnet\'s admin still has to approve this computer in the Tailscale admin console.</string>
+    <string name="conn_sign_out_footer">Sign Out removes this computer from the tailnet and deletes its Tailscale keys here.</string>
+    <string name="conn_sign_out_question">Sign out of Tailscale on this computer?</string>
+    <string name="conn_sign_out_explain">This computer leaves your tailnet. Elsewhere it then reaches the Mac only through the Tailscale app, if it has it.</string>
+    <string name="term_sessions_footer">They keep running when the connection drops, also with aOS closed, and this computer picks up where it left off. End the ones you no longer need.</string>
+    <string name="term_open_here_phone">Open on this computer</string>
+    <string name="screen_login_kept">Kept on this computer, encrypted for your user account, and read only after you confirm it\'s you. It only goes to the Mac\'s screen sharing.</string>
+    <string name="screen_set_screen_lock">Set up Windows Hello or choose another way to confirm in Settings &gt; This computer.</string>
+    <string name="screen_matches_phone">Screens in the window\'s size</string>
+    <string name="screen_display_footer">The workspace takes the window\'s shape: aOS resizes its display. Your own Mac keeps its size on the desktop (high performance video isn\'t played here). More resolution gives more room and less sharpness.</string>
+    <string name="settings_notifications_footer">Requests that arrive while aOS\'s window is closed or hidden show as notifications of this computer.</string>
+    <string name="settings_security_footer">aOS asks you to confirm it\'s you when it starts and when it comes back after a while.</string>
+    <string name="lock_title">aOS is locked</string>
+</resources>

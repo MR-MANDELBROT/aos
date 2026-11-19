@@ -16,6 +16,7 @@ import dev.marquart.aos.ui.AosRoot
 import dev.marquart.aos.ui.AosUi
 import dev.marquart.aos.ui.demo.Demo
 import dev.marquart.aos.ui.demo.DemoOptions
+import dev.marquart.aos.ui.demo.from
 import dev.marquart.aos.ui.tabs.installSettingsSlots
 import dev.marquart.aos.ui.tailnet.TailnetControls
 import dev.marquart.aos.ui.theme.AosTheme

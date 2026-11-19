@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings only the desktop app has (Windows, Linux), German. -->
+<resources>
+    <string name="desktop_tray_open">aOS öffnen</string>
+    <string name="desktop_tray_quit">aOS beenden</string>
+    <string name="desktop_tray_not_paired">Mit keinem Mac gekoppelt</string>
+    <string name="desktop_tray_connected">Verbunden mit %1$s</string>
+    <string name="desktop_tray_connecting">Verbinde mit %1$s</string>
+    <string name="desktop_tray_unreachable">%1$s ist nicht erreichbar</string>
+    <plurals name="desktop_tray_waiting"><item quantity="one">%1$d Anfrage wartet</item><item quantity="other">%1$d Anfragen warten</item></plurals>
+    <string name="desktop_password_title">Bestätige, dass du es bist</string>
+    <string name="desktop_password_label">Passwort von %1$s</string>
+    <string name="desktop_password_wrong">Das war nicht das Passwort. Versuch es noch einmal.</string>
+    <string name="desktop_confirm_header">Freigaben bestätigen mit</string>
+    <string name="desktop_confirm_hello">Windows Hello</string>
+    <string name="desktop_confirm_polkit">Dem Dialog des Systems (polkit)</string>
+    <string name="desktop_confirm_password">Dem Passwort deines Kontos</string>
+    <string name="desktop_confirm_off">Nicht fragen</string>
+    <string name="desktop_confirm_footer_windows">Bevor eine Anmeldung oder Freigabe an den Mac geht, fragt Windows Hello nach Gesicht, Fingerabdruck oder PIN. Nicht fragen: Jeder an diesem Computer kann freigeben.</string>
+    <string name="desktop_confirm_footer_linux">Bevor eine Anmeldung oder Freigabe an den Mac geht, fragt aOS nach deinem Passwort: im Dialog des Systems (polkit) oder in aOS selbst (vom System geprüft, PAM). Nicht fragen: Jeder an diesem Computer kann freigeben.</string>
+    <string name="desktop_confirm_footer_other">Auf diesem System kann aOS nicht nach einer Bestätigung fragen: Freigaben gehen mit einem Klick hinaus.</string>
+    <string name="desktop_this_computer">Im Hintergrund</string>
+    <string name="desktop_start_at_login">aOS bei der Anmeldung starten</string>
+    <string name="desktop_keep_running">Weiterlaufen, wenn das Fenster schließt</string>
+    <string name="desktop_background_footer">aOS bleibt dann im Infobereich verbunden: Anfragen kommen als Mitteilung. Beenden über das Menü des Symbols dort.</string>
+    <string name="desktop_secrets">Schlüssel und Geheimnisse</string>
+    <string name="desktop_secrets_dpapi">Verschlüsselt für dein Windows-Konto (DPAPI); den SSH-Schlüssel verwahrt Windows selbst (TPM oder Windows-Schlüsselspeicher), er lässt sich nicht exportieren.</string>
+    <string name="desktop_secrets_secret_service">Verschlüsselt mit einem Schlüssel aus deinem Schlüsselbund (Secret Service) und nur für dein Benutzerkonto lesbar (0600).</string>
+    <string name="desktop_secrets_none">Kein Schlüsselbund (Secret Service) gefunden: Schlüssel und Geheimnisse liegen unverschlüsselt in Dateien, die nur dein Benutzerkonto lesen kann (0600).</string>
+</resources>

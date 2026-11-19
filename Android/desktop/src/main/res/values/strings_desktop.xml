@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings only the desktop app has (Windows, Linux), English. German: values-de/strings_desktop.xml. -->
+<resources>
+    <string name="desktop_tray_open">Open aOS</string>
+    <string name="desktop_tray_quit">Quit aOS</string>
+    <string name="desktop_tray_not_paired">Not paired with a Mac</string>
+    <string name="desktop_tray_connected">Connected to %1$s</string>
+    <string name="desktop_tray_connecting">Connecting to %1$s</string>
+    <string name="desktop_tray_unreachable">%1$s isn\'t reachable</string>
+    <plurals name="desktop_tray_waiting"><item quantity="one">%1$d request waits</item><item quantity="other">%1$d requests wait</item></plurals>
+    <string name="desktop_password_title">Confirm it\'s you</string>
+    <string name="desktop_password_label">Password of %1$s</string>
+    <string name="desktop_password_wrong">That wasn\'t the password. Try again.</string>
+    <string name="desktop_confirm_header">Confirm approvals with</string>
+    <string name="desktop_confirm_hello">Windows Hello</string>
+    <string name="desktop_confirm_polkit">The system\'s dialog (polkit)</string>
+    <string name="desktop_confirm_password">The password of your account</string>
+    <string name="desktop_confirm_off">Don\'t ask</string>
+    <string name="desktop_confirm_footer_windows">Before a sign-in or an approval goes to the Mac, Windows Hello asks for your face, fingerprint or PIN. Don\'t ask: anyone at this computer can approve.</string>
+    <string name="desktop_confirm_footer_linux">Before a sign-in or an approval goes to the Mac, aOS asks for your password: in the system\'s dialog (polkit), or in aOS itself (checked by the system, PAM). Don\'t ask: anyone at this computer can approve.</string>
+    <string name="desktop_confirm_footer_other">On this system aOS can\'t ask for a confirmation: approvals go out with a click.</string>
+    <string name="desktop_this_computer">Running</string>
+    <string name="desktop_start_at_login">Start aOS at login</string>
+    <string name="desktop_keep_running">Keep running when the window closes</string>
+    <string name="desktop_background_footer">aOS then stays connected in the tray (the notification area): requests arrive as notifications. Quit it from the tray icon\'s menu.</string>
+    <string name="desktop_secrets">Keys and secrets</string>
+    <string name="desktop_secrets_dpapi">Encrypted for your Windows account (DPAPI); the SSH key is kept by Windows itself (TPM or the Windows key storage) and can\'t be exported.</string>
+    <string name="desktop_secrets_secret_service">Encrypted with a key in your keyring (Secret Service) and only readable by your user account (0600).</string>
+    <string name="desktop_secrets_none">No keyring (Secret Service) was found: the key and the secrets are in files only your user account can read (0600), not encrypted.</string>
+</resources>

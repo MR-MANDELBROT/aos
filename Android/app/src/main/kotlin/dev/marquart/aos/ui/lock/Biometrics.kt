@@ -1,5 +1,6 @@
 package dev.marquart.aos.ui.lock
 
+import dev.marquart.aos.ui.platform.PresenceOutcome
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
@@ -19,7 +20,7 @@ import kotlin.coroutines.resume
  * the screen lock in one prompt, so it takes any biometrics there.
  */
 object Biometrics {
-    enum class Outcome { SUCCESS, CANCELLED, FAILED, UNAVAILABLE }
+
 
     private val authenticators: Int
         get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) BIOMETRIC_STRONG or DEVICE_CREDENTIAL
@@ -29,22 +30,22 @@ object Biometrics {
     fun isAvailable(context: Context): Boolean =
         BiometricManager.from(context).canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
 
-    suspend fun authenticate(activity: FragmentActivity, title: String, subtitle: String? = null): Outcome {
-        if (!isAvailable(activity)) return Outcome.UNAVAILABLE
+    suspend fun authenticate(activity: FragmentActivity, title: String, subtitle: String? = null): PresenceOutcome {
+        if (!isAvailable(activity)) return PresenceOutcome.UNAVAILABLE
         return suspendCancellableCoroutine { continuation ->
             val prompt = BiometricPrompt(activity, ContextCompat.getMainExecutor(activity), object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    if (continuation.isActive) continuation.resume(Outcome.SUCCESS)
+                    if (continuation.isActive) continuation.resume(PresenceOutcome.SUCCESS)
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     if (!continuation.isActive) return
                     continuation.resume(when (errorCode) {
                         BiometricPrompt.ERROR_USER_CANCELED, BiometricPrompt.ERROR_CANCELED, BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
-                            Outcome.CANCELLED
+                            PresenceOutcome.CANCELLED
                         BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL, BiometricPrompt.ERROR_HW_NOT_PRESENT,
-                        BiometricPrompt.ERROR_HW_UNAVAILABLE, BiometricPrompt.ERROR_NO_BIOMETRICS -> Outcome.UNAVAILABLE
-                        else -> Outcome.FAILED
+                        BiometricPrompt.ERROR_HW_UNAVAILABLE, BiometricPrompt.ERROR_NO_BIOMETRICS -> PresenceOutcome.UNAVAILABLE
+                        else -> PresenceOutcome.FAILED
                     })
                 }
                 // A finger that doesn't match: the prompt stays and asks again.

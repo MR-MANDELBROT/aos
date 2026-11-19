@@ -26,6 +26,10 @@ android {
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
 
+    // The UI shared with the desktop app (../shared-ui: Compose code and its strings, see README.md).
+    sourceSets.getByName("main").kotlin.directories.add("../shared-ui/src/main/kotlin")
+    sourceSets.getByName("main").res.directories.add("../shared-ui/src/main/res")
+    sourceSets.getByName("test").kotlin.directories.add("../shared-ui/src/test/kotlin")
     sourceSets.getByName("main").kotlin.directories.add(if (hasAosgo) "src/tailnet/kotlin" else "src/notailnet/kotlin")
     // The screen's session engine: libsharing from the Go library (dev.marquart.aos.screen), else a stand-in.
     sourceSets.getByName("main").kotlin.directories.add(if (hasAosgo) "src/libsharing/kotlin" else "src/nolibsharing/kotlin")
@@ -58,8 +62,9 @@ android {
         unitTests.isReturnDefaultValues = true
         unitTests.all { test ->
             test.maxHeapSize = "1g"
-            // The live check against the real Mac side (LiveMacTests): Tools/android.sh :app:testDebugUnitTest
-            // --tests '*LiveMacTests*' -Paos.live.link='aos-pair://...' (from `aosctl pair-test`; see README.md).
+            // The live check against the real Mac side (LiveTerminalTests; LiveMacTests is in :shared):
+            // Tools/android.sh :app:testDebugUnitTest --tests '*LiveTerminalTests*' -Paos.live.link='aos-pair://...'
+            // (from `aosctl pair-test`; see README.md).
             val live = providers.gradleProperty("aos.live.link").orNull
             if (live != null) {
                 test.systemProperty("aos.live.link", live)
@@ -72,6 +77,8 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    // The app without UI (SSH, companion, connection, model, terminal and screen logic), shared with the desktop app.
+    implementation(project(":shared"))
     if (hasAosgo) implementation(files(aosgo))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -85,11 +92,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
-    // SSH: Apache MINA SSHD's client; net.i2p's EdDSA for the Mac's ssh-ed25519 host key; SLF4J's no-op binding
-    // (MINA logs through SLF4J; nothing of it should reach logcat, it could carry host names).
-    implementation(libs.sshd.core)
-    implementation(libs.eddsa)
-    implementation(libs.slf4j.nop)
+    // SSH (Apache MINA SSHD, EdDSA, SLF4J's no-op binding) comes with :shared.
     // The terminal: Termux's emulator and view, fed from the SSH channel (dev.marquart.aos.terminal).
     implementation(libs.termux.terminal.view)
     implementation(libs.termux.terminal.emulator)
@@ -100,6 +103,7 @@ dependencies {
     implementation(libs.zxing.embedded)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(kotlin("test-junit"))
+    testImplementation(testFixtures(project(":shared")))
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.junit)

@@ -10,6 +10,7 @@ import dev.marquart.aos.core.SoftwareP256Signer
 import dev.marquart.aos.core.TermAttach
 import dev.marquart.aos.ssh.SshConnector
 import dev.marquart.aos.terminal.MacTerminal
+import dev.marquart.aos.terminal.TermuxScreen
 import dev.marquart.aos.terminal.MemorySessionMemory
 import dev.marquart.aos.terminal.SessionMemory
 import dev.marquart.aos.terminal.TerminalKey
@@ -80,7 +81,7 @@ class MacTerminalTests {
     }
 
     private fun Setup.terminal(memory: SessionMemory = MemorySessionMemory(), macId: String = UUID.randomUUID().toString()) =
-        MacTerminal(macId, "Test Mac", memory, main, macConnection = { connection })
+        MacTerminal(macId, "Test Mac", memory, main, macConnection = { connection }, makeScreen = ::TermuxScreen)
 
     private suspend fun MacTerminal.screen() = onTerminal { screenText() }
 

@@ -1,0 +1,12 @@
+#!/bin/sh
+# aOS for Linux: starts the bundled Java with the app. The Go library (libsharing, Tailscale) installs signal handlers
+# in the same process as the JVM: libjsig (from the bundled runtime) chains them, as the JDK documents for native
+# libraries with their own handlers.
+DIR="$(dirname "$(readlink -f "$0")")"
+JSIG="$DIR/runtime/lib/libjsig.so"
+if [ -f "$JSIG" ]; then
+  export LD_PRELOAD="$JSIG${LD_PRELOAD:+:$LD_PRELOAD}"
+fi
+GO=""
+if [ -f "$DIR/lib/libaosgo.so" ]; then GO="-Daosgo.library=$DIR/lib/libaosgo.so"; fi
+exec "$DIR/runtime/bin/java" -Xmx512m -Daos.launcher="$DIR/aos" $GO -jar "$DIR/aOS.jar" "$@"

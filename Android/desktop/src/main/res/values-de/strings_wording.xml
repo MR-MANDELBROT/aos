@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Die Formulierungen des Desktops, wo die gemeinsamen Texte "Handy" sagen. -->
+<resources>
+    <string name="mac_pair_again_explain">aOS auf dem Mac nimmt Anfragen jetzt nur noch an, wenn dieser Computer sie unterschreibt, mit einem Schlüssel aus der Kopplung. Zeig auf dem Mac den Kopplungscode und füge hier seinen Link ein.</string>
+    <string name="mac_sleep_explain">Dieser Computer verliert die Verbindung, bis der Mac wieder aufwacht (Deckel aufklappen oder eine Taste drücken). Der Arbeitsplatz und deine Agents pausieren so lange.</string>
+    <string name="promise_ssh">Dieser Computer spricht über SSH mit deinem Mac, mit einem Schlüssel, der ihn nie verlässt.</string>
+    <string name="welcome_title">aOS auf deinem Computer</string>
+    <string name="signin_needs_screen_lock">Bestätigen geht auf diesem Computer nicht. Richte Windows Hello ein oder wähle einen anderen Weg unter Einstellungen &gt; Dieser Computer.</string>
+    <string name="pair_newer_code">Dieser Code stammt von einem neueren aOS. Aktualisiere aOS auf diesem Computer.</string>
+    <string name="pair_fact_key">Dieser Computer erzeugt einen eigenen Schlüssel. Nur seine öffentliche Hälfte geht an den Mac.</string>
+    <string name="pair_only_own_mac">Kopple nur mit deinem eigenen Mac. aOS auf dem Mac trägt den Schlüssel dieses Computers dort bei den SSH-Schlüsseln deines Benutzers ein.</string>
+    <string name="pair_how_reached">So erreicht ihn dieser Computer</string>
+    <string name="pair_way_aos">Unterwegs über das eigene Tailscale von aOS. Richte es nach dem Koppeln auch auf diesem Computer ein, mit demselben Tailscale-Konto.</string>
+    <string name="pair_way_app">Unterwegs über die Tailscale-App. Dieser Computer braucht sie auch, mit demselben Konto angemeldet (oder das eigene Tailscale von aOS, unter Einstellungen &gt; Verbindung).</string>
+    <string name="pair_way_lan">Nur im selben Netzwerk: Anderswo erreicht dieser Computer den Mac nicht.</string>
+    <string name="pair_key_footer">Dieser Computer nimmt den Mac nur mit genau diesem Schlüssel an, jetzt und später.</string>
+    <string name="pair_device_name">Name dieses Computers</string>
+    <string name="pair_done_text">Dieser Computer erreicht deinen Mac jetzt von selbst, solange aOS läuft.</string>
+    <string name="pair_error_unreachable">Der Mac hat nicht geantwortet. Prüfe, ob dieser Computer im selben Netzwerk ist wie der Mac und ob der Kopplungscode noch angezeigt wird.</string>
+    <string name="pair_error_invalid_answer">Die Antwort des Macs war nicht zu verstehen. Aktualisiere aOS auf dem Mac und auf diesem Computer.</string>
+    <string name="error_pair_again">Kopple neu, um weiter mit diesem Computer freizugeben.</string>
+    <string name="error_update_mac">Aktualisiere aOS auf dem Mac, um den Arbeitsplatz auf diesem Computer zu sehen.</string>
+    <string name="conn_not_accepted">Der Mac nimmt diesen Computer nicht mehr an. Kopple ihn über aOS auf dem Mac neu.</string>
+    <string name="conn_unreachable_set_up_aos">Der Mac ist nicht erreichbar. Für unterwegs richte das Tailscale von aOS auf diesem Computer ein: Einstellungen &gt; Verbindung.</string>
+    <string name="conn_unreachable_aos_off">Der Mac ist nicht erreichbar, und das Tailscale von aOS ist auf diesem Computer nicht verbunden (Einstellungen &gt; Verbindung).</string>
+    <string name="conn_unreachable_switch_on">Der Mac ist nicht erreichbar. Schalte unterwegs Tailscale auf diesem Computer ein (die Tailscale-App oder das Tailscale von aOS unter Einstellungen &gt; Verbindung).</string>
+    <string name="settings_this_phone">Dieser Computer</string>
+    <string name="settings_ssh_key">SSH-Schlüssel dieses Computers</string>
+    <string name="mac_unpair_footer">Dieser Computer vergisst den Mac. Um seinen Schlüssel auch vom Mac zu entfernen, öffne aOS auf dem Mac und entferne ihn aus den gekoppelten Geräten.</string>
+    <string name="mac_unpair_explain">Anmelde- und Hilfeanfragen von diesem Mac erreichen diesen Computer dann nicht mehr.</string>
+    <string name="key_public_footer">Um dich mit dem Schlüssel dieses Computers an einem anderen Rechner anzumelden, trag diese Zeile dort in ~/.ssh/authorized_keys ein. Der öffentliche Schlüssel ist nicht geheim.</string>
+    <string name="about_passwords_1">Sie bleiben in deinem Bitwarden-Konto. aOS auf deinem Mac meldet sich dort mit dem eigenen Befehlszeilenprogramm von Bitwarden an; dieser Computer spricht nie mit Bitwarden.</string>
+    <string name="about_passwords_3">aOS auf deinem Mac holt dann genau diese Anmeldung aus Bitwarden und tippt sie in den Arbeitsplatz. Weder dieser Computer noch der Mac behält sie.</string>
+    <string name="about_connection_1">Dieser Computer erreicht deinen Mac über SSH (die entfernte Anmeldung des Macs), mit einem Schlüssel, der auf ihm entstanden ist und ihn nie verlässt. Der Schlüssel des Macs wird jedes Mal geprüft.</string>
+    <string name="about_screen_2">Accountname und Passwort für den Bildschirm des Macs bleiben verschlüsselt auf diesem Computer und gehen nur an die Bildschirmfreigabe des Macs.</string>
+    <string name="ack_tailscale">Das eigene Tailscale von aOS auf diesem Computer ist der offene Quellcode von Tailscale (tailscale.com), unter der BSD-3-Clause-Lizenz.</string>
+    <string name="ack_apache_list">Apache MINA SSHD, Compose Multiplatform, Kotlin und kotlinx, JNA, JmDNS und JediTerm von JetBrains (doppelt lizenziert unter LGPL-3.0 oder Apache-2.0, verwendet unter Apache-2.0).</string>
+    <string name="conn_footer">Dieser Computer versucht zuerst dasselbe Netzwerk, dann das Tailnet, dann den Namen des Macs im Netzwerk.</string>
+    <string name="conn_tailscale_app">Tailscale-App auf diesem Computer</string>
+    <string name="conn_app_footer">Dein Mac nutzt die Tailscale-App. Auf diesem Computer erreicht ihn die Tailscale-App, mit demselben Konto angemeldet, ebenfalls; genauso das eigene Tailscale von aOS weiter unten.</string>
+    <string name="conn_node_header">Das Tailscale von aOS auf diesem Computer</string>
+    <string name="conn_node_footer">Kein VPN und keine Tailscale-App nötig. aOS erreicht darüber nur deinen Mac, und auf diesem Computer ist in deinem Tailnet nichts erreichbar. Die Schlüssel bleiben im Ordner von aOS auf diesem Computer.</string>
+    <string name="conn_node_can">aOS kann Tailscale auch auf diesem Computer mitbringen: kein VPN, keine zusätzliche App. Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac.</string>
+    <string name="conn_needs_approval">Angemeldet. Die Verwaltung des Tailnets muss diesen Computer noch in der Tailscale-Verwaltung freigeben.</string>
+    <string name="conn_sign_out_footer">„Abmelden“ nimmt diesen Computer aus dem Tailnet und löscht hier seine Tailscale-Schlüssel.</string>
+    <string name="conn_sign_out_question">Auf diesem Computer von Tailscale abmelden?</string>
+    <string name="conn_sign_out_explain">Dieser Computer verlässt dein Tailnet. Unterwegs erreicht er den Mac dann nur noch über die Tailscale-App, falls er sie hat.</string>
+    <string name="term_sessions_footer">Sie laufen weiter, wenn die Verbindung abreißt, auch bei geschlossenem aOS, und dieser Computer macht weiter, wo er war. Beende die, die du nicht mehr brauchst.</string>
+    <string name="term_open_here_phone">Auf diesem Computer offen</string>
+    <string name="screen_login_kept">Bleibt auf diesem Computer, verschlüsselt für dein Benutzerkonto, und wird erst gelesen, nachdem du bestätigt hast, dass du es bist. Es geht nur an die Bildschirmfreigabe des Macs.</string>
+    <string name="screen_set_screen_lock">Richte Windows Hello ein oder wähle einen anderen Weg zum Bestätigen unter Einstellungen &gt; Dieser Computer.</string>
+    <string name="screen_matches_phone">Bildschirme in der Größe des Fensters</string>
+    <string name="screen_display_footer">Der Arbeitsplatz nimmt die Form des Fensters an: aOS passt sein Display an. Dein eigener Mac behält am Computer seine Größe (Video im Hochleistungsmodus wird hier nicht abgespielt). Mehr Auflösung gibt mehr Platz und weniger Schärfe.</string>
+    <string name="settings_notifications_footer">Anfragen, die kommen, während das Fenster von aOS geschlossen oder verborgen ist, zeigt dieser Computer als Mitteilung.</string>
+    <string name="settings_security_footer">aOS fragt beim Start und nach einer Weile im Hintergrund, ob du es bist.</string>
+    <string name="lock_title">aOS ist gesperrt</string>
+</resources>

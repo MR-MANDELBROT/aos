@@ -78,7 +78,7 @@ class TerminalController private constructor(private val app: Application, val m
             return it
         }
         val terminal = MacTerminal(mac.id, mac.name, settings, Dispatchers.Main.immediate,
-            macConnection = { model.connection.value?.takeIf { it.mac.value.id == mac.id } })
+            macConnection = { model.connection.value?.takeIf { it.mac.value.id == mac.id } }, makeScreen = ::TermuxScreen)
         terminal.setFontSize(settings.fontSize.value)
         terminal.clipboard = { text ->
             val manager = app.getSystemService(ClipboardManager::class.java)
@@ -188,76 +188,6 @@ class TerminalController private constructor(private val app: Application, val m
         }
 
         /** What the demo's terminal shows (iOS Demo.terminalText). */
-        const val DEMO_TEXT = "Last login: Thu Nov  6 08:12:44 on ttys002\r\n" +
-            "\u001b[1;32mmax@Maxs-MacBook-Pro\u001b[0m \u001b[1;34m~\u001b[0m % cd Developer/aos\r\n" +
-            "\u001b[1;32mmax@Maxs-MacBook-Pro\u001b[0m \u001b[1;34m~/Developer/aos\u001b[0m % git status --short\r\n" +
-            " M Android/app/src/main/kotlin/dev/marquart/aos/terminal/MacTerminal.kt\r\n" +
-            "?? Android/app/src/main/kotlin/dev/marquart/aos/screen/\r\n" +
-            "\u001b[1;32mmax@Maxs-MacBook-Pro\u001b[0m \u001b[1;34m~/Developer/aos\u001b[0m % uptime\r\n" +
-            "08:15  up 3 days, 22:41, 2 users, load averages: 1.42 1.37 1.29\r\n" +
-            "\u001b[1;32mmax@Maxs-MacBook-Pro\u001b[0m \u001b[1;34m~/Developer/aos\u001b[0m % "
-    }
-}
-
-/** The terminal sessions on the paired Mac (`aos-companion term list`). */
-class MacSessionList {
-    private val _sessions = MutableStateFlow<List<MacTermSession>>(emptyList())
-    private val _loaded = MutableStateFlow(false)
-    val sessions: StateFlow<List<MacTermSession>> = _sessions.asStateFlow()
-
-    /** The Mac sent its list at least once (an empty list then means: none). */
-    val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
-
-    suspend fun load(model: AppModel) {
-        val connection = model.connection.value ?: return
-        val ssh = connection.ssh.value ?: return
-        if (!ssh.isActive) return
-        val list = try {
-            connection.termSessions()
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            null
-        } ?: return
-        _sessions.value = TermAttach.ordered(list)
-        _loaded.value = true
-    }
-
-    /** Ends a session (the terminal's own through the terminal, which then says so). */
-    suspend fun end(session: MacTermSession, model: AppModel, terminal: MacTerminal?) {
-        if (terminal != null && terminal.holderId.value == session.id) {
-            terminal.endSession()
-        } else {
-            try {
-                model.connection.value?.endTermSession(session.id)
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (_: Exception) {
-            }
-        }
-        _sessions.value = _sessions.value.filter { it.id != session.id }
-        if (model.demo != null) return
-        delay(400)
-        load(model)
-    }
-
-    /** The name of a session in menus and titles: its title, or the program and the folder. */
-    fun name(id: String?, home: String, place: (MacTermSession) -> String): String? {
-        val session = _sessions.value.firstOrNull { it.id == id } ?: return null
-        return session.title ?: place(session)
-    }
-
-    /** Claude Code open on this phone, a shell nobody has open, one in a terminal on the Mac (the demo). */
-    fun showDemo(phoneId: String?) {
-        val now = Instant.now()
-        _sessions.value = TermAttach.ordered(listOf(
-            MacTermSession("3fa9c1d2", attached = true, since = now.minusSeconds(600), created = now.minusSeconds(7200),
-                from = "ssh 192.168.178.31", client = phoneId, command = "claude", cwd = "/Users/max/Developer/aos"),
-            MacTermSession("7b2e90aa", attached = false, since = now.minusSeconds(3 * 3600), created = now.minusSeconds(5 * 3600),
-                command = "zsh", cwd = "/Users/max"),
-            MacTermSession("c41d07e5", attached = true, since = now.minusSeconds(1200), created = now.minusSeconds(1800),
-                from = "local", command = "htop", cwd = "/Users/max"),
-        ))
-        _loaded.value = true
+        const val DEMO_TEXT = TerminalDemo.TEXT
     }
 }

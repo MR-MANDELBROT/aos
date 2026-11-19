@@ -11,6 +11,7 @@ import dev.marquart.aos.store.AppSettings
 import dev.marquart.aos.store.MemoryMacStore
 import dev.marquart.aos.store.MemorySettingsStore
 import dev.marquart.aos.terminal.MacTerminal
+import dev.marquart.aos.terminal.TermuxScreen
 import dev.marquart.aos.terminal.MemorySessionMemory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,7 +45,7 @@ class LiveTerminalTests {
                     val mac = model.pair(PairingLink.parse(text))
                     val connection = model.connection.value!!
                     waitUntil(30_000, "ssh") { connection.ssh.value?.isActive == true }
-                    val t = MacTerminal(mac.id, mac.name, MemorySessionMemory(), main, macConnection = { model.connection.value })
+                    val t = MacTerminal(mac.id, mac.name, MemorySessionMemory(), main, macConnection = { model.connection.value }, makeScreen = ::TermuxScreen)
                     terminal = t
                     suspend fun screen() = t.onTerminal { screenText() }
                     t.connect()

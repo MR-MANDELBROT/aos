@@ -19,6 +19,8 @@ import dev.marquart.aos.store.DataStoreSettingsStore
 import dev.marquart.aos.store.KeystoreSecretStore
 import dev.marquart.aos.ui.lock.AppLock
 import dev.marquart.aos.ui.notify.RequestNotifier
+import dev.marquart.aos.ui.platform.AndroidPlatform
+import dev.marquart.aos.ui.platform.Platform
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,6 +34,7 @@ class AosApp : Application() {
     override fun onCreate() {
         super.onCreate()
         SshConnector.useHomeFolder(java.io.File(noBackupFilesDir, "ssh-home"))
+        Platform.current = AndroidPlatform(this)
         graph = AppGraph(this)
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {

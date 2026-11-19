@@ -1,0 +1,187 @@
+aOS's desktop changes to Open Screen Sharing's Go library (libsharing), GPL-3.0 like Open Screen Sharing (LICENSE and
+COPYING in iOS/ThirdParty/OpenScreenSharing). Android/Tools/go-desktop.sh applies them after aOS's own patch
+(iOS/ThirdParty/OpenScreenSharing/libsharing-aos.patch) and the Android patch (third_party/libsharing-android.patch) to
+a copy of the source before it builds aosgo for Windows, Linux and macOS (libsharing and aOS's Tailnet/mobile in one C
+library, third_party/aosgo-desktop); the checkout stays as it is. Made on 2026-11-19 against Max's fork of Open Screen
+Sharing (branch autofill-passwort, 8b19fc9). Each change is marked "aOS:".
+
+- internal/rfb/media/socket.go, socket_windows.go, stream.go: the high performance stream's UDP sockets on Windows.
+  socket.go uses Unix socket calls (it doesn't compile for Windows), and sing has no batched UDP reads or writes
+  there; socket_windows.go does the same with Winsock, one datagram per read and write. stream.go gets its batch
+  reader from the platform's file (newPacketBatchReader). Linux and Apple's systems keep sing's batched I/O.
+
+diff -ruN a/internal/rfb/media/socket.go b/internal/rfb/media/socket.go
+--- a/internal/rfb/media/socket.go	2026-11-19 00:00:00
++++ b/internal/rfb/media/socket.go	2026-11-19 00:00:00
+@@ -1,3 +1,7 @@
++// aOS: not for Windows (socket_windows.go there). Part of aOS's desktop patch (GPL-3.0).
++
++//go:build !windows
++
+ package media
+ 
+ import (
+@@ -92,4 +96,10 @@
+ 		return nil, E.New("media: batched UDP writes are unsupported on this platform")
+ 	}
+ 	return writer, nil
++}
++
++// aOS: sing's batched reads on the leg's socket (Windows has its own, socket_windows.go). Part of aOS's desktop patch
++// (GPL-3.0).
++func newPacketBatchReader(conn *net.UDPConn) (N.ConnectedPacketBatchReadWaiter, bool) {
++	return bufio.CreateConnectedPacketBatchReadWaiter(bufio.NewUnbindPacketConn(conn))
+ }
+diff -ruN a/internal/rfb/media/socket_windows.go b/internal/rfb/media/socket_windows.go
+--- a/internal/rfb/media/socket_windows.go	2026-11-19 00:00:00
++++ b/internal/rfb/media/socket_windows.go	2026-11-19 00:00:00
+@@ -0,0 +1,127 @@
++// aOS: the media stream's UDP sockets on Windows, for aOS's desktop companion (Windows and Linux; libsharing in one
++// C library with aOS's Tailscale node, Android/third_party/aosgo-desktop in aOS). socket.go uses Unix socket calls,
++// and sing has no batched UDP reads or writes on Windows, so this file does what socket.go does with Winsock and reads
++// and writes one datagram at a time. Part of aOS's desktop patch to Open Screen Sharing (GPL-3.0,
++// Android/third_party/aosgo-desktop/libsharing-desktop.patch in aOS); based on Open Screen Sharing's socket.go by
++// nekohasekai (GPL-3.0).
++
++//go:build windows
++
++package media
++
++import (
++	"context"
++	"net"
++	"net/netip"
++	"syscall"
++
++	"github.com/sagernet/sing/common/buf"
++	E "github.com/sagernet/sing/common/exceptions"
++	M "github.com/sagernet/sing/common/metadata"
++	N "github.com/sagernet/sing/common/network"
++	"golang.org/x/sys/windows"
++)
++
++// dialLeg as in socket.go. Windows has no SO_REUSEPORT; its SO_REUSEADDR lets a second socket bind the same port.
++func dialLeg(local netip.Addr, remote netip.AddrPort, receiveBuffer int) (*net.UDPConn, error) {
++	dialer := net.Dialer{
++		LocalAddr: net.UDPAddrFromAddrPort(netip.AddrPortFrom(local, remote.Port())),
++		Control: func(network string, address string, raw syscall.RawConn) error {
++			var optionErr error
++			err := raw.Control(func(fd uintptr) {
++				optionErr = windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_REUSEADDR, 1)
++			})
++			return E.Errors(err, optionErr)
++		},
++	}
++	conn, err := dialer.DialContext(context.Background(), "udp", remote.String())
++	if err != nil {
++		return nil, err
++	}
++	udpConn := conn.(*net.UDPConn)
++	_ = udpConn.SetReadBuffer(receiveBuffer)
++	return udpConn, nil
++}
++
++// connectLeg as in socket.go: connects the socket to the address the server sends from (a UDP socket may connect
++// again on Windows too); writes then go there.
++func connectLeg(conn *net.UDPConn, address netip.AddrPort) (N.ConnectedPacketBatchWriter, error) {
++	rawConn, err := conn.SyscallConn()
++	if err != nil {
++		return nil, err
++	}
++	var connectErr error
++	err = rawConn.Control(func(fd uintptr) {
++		handle := windows.Handle(fd)
++		var local windows.Sockaddr
++		local, connectErr = windows.Getsockname(handle)
++		if connectErr != nil {
++			return
++		}
++		_, localInet6 := local.(*windows.SockaddrInet6)
++		var remote windows.Sockaddr
++		switch {
++		case localInet6:
++			inet6 := &windows.SockaddrInet6{Port: int(address.Port()), Addr: address.Addr().As16()}
++			if zone := address.Addr().Zone(); zone != "" {
++				var networkInterface *net.Interface
++				networkInterface, connectErr = net.InterfaceByName(zone)
++				if connectErr != nil {
++					return
++				}
++				inet6.ZoneId = uint32(networkInterface.Index)
++			}
++			remote = inet6
++		case address.Addr().Unmap().Is4():
++			remote = &windows.SockaddrInet4{Port: int(address.Port()), Addr: address.Addr().Unmap().As4()}
++		default:
++			connectErr = E.New("media: an IPv4 socket cannot connect to ", address)
++			return
++		}
++		connectErr = windows.Connect(handle, remote)
++	})
++	err = E.Errors(err, connectErr)
++	if err != nil {
++		return nil, err
++	}
++	return singleWriter{conn}, nil
++}
++
++// singleWriter sends a batch one datagram after the other on the connected socket.
++type singleWriter struct{ conn *net.UDPConn }
++
++func (w singleWriter) WriteConnectedPacketBatch(buffers []*buf.Buffer) error {
++	defer buf.ReleaseMulti(buffers)
++	for _, buffer := range buffers {
++		if _, err := w.conn.Write(buffer.Bytes()); err != nil {
++			return err
++		}
++	}
++	return nil
++}
++
++// singleReader reads one datagram per call (sing's batched reads exist only on Linux, NetBSD and Apple's systems).
++type singleReader struct {
++	conn    *net.UDPConn
++	options N.ReadWaitOptions
++}
++
++func newPacketBatchReader(conn *net.UDPConn) (N.ConnectedPacketBatchReadWaiter, bool) {
++	return &singleReader{conn: conn}, true
++}
++
++func (r *singleReader) InitializeReadWaiter(options N.ReadWaitOptions) bool {
++	r.options = options
++	return false
++}
++
++func (r *singleReader) WaitReadConnectedPackets() ([]*buf.Buffer, M.Socksaddr, error) {
++	buffer := r.options.NewPacketBuffer()
++	n, err := r.conn.Read(buffer.FreeBytes())
++	if err != nil {
++		buffer.Release()
++		return nil, M.Socksaddr{}, err
++	}
++	buffer.Truncate(n)
++	return []*buf.Buffer{buffer}, M.Socksaddr{}, nil
++}
+diff -ruN a/internal/rfb/media/stream.go b/internal/rfb/media/stream.go
+--- a/internal/rfb/media/stream.go	2026-11-19 00:00:00
++++ b/internal/rfb/media/stream.go	2026-11-19 00:00:00
+@@ -10,7 +10,6 @@
+ 	"time"
+ 
+ 	"github.com/sagernet/sing/common/buf"
+-	"github.com/sagernet/sing/common/bufio"
+ 	E "github.com/sagernet/sing/common/exceptions"
+ 	N "github.com/sagernet/sing/common/network"
+ )
+@@ -206,7 +205,9 @@
+ 	if err != nil {
+ 		return nil, E.Cause(err, "media: open UDP port ", port)
+ 	}
+-	reader, created := bufio.CreateConnectedPacketBatchReadWaiter(bufio.NewUnbindPacketConn(conn))
++	// aOS: newPacketBatchReader (socket.go, socket_windows.go): Windows reads one datagram at a time. Part of aOS's
++	// desktop patch (GPL-3.0).
++	reader, created := newPacketBatchReader(conn)
+ 	if !created {
+ 		_ = conn.Close()
+ 		return nil, E.New("media: batched UDP reads are unsupported on this platform")
