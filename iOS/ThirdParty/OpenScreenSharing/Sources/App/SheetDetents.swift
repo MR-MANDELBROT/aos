@@ -17,44 +17,41 @@ enum SheetDetent: Hashable {
     }
 }
 
+// aOS: the detents go by the room the window has (its horizontal size class), not by the device: a narrow iPad window
+// gets the bottom sheet with its detents too, a wide window a form sheet without them.
 extension View {
-    @ViewBuilder
     func phonePresentationDetents(_ detents: Set<SheetDetent>) -> some View {
-        if #available(iOS 16, *) {
-            #if os(iOS)
-            if UIDevice.current.userInterfaceIdiom == .phone {
-                presentationDetents(Set(detents.map(\.presentationDetent)))
-            } else {
-                self
-            }
-            #else
-            self
-            #endif
-        } else {
-            self
-        }
+        modifier(CompactPresentationDetents(detents: detents, selection: nil))
     }
 
-    @ViewBuilder
     func phonePresentationDetents(_ detents: Set<SheetDetent>, selection: Binding<SheetDetent>) -> some View {
-        if #available(iOS 16, *) {
-            #if os(iOS)
-            if UIDevice.current.userInterfaceIdiom == .phone {
-                presentationDetents(
-                    Set(detents.map(\.presentationDetent)),
-                    selection: Binding(
-                        get: { selection.wrappedValue.presentationDetent },
-                        set: { selection.wrappedValue = $0 == .large ? .large : .medium }
-                    )
+        modifier(CompactPresentationDetents(detents: detents, selection: selection))
+    }
+}
+
+private struct CompactPresentationDetents: ViewModifier {
+    let detents: Set<SheetDetent>
+    let selection: Binding<SheetDetent>?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        if horizontalSizeClass == .regular {
+            content
+        } else if let selection {
+            content.presentationDetents(
+                Set(detents.map(\.presentationDetent)),
+                selection: Binding(
+                    get: { selection.wrappedValue.presentationDetent },
+                    set: { selection.wrappedValue = $0 == .large ? .large : .medium }
                 )
-            } else {
-                self
-            }
-            #else
-            self
-            #endif
+            )
         } else {
-            self
+            content.presentationDetents(Set(detents.map(\.presentationDetent)))
         }
+        #else
+        content
+        #endif
     }
 }

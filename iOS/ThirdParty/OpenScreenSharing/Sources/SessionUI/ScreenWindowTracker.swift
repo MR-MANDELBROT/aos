@@ -27,21 +27,27 @@ final class ScreenWindowTracker {
 
     var screenArea: CGRect? {
         guard let window = view.window else { return nil }
-        var area = window.bounds
-        if view.traitCollection.userInterfaceIdiom == .phone {
-            let safeArea = window.safeAreaInsets
-            var insets = UIEdgeInsets.zero
-            switch window.windowScene?.interfaceOrientationCompat {
-            case .landscapeLeft, .landscapeRight:
-                insets.left = safeArea.left
-                insets.right = safeArea.right
-            case .portraitUpsideDown: insets.bottom = safeArea.bottom
-            default: insets.top = safeArea.top
-            }
-            area = area.inset(by: insets)
-        }
+        // aOS: the window's own insets, each edge for itself, on every device: the top one (the Dynamic Island, the
+        // status bar, an iPad window's controls in Stage Manager) and the sides (the sensor housing on its side, a bar
+        // the system keeps on one side, as on the iPhone Duo). Open Screen Sharing chose the edges by the iPhone's
+        // orientation and used the whole window on an iPad. The bottom one (the home indicator) stays part of the
+        // picture, as before.
+        let safeArea = ScreenWindowTracker.pictureInsets(of: window)
+        let area = window.bounds.inset(by: UIEdgeInsets(top: safeArea.top, left: safeArea.left, bottom: 0, right: safeArea.right))
         let visible = view.convert(area, from: window).intersection(view.bounds)
         return visible.isNull || visible.isEmpty ? nil : visible
+    }
+
+    /// aOS: see `applySizeRestriction`.
+    private static let restrictsWindowSize = false
+
+    /// aOS: the window's safe area with its corners adapted vertically: an iPad window's controls (top left in Stage
+    /// Manager) push the picture's top below them, so the Mac's menu bar isn't under them. Elsewhere the plain safe area.
+    static func pictureInsets(of window: UIWindow) -> UIEdgeInsets {
+        if #available(iOS 26, *) {
+            return window.edgeInsets(for: .safeArea(cornerAdaptation: .vertical))
+        }
+        return window.safeAreaInsets
     }
 
     func windowDidChange() {
@@ -124,6 +130,12 @@ final class ScreenWindowTracker {
     }
 
     private func applySizeRestriction() {
+        // aOS: no minimum window size for a picture in the window's shape. Open Screen Sharing asked for at least
+        // 600 by 394 points (a landscape minimum for the Mac's virtual display); a narrow Stage Manager window below
+        // that was grown by the system while the session kept laying out for the old size (the picture stuck half
+        // outside the window, seen in the simulator). The display is grown to its minimum anyway
+        // (`VirtualDisplayMode`), so any window shape works.
+        guard Self.restrictsWindowSize else { return }
         guard let restrictions = scene?.sizeRestrictions else { return }
         if matchesWindow {
             if replacedMinimumSize == nil {
@@ -141,7 +153,8 @@ final class ScreenWindowTracker {
         let orientation: UIInterfaceOrientationMask?
         if view.traitCollection.userInterfaceIdiom == .phone {
             orientation = preferredOrientation
-        } else if turnsLandscape {
+        } else if turnsLandscape, !matchesWindow {
+            // aOS: only a picture in its own shape turns the iPad; one in the window's shape follows it in any way.
             let screen = scene.screen.bounds.size
             let size = window.bounds.size
             let fillsScreen =

@@ -23,6 +23,15 @@ final class AppModel {
     private(set) var companionKey: CompanionKey?
 
     var tab: Tab = .overview
+    /// Settings over the Overview (its gear button, ⌘, from a keyboard).
+    var isSettingsPresented = false
+
+    // Windows (an iPad has more than one: the main window and terminal windows; an iPhone has the main one)
+    /// The scene that shows the main window (the tabs). Further windows of the same kind become terminal windows.
+    private(set) var mainScene: String?
+    /// The main window's UIKit window (the demo sizes its pictures to it).
+    @ObservationIgnored weak var mainWindow: UIWindow?
+    @ObservationIgnored private var lastScenePhase: ScenePhase?
 
     /// Something the agent asks the person to decide: a sign-in or opening the workspace.
     enum Question: Identifiable, Equatable {
@@ -173,6 +182,9 @@ final class AppModel {
     }
 
     func scenePhaseChanged(to phase: ScenePhase) {
+        // Every window reports the app's phase; once is enough.
+        guard phase != lastScenePhase else { return }
+        lastScenePhase = phase
         lock.scenePhaseChanged(to: phase)
         keepAlive.scenePhaseChanged(phase)
         switch phase {
@@ -264,8 +276,10 @@ final class AppModel {
         try? saveMacs(macs.filter { $0.id != mac.id })
         macScreen.stop()
         workspaceScreen.stop()
-        terminals[.mac(mac.id)]?.disconnect()
-        terminals[.mac(mac.id)] = nil
+        for (target, terminal) in terminals where target.macID == mac.id {
+            terminal.disconnect()
+            terminals[target] = nil
+        }
         questions = []
         deferredQuestions = []
         helpRequests = []
@@ -300,16 +314,82 @@ final class AppModel {
 
     func terminal(for target: TerminalSession.Target) -> TerminalSession {
         if let existing = terminals[target] { return existing }
-        let title: String
-        switch target {
-        case .mac(let id): title = macs.first { $0.id == id }?.name ?? "Mac"
-        }
+        let title = macs.first { $0.id == target.macID }?.name ?? "Mac"
         let session = TerminalSession(id: target, title: title)
         session.macConnection = { [weak self] in self?.connection }
         session.phoneID = { [weak self] in self?.deviceKey?.phoneID }
         session.onChange = { [weak self] _ in self?.keepAlive.terminalsChanged() }
+        session.shownElsewhere = { [weak self, weak session] id in
+            self?.terminals.values.contains { $0 !== session && $0.holdsChannel && $0.holderID == id } ?? false
+        }
+        session.releaseElsewhere = { [weak self, weak session] id in
+            guard let self else { return }
+            for other in self.terminals.values where other !== session && other.holderID == id {
+                other.shownInAnotherWindow()
+            }
+        }
         terminals[target] = session
         return session
+    }
+
+    /// The terminal of this app that shows that session on the Mac now, if one does.
+    func terminal(showing id: String) -> TerminalSession? {
+        terminals.values.first { $0.isActive && $0.holderID == id }
+    }
+
+    /// A terminal window's terminal: its session, or the one it was opened for (taken from another window).
+    func windowTerminal(mac: PairedMac, scene: String, initialSession: String?) -> TerminalSession {
+        let target = TerminalSession.Target.window(mac: mac.id, scene: scene)
+        let fresh = terminals[target] == nil && TerminalSession.storedHolderID(for: target) == nil
+        let session = terminal(for: target)
+        if fresh, let initialSession { session.prepare(toShow: initialSession) }
+        return session
+    }
+
+    /// A terminal window closed: its terminal lets go (the session keeps running on the Mac).
+    func closeTerminalWindow(_ target: TerminalSession.Target) {
+        guard case .window = target, let session = terminals[target] else { return }
+        session.disconnect()
+        terminals[target] = nil
+        keepAlive.terminalsChanged()
+    }
+
+    /// New Session in a terminal (the menu, a keyboard shortcut); the demo shows its sample output again.
+    func startNewSession(in session: TerminalSession) {
+        #if DEBUG
+        if isDemo {
+            session.showDemo(Demo.terminalText)
+            return
+        }
+        #endif
+        session.startNewSession()
+    }
+
+    // MARK: Windows
+
+    /// A window of the main kind asks to show the tabs: the first one does; the others become terminal windows.
+    func claimMainScene(_ scene: String) -> Bool {
+        guard mainScene == nil || mainScene == scene else { return false }
+        mainScene = scene
+        return true
+    }
+
+    /// The main window closed (its scene went away).
+    func releaseMainScene(_ scene: String) {
+        if mainScene == scene { mainScene = nil }
+    }
+
+    /// A screen fills the main window (keyboard shortcuts of the app then go to the screen's Mac).
+    var isScreenShown: Bool {
+        tab == .screen && (macScreen.phase == .running || workspaceScreen.phase == .running)
+    }
+
+    /// Everything the Overview shows, again (pull to refresh, ⌘R).
+    func refresh() async {
+        connection?.retryNow()
+        await connection?.refreshStatus()
+        await connection?.refreshMacStatus()
+        await connection?.refreshChats()
     }
 
     /// The Terminal tab with the Mac's terminal in a new session there (the Overview's "Open Terminal": to sign in to

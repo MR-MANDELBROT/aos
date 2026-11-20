@@ -1,15 +1,61 @@
 import SwiftTerm
 import SwiftUI
 
-/// The Terminal tab: the terminal sessions on the Mac, a new one, and the terminal that shows one of them.
+/// The Terminal tab: the terminal sessions on the Mac, a new one, and the terminal that shows one of them. Side by side
+/// where the window is wide (an iPad, an iPhone Duo open): the list in the sidebar, the terminal beside it. In a narrow
+/// window the terminal comes over the list, as on an iPhone.
 struct TerminalTab: View {
     @Environment(AppModel.self) private var model
-    @State private var path: [TerminalSession.Target] = []
+    @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
+    @Environment(\.openWindow) private var openWindow
+    /// The terminal was opened (narrow: it is the column on screen).
+    @State private var opened = false
     @State private var ending: MacTermSession?
     @State private var showSettings = false
 
+    /// The main window's terminal on the paired Mac, once there is one (made by opening it, not while drawing).
+    private var terminal: TerminalSession? {
+        model.activeMac.flatMap { model.terminals[.mac($0.id)] }
+    }
+
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationSplitView(preferredCompactColumn: Binding(get: { opened ? .detail : .sidebar },
+                                                            set: { opened = $0 == .detail })) {
+            list
+        } detail: {
+            NavigationStack {
+                if let terminal, opened || terminal.isActive || terminal.phase == .ended {
+                    TerminalScreen(session: terminal)
+                } else {
+                    ContentUnavailableView {
+                        Label("No terminal open", systemImage: "apple.terminal")
+                    } description: {
+                        Text("Open a session from the list, or start a new one.")
+                    } actions: {
+                        if let mac = model.activeMac {
+                            Button("New Session") { newSession(on: mac) }.buttonStyle(.glassProminent)
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear {
+            #if DEBUG
+            if model.isDemo, Demo.tab == "terminal", let mac = model.activeMac, !opened, Demo.sheet == "shell" {
+                _ = model.terminal(for: .mac(mac.id))
+                opened = true
+            }
+            #endif
+        }
+        .onChange(of: model.openTerminal, initial: true) { _, target in
+            guard let target else { return }
+            model.openTerminal = nil
+            _ = model.terminal(for: target)
+            opened = true
+        }
+    }
+
+    private var list: some View {
             List {
                 if let mac = model.activeMac {
                     Section {
@@ -45,6 +91,11 @@ struct TerminalTab: View {
                             }
                             .contextMenu {
                                 Button("Open Session", systemImage: "apple.terminal") { open(session, on: mac) }
+                                if supportsMultipleWindows {
+                                    Button("Open in New Window", systemImage: "macwindow.badge.plus") {
+                                        openWindow(id: SceneRole.terminalWindowID, value: TerminalWindowRequest(session: session.id))
+                                    }
+                                }
                                 Button("End Session", systemImage: "xmark.circle", role: .destructive) { ending = session }
                             }
                         }
@@ -56,15 +107,14 @@ struct TerminalTab: View {
                 }
             }
             .navigationTitle("Terminal")
+            // The list stays beside the terminal (the tabs' sidebar has its own button already)
+            .toolbar(removing: .sidebarToggle)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Terminal settings", systemImage: "gearshape") { showSettings = true }
                 }
             }
             .sheet(isPresented: $showSettings) { TerminalSettingsSheet { showSettings = false } }
-            .navigationDestination(for: TerminalSession.Target.self) { target in
-                TerminalScreen(session: model.terminal(for: target))
-            }
             .overlay {
                 if model.activeMac == nil {
                     ContentUnavailableView {
@@ -75,13 +125,6 @@ struct TerminalTab: View {
                         Button("Pair with your Mac") { model.isPairingPresented = true }.buttonStyle(.glass)
                     }
                 }
-            }
-            .onAppear {
-                #if DEBUG
-                if model.isDemo, Demo.tab == "terminal", let mac = model.activeMac, path.isEmpty, Demo.sheet == "shell" {
-                    path = [.mac(mac.id)]
-                }
-                #endif
             }
             .task(id: model.connection?.isConnected == true) {
                 // While the list is on screen: now and every 10 s (what runs in the sessions changes).
@@ -94,11 +137,6 @@ struct TerminalTab: View {
                 model.connection?.retryNow()
                 await refreshSessions()
             }
-            .onChange(of: model.openTerminal, initial: true) { _, target in
-                guard let target else { return }
-                model.openTerminal = nil
-                path = [target]
-            }
             .confirmationDialog("End this session?", isPresented: Binding(get: { ending != nil }, set: { if !$0 { ending = nil } }),
                                 titleVisibility: .visible, presenting: ending) { session in
                 Button("End Session", role: .destructive) {
@@ -110,7 +148,6 @@ struct TerminalTab: View {
             } message: { _ in
                 Text("The shell on the Mac ends, and so do the programs running in it.")
             }
-        }
     }
 
     private func refreshSessions() async {
@@ -143,22 +180,23 @@ struct TerminalTab: View {
     private func holder(of session: MacTermSession, on mac: PairedMac) -> MacTermSession.Holder {
         let target = TerminalSession.Target.mac(mac.id)
         let terminal = model.terminals[target]
-        return session.holder(shown: terminal?.isActive == true ? terminal?.holderID : nil,
+        // Shown here: in this window's terminal or in a terminal window of its own
+        return session.holder(shown: model.terminal(showing: session.id) != nil ? session.id : nil,
                               phoneID: model.deviceKey?.phoneID,
                               last: terminal?.holderID ?? TerminalSession.storedHolderID(for: target))
     }
 
-    /// The terminal shows that session (the one it showed keeps running).
+    /// The terminal shows that session (the one it showed keeps running; a window that showed it lets go).
     private func open(_ session: MacTermSession, on mac: PairedMac) {
         let terminal = model.terminal(for: .mac(mac.id))
-        path = [.mac(mac.id)]
+        opened = true
         if !model.isDemo { terminal.switchTo(session: session.id) }
     }
 
     private func newSession(on mac: PairedMac) {
         let terminal = model.terminal(for: .mac(mac.id))
         if !model.isDemo { terminal.startNewSession() }
-        path = [.mac(mac.id)]
+        opened = true
     }
 }
 
@@ -254,13 +292,18 @@ private struct MacSessionRow: View {
 struct TerminalScreen: View {
     @Environment(AppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     let session: TerminalSession
+    /// In a terminal window of its own (no tabs there).
+    var inOwnWindow = false
     @State private var visible = false
     @State private var showSettings = false
 
     var body: some View {
         ZStack {
             TerminalViewRepresentable(view: session.view)
+                // Wide: beside the list, the text doesn't start right at its edge
+                .padding(.leading, horizontalSizeClass == .regular ? 8 : 0)
                 .ignoresSafeArea(.container, edges: .bottom)
             switch session.phase {
             case .connecting:
@@ -273,6 +316,10 @@ struct TerminalScreen: View {
                     StateOverlay(symbol: "rectangle.portrait.and.arrow.right",
                                  text: String(localized: "This session is open on another device now. It keeps running on the Mac."),
                                  action: "Open It Here") { connect() }
+                case .elsewhere:
+                    StateOverlay(symbol: "macwindow.on.rectangle",
+                                 text: String(localized: "This session is open in another window."),
+                                 action: "Open It Here") { session.takeOver() }
                 case .exited:
                     StateOverlay(symbol: "power", text: String(localized: "The shell ended."), action: "New Session") { newSession() }
                 case .ended:
@@ -315,8 +362,11 @@ struct TerminalScreen: View {
         .navigationTitle(session.title)
         .navigationSubtitle(model.macSessions.name(of: session.holderID, home: home) ?? "")
         .navigationBarTitleDisplayMode(.inline)
-        // The terminal gets the rows the tab bar would take.
-        .toolbar(.hidden, for: .tabBar)
+        // The terminal gets the rows the tab bar would take (where it comes over the list; beside the list, in a wide
+        // window, the tabs stay).
+        .toolbar(horizontalSizeClass == .regular || inOwnWindow ? .automatic : .hidden, for: .tabBar)
+        // The Terminal menu and its shortcuts act on the terminal on screen
+        .focusedSceneValue(\.terminalSession, visible ? session : nil)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button(session.keyboardShown ? "Hide Keyboard" : "Show Keyboard",
@@ -388,7 +438,7 @@ struct TerminalScreen: View {
             return
         }
         #endif
-        session.startNewSession()
+        model.startNewSession(in: session)
     }
 
     #if DEBUG
@@ -497,6 +547,7 @@ private struct TerminalSettingsSheet: View {
             TerminalSettingsForm()
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done", action: done) } }
         }
+        .presentationSizing(.form)
     }
 }
 

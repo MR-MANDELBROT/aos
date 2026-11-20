@@ -434,6 +434,9 @@ Chrome, so a filled password can't be read back.
 - Tabs: Overview (Mac with battery, lid, display and staying awake, requests, workspace, aOS's Claude Code session and
   Bitwarden, the chats aOS keeps reachable, with their actions), Terminal (the Mac's sessions, which survive the connection: New Session, switching,
   ending), Screen (built only while it is the tab on screen); settings from the Overview.
+- One universal app for iPhone, iPad and the foldable iPhone Duo: layouts follow the window (two columns, the terminal
+  beside its list, form sheets), more than one window on an iPad (terminal windows, one session each, over the one
+  connection), keyboard shortcuts in the iPad's menu bar (iOS/NOTES.md, "iPad and iPhone Duo").
 - German and English (string catalogs), German first for Max.
 - Trust in the design: what is where, said plainly ("Your passwords stay in Bitwarden. You approve every sign-in with
   Face ID."), lock and shield symbols only where they are true, no dark patterns, every approval shows who asks for

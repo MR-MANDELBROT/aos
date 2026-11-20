@@ -5067,6 +5067,16 @@
         }
       }
     },
+    "New Terminal Window" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues Terminalfenster"
+          }
+        }
+      }
+    },
     "Next %@" : {
       "localizations" : {
         "de" : {
@@ -5293,6 +5303,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Sitzungen auf dem Mac. „Neue Sitzung“ startet eine."
+          }
+        }
+      }
+    },
+    "No terminal open" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Terminal offen"
           }
         }
       }
@@ -5882,6 +5902,16 @@
         }
       }
     },
+    "Open a session from the list, or start a new one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffne eine Sitzung aus der Liste oder starte eine neue."
+          }
+        }
+      }
+    },
     "Open elsewhere" : {
       "localizations" : {
         "de" : {
@@ -5940,6 +5970,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In einem Terminal auf dem Mac offen"
+          }
+        }
+      }
+    },
+    "Open in New Window" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In neuem Fenster öffnen"
           }
         }
       }
@@ -6742,6 +6782,16 @@
         }
       }
     },
+    "Refresh" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisieren"
+          }
+        }
+      }
+    },
     "Reload" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7438,6 +7488,16 @@
         }
       }
     },
+    "Settings…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen …"
+          }
+        }
+      }
+    },
     "Share the public key" : {
       "localizations" : {
         "de" : {
@@ -7533,6 +7593,16 @@
         }
       }
     },
+    "Show aOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS zeigen"
+          }
+        }
+      }
+    },
     "Show Fewer" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7561,6 +7631,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tastatur ein- oder ausblenden"
+          }
+        }
+      }
+    },
+    "Show the Mac's Screen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm des Mac zeigen"
           }
         }
       }
@@ -7597,6 +7677,16 @@
       }
     },
     "Show the workspace" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeitsplatz zeigen"
+          }
+        }
+      }
+    },
+    "Show the Workspace" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -9749,6 +9839,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diese Anfrage ist abgelaufen."
+          }
+        }
+      }
+    },
+    "This session is open in another window." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Sitzung ist in einem anderen Fenster offen."
           }
         }
       }

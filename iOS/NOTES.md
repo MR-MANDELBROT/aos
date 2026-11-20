@@ -501,6 +501,69 @@ German in `Tools/translations_screen_de.py` (OSS's own German, reviewed); `trans
 `AOS_SCREEN_PASSWORD` connects the workspace screen straight to a screensharingd (the simulator reaches a workspace
 VM's address). libsharing logs to the app's subsystem, category `libsharing`.
 
+## iPad and iPhone Duo (2026-11-19)
+
+One universal app (`TARGETED_DEVICE_FAMILY` 1,2, bundle `dev.marquart.aos.ios`): iPhone, iPad and the foldable iPhone
+Duo. Nothing pins the layout: no `UIRequiresFullScreen`, the iPad turns all four ways
+(`UISupportedInterfaceOrientations~ipad`), the iPhone keeps portrait and both landscapes. Layout decisions read the
+window (size classes, the window's own safe areas), never the device, so a window that changes size while the app runs
+(Split View, Stage Manager, the Duo folding and unfolding) just lays out again; the terminal and the screen keep running.
+
+- **Tabs**: `TabView` with `.sidebarAdaptable`: a tab bar on an iPhone and in a narrow window, on an iPad a bar at the
+  top that can become a sidebar.
+- **Overview**: two columns from 800 pt of width (the Mac and its requests; the workspace and aOS), the promises
+  below, at most 1100 pt wide; narrower, one column of at most 640 pt (measured width, not the size class: an iPad
+  mini upright is "regular" at 744 pt, and two columns there wrapped the buttons' titles). Settings is a form sheet (`AppModel.isSettingsPresented`, also ⌘,).
+- **Terminal**: `NavigationSplitView`: the Mac's sessions in the sidebar, the terminal beside them. In a narrow window
+  it collapses to the iPhone's list with the terminal over it (`preferredCompactColumn`). In a wide window the terminal
+  keeps the tab bar (it hides it only where it comes over the list). Until a terminal was opened the detail says "No
+  terminal open" with New Session: opening the tab on an iPad doesn't start a shell on the Mac by itself.
+- **Screen**: the two cards side by side (as before, by size class); a session fills the window: while one is shown
+  the tabs' sidebar goes too (`ScreenTab.hideSidebar`: `.toolbar(.hidden, for: .tabBar)` leaves a shown sidebar
+  where it is, and SwiftUI has no switch for it, so the tab bar controller's `sidebar.isHidden` is set and put back
+  when the session closes). The picture's area is
+  the window's (`ScreenSession.currentArea(in:)` gets the Screen tab's window through `WindowReader`, and the session
+  keeps it for the return from the background), not the key window of the first scene. Open Screen Sharing's
+  `ScreenWindowTracker.screenArea` takes the window's top and side insets, each edge for itself, on every device (it
+  chose the edges by the iPhone's orientation and used the whole window on an iPad), with the corners adapted
+  vertically (`edgeInsets(for: .safeArea(cornerAdaptation: .vertical))`, `ScreenClient.pictureInsets`): a bar the
+  system keeps on one side (the Duo) or a Stage Manager window's controls (top left; before, the Mac's menu bar lay
+  under them) stay out of the picture, and the workspace's display gets that shape. Open Screen Sharing's minimum
+  window size for a picture in the window's shape (600 by 394 points) is gone: a narrower Stage Manager window was
+  grown by the system while the session kept laying out for the old size, the picture stuck half outside the window.
+  On an iPad a picture in the window's shape (the workspace, the Mac's virtual display) doesn't lock the iPad to
+  landscape; only a picture in its own shape does, and only while the window fills the screen (Open Screen Sharing's
+  rule). Checked in the simulator: the workspace's session in a Stage Manager window made narrower and wider while it
+  runs, and through the Duo's postures.
+- **Sheets**: sign-in and approval requests, pairing, settings, the Mac's login and the screen and terminal settings
+  are form sheets (`.presentationSizing(.form)`); Open Screen Sharing's detents go by the size class
+  (`phonePresentationDetents`).
+- **Windows** (`Sources/App/Windows.swift`): `UIApplicationSupportsMultipleScenes`. The first window shows the tabs
+  (`SceneRoot`, `AppModel.mainScene`); every further window of that kind (the system's New Window) and every window
+  opened with New Terminal Window (⌥⌘N) or a session's "Open in New Window" (context menu in the Terminal tab) is a
+  terminal window: one terminal (`TerminalSession.Target.window(mac:scene:)`), one session on the Mac each, all over
+  the app's one connection (exec channels in the same SSH connection, as the Terminal tab's). A window's session is
+  kept with the window (its id in the scene's storage, the session per window in UserDefaults), so a window that
+  comes back attaches again. Only one terminal of the app shows a session at a time: two attaches of the same device
+  would take it from each other without end ("replaced"). Opening a session in one window makes the window that showed
+  it let go ("This session is open in another window", Open It Here); an attach that finds another terminal of the app
+  attached to its session yields (`shownElsewhere`, `holdsChannel` as the tie-break). The screen stays in the main
+  window: one screen session at a time, and Open Screen Sharing's session is one view. The agent's questions come up in
+  the main window, or in a terminal window while no main window is open ("Show aOS" opens it again); the lock covers
+  every window. The app's phase comes from every window once (`scenePhaseChanged` ignores repeats).
+- **Keyboard** (`AOSCommands`, in the iPad's menu bar and the ⌘ overlay): ⌘1 to ⌘3 the tabs, ⇧⌘1 the workspace's
+  screen, ⇧⌘2 the Mac's, ⌘R refresh, ⌘, settings, ⌘T new session (in the terminal on screen, else in the Terminal
+  tab), ⌥⌘N New Terminal Window, ⌥⌘C copy screen, ⇧⌘C copy last output, ⌥⌘K keyboard; the terminal's own keys
+  stay (⌘+, ⌘-, ⌘0, ⌘K). The tab and refresh shortcuts are off while a screen fills the window, so its Mac gets those
+  keys. Open Screen Sharing's session commands (its menus and shortcuts) as before. In the request sheets Return
+  approves or allows, Escape is Later.
+- **Pointer**: SwiftTerm has its own pointer interaction; Open Screen Sharing's input handles the trackpad and mouse
+  (pointer lock where the iPad offers it) and is unchanged.
+- The iPhone Duo is an iPhone: closed it is a compact window, open a regular one, half open as iOS reports it. The
+  layouts follow live; the terminal's view and the screen session live in the model, not in the view tree.
+- Words: the UI still says "this iPhone" in many places (pairing, keys, Face ID). An iPad's wording (string catalog
+  variations by device) is open.
+
 ## AOSRFB on the iPhone
 
 Only `DisplayRequest` (shared with the Mac; the iPhone sizes it with OSS's `VirtualDisplayMode` now, not with
@@ -575,7 +638,8 @@ would still need the screen sharing login).
   background), the location keep-alive and its battery cost, the swipe thresholds (12 pt, 450 pt/s) on real fingers,
   the display state and Display On against a real Mac, the 20 s pause after Sleep.
 - Unpairing on the iPhone doesn't remove the key on the Mac (the design leaves that to aOS on the Mac).
-- iPhone only (no iPad layout). Landscape works but wasn't tuned.
+- iPad and iPhone Duo (above): checked in the simulator only (iPad Pro 13", iPad mini, the Duo's postures); not on a
+  device, not with a hardware keyboard or trackpad, not in real Stage Manager windows dragged by hand.
 - The screen client was tested against in-process servers (Apple's account login over the SSH tunnel, a refused
   login, the setup check, the direct path to a server without high performance handing over to the tunnel, one Face
   ID through fallback and the return from the background) and in the simulator's demo; not yet against the real

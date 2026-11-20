@@ -84,13 +84,12 @@ struct ScreenRoute: Equatable, Sendable {
                            bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
     }
 
-    /// The area a session shows its picture in, in points: the window without the top safe area in portrait, without
-    /// the side ones in landscape (Open Screen Sharing's `ScreenWindowTracker.screenArea` on an iPhone). The workspace
-    /// takes this shape.
+    /// The area a session shows its picture in, in points: the window without its top and side safe areas, each edge
+    /// as the window has it (Open Screen Sharing's `ScreenWindowTracker.screenArea`): upright an iPhone has only the top
+    /// one, on its side only the sides, an iPhone Duo can keep a bar on one side, an iPad window its controls on top.
+    /// The bottom one (the home indicator) stays part of the picture. The workspace takes this shape.
     static func pictureArea(window: CGSize, top: CGFloat, leading: CGFloat, trailing: CGFloat) -> CGSize {
-        window.width > window.height
-            ? CGSize(width: max(0, window.width - leading - trailing), height: window.height)
-            : CGSize(width: window.width, height: max(0, window.height - top))
+        CGSize(width: max(0, window.width - leading - trailing), height: max(0, window.height - top))
     }
 
     /// The workspace's display for a picture area: sized as Open Screen Sharing sizes the Mac's virtual display (the
@@ -170,6 +169,9 @@ final class ScreenSession {
 
     /// The person changed the resolution in the session (aOS keeps one setting for both screens).
     @ObservationIgnored var onResolutionScale: ((Double) -> Void)?
+    /// The window the screen is shown in (the Screen tab's): its size and safe areas give the picture's first shape,
+    /// also when the screen comes back from the background.
+    @ObservationIgnored weak var window: UIWindow?
 
     @ObservationIgnored private var forwarder: LocalForwarder?
     @ObservationIgnored private weak var mac: MacConnection?
@@ -484,7 +486,8 @@ final class ScreenSession {
             phase = .failed(ScreenError.notConnected.localizedDescription)
             return
         }
-        await start(mac: mac, login: login, options: options, area: Self.currentArea(resolutionScale: options.resolutionScale))
+        await start(mac: mac, login: login, options: options,
+                    area: Self.currentArea(in: window, resolutionScale: options.resolutionScale))
     }
 
     // MARK: Without the Mac (debug)
@@ -565,11 +568,12 @@ final class ScreenSession {
 
     // MARK: The workspace in the phone's shape
 
-    /// The area the session will show its picture in, from the key window (before the session's view measures it).
-    static func currentArea(resolutionScale: Double) -> ScreenArea {
-        let window = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.keyWindow }.first
+    /// The area the session will show its picture in, from the window it is shown in (before the session's view
+    /// measures it): that window's size and safe areas, not the device's screen (an iPad window in Stage Manager or
+    /// Split View, an iPhone Duo folded or open).
+    static func currentArea(in window: UIWindow?, resolutionScale: Double) -> ScreenArea {
         guard let window else { return ScreenArea(points: .zero, screenScale: 3, resolutionScale: resolutionScale) }
-        let insets = window.safeAreaInsets
+        let insets = ScreenClient.pictureInsets(of: window)
         let points = ScreenRoute.pictureArea(window: window.bounds.size, top: insets.top, leading: insets.left,
                                              trailing: insets.right)
         return ScreenArea(points: points, screenScale: window.traitCollection.displayScale,

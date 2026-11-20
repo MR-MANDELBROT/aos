@@ -44,7 +44,7 @@ struct ApprovalSheet: View {
             .navigationTitle("Workspace request")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Later") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Later") { dismiss() }.keyboardShortcut(.cancelAction) }
             }
         }
     }
@@ -92,6 +92,7 @@ struct ApprovalSheet: View {
                 Label("Allow", systemImage: "checkmark").frame(maxWidth: .infinity)
             }
             .buttonStyle(.glassProminent)
+            .keyboardShortcut(.defaultAction)
             .controlSize(.large)
             Button(role: .destructive) {
                 Task { await answer(false) }

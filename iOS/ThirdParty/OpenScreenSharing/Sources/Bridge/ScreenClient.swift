@@ -39,6 +39,9 @@ public enum ScreenClient {
     nonisolated public static let defaultResolutionScale = VirtualDisplayMode.defaultResolutionScale
     public static func resolutionTitle(_ scale: Double) -> String { resolutionScaleTitle(scale) }
 
+    /// The insets a session keeps its picture out of, from the window it is shown in (`ScreenWindowTracker`).
+    public static func pictureInsets(of window: UIWindow) -> UIEdgeInsets { ScreenWindowTracker.pictureInsets(of: window) }
+
     /// The display a screen gets in the shape of `area` (points), as Open Screen Sharing sizes the Mac's virtual
     /// display: the same shape, at least 800 by 525 points, times the resolution scale, two pixels per point on a
     /// Retina screen. aOS sizes the workspace's display the same way.

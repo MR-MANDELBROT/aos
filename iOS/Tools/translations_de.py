@@ -1002,3 +1002,17 @@ DE.update({
     "Chrome and Safari in the workspace forget every sign-in, also Google. If your agent is using it, its browser closes. Programs you signed in to yourself stay signed in.": "Chrome und Safari im Arbeitsplatz vergessen jede Anmeldung, auch bei Google. Nutzt dein Agent ihn gerade, schließt sich sein Browser. Programme, bei denen du dich selbst angemeldet hast, bleiben angemeldet.",
     "Signing out didn't work. The workspace tries again when it starts next.": "Abmelden hat nicht geklappt. Der Arbeitsplatz versucht es beim nächsten Start noch einmal.",
 })
+
+# iPad and iPhone Duo: windows, the split terminal, keyboard shortcuts (2026-11-19)
+DE.update({
+    "Show aOS": "aOS zeigen",
+    "New Terminal Window": "Neues Terminalfenster",
+    "Settings…": "Einstellungen …",
+    "Show the Workspace": "Arbeitsplatz zeigen",
+    "Show the Mac's Screen": "Bildschirm des Mac zeigen",
+    "Refresh": "Aktualisieren",
+    "No terminal open": "Kein Terminal offen",
+    "Open a session from the list, or start a new one.": "Öffne eine Sitzung aus der Liste oder starte eine neue.",
+    "Open in New Window": "In neuem Fenster öffnen",
+    "This session is open in another window.": "Diese Sitzung ist in einem anderen Fenster offen.",
+})

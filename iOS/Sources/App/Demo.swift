@@ -121,7 +121,7 @@ enum Demo {
         Task {
             // The cards' last pictures, once the app is up (in the window's shape, or an iPhone 17 Pro's held upright)
             try? await Task.sleep(for: .milliseconds(800))
-            let window = ScreenSession.currentArea(resolutionScale: 1).points
+            let window = ScreenSession.currentArea(in: model.mainWindow, resolutionScale: 1).points
             let area = window == .zero ? CGSize(width: 402, height: 812) : window
             if let jpeg = workspacePicture(fitting: area).flatMap(jpeg) {
                 ScreenPictures.shared.save(jpeg, for: ScreenRoute.screenID(.workspace, mac: connection.mac))
@@ -164,7 +164,7 @@ enum Demo {
                                                   purpose: "Zählerstand eintragen",
                                                   expires: Date().addingTimeInterval(3 * 60), bitwarden: .unlocked)))
             case "help":
-                let captcha = workspaceLayout(fitting: ScreenSession.currentArea(resolutionScale: 1).points).captcha
+                let captcha = workspaceLayout(fitting: ScreenSession.currentArea(in: model.mainWindow, resolutionScale: 1).points).captcha
                 server.emit(.help(HelpRequest(id: "help-1", agent: "Claude Code",
                                               purpose: "Bitte das Captcha auf der Anmeldeseite lösen",
                                               region: .init(x: captcha.minX, y: captcha.minY,

@@ -15,6 +15,10 @@ struct ScreenTab: View {
     @State private var showsWhenRunning = false
     @State private var notice: String?
     @State private var actions = ActionState()
+    /// The window the tab is in: the picture's first shape comes from its size and safe areas.
+    @State private var window = WeakWindow()
+    /// The tabs' sidebar was showing when a session took the window (it comes back when the session closes).
+    @State private var sidebarWasShown = false
 
     /// The session on screen (one at a time).
     private var shown: ScreenSession? {
@@ -55,6 +59,7 @@ struct ScreenTab: View {
                     ScreenSettingsPage()
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showSettings = false } } }
                 }
+                .presentationSizing(.form)
             }
             .sheet(isPresented: loginShown) {
                 if let mac = model.activeMac {
@@ -68,6 +73,7 @@ struct ScreenTab: View {
                             }
                         }
                     }
+                    .presentationSizing(.form)
                 }
             }
             .confirmationDialog("The workspace is closed", isPresented: $confirmStart, titleVisibility: .visible) {
@@ -85,6 +91,7 @@ struct ScreenTab: View {
                 }
             }
         }
+        .background { WindowReader { [window] in window.window = $0 } }
         // Requests from elsewhere (the overview's "Show the screen", a help request the person opened): taps too.
         .onAppear(perform: takeRequest)
         .onChange(of: model.screenRequest) { _, _ in takeRequest() }
@@ -100,13 +107,39 @@ struct ScreenTab: View {
         }
         .onChange(of: model.activeHelp, initial: true) { _, _ in focusOnHelp() }
         .onChange(of: shown?.client?.hasPicture) { _, _ in focusOnHelp() }
+        // A session has the whole window: the tabs' sidebar (iPad) goes away with the tab bar and comes back after.
+        .onChange(of: shown != nil, initial: true) { _, isShown in hideSidebar(isShown) }
         .onDisappear {
             model.macScreen.stop()
             model.workspaceScreen.stop()
+            hideSidebar(false)
         }
         #if DEBUG
         .onAppear { if model.isDemo, Demo.sheet == "screen-settings" { showSettings = true } }
         #endif
+    }
+
+    /// `.toolbar(.hidden, for: .tabBar)` hides the tab bar but leaves the tabs' sidebar where it is shown (an iPad on
+    /// its side, seen in the simulator): the session would get only the rest of the window. SwiftUI has no switch for
+    /// the sidebar, so this asks the tab bar controller behind the TabView.
+    private func hideSidebar(_ hide: Bool) {
+        func find(_ controller: UIViewController?) -> UITabBarController? {
+            guard let controller else { return nil }
+            if let tabs = controller as? UITabBarController { return tabs }
+            for child in controller.children {
+                if let found = find(child) { return found }
+            }
+            return nil
+        }
+        guard let tabs = find(window.window?.rootViewController) else { return }
+        if hide {
+            guard !tabs.sidebar.isHidden else { return }
+            sidebarWasShown = true
+            tabs.sidebar.isHidden = true
+        } else if sidebarWasShown {
+            sidebarWasShown = false
+            tabs.sidebar.isHidden = false
+        }
     }
 
     private var loginShown: Binding<Bool> {
@@ -380,13 +413,23 @@ struct ScreenTab: View {
     }
 
     /// Connects a screen (the other one lets go): the workspace with its sealed login, the Mac behind Face ID once.
-    private func connect(_ target: ScreenTarget) {
+    private func connect(_ target: ScreenTarget, waitedForWindow: Bool = false) {
+        // A request taken as the tab appears can come before the tab knows its window: the picture's shape comes from
+        // the window, so wait for it a moment.
+        if window.window == nil, !waitedForWindow {
+            Task { [window] in
+                for _ in 0..<40 where window.window == nil { try? await Task.sleep(for: .milliseconds(25)) }
+                connect(target, waitedForWindow: true)
+            }
+            return
+        }
         notice = nil
         let session = model.screen(for: target)
         model.screen(for: target == .mac ? .workspace : .mac).stop()
         guard session.phase != .preparing else { return }
         let options = ScreenOptions(settings: model.settings)
-        let area = ScreenSession.currentArea(resolutionScale: options.resolutionScale)
+        session.window = window.window
+        let area = ScreenSession.currentArea(in: window.window, resolutionScale: options.resolutionScale)
         session.onResolutionScale = { [settings = model.settings] in settings.screenResolution = $0 }
         #if DEBUG
         if model.isDemo {
@@ -405,10 +448,11 @@ struct ScreenTab: View {
     private func connectMac(with login: SecretStore.ScreenLogin) {
         let session = model.macScreen
         let options = ScreenOptions(settings: model.settings)
+        session.window = window.window
         #if DEBUG
         if model.isDemo {
             session.stop()
-            connectDemo(.mac, area: ScreenSession.currentArea(resolutionScale: options.resolutionScale))
+            connectDemo(.mac, area: ScreenSession.currentArea(in: window.window, resolutionScale: options.resolutionScale))
             return
         }
         #endif
@@ -420,7 +464,7 @@ struct ScreenTab: View {
         session.onResolutionScale = { [settings = model.settings] in settings.screenResolution = $0 }
         Task {
             await session.start(mac: connection, login: login, options: options,
-                                area: ScreenSession.currentArea(resolutionScale: options.resolutionScale))
+                                area: ScreenSession.currentArea(in: window.window, resolutionScale: options.resolutionScale))
         }
     }
 

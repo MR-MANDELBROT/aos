@@ -51,7 +51,9 @@ settings:
     CURRENT_PROJECT_VERSION: 13
     SWIFT_VERSION: "6.0"
     IPHONEOS_DEPLOYMENT_TARGET: "27.0"
-    TARGETED_DEVICE_FAMILY: "1"
+    # iPhone (with the foldable iPhone Duo) and iPad: one universal app, windows of any size (iOS/NOTES.md, "iPad and
+    # iPhone Duo")
+    TARGETED_DEVICE_FAMILY: "1,2"
     CODE_SIGN_STYLE: Automatic
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
@@ -107,10 +109,18 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen:
           UIColorName: LaunchBackground
+        # More than one window on an iPad (and in Stage Manager): the main window and terminal windows, one session on
+        # the Mac each, all over the app's one connection (AOSApp.swift)
         UIApplicationSceneManifest:
-          UIApplicationSupportsMultipleScenes: false
+          UIApplicationSupportsMultipleScenes: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # An iPad turns every way, and its windows take any size (Split View, Stage Manager)
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         # aos-pair:// links from the Mac's QR code (the Camera app offers to open them in aOS); aos://terminal/...

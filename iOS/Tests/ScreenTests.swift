@@ -63,6 +63,11 @@ struct ScreenRouteTests {
             == CGSize(width: 402, height: 812))
         #expect(ScreenRoute.pictureArea(window: CGSize(width: 874, height: 402), top: 0, leading: 62, trailing: 62)
             == CGSize(width: 750, height: 402))
+        // Each edge as the window has it: a bar the system keeps on one side (iPhone Duo), an iPad window's top
+        #expect(ScreenRoute.pictureArea(window: CGSize(width: 900, height: 1000), top: 30, leading: 0, trailing: 60)
+            == CGSize(width: 840, height: 970))
+        #expect(ScreenRoute.pictureArea(window: CGSize(width: 800, height: 600), top: 24, leading: 0, trailing: 0)
+            == CGSize(width: 800, height: 576))
         // Sized as Open Screen Sharing sizes the Mac's virtual display: grown until the short side has 525 points
         // (the long one 800), two pixels per point on a Retina screen; the area's shape
         let upright = ScreenRoute.display(for: ScreenArea(points: CGSize(width: 402, height: 812), screenScale: 3,

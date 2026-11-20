@@ -11,7 +11,9 @@ enum OverviewPage: Hashable {
 struct OverviewView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
-    @State private var showSettings = false
+    /// How wide the Overview is (its window's room, measured: an iPad mini upright has a regular size class but not
+    /// the room for two columns of cards).
+    @State private var width: CGFloat = 0
     @State private var path: [OverviewPage] = []
     /// The chats' actions, shared by the Chats page and a chat's page.
     @State private var chatActions = ActionState()
@@ -19,42 +21,49 @@ struct OverviewView: View {
     @State private var demoPageOpened = false
 
     var body: some View {
+        @Bindable var model = model
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 16) {
                     if let connection = model.connection {
-                        MacCard(connection: connection)
-                        if model.waitingCount > 0 {
-                            RequestsCard()
-                        }
-                        WorkspaceCard(connection: connection)
-                        // What aOS on the Mac does now: not while the Mac sleeps or doesn't answer (it would be old).
-                        // Its Chats row opens the chats aOS keeps reachable.
-                        if connection.macStatus != nil, connection.companionState == .ready, connection.sleepingSince == nil {
-                            AOSCard(connection: connection)
+                        if width >= Self.twoColumnWidth {
+                            // A wide window (an iPad, an iPhone Duo open): two columns, the Mac and its requests
+                            // beside the workspace and aOS, each column as tall as its cards.
+                            HStack(alignment: .top, spacing: 16) {
+                                VStack(spacing: 16) { macCards(connection) }
+                                VStack(spacing: 16) { workspaceCards(connection) }
+                            }
+                        } else {
+                            // One column, not wider than reads well (an iPad mini upright, a medium window)
+                            VStack(spacing: 16) {
+                                macCards(connection)
+                                workspaceCards(connection)
+                            }
+                            .frame(maxWidth: 640)
                         }
                         PromiseCard()
+                            .frame(maxWidth: width >= Self.twoColumnWidth ? .infinity : 640)
                     } else {
                         WelcomeView()
+                            .frame(maxWidth: 560)
                     }
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 24)
+                // Not wider than reads well on a large iPad
+                .frame(maxWidth: 1100)
+                .frame(maxWidth: .infinity)
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .defaultScrollAnchor(Self.startAnchor)
             .aosBackground()
             .navigationTitle(model.isPaired ? "aOS" : "")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Settings", systemImage: "gearshape") { showSettings = true }
+                    Button("Settings", systemImage: "gearshape") { model.isSettingsPresented = true }
                 }
             }
-            .refreshable {
-                model.connection?.retryNow()
-                await model.connection?.refreshStatus()
-                await model.connection?.refreshMacStatus()
-                await model.connection?.refreshChats()
-            }
+            .refreshable { await model.refresh() }
             // The Mac's status and the chats while the Overview is on screen: now and every 15 s.
             .task(id: StatusPoll(ready: model.connection?.companionState == .ready, active: scenePhase == .active)) {
                 guard scenePhase == .active else { return }
@@ -71,10 +80,10 @@ struct OverviewView: View {
                 case .apps: AppsPage()
                 }
             }
-            .sheet(isPresented: $showSettings) { SettingsView() }
+            .sheet(isPresented: $model.isSettingsPresented) { SettingsView().presentationSizing(.form) }
             .onAppear {
                 #if DEBUG
-                if model.isDemo, Demo.sheet == "settings" { showSettings = true }
+                if model.isDemo, Demo.sheet == "settings" { model.isSettingsPresented = true }
                 if model.isDemo, Demo.sheet == "chats" || Demo.sheet == "chat", !demoPageOpened { openDemoChats() }
                 if model.isDemo, Demo.sheet == "apps", !demoPageOpened {
                     demoPageOpened = true
@@ -82,6 +91,22 @@ struct OverviewView: View {
                 }
                 #endif
             }
+        }
+    }
+
+    @ViewBuilder private func macCards(_ connection: MacConnection) -> some View {
+        MacCard(connection: connection)
+        if model.waitingCount > 0 {
+            RequestsCard()
+        }
+    }
+
+    @ViewBuilder private func workspaceCards(_ connection: MacConnection) -> some View {
+        WorkspaceCard(connection: connection)
+        // What aOS on the Mac does now: not while the Mac sleeps or doesn't answer (it would be old).
+        // Its Chats row opens the chats aOS keeps reachable.
+        if connection.macStatus != nil, connection.companionState == .ready, connection.sleepingSince == nil {
+            AOSCard(connection: connection)
         }
     }
 
@@ -102,6 +127,9 @@ struct OverviewView: View {
         }
     }
     #endif
+
+    /// From this width on the cards stand in two columns (each at least about an iPhone wide).
+    private static let twoColumnWidth: CGFloat = 800
 
     private struct StatusPoll: Hashable {
         var ready: Bool
@@ -329,6 +357,9 @@ struct MacCard: View {
                 if actions.running != nil { ProgressView().controlSize(.small) }
             }
             .buttonStyle(.glass)
+            // In a narrow window (the iPhone Duo closed) a title stays on one line, a little smaller if it must
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
             .disabled(actions.running != nil)
             ProblemLine(text: actions.problem)
         } else if let hello = connection.hello, !hello.aos.isEmpty {
@@ -794,6 +825,8 @@ struct WorkspaceCard: View {
             }
         }
         .buttonStyle(.glass)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
         .disabled(actions.running != nil || operation != nil)
     }
 

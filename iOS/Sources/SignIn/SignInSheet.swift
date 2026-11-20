@@ -56,7 +56,7 @@ struct SignInSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Later") { dismiss() }
+                    Button("Later") { dismiss() }.keyboardShortcut(.cancelAction)
                 }
             }
         }
@@ -201,6 +201,7 @@ struct SignInSheet: View {
                     Label("Approve with \(Biometrics.name)", systemImage: Biometrics.symbol).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
+                .keyboardShortcut(.defaultAction)
                 .controlSize(.large)
                 .disabled(selection == nil || phase == .sending)
             }

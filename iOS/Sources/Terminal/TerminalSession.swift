@@ -16,18 +16,38 @@ private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "terminal"
 @MainActor @Observable
 final class TerminalSession: Identifiable, TerminalInteractionDelegate {
     enum Target: Hashable, Sendable {
+        /// The main window's terminal (the Terminal tab).
         case mac(UUID)
+        /// A terminal window of its own (iPad, Stage Manager): one per window, named by the window's scene.
+        case window(mac: UUID, scene: String)
 
-        /// For links and the Live Activity.
+        /// The paired Mac the terminal is on.
+        var macID: UUID {
+            switch self {
+            case .mac(let id), .window(let id, _): id
+            }
+        }
+
+        /// For links, the Live Activity and the session kept per terminal.
         var key: String {
             switch self {
             case .mac(let id): "mac-\(id.uuidString)"
+            case .window(let id, let scene): "win-\(id.uuidString)-\(scene)"
             }
         }
 
         init?(key: String) {
-            guard key.hasPrefix("mac-"), let id = UUID(uuidString: String(key.dropFirst(4))) else { return nil }
-            self = .mac(id)
+            if key.hasPrefix("mac-"), let id = UUID(uuidString: String(key.dropFirst(4))) {
+                self = .mac(id)
+                return
+            }
+            // win-<the Mac's id>-<the window's scene>
+            let rest = key.dropFirst(4)
+            guard key.hasPrefix("win-"), rest.count > 37, let id = UUID(uuidString: String(rest.prefix(36))),
+                  rest.dropFirst(36).first == "-" else { return nil }
+            let scene = String(rest.dropFirst(37))
+            guard scene.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "-" }) else { return nil }
+            self = .window(mac: id, scene: scene)
         }
     }
 
@@ -51,6 +71,8 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         case ended
         /// Another device attached to the session.
         case taken
+        /// Another window of this app shows the session (only one terminal here shows a session at a time).
+        case elsewhere
     }
 
     /// A short message over the terminal ("Copied", the font size while pinching).
@@ -92,6 +114,13 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
     @ObservationIgnored var macConnection: () -> MacConnection? = { nil }
     /// This iPhone's id (`DeviceKey.phoneID`), named when attaching.
     @ObservationIgnored var phoneID: () -> String? = { nil }
+    /// Whether another terminal of this app (another window's) shows that session on the Mac now. Two terminals of the
+    /// same device on one session would take it from each other without end ("replaced"), so only one attaches.
+    @ObservationIgnored var shownElsewhere: (String) -> Bool = { _ in false }
+    /// Makes the other terminals that show that session let go of it (this one shows it now: the person chose it here).
+    @ObservationIgnored var releaseElsewhere: (String) -> Void = { _ in }
+    /// The next attach takes the session over from another window (the person opened it here).
+    @ObservationIgnored private var takesOver = false
     /// The session on the Mac this terminal shows (kept across launches of the app).
     private(set) var holderID: String?
     /// False when aOS on the Mac can't hold sessions (an older version): a plain shell then.
@@ -129,6 +158,9 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
     }
 
     var isActive: Bool { phase == .connecting || phase == .connected || phase == .reconnecting }
+
+    /// Attached to its session on the Mac, or attaching right now (not just waiting for the Mac).
+    var holdsChannel: Bool { channel != nil || attaching != nil }
 
     private var holderKey: String { Self.holderKey(id) }
     private static func holderKey(_ target: Target) -> String { "terminal.session.\(target.key)" }
@@ -174,6 +206,18 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
             waitForMac()
             return
         }
+        if holdsSession, let holderID, shownElsewhere(holderID) {
+            if takesOver {
+                releaseElsewhere(holderID)
+            } else {
+                // Another window shows it: this one lets it be (it offers to show it here instead).
+                wantsAttached = false
+                endReason = .elsewhere
+                setPhase(.ended)
+                return
+            }
+        }
+        takesOver = false
         if phase != .reconnecting { setPhase(.connecting) }
         let mine = round
         attaching = mine
@@ -389,7 +433,8 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         }
     }
 
-    /// Shows another session on the Mac (from the list); the one before keeps running there.
+    /// Shows another session on the Mac (from the list); the one before keeps running there. Another window that
+    /// shows it lets go of it.
     func switchTo(session id: String) {
         guard TermAttach.isID(id), id != holderID || !isActive else { return }
         let same = id == holderID
@@ -398,7 +443,41 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         // The same session again continues where the view is; another one starts afresh.
         if !same { viewHasOutput = false }
         holdsSession = true
+        takesOver = true
+        releaseElsewhere(id)
         attachAgain()
+    }
+
+    /// The session another window showed, here now ("Open It Here" after it went elsewhere).
+    func takeOver() {
+        guard let holderID else {
+            startNewSession()
+            return
+        }
+        takesOver = true
+        holdsSession = true
+        releaseElsewhere(holderID)
+        attachAgain()
+    }
+
+    /// A new window starts with this session (it attaches when the window shows it, taking it from another window).
+    func prepare(toShow id: String) {
+        guard TermAttach.isID(id), !isActive else { return }
+        if id != holderID { viewHasOutput = false }
+        remember(holder: id)
+        holdsSession = true
+        takesOver = true
+        releaseElsewhere(id)
+    }
+
+    /// Another window shows this terminal's session now: this one lets go of it (the session keeps running).
+    func shownInAnotherWindow() {
+        guard isActive || phase == .idle else { return }
+        disconnect()
+        endReason = .elsewhere
+        setPhase(.ended)
+        // Not again by itself after a relaunch (the other window has it); "Open It Here" still knows it.
+        UserDefaults.standard.removeObject(forKey: holderKey)
     }
 
     /// Starts another shell on the Mac and shows it; the one before keeps running there.
