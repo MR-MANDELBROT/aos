@@ -230,7 +230,7 @@ struct SignInSheet: View {
                     }
                     .buttonStyle(.glass)
                     .disabled(otherPassword.isEmpty || phase == .sending)
-                    Text("Your password app (1Password, Passwords, Bitwarden's app) fills these fields with its own Face ID. aOS sends them once and doesn't keep them.")
+                    Text("Your password app (1Password, Passwords, Bitwarden's app) fills these fields with its own \(Biometrics.name). aOS sends them once and doesn't keep them.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 .textFieldStyle(.roundedBorder)
@@ -335,7 +335,7 @@ struct SignInSheet: View {
         } catch Biometrics.Failure.cancelled {
             phase = .choosing
         } catch Biometrics.Failure.unavailable {
-            phase = .failed(String(localized: "Set a passcode for this iPhone first (Settings > Face ID & Passcode). Approving a sign-in needs Face ID or the passcode."))
+            phase = .failed(String(localized: "Set a passcode for this iPhone first (Settings > \(Biometrics.settingsPane)). Approving a sign-in needs \(Biometrics.name) or the passcode."))
         } catch {
             phase = .failed(error.localizedDescription)
         }

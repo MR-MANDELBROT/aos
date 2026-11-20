@@ -163,11 +163,17 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
     var holdsChannel: Bool { channel != nil || attaching != nil }
 
     private var holderKey: String { Self.holderKey(id) }
-    private static func holderKey(_ target: Target) -> String { "terminal.session.\(target.key)" }
+    static let holderKeyPrefix = "terminal.session."
+    private static func holderKey(_ target: Target) -> String { holderKeyPrefix + target.key }
 
     /// The session the terminal showed last (also before it exists in this launch: for the list).
     static func storedHolderID(for target: Target) -> String? {
         UserDefaults.standard.string(forKey: holderKey(target)).flatMap { TermAttach.isID($0) ? $0 : nil }
+    }
+
+    /// Forgets which session a terminal showed (its window was closed for good).
+    static func forgetStoredHolder(for target: Target) {
+        UserDefaults.standard.removeObject(forKey: holderKey(target))
     }
 
     private func setPhase(_ new: Phase) {
@@ -456,6 +462,8 @@ final class TerminalSession: Identifiable, TerminalInteractionDelegate {
         }
         takesOver = true
         holdsSession = true
+        // Kept again (letting go to the other window had dropped it)
+        remember(holder: holderID)
         releaseElsewhere(holderID)
         attachAgain()
     }

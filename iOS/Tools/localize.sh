@@ -1,7 +1,8 @@
 #!/bin/bash
 # Exports the app's strings, fills German from iOS/Tools/translations_de.py (and translations_screen_de.py: the screen
 # client, Open Screen Sharing's strings) and imports them into the string catalogs (iOS/Resources/Localizable.xcstrings,
-# InfoPlist.xcstrings). Prints English strings that have no German yet.
+# InfoPlist.xcstrings). Prints English strings that have no German yet. Then gives every text that names "this iPhone"
+# its iPad wording, in English and German (Tools/device_variations.py, String Catalog device variations).
 # Never with signing: an xcodebuild with automatic signing from a non-Xcode environment can remove the Xcode account.
 #   iOS/Tools/localize.sh            export, fill, import
 #   iOS/Tools/localize.sh --check    only list what's missing
@@ -18,4 +19,5 @@ if [ "${1:-}" != "--check" ]; then
   xcodebuild -importLocalizations -project aOS.xcodeproj -localizationPath "$OUT/de.xcloc" \
     -skipPackagePluginValidation -skipMacroValidation CODE_SIGNING_ALLOWED=NO >/dev/null 2>&1
   echo "imported"
+  python3 -I Tools/device_variations.py Resources/Localizable.xcstrings
 fi

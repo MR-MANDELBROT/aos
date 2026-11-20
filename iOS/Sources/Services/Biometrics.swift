@@ -1,11 +1,22 @@
 import Foundation
 import LocalAuthentication
+import os
 
 /// Face ID (or Touch ID, or the device passcode as fallback) in front of secrets and approvals.
 enum Biometrics {
     enum Kind: Sendable { case faceID, touchID, opticID, passcodeOnly, unavailable }
 
+    /// What this device has (asked at most every 10 s: texts name it in many places, and each ask makes a context).
     static var kind: Kind {
+        if let cached = cache.withLock({ $0 }), Date().timeIntervalSince(cached.at) < 10 { return cached.kind }
+        let kind = currentKind
+        cache.withLock { $0 = (Date(), kind) }
+        return kind
+    }
+
+    private static let cache = OSAllocatedUnfairLock<(at: Date, kind: Kind)?>(initialState: nil)
+
+    private static var currentKind: Kind {
         let context = LAContext()
         var error: NSError?
         let canBiometrics = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
@@ -26,6 +37,14 @@ enum Biometrics {
         case .faceID: "Face ID"
         case .touchID: "Touch ID"
         case .opticID: "Optic ID"
+        case .passcodeOnly, .unavailable: String(localized: "Passcode")
+        }
+    }
+
+    /// The pane of the Settings app where the passcode is set: "Face ID & Passcode", "Touch ID & Passcode", ...
+    static var settingsPane: String {
+        switch kind {
+        case .faceID, .touchID, .opticID: String(localized: "\(name) & Passcode")
         case .passcodeOnly, .unavailable: String(localized: "Passcode")
         }
     }

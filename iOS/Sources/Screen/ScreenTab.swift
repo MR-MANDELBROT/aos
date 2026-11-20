@@ -714,7 +714,7 @@ struct MacScreenLoginForm: View {
                 }
             }
             Section {
-                FactRow(symbol: "faceid", text: "Kept on this iPhone behind Face ID. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network.")
+                FactRow(symbol: Biometrics.symbol, text: "Kept on this iPhone behind \(Biometrics.name). It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network.")
                 FactRow(symbol: "switch.2", text: "Screen Sharing must be on, on the Mac: System Settings > General > Sharing.")
             }
         }
@@ -764,7 +764,7 @@ struct MacScreenLoginForm: View {
             focus = nil
             saved(login)
         } catch Keychain.Failure.noPasscode {
-            error = String(localized: "Set a passcode for this iPhone first (Settings > Face ID & Passcode).")
+            error = String(localized: "Set a passcode for this iPhone first (Settings > \(Biometrics.settingsPane)).")
         } catch {
             self.error = error.localizedDescription
         }

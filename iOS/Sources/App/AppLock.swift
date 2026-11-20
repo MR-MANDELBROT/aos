@@ -56,7 +56,7 @@ final class AppLock {
     func setRequired(_ required: Bool) async -> Bool {
         if required {
             do {
-                let context = try await Biometrics.authenticate(reason: String(localized: "Turn on Face ID for aOS"))
+                let context = try await Biometrics.authenticate(reason: String(localized: "Turn on \(Biometrics.name) for aOS"))
                 context.invalidate()
             } catch {
                 return false

@@ -54,9 +54,22 @@ struct WindowTests {
         #expect(window.phase == .ended)
         #expect(window.endReason == .elsewhere)
 
-        // A window that closes lets go of its terminal
+        // A window that goes away lets go of its terminal and keeps its session's id (iOS may bring the window back)
+        window.takeOver()
         model.closeTerminalWindow(window.id)
         #expect(model.terminals[window.id] == nil)
+        #expect(TerminalSession.storedHolderID(for: window.id) == session)
+        #expect(TerminalWindows.keptKeys().contains(window.id.key))
+        #expect(!TerminalWindows.keptKeys().contains(main.id.key), "only windows of their own")
+
+        // Closed for good (iOS discards its scene session): nothing of it is kept
+        TerminalWindows.discarded(key: window.id.key)
+        #expect(TerminalSession.storedHolderID(for: window.id) == nil)
+        #expect(!TerminalWindows.keptKeys().contains(window.id.key))
+        // The main window's terminal is not a window to discard
+        main.takeOver()
+        TerminalWindows.discarded(key: main.id.key)
+        #expect(TerminalSession.storedHolderID(for: main.id) == session)
         main.disconnect()
         UserDefaults.standard.removeObject(forKey: "terminal.session.\(main.id.key)")
     }

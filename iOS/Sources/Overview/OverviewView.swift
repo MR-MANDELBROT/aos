@@ -1080,7 +1080,7 @@ struct SignInHelp: View {
 struct PromiseCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            FactRow(symbol: "faceid", text: "Your passwords stay in Bitwarden. You approve every sign-in with Face ID.")
+            FactRow(symbol: Biometrics.symbol, text: "Your passwords stay in Bitwarden. You approve every sign-in with \(Biometrics.name).")
             FactRow(symbol: "eye.slash", text: "Your agent never sees a password. aOS fills it into the workspace for you.")
             FactRow(symbol: "lock", text: "The iPhone talks to your Mac over SSH with a key that never leaves this iPhone.")
         }
@@ -1105,7 +1105,7 @@ struct WelcomeView: View {
             GlassCard {
                 VStack(alignment: .leading, spacing: 16) {
                     WelcomePoint(symbol: "person.badge.key", title: "Sign-ins for your agent",
-                                 text: "Your agent asks, you approve with Face ID. It never sees the password.")
+                                 text: "Your agent asks, you approve with \(Biometrics.name). It never sees the password.")
                     WelcomePoint(symbol: "apple.terminal", title: "Terminal",
                                  text: "Your Mac's shells, which keep running when the connection drops.")
                     WelcomePoint(symbol: "display", title: "Screen",

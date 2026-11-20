@@ -1,5 +1,8 @@
+import os
 import SwiftUI
 import UIKit
+
+private let log = Logger(subsystem: "dev.marquart.aos.ios", category: "windows")
 
 /// The app's windows. An iPhone shows the main window (the tabs). An iPad, and Stage Manager, can show more: terminal
 /// windows, each with one of the Mac's terminal sessions. All windows share the app's model and its one connection to
@@ -8,6 +11,81 @@ import UIKit
 enum SceneRole {
     static let mainWindowID = "main"
     static let terminalWindowID = "terminal"
+}
+
+/// A terminal window the person closed for good (iOS discards its scene session, also while the app isn't running):
+/// what was kept for it goes, the session it showed on the Mac keeps running. A window iOS only puts away to save
+/// memory is not discarded and finds its session again.
+///
+/// Seen in the simulator (iPadOS 27.2): the window's own close control discards its session, and iOS tells the app
+/// delegate at once. A window swiped out of the app switcher is only hidden ("1 hidden window", iOS keeps its session
+/// and can show it again), so what is kept for it stays. As a second net the windows iOS still has
+/// (`UIApplication.openSessions`) are compared with what is kept, when a window goes away, when one comes to the front
+/// and at launch: what belongs to no window any more goes (also what a discard the app missed left behind).
+@MainActor
+enum TerminalWindows {
+    /// Where a terminal window's scene session keeps its terminal's key (`TerminalSession.Target.key`).
+    static let sessionKey = "aos.terminal"
+    /// The app's model lets go of the terminal.
+    static var onDiscard: ((TerminalSession.Target) -> Void)?
+    private static var observers: [NSObjectProtocol] = []
+
+    /// Starts watching the windows (once, at launch).
+    static func watch() {
+        guard observers.isEmpty else { return }
+        let center = NotificationCenter.default
+        for name in [UIScene.didDisconnectNotification, UIScene.didActivateNotification] {
+            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { _ in
+                MainActor.assumeIsolated {
+                    // A moment later: iOS takes a closed window out of its list after the scene is gone
+                    Task {
+                        try? await Task.sleep(for: .seconds(1))
+                        sweep()
+                    }
+                }
+            })
+        }
+        sweep()
+    }
+
+    /// Forgets what is kept for terminal windows that iOS no longer has.
+    static func sweep(defaults: UserDefaults = .standard) {
+        let sessions = UIApplication.shared.openSessions
+        let open = Set(sessions.compactMap { $0.userInfo?[sessionKey] as? String })
+        log.debug("Windows iOS has: \(sessions.count, privacy: .public), terminal windows among them: \(open.count, privacy: .public), connected: \(sessions.filter { $0.scene != nil }.count, privacy: .public)")
+        for key in keptKeys(defaults: defaults) where !open.contains(key) {
+            log.notice("A terminal window is gone: forgetting what was kept for it")
+            discarded(key: key)
+        }
+    }
+
+    /// The terminal windows something is kept for (their terminals' keys).
+    static func keptKeys(defaults: UserDefaults = .standard) -> [String] {
+        defaults.dictionaryRepresentation().keys.compactMap { name in
+            guard name.hasPrefix(TerminalSession.holderKeyPrefix) else { return nil }
+            let key = String(name.dropFirst(TerminalSession.holderKeyPrefix.count))
+            guard let target = TerminalSession.Target(key: key), case .window = target else { return nil }
+            return key
+        }
+    }
+
+    /// Names the window's terminal in its scene session, so a discarded window can be tidied up.
+    static func remember(_ target: TerminalSession.Target, in window: UIWindow?) {
+        guard let session = window?.windowScene?.session else { return }
+        var info = session.userInfo ?? [:]
+        info[sessionKey] = target.key
+        session.userInfo = info
+    }
+
+    static func discarded(_ sceneSession: UISceneSession) {
+        if let key = sceneSession.userInfo?[sessionKey] as? String { discarded(key: key) }
+    }
+
+    static func discarded(key: String) {
+        guard let target = TerminalSession.Target(key: key), case .window = target else { return }
+        onDiscard?(target)
+        TerminalSession.forgetStoredHolder(for: target)
+    }
 }
 
 /// What a terminal window opens with: one of the Mac's sessions, or a new one. Kept with the window, so a window
@@ -95,6 +173,11 @@ struct TerminalWindow: View {
         .onAppear {
             if let mac = model.activeMac {
                 _ = model.windowTerminal(mac: mac, scene: scene, initialSession: initialSession)
+            }
+        }
+        .background {
+            WindowReader { window in
+                if let mac = model.activeMac { TerminalWindows.remember(.window(mac: mac.id, scene: scene), in: window) }
             }
         }
         // The agent's questions come up here while no window shows the tabs.

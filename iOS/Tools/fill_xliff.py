@@ -3,8 +3,13 @@
 Usage: python3 -I fill_xliff.py <de.xliff> <translations_de.py> [<more_de.py> ...] [--check]
 Also checks the German for dashes used as punctuation (house style: none in German texts) and for format
 specifiers that don't match the English.
+
+Texts with device variations (an iPad's wording beside the iPhone's, device_variations.py) come out of the export once
+per device, as "<key>|==|device.ipad" and "<key>|==|device.other". Their German is the dictionary's German for the
+key, for the iPad in the iPad's words (device_words.py).
 """
 import importlib.util
+import os
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -21,6 +26,10 @@ for number, table in enumerate(a for a in rest if not a.startswith("--")):
     for key, value in module.DE.items():
         DE.setdefault(key, value)  # the first table's German wins
 
+spec = importlib.util.spec_from_file_location("device_words", os.path.join(os.path.dirname(os.path.abspath(__file__)), "device_words.py"))
+words = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(words)
+
 ns = "urn:oasis:names:tc:xliff:document:1.2"
 ET.register_namespace("", ns)
 tree = ET.parse(xliff)
@@ -32,6 +41,11 @@ for unit in tree.getroot().iter("{%s}trans-unit" % ns):
     source = unit.find("{%s}source" % ns)
     english = source.text if source is not None else key
     de = DE.get(key, DE.get(english))
+    if de is None and "|==|device." in key:
+        base, device = key.rsplit("|==|device.", 1)
+        de = DE.get(base)
+        if de is not None and device == "ipad":
+            de = words.ipad(de)
     if de is None:
         missing.append(key)
         continue

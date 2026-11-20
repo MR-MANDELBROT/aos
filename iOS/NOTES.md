@@ -43,7 +43,8 @@ only; `-AOSDemoTab screen`, `-AOSDemoScreen mac|mac-login|mac-login-keyboard`,
 `-AOSDemoWorkspace starting|closing`, `-AOSDemoConnecting YES`, see `Sources/App/Demo.swift`).
 Screenshots of every screen, light and dark: `iOS/Tools/screenshots.sh de` (or `en`), into `build/ios-screenshots`.
 Strings: write English in code, German in `Tools/translations_de.py`, then `iOS/Tools/localize.sh`; it refuses
-nothing but reports missing German, mismatched format specifiers and dashes used as punctuation. The screen client's
+nothing but reports missing German, mismatched format specifiers and dashes used as punctuation. Write "iPhone" for
+the device itself and "\(Biometrics.name)" for Face ID: the iPad's wording is derived ("iPad and iPhone Duo", Words). The screen client's
 strings: see "The screen" below.
 
 Only an iOS 26.4 simulator runtime was installed here. The project targets iOS 27; `test.sh` and `sim.sh` lower the
@@ -561,8 +562,22 @@ window (size classes, the window's own safe areas), never the device, so a windo
   (pointer lock where the iPad offers it) and is unchanged.
 - The iPhone Duo is an iPhone: closed it is a compact window, open a regular one, half open as iOS reports it. The
   layouts follow live; the terminal's view and the screen session live in the model, not in the view tree.
-- Words: the UI still says "this iPhone" in many places (pairing, keys, Face ID). An iPad's wording (string catalog
-  variations by device) is open.
+- **Words** (2026-11-20): an iPad says "iPad" where the iPhone says "iPhone" and means itself (62 texts), through
+  String Catalog device variations (`ipad` / `other`; the iPhone Duo is an iPhone) in English and German. Nothing is
+  written twice: the iPhone's wording stays the source (English in the code, German in `Tools/translations_de.py`),
+  and `Tools/device_variations.py` derives the iPad's by swapping the word (`Tools/device_words.py`; in German both
+  are neuter and decline alike, so the sentence stays right). Kept as "iPhone": what names the Mac app's own labels
+  ("Pair" next to iPhone, Settings > iPhone, "Install apps on my iPhone"). `localize.sh` runs it after the import, and
+  `fill_xliff.py` fills the German of the variations an export contains ("<key>|==|device.ipad"). Face ID, Touch ID
+  or Optic ID are named by what the device has (`Biometrics.name`, `Biometrics.symbol`, `Biometrics.settingsPane` for
+  "Settings > Touch ID & Passcode"; asked at most every 10 s), no text says "Face ID" by itself any more. Still
+  "iPhone": the fallback device name sent when pairing if the device's name is empty (`PairingLink`), and
+  `NSFaceIDUsageDescription` (iOS shows it only with Face ID).
+- A terminal window closed for good takes the session id kept for it along (`TerminalWindows` in Windows.swift):
+  iOS discards its scene session and tells the app delegate, and the kept ids are also compared with the windows iOS
+  still has (`UIApplication.openSessions`) at launch and when a window goes or comes. Seen in the simulator: the
+  window's close control discards it (the id went); a window swiped out of the app switcher is only hidden, iOS keeps
+  its session, so its id stays and it attaches again when shown.
 
 ## AOSRFB on the iPhone
 

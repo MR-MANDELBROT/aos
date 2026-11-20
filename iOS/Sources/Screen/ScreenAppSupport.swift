@@ -13,6 +13,17 @@ final class AOSAppDelegate: NSObject, UIApplicationDelegate {
                      supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         ScreenClient.supportedOrientations(for: window?.windowScene)
     }
+
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        TerminalWindows.watch()
+        return true
+    }
+
+    /// A window was closed for good: a terminal window's kept session id goes with it (Windows.swift).
+    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
+        for session in sceneSessions { TerminalWindows.discarded(session) }
+    }
 }
 
 extension Scene {

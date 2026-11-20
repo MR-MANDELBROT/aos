@@ -141,6 +141,16 @@
         }
       }
     },
+    "%@ & Passcode" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ & Code"
+          }
+        }
+      }
+    },
     "%@ answered with a different SSH key (%@). If the Mac was set up again, pair it again." : {
       "localizations" : {
         "de" : {
@@ -580,7 +590,18 @@
         }
       }
     },
+    "A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with %@ or your passcode." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Anmeldeanfrage zeigt, welche deiner Bitwarden-Anmeldungen zur Website passen, mit Name und Benutzername, nie mit Passwort. Du gibst eine mit %@ oder deinem Code frei."
+          }
+        }
+      }
+    },
     "A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with Face ID or your passcode." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -957,9 +978,39 @@
     "aOS can bring Tailscale along on this iPhone too: no VPN, no extra app. You sign in once with your Tailscale account, the same as on the Mac." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aOS kann Tailscale auch auf diesem iPhone mitbringen: kein VPN, keine zusätzliche App. Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS kann Tailscale auch auf diesem iPad mitbringen: kein VPN, keine zusätzliche App. Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS kann Tailscale auch auf diesem iPhone mitbringen: kein VPN, keine zusätzliche App. Du meldest dich einmal mit deinem Tailscale-Konto an, demselben wie auf dem Mac."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS can bring Tailscale along on this iPad too: no VPN, no extra app. You sign in once with your Tailscale account, the same as on the Mac."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS can bring Tailscale along on this iPhone too: no VPN, no extra app. You sign in once with your Tailscale account, the same as on the Mac."
+                }
+              }
+            }
           }
         }
       }
@@ -1120,9 +1171,39 @@
     "aOS on the Mac connects as soon as this iPhone is on any Wi-Fi." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aOS auf dem Mac verbindet sich, sobald dieses iPhone in einem WLAN ist."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS auf dem Mac verbindet sich, sobald dieses iPad in einem WLAN ist."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS auf dem Mac verbindet sich, sobald dieses iPhone in einem WLAN ist."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS on the Mac connects as soon as this iPad is on any Wi-Fi."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS on the Mac connects as soon as this iPhone is on any Wi-Fi."
+                }
+              }
+            }
           }
         }
       }
@@ -1200,9 +1281,39 @@
     "aOS on the Mac now takes requests only when this iPhone signs them, with a key it gets when you pair. Show the pairing code on the Mac (Settings > iPhone) and scan it." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aOS auf dem Mac nimmt Anfragen jetzt nur noch an, wenn dieses iPhone sie unterschreibt, mit einem Schlüssel aus der Kopplung. Zeig auf dem Mac den Kopplungscode (Einstellungen > iPhone) und scanne ihn."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS auf dem Mac nimmt Anfragen jetzt nur noch an, wenn dieses iPad sie unterschreibt, mit einem Schlüssel aus der Kopplung. Zeig auf dem Mac den Kopplungscode (Einstellungen > iPhone) und scanne ihn."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS auf dem Mac nimmt Anfragen jetzt nur noch an, wenn dieses iPhone sie unterschreibt, mit einem Schlüssel aus der Kopplung. Zeig auf dem Mac den Kopplungscode (Einstellungen > iPhone) und scanne ihn."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS on the Mac now takes requests only when this iPad signs them, with a key it gets when you pair. Show the pairing code on the Mac (Settings > iPhone) and scan it."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS on the Mac now takes requests only when this iPhone signs them, with a key it gets when you pair. Show the pairing code on the Mac (Settings > iPhone) and scan it."
+                }
+              }
+            }
           }
         }
       }
@@ -1270,9 +1381,39 @@
     "aOS on your iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aOS auf deinem iPhone"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS auf deinem iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS auf deinem iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS on your iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS on your iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -1290,9 +1431,39 @@
     "aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither the iPhone nor the Mac keeps it." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aOS auf deinem Mac holt dann genau diese Anmeldung aus Bitwarden und tippt sie in den Arbeitsplatz. Weder das iPhone noch der Mac behält sie."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS auf deinem Mac holt dann genau diese Anmeldung aus Bitwarden und tippt sie in den Arbeitsplatz. Weder das iPad noch der Mac behält sie."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS auf deinem Mac holt dann genau diese Anmeldung aus Bitwarden und tippt sie in den Arbeitsplatz. Weder das iPhone noch der Mac behält sie."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither the iPad nor the Mac keeps it."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither the iPhone nor the Mac keeps it."
+                }
+              }
+            }
           }
         }
       }
@@ -1411,9 +1582,39 @@
     "aOS's Tailscale isn't connected on this iPhone." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Tailscale von aOS ist auf diesem iPhone nicht verbunden."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das Tailscale von aOS ist auf diesem iPad nicht verbunden."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das Tailscale von aOS ist auf diesem iPhone nicht verbunden."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS's Tailscale isn't connected on this iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS's Tailscale isn't connected on this iPhone."
+                }
+              }
+            }
           }
         }
       }
@@ -1421,9 +1622,39 @@
     "aOS's Tailscale on this iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Tailscale von aOS auf diesem iPhone"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das Tailscale von aOS auf diesem iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das Tailscale von aOS auf diesem iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS's Tailscale on this iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "aOS's Tailscale on this iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -1513,7 +1744,18 @@
         }
       }
     },
+    "Approving a sign-in always needs %@, whether or not the app itself is locked." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Anmeldung freizugeben braucht immer %@, ob die App selbst gesperrt ist oder nicht."
+          }
+        }
+      }
+    },
     "Approving a sign-in always needs Face ID, whether or not the app itself is locked." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1808,9 +2050,39 @@
     "Both screens take the iPhone's shape and turn with it: aOS resizes the workspace's display, your Mac gets a virtual display in Open Screen Sharing's high performance mode, directly in the same Wi-Fi or with the Tailscale app's VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beide Bildschirme nehmen die Form des iPhones an und drehen sich mit: aOS passt das Display des Arbeitsplatzes an, dein Mac bekommt ein virtuelles Display im Hochleistungsmodus von Open Screen Sharing, direkt im selben WLAN oder mit dem VPN der Tailscale-App. Nur über SSH behält dein Mac seine eigene Größe. Mehr Auflösung gibt mehr Platz und weniger Schärfe."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Beide Bildschirme nehmen die Form des iPads an und drehen sich mit: aOS passt das Display des Arbeitsplatzes an, dein Mac bekommt ein virtuelles Display im Hochleistungsmodus von Open Screen Sharing, direkt im selben WLAN oder mit dem VPN der Tailscale-App. Nur über SSH behält dein Mac seine eigene Größe. Mehr Auflösung gibt mehr Platz und weniger Schärfe."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Beide Bildschirme nehmen die Form des iPhones an und drehen sich mit: aOS passt das Display des Arbeitsplatzes an, dein Mac bekommt ein virtuelles Display im Hochleistungsmodus von Open Screen Sharing, direkt im selben WLAN oder mit dem VPN der Tailscale-App. Nur über SSH behält dein Mac seine eigene Größe. Mehr Auflösung gibt mehr Platz und weniger Schärfe."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Both screens take the iPad's shape and turn with it: aOS resizes the workspace's display, your Mac gets a virtual display in Open Screen Sharing's high performance mode, directly in the same Wi-Fi or with the Tailscale app's VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Both screens take the iPhone's shape and turn with it: aOS resizes the workspace's display, your Mac gets a virtual display in Open Screen Sharing's high performance mode, directly in the same Wi-Fi or with the Tailscale app's VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness."
+                }
+              }
+            }
           }
         }
       }
@@ -2256,9 +2528,39 @@
     "Connect this iPhone to the Mac with a cable once, then pair it in aOS on the Mac (Settings > Apps)." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbinde dieses iPhone einmal per Kabel mit dem Mac und kopple es dann in aOS auf dem Mac (Einstellungen > Apps)."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Verbinde dieses iPad einmal per Kabel mit dem Mac und kopple es dann in aOS auf dem Mac (Einstellungen > Apps)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Verbinde dieses iPhone einmal per Kabel mit dem Mac und kopple es dann in aOS auf dem Mac (Einstellungen > Apps)."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Connect this iPad to the Mac with a cable once, then pair it in aOS on the Mac (Settings > Apps)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Connect this iPhone to the Mac with a cable once, then pair it in aOS on the Mac (Settings > Apps)."
+                }
+              }
+            }
           }
         }
       }
@@ -3938,9 +4240,39 @@
     "How the iPhone reaches it" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "So erreicht ihn das iPhone"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "So erreicht ihn das iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "So erreicht ihn das iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "How the iPad reaches it"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "How the iPhone reaches it"
+                }
+              }
+            }
           }
         }
       }
@@ -4063,9 +4395,39 @@
     "iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -4308,7 +4670,48 @@
         }
       }
     },
+    "Kept on this iPhone behind %@. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network." : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Bleibt auf diesem iPad hinter %@ und geht nur an die Bildschirmfreigabe des Macs, über die SSH-Verbindung oder direkt im selben Netzwerk."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Bleibt auf diesem iPhone hinter %@ und geht nur an die Bildschirmfreigabe des Macs, über die SSH-Verbindung oder direkt im selben Netzwerk."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Kept on this iPad behind %@. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Kept on this iPhone behind %@. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Kept on this iPhone behind Face ID. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4823,9 +5226,39 @@
     "Name of this iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Name dieses iPhones"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Name dieses iPads"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Name dieses iPhones"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Name of this iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Name of this iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -5320,9 +5753,39 @@
     "No VPN and no Tailscale app needed. aOS only reaches your Mac through it, and nothing on this iPhone is reachable in your tailnet. Its keys stay on this iPhone, out of backups." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein VPN und keine Tailscale-App nötig. aOS erreicht darüber nur deinen Mac, und auf diesem iPhone ist in deinem Tailnet nichts erreichbar. Die Schlüssel bleiben auf diesem iPhone, nicht in Backups."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Kein VPN und keine Tailscale-App nötig. aOS erreicht darüber nur deinen Mac, und auf diesem iPad ist in deinem Tailnet nichts erreichbar. Die Schlüssel bleiben auf diesem iPad, nicht in Backups."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Kein VPN und keine Tailscale-App nötig. aOS erreicht darüber nur deinen Mac, und auf diesem iPhone ist in deinem Tailnet nichts erreichbar. Die Schlüssel bleiben auf diesem iPhone, nicht in Backups."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "No VPN and no Tailscale app needed. aOS only reaches your Mac through it, and nothing on this iPad is reachable in your tailnet. Its keys stay on this iPad, out of backups."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "No VPN and no Tailscale app needed. aOS only reaches your Mac through it, and nothing on this iPhone is reachable in your tailnet. Its keys stay on this iPhone, out of backups."
+                }
+              }
+            }
           }
         }
       }
@@ -5773,9 +6236,39 @@
     "On the go through aOS's own Tailscale. After pairing, set it up on this iPhone too, with the same Tailscale account." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unterwegs über das eigene Tailscale von aOS. Richte es nach dem Koppeln auch auf diesem iPhone ein, mit demselben Tailscale-Konto."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Unterwegs über das eigene Tailscale von aOS. Richte es nach dem Koppeln auch auf diesem iPad ein, mit demselben Tailscale-Konto."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Unterwegs über das eigene Tailscale von aOS. Richte es nach dem Koppeln auch auf diesem iPhone ein, mit demselben Tailscale-Konto."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "On the go through aOS's own Tailscale. After pairing, set it up on this iPad too, with the same Tailscale account."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "On the go through aOS's own Tailscale. After pairing, set it up on this iPhone too, with the same Tailscale account."
+                }
+              }
+            }
           }
         }
       }
@@ -5783,9 +6276,39 @@
     "On the go through the Tailscale app. On this iPhone you need it too, signed in with the same account (or aOS's own Tailscale, in Settings > Connection)." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unterwegs über die Tailscale-App. Auf diesem iPhone brauchst du sie auch, mit demselben Konto angemeldet (oder das eigene Tailscale von aOS, unter Einstellungen > Verbindung)."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Unterwegs über die Tailscale-App. Auf diesem iPad brauchst du sie auch, mit demselben Konto angemeldet (oder das eigene Tailscale von aOS, unter Einstellungen > Verbindung)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Unterwegs über die Tailscale-App. Auf diesem iPhone brauchst du sie auch, mit demselben Konto angemeldet (oder das eigene Tailscale von aOS, unter Einstellungen > Verbindung)."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "On the go through the Tailscale app. On this iPad you need it too, signed in with the same account (or aOS's own Tailscale, in Settings > Connection)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "On the go through the Tailscale app. On this iPhone you need it too, signed in with the same account (or aOS's own Tailscale, in Settings > Connection)."
+                }
+              }
+            }
           }
         }
       }
@@ -5884,9 +6407,39 @@
     "Only on the same network: on the go the iPhone doesn't reach this Mac." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nur im selben Netzwerk: Unterwegs erreicht das iPhone diesen Mac nicht."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nur im selben Netzwerk: Unterwegs erreicht das iPad diesen Mac nicht."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nur im selben Netzwerk: Unterwegs erreicht das iPhone diesen Mac nicht."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Only on the same network: on the go the iPad doesn't reach this Mac."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Only on the same network: on the go the iPhone doesn't reach this Mac."
+                }
+              }
+            }
           }
         }
       }
@@ -6037,9 +6590,39 @@
     "Open on this iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auf diesem iPhone offen"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Auf diesem iPad offen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Auf diesem iPhone offen"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Open on this iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Open on this iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -6241,9 +6824,39 @@
     "Pair again to keep approving from this iPhone." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Koppel neu, um weiter mit diesem iPhone freizugeben."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Koppel neu, um weiter mit diesem iPad freizugeben."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Koppel neu, um weiter mit diesem iPhone freizugeben."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Pair again to keep approving from this iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Pair again to keep approving from this iPhone."
+                }
+              }
+            }
           }
         }
       }
@@ -6251,9 +6864,39 @@
     "Pair only with your own Mac. aOS on the Mac adds this iPhone's key to your user's SSH keys there." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopple nur mit deinem eigenen Mac. aOS auf dem Mac trägt den Schlüssel dieses iPhones dort bei den SSH-Schlüsseln deines Benutzers ein."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Kopple nur mit deinem eigenen Mac. aOS auf dem Mac trägt den Schlüssel dieses iPads dort bei den SSH-Schlüsseln deines Benutzers ein."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Kopple nur mit deinem eigenen Mac. aOS auf dem Mac trägt den Schlüssel dieses iPhones dort bei den SSH-Schlüsseln deines Benutzers ein."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Pair only with your own Mac. aOS on the Mac adds this iPad's key to your user's SSH keys there."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Pair only with your own Mac. aOS on the Mac adds this iPhone's key to your user's SSH keys there."
+                }
+              }
+            }
           }
         }
       }
@@ -7264,9 +7907,39 @@
     "Screens in the iPhone's size" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirme in iPhone-Größe"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Bildschirme in iPad-Größe"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Bildschirme in iPhone-Größe"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Screens in the iPad's size"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Screens in the iPhone's size"
+                }
+              }
+            }
           }
         }
       }
@@ -7438,7 +8111,88 @@
         }
       }
     },
+    "Set a passcode for this iPhone first (Settings > %@)." : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Leg zuerst einen Code für dieses iPad fest (Einstellungen > %@)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Leg zuerst einen Code für dieses iPhone fest (Einstellungen > %@)."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Set a passcode for this iPad first (Settings > %@)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Set a passcode for this iPhone first (Settings > %@)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Set a passcode for this iPhone first (Settings > %@). Approving a sign-in needs %@ or the passcode." : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Leg zuerst einen Code für dieses iPad fest (Einstellungen > %1$@). Eine Anmeldung freizugeben braucht %2$@ oder den Code."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Leg zuerst einen Code für dieses iPhone fest (Einstellungen > %1$@). Eine Anmeldung freizugeben braucht %2$@ oder den Code."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Set a passcode for this iPad first (Settings > %1$@). Approving a sign-in needs %2$@ or the passcode."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Set a passcode for this iPhone first (Settings > %1$@). Approving a sign-in needs %2$@ or the passcode."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Set a passcode for this iPhone first (Settings > Face ID & Passcode)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7449,6 +8203,7 @@
       }
     },
     "Set a passcode for this iPhone first (Settings > Face ID & Passcode). Approving a sign-in needs Face ID or the passcode." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7825,9 +8580,39 @@
     "Sign out of Tailscale on this iPhone?" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auf diesem iPhone von Tailscale abmelden?"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Auf diesem iPad von Tailscale abmelden?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Auf diesem iPhone von Tailscale abmelden?"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sign out of Tailscale on this iPad?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sign out of Tailscale on this iPhone?"
+                }
+              }
+            }
           }
         }
       }
@@ -7835,9 +8620,39 @@
     "Sign Out removes this iPhone from the tailnet and deletes its Tailscale keys here." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„Abmelden“ nimmt dieses iPhone aus dem Tailnet und löscht hier seine Tailscale-Schlüssel."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "„Abmelden“ nimmt dieses iPad aus dem Tailnet und löscht hier seine Tailscale-Schlüssel."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "„Abmelden“ nimmt dieses iPhone aus dem Tailnet und löscht hier seine Tailscale-Schlüssel."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sign Out removes this iPad from the tailnet and deletes its Tailscale keys here."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sign Out removes this iPhone from the tailnet and deletes its Tailscale keys here."
+                }
+              }
+            }
           }
         }
       }
@@ -7865,9 +8680,39 @@
     "Sign-in requests and help requests from this Mac no longer reach this iPhone." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmelde- und Hilfeanfragen von diesem Mac erreichen dieses iPhone dann nicht mehr."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Anmelde- und Hilfeanfragen von diesem Mac erreichen dieses iPad dann nicht mehr."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Anmelde- und Hilfeanfragen von diesem Mac erreichen dieses iPhone dann nicht mehr."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sign-in requests and help requests from this Mac no longer reach this iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sign-in requests and help requests from this Mac no longer reach this iPhone."
+                }
+              }
+            }
           }
         }
       }
@@ -7895,9 +8740,39 @@
     "Signed in. The tailnet's admin still has to approve this iPhone in the Tailscale admin console." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Angemeldet. Die Verwaltung des Tailnets muss dieses iPhone noch in der Tailscale-Verwaltung freigeben."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Angemeldet. Die Verwaltung des Tailnets muss dieses iPad noch in der Tailscale-Verwaltung freigeben."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Angemeldet. Die Verwaltung des Tailnets muss dieses iPhone noch in der Tailscale-Verwaltung freigeben."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Signed in. The tailnet's admin still has to approve this iPad in the Tailscale admin console."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Signed in. The tailnet's admin still has to approve this iPhone in the Tailscale admin console."
+                }
+              }
+            }
           }
         }
       }
@@ -8103,9 +8978,39 @@
     "SSH key of this iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSH-Schlüssel dieses iPhones"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "SSH-Schlüssel dieses iPads"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "SSH-Schlüssel dieses iPhones"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "SSH key of this iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "SSH key of this iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -8491,9 +9396,39 @@
     "Tailscale app on this iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tailscale-App auf diesem iPhone"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tailscale-App auf diesem iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tailscale-App auf diesem iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tailscale app on this iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tailscale app on this iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -8617,9 +9552,39 @@
     "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPad zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Terminals auf deinem Mac laufen dort weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und machen weiter, wo sie waren. Auf dem iPhone zeigt die Live-Aktivität offene Terminals auf dem Sperrbildschirm, mit einer Taste zum Beenden. Mit dem Ortungsdienst läuft aOS, solange ein Terminal offen ist: Das kostet Akku (aOS fragt nach dem gröbsten Standort und nutzt ihn nicht), und iOS zeigt den Ortungspfeil."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPad, the Live Activity shows open terminals on the Lock Screen with a button to end them. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Terminals on your Mac keep running there when the connection drops, also with this app closed, and pick up where they left off. On the iPhone, the Live Activity shows open terminals on the Lock Screen with a button to end them. With location, aOS keeps running as long as a terminal is open: it costs battery (aOS asks for the coarsest location and doesn't use it) and iOS shows the location arrow."
+                }
+              }
+            }
           }
         }
       }
@@ -8749,9 +9714,39 @@
     "The connection holds on cellular too, until the iPhone restarts." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Verbindung hält auch im Mobilfunk, bis das iPhone neu startet."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die Verbindung hält auch im Mobilfunk, bis das iPad neu startet."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die Verbindung hält auch im Mobilfunk, bis das iPhone neu startet."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The connection holds on cellular too, until the iPad restarts."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The connection holds on cellular too, until the iPhone restarts."
+                }
+              }
+            }
           }
         }
       }
@@ -8789,9 +9784,39 @@
     "The iPhone accepts the Mac only with exactly this key, now and later." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das iPhone nimmt den Mac nur mit genau diesem Schlüssel an, jetzt und später."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPad nimmt den Mac nur mit genau diesem Schlüssel an, jetzt und später."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPhone nimmt den Mac nur mit genau diesem Schlüssel an, jetzt und später."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPad accepts the Mac only with exactly this key, now and later."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPhone accepts the Mac only with exactly this key, now and later."
+                }
+              }
+            }
           }
         }
       }
@@ -8799,9 +9824,39 @@
     "The iPhone now reaches your Mac by itself whenever the app is open." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das iPhone erreicht deinen Mac jetzt von selbst, sobald die App offen ist."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPad erreicht deinen Mac jetzt von selbst, sobald die App offen ist."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPhone erreicht deinen Mac jetzt von selbst, sobald die App offen ist."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPad now reaches your Mac by itself whenever the app is open."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPhone now reaches your Mac by itself whenever the app is open."
+                }
+              }
+            }
           }
         }
       }
@@ -8809,9 +9864,39 @@
     "The iPhone reaches your Mac over SSH (the Mac's Remote Login), with a key made on this iPhone that never leaves it. The Mac's key is checked every time." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das iPhone erreicht deinen Mac über SSH (die entfernte Anmeldung des Macs), mit einem Schlüssel, der auf diesem iPhone entstanden ist und es nie verlässt. Der Schlüssel des Macs wird jedes Mal geprüft."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPad erreicht deinen Mac über SSH (die entfernte Anmeldung des Macs), mit einem Schlüssel, der auf diesem iPad entstanden ist und es nie verlässt. Der Schlüssel des Macs wird jedes Mal geprüft."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPhone erreicht deinen Mac über SSH (die entfernte Anmeldung des Macs), mit einem Schlüssel, der auf diesem iPhone entstanden ist und es nie verlässt. Der Schlüssel des Macs wird jedes Mal geprüft."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPad reaches your Mac over SSH (the Mac's Remote Login), with a key made on this iPad that never leaves it. The Mac's key is checked every time."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPhone reaches your Mac over SSH (the Mac's Remote Login), with a key made on this iPhone that never leaves it. The Mac's key is checked every time."
+                }
+              }
+            }
           }
         }
       }
@@ -8819,9 +9904,39 @@
     "The iPhone talks to your Mac over SSH with a key that never leaves this iPhone." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das iPhone spricht über SSH mit deinem Mac, mit einem Schlüssel, der dieses iPhone nie verlässt."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPad spricht über SSH mit deinem Mac, mit einem Schlüssel, der dieses iPad nie verlässt."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPhone spricht über SSH mit deinem Mac, mit einem Schlüssel, der dieses iPhone nie verlässt."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPad talks to your Mac over SSH with a key that never leaves this iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPhone talks to your Mac over SSH with a key that never leaves this iPhone."
+                }
+              }
+            }
           }
         }
       }
@@ -8829,9 +9944,39 @@
     "The iPhone tries the same network first, then the tailnet, then the Mac's name on the network." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das iPhone versucht zuerst dasselbe Netzwerk, dann das Tailnet, dann den Namen des Macs im Netzwerk."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPad versucht zuerst dasselbe Netzwerk, dann das Tailnet, dann den Namen des Macs im Netzwerk."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Das iPhone versucht zuerst dasselbe Netzwerk, dann das Tailnet, dann den Namen des Macs im Netzwerk."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPad tries the same network first, then the tailnet, then the Mac's name on the network."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The iPhone tries the same network first, then the tailnet, then the Mac's name on the network."
+                }
+              }
+            }
           }
         }
       }
@@ -8888,7 +10033,48 @@
         }
       }
     },
+    "The Mac account name and password for its screen stay on this iPhone behind %@ and only go to the Mac's screen sharing." : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Accountname und Passwort für den Bildschirm des Macs bleiben auf diesem iPad hinter %@ und gehen nur an die Bildschirmfreigabe des Macs."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Accountname und Passwort für den Bildschirm des Macs bleiben auf diesem iPhone hinter %@ und gehen nur an die Bildschirmfreigabe des Macs."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac account name and password for its screen stay on this iPad behind %@ and only go to the Mac's screen sharing."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac account name and password for its screen stay on this iPhone behind %@ and only go to the Mac's screen sharing."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "The Mac account name and password for its screen stay on this iPhone behind Face ID and only go to the Mac's screen sharing." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8898,7 +10084,48 @@
         }
       }
     },
+    "The Mac account name and password for screen sharing, kept on this iPhone behind %@." : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Accountname und Passwort des Macs für die Bildschirmfreigabe, auf diesem iPad hinter %@."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Accountname und Passwort des Macs für die Bildschirmfreigabe, auf diesem iPhone hinter %@."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac account name and password for screen sharing, kept on this iPad behind %@."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac account name and password for screen sharing, kept on this iPhone behind %@."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "The Mac account name and password for screen sharing, kept on this iPhone behind Face ID." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8932,9 +10159,39 @@
     "The Mac didn't answer. Check that the iPhone is on the same network as the Mac and that the pairing code is still shown." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac hat nicht geantwortet. Prüfe, ob das iPhone im selben Netzwerk ist wie der Mac und ob der Kopplungscode noch angezeigt wird."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac hat nicht geantwortet. Prüfe, ob das iPad im selben Netzwerk ist wie der Mac und ob der Kopplungscode noch angezeigt wird."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac hat nicht geantwortet. Prüfe, ob das iPhone im selben Netzwerk ist wie der Mac und ob der Kopplungscode noch angezeigt wird."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac didn't answer. Check that the iPad is on the same network as the Mac and that the pairing code is still shown."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac didn't answer. Check that the iPhone is on the same network as the Mac and that the pairing code is still shown."
+                }
+              }
+            }
           }
         }
       }
@@ -9085,9 +10342,39 @@
     "The Mac isn't reachable, and aOS's Tailscale on this iPhone isn't connected (Settings > Connection)." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac ist nicht erreichbar, und das Tailscale von aOS ist auf diesem iPhone nicht verbunden (Einstellungen > Verbindung)."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac ist nicht erreichbar, und das Tailscale von aOS ist auf diesem iPad nicht verbunden (Einstellungen > Verbindung)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac ist nicht erreichbar, und das Tailscale von aOS ist auf diesem iPhone nicht verbunden (Einstellungen > Verbindung)."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac isn't reachable, and aOS's Tailscale on this iPad isn't connected (Settings > Connection)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac isn't reachable, and aOS's Tailscale on this iPhone isn't connected (Settings > Connection)."
+                }
+              }
+            }
           }
         }
       }
@@ -9095,9 +10382,39 @@
     "The Mac isn't reachable. On the go, set up aOS's Tailscale on this iPhone: Settings > Connection." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac ist nicht erreichbar. Für unterwegs richte das Tailscale von aOS auf diesem iPhone ein: Einstellungen > Verbindung."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac ist nicht erreichbar. Für unterwegs richte das Tailscale von aOS auf diesem iPad ein: Einstellungen > Verbindung."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac ist nicht erreichbar. Für unterwegs richte das Tailscale von aOS auf diesem iPhone ein: Einstellungen > Verbindung."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac isn't reachable. On the go, set up aOS's Tailscale on this iPad: Settings > Connection."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac isn't reachable. On the go, set up aOS's Tailscale on this iPhone: Settings > Connection."
+                }
+              }
+            }
           }
         }
       }
@@ -9105,9 +10422,39 @@
     "The Mac isn't reachable. On the go, switch on Tailscale on this iPhone (the Tailscale app, or aOS's Tailscale in Settings > Connection)." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac ist nicht erreichbar. Schalte unterwegs Tailscale auf diesem iPhone ein (die Tailscale-App oder das Tailscale von aOS unter Einstellungen > Verbindung)."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac ist nicht erreichbar. Schalte unterwegs Tailscale auf diesem iPad ein (die Tailscale-App oder das Tailscale von aOS unter Einstellungen > Verbindung)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac ist nicht erreichbar. Schalte unterwegs Tailscale auf diesem iPhone ein (die Tailscale-App oder das Tailscale von aOS unter Einstellungen > Verbindung)."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac isn't reachable. On the go, switch on Tailscale on this iPad (the Tailscale app, or aOS's Tailscale in Settings > Connection)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac isn't reachable. On the go, switch on Tailscale on this iPhone (the Tailscale app, or aOS's Tailscale in Settings > Connection)."
+                }
+              }
+            }
           }
         }
       }
@@ -9135,9 +10482,39 @@
     "The Mac no longer accepts this iPhone. Pair again in aOS on the Mac." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Mac nimmt dieses iPhone nicht mehr an. Kopple es über aOS auf dem Mac neu."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac nimmt dieses iPad nicht mehr an. Kopple es über aOS auf dem Mac neu."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Mac nimmt dieses iPhone nicht mehr an. Kopple es über aOS auf dem Mac neu."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac no longer accepts this iPad. Pair again in aOS on the Mac."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac no longer accepts this iPhone. Pair again in aOS on the Mac."
+                }
+              }
+            }
           }
         }
       }
@@ -9216,9 +10593,39 @@
     "The Mac's answer wasn't understood. Update aOS on the Mac and on this iPhone." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Antwort des Macs war nicht zu verstehen. Aktualisiere aOS auf dem Mac und auf diesem iPhone."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die Antwort des Macs war nicht zu verstehen. Aktualisiere aOS auf dem Mac und auf diesem iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die Antwort des Macs war nicht zu verstehen. Aktualisiere aOS auf dem Mac und auf diesem iPhone."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac's answer wasn't understood. Update aOS on the Mac and on this iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The Mac's answer wasn't understood. Update aOS on the Mac and on this iPhone."
+                }
+              }
+            }
           }
         }
       }
@@ -9341,9 +10748,39 @@
     "The private key was made in this iPhone's Secure Enclave and can't leave it." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der private Schlüssel ist in der Secure Enclave dieses iPhones entstanden und kann sie nicht verlassen."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der private Schlüssel ist in der Secure Enclave dieses iPads entstanden und kann sie nicht verlassen."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der private Schlüssel ist in der Secure Enclave dieses iPhones entstanden und kann sie nicht verlassen."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The private key was made in this iPad's Secure Enclave and can't leave it."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The private key was made in this iPhone's Secure Enclave and can't leave it."
+                }
+              }
+            }
           }
         }
       }
@@ -9403,9 +10840,39 @@
     "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac (your Mac in the iPhone's size also directly), and aOS's sign-in replaces the app's own." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Bildschirm des Arbeitsplatzes und des Macs beruht auf Open Screen Sharing von nekohasekai, verwendet unter der GNU General Public License, Version 3. aOS hat es für den eigenen Gebrauch angepasst: Die Bildschirme kommen über die Verbindung zu deinem Mac (dein Mac in iPhone-Größe auch direkt), und die Anmeldung von aOS ersetzt die der App."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Bildschirm des Arbeitsplatzes und des Macs beruht auf Open Screen Sharing von nekohasekai, verwendet unter der GNU General Public License, Version 3. aOS hat es für den eigenen Gebrauch angepasst: Die Bildschirme kommen über die Verbindung zu deinem Mac (dein Mac in iPad-Größe auch direkt), und die Anmeldung von aOS ersetzt die der App."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Bildschirm des Arbeitsplatzes und des Macs beruht auf Open Screen Sharing von nekohasekai, verwendet unter der GNU General Public License, Version 3. aOS hat es für den eigenen Gebrauch angepasst: Die Bildschirme kommen über die Verbindung zu deinem Mac (dein Mac in iPhone-Größe auch direkt), und die Anmeldung von aOS ersetzt die der App."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac (your Mac in the iPad's size also directly), and aOS's sign-in replaces the app's own."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac (your Mac in the iPhone's size also directly), and aOS's sign-in replaces the app's own."
+                }
+              }
+            }
           }
         }
       }
@@ -9629,9 +11096,39 @@
     "They keep running when the connection drops, also with the app closed, and this iPhone picks up where it left off. End the ones you no longer need." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sie laufen weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und dieses iPhone macht weiter, wo es war. Beende die, die du nicht mehr brauchst."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sie laufen weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und dieses iPad macht weiter, wo es war. Beende die, die du nicht mehr brauchst."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sie laufen weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und dieses iPhone macht weiter, wo es war. Beende die, die du nicht mehr brauchst."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "They keep running when the connection drops, also with the app closed, and this iPad picks up where it left off. End the ones you no longer need."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "They keep running when the connection drops, also with the app closed, and this iPhone picks up where it left off. End the ones you no longer need."
+                }
+              }
+            }
           }
         }
       }
@@ -9639,9 +11136,39 @@
     "They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden's own command line tool; this iPhone never talks to Bitwarden." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sie bleiben in deinem Bitwarden-Konto. aOS auf deinem Mac meldet sich dort mit dem eigenen Befehlszeilenprogramm von Bitwarden an; dieses iPhone spricht nie mit Bitwarden."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sie bleiben in deinem Bitwarden-Konto. aOS auf deinem Mac meldet sich dort mit dem eigenen Befehlszeilenprogramm von Bitwarden an; dieses iPad spricht nie mit Bitwarden."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Sie bleiben in deinem Bitwarden-Konto. aOS auf deinem Mac meldet sich dort mit dem eigenen Befehlszeilenprogramm von Bitwarden an; dieses iPhone spricht nie mit Bitwarden."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden's own command line tool; this iPad never talks to Bitwarden."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden's own command line tool; this iPhone never talks to Bitwarden."
+                }
+              }
+            }
           }
         }
       }
@@ -9669,9 +11196,39 @@
     "This code is from a newer aOS. Update the app on this iPhone." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieser Code stammt von einem neueren aOS. Aktualisiere die App auf diesem iPhone."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieser Code stammt von einem neueren aOS. Aktualisiere die App auf diesem iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieser Code stammt von einem neueren aOS. Aktualisiere die App auf diesem iPhone."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This code is from a newer aOS. Update the app on this iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This code is from a newer aOS. Update the app on this iPhone."
+                }
+              }
+            }
           }
         }
       }
@@ -9723,9 +11280,39 @@
     "this iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dieses iPhone"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "dieses iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "dieses iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "this iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "this iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -9733,9 +11320,39 @@
     "This iPhone" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieses iPhone"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPad"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPhone"
+                }
+              }
+            }
           }
         }
       }
@@ -9743,9 +11360,39 @@
     "This iPhone forgets the Mac. To remove the iPhone's key from the Mac too, open aOS on the Mac and remove it from the paired devices." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieses iPhone vergisst den Mac. Um den Schlüssel des iPhones auch vom Mac zu entfernen, öffne aOS auf dem Mac und entferne es aus den gekoppelten Geräten."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPad vergisst den Mac. Um den Schlüssel des iPads auch vom Mac zu entfernen, öffne aOS auf dem Mac und entferne es aus den gekoppelten Geräten."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPhone vergisst den Mac. Um den Schlüssel des iPhones auch vom Mac zu entfernen, öffne aOS auf dem Mac und entferne es aus den gekoppelten Geräten."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPad forgets the Mac. To remove the iPad's key from the Mac too, open aOS on the Mac and remove it from the paired devices."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPhone forgets the Mac. To remove the iPhone's key from the Mac too, open aOS on the Mac and remove it from the paired devices."
+                }
+              }
+            }
           }
         }
       }
@@ -9753,9 +11400,39 @@
     "This iPhone leaves your tailnet. On the go it then reaches the Mac only through the Tailscale app, if it has it." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieses iPhone verlässt dein Tailnet. Unterwegs erreicht es den Mac dann nur noch über die Tailscale-App, falls es sie hat."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPad verlässt dein Tailnet. Unterwegs erreicht es den Mac dann nur noch über die Tailscale-App, falls es sie hat."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPhone verlässt dein Tailnet. Unterwegs erreicht es den Mac dann nur noch über die Tailscale-App, falls es sie hat."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPad leaves your tailnet. On the go it then reaches the Mac only through the Tailscale app, if it has it."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPhone leaves your tailnet. On the go it then reaches the Mac only through the Tailscale app, if it has it."
+                }
+              }
+            }
           }
         }
       }
@@ -9763,9 +11440,39 @@
     "This iPhone loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieses iPhone verliert die Verbindung, bis der Mac wieder aufwacht (Deckel aufklappen oder eine Taste drücken). Der Arbeitsplatz und deine Agents pausieren so lange."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPad verliert die Verbindung, bis der Mac wieder aufwacht (Deckel aufklappen oder eine Taste drücken). Der Arbeitsplatz und deine Agents pausieren so lange."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPhone verliert die Verbindung, bis der Mac wieder aufwacht (Deckel aufklappen oder eine Taste drücken). Der Arbeitsplatz und deine Agents pausieren so lange."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPad loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPhone loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile."
+                }
+              }
+            }
           }
         }
       }
@@ -9773,9 +11480,39 @@
     "This iPhone makes its own key. Only its public half goes to the Mac." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieses iPhone erzeugt einen eigenen Schlüssel. Nur seine öffentliche Hälfte geht an den Mac."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPad erzeugt einen eigenen Schlüssel. Nur seine öffentliche Hälfte geht an den Mac."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dieses iPhone erzeugt einen eigenen Schlüssel. Nur seine öffentliche Hälfte geht an den Mac."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPad makes its own key. Only its public half goes to the Mac."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPhone makes its own key. Only its public half goes to the Mac."
+                }
+              }
+            }
           }
         }
       }
@@ -9794,9 +11531,39 @@
     "This iPhone's key couldn't be created: %@" : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Schlüssel dieses iPhones ließ sich nicht erzeugen: %@"
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Schlüssel dieses iPads ließ sich nicht erzeugen: %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Der Schlüssel dieses iPhones ließ sich nicht erzeugen: %@"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPad's key couldn't be created: %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This iPhone's key couldn't be created: %@"
+                }
+              }
+            }
           }
         }
       }
@@ -9876,9 +11643,39 @@
     "Through aOS's Tailscale your Mac keeps its own size. In the iPhone's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Über das Tailscale von aOS behält dein Mac seine eigene Größe. In iPhone-Größe kommt er mit eingeschaltetem VPN der Tailscale-App oder im selben WLAN."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Über das Tailscale von aOS behält dein Mac seine eigene Größe. In iPad-Größe kommt er mit eingeschaltetem VPN der Tailscale-App oder im selben WLAN."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Über das Tailscale von aOS behält dein Mac seine eigene Größe. In iPhone-Größe kommt er mit eingeschaltetem VPN der Tailscale-App oder im selben WLAN."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Through aOS's Tailscale your Mac keeps its own size. In the iPad's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Through aOS's Tailscale your Mac keeps its own size. In the iPhone's size it comes with the Tailscale app's VPN on, or in the same Wi-Fi."
+                }
+              }
+            }
           }
         }
       }
@@ -9886,9 +11683,39 @@
     "Through SSH your Mac keeps its own size. In the iPhone's size it comes directly: in the same Wi-Fi, or with the Tailscale app's VPN on." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Über SSH behält dein Mac seine eigene Größe. In iPhone-Größe kommt er direkt: im selben WLAN oder mit eingeschaltetem VPN der Tailscale-App."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Über SSH behält dein Mac seine eigene Größe. In iPad-Größe kommt er direkt: im selben WLAN oder mit eingeschaltetem VPN der Tailscale-App."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Über SSH behält dein Mac seine eigene Größe. In iPhone-Größe kommt er direkt: im selben WLAN oder mit eingeschaltetem VPN der Tailscale-App."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Through SSH your Mac keeps its own size. In the iPad's size it comes directly: in the same Wi-Fi, or with the Tailscale app's VPN on."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Through SSH your Mac keeps its own size. In the iPhone's size it comes directly: in the same Wi-Fi, or with the Tailscale app's VPN on."
+                }
+              }
+            }
           }
         }
       }
@@ -9937,9 +11764,39 @@
     "To log in to another computer with this iPhone's key, add this line to ~/.ssh/authorized_keys there. The public key isn't secret." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Um dich mit dem Schlüssel dieses iPhones an einem anderen Rechner anzumelden, trag diese Zeile dort in ~/.ssh/authorized_keys ein. Der öffentliche Schlüssel ist nicht geheim."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Um dich mit dem Schlüssel dieses iPads an einem anderen Rechner anzumelden, trag diese Zeile dort in ~/.ssh/authorized_keys ein. Der öffentliche Schlüssel ist nicht geheim."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Um dich mit dem Schlüssel dieses iPhones an einem anderen Rechner anzumelden, trag diese Zeile dort in ~/.ssh/authorized_keys ein. Der öffentliche Schlüssel ist nicht geheim."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "To log in to another computer with this iPad's key, add this line to ~/.ssh/authorized_keys there. The public key isn't secret."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "To log in to another computer with this iPhone's key, add this line to ~/.ssh/authorized_keys there. The public key isn't secret."
+                }
+              }
+            }
           }
         }
       }
@@ -10074,7 +11931,18 @@
         }
       }
     },
+    "Turn on %@ for aOS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ für aOS einschalten"
+          }
+        }
+      }
+    },
     "Turn on Face ID for aOS" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -10347,9 +12215,39 @@
     "Update aOS on the Mac to see the workspace from this iPhone." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktualisiere aOS auf dem Mac, um den Arbeitsplatz auf diesem iPhone zu sehen."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aktualisiere aOS auf dem Mac, um den Arbeitsplatz auf diesem iPad zu sehen."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aktualisiere aOS auf dem Mac, um den Arbeitsplatz auf diesem iPhone zu sehen."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Update aOS on the Mac to see the workspace from this iPad."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Update aOS on the Mac to see the workspace from this iPhone."
+                }
+              }
+            }
           }
         }
       }
@@ -10831,7 +12729,18 @@
         }
       }
     },
+    "Your agent asks, you approve with %@. It never sees the password." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Agent fragt, du gibst mit %@ frei. Er sieht das Passwort nie."
+          }
+        }
+      }
+    },
     "Your agent asks, you approve with Face ID. It never sees the password." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -10864,9 +12773,39 @@
     "Your agents put apps on this iPhone through aOS. When there is no connection, installs wait until the iPhone is on any Wi-Fi." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deine Agents bringen Apps über aOS auf dieses iPhone. Steht keine Verbindung, warten die Installationen, bis das iPhone in einem WLAN ist."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Deine Agents bringen Apps über aOS auf dieses iPad. Steht keine Verbindung, warten die Installationen, bis das iPad in einem WLAN ist."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Deine Agents bringen Apps über aOS auf dieses iPhone. Steht keine Verbindung, warten die Installationen, bis das iPhone in einem WLAN ist."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Your agents put apps on this iPad through aOS. When there is no connection, installs wait until the iPad is on any Wi-Fi."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Your agents put apps on this iPhone through aOS. When there is no connection, installs wait until the iPhone is on any Wi-Fi."
+                }
+              }
+            }
           }
         }
       }
@@ -10956,9 +12895,39 @@
     "Your Mac uses the Tailscale app. On this iPhone the Tailscale app, signed in with the same account, reaches it too; so does aOS's own Tailscale below." : {
       "localizations" : {
         "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dein Mac nutzt die Tailscale-App. Auf diesem iPhone erreicht ihn die Tailscale-App, mit demselben Konto angemeldet, ebenfalls; genauso das eigene Tailscale von aOS weiter unten."
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dein Mac nutzt die Tailscale-App. Auf diesem iPad erreicht ihn die Tailscale-App, mit demselben Konto angemeldet, ebenfalls; genauso das eigene Tailscale von aOS weiter unten."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dein Mac nutzt die Tailscale-App. Auf diesem iPhone erreicht ihn die Tailscale-App, mit demselben Konto angemeldet, ebenfalls; genauso das eigene Tailscale von aOS weiter unten."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Your Mac uses the Tailscale app. On this iPad the Tailscale app, signed in with the same account, reaches it too; so does aOS's own Tailscale below."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Your Mac uses the Tailscale app. On this iPhone the Tailscale app, signed in with the same account, reaches it too; so does aOS's own Tailscale below."
+                }
+              }
+            }
           }
         }
       }
@@ -10994,7 +12963,18 @@
         }
       }
     },
+    "Your password app (1Password, Passwords, Bitwarden's app) fills these fields with its own %@. aOS sends them once and doesn't keep them." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Passwort-App (1Password, Passwörter, die App von Bitwarden) füllt diese Felder mit ihrem eigenen %@. aOS sendet sie einmal und behält sie nicht."
+          }
+        }
+      }
+    },
     "Your password app (1Password, Passwords, Bitwarden's app) fills these fields with its own Face ID. aOS sends them once and doesn't keep them." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11024,7 +13004,18 @@
         }
       }
     },
+    "Your passwords stay in Bitwarden. You approve every sign-in with %@." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Passwörter bleiben in Bitwarden. Jede Anmeldung gibst du mit %@ frei."
+          }
+        }
+      }
+    },
     "Your passwords stay in Bitwarden. You approve every sign-in with Face ID." : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

@@ -63,7 +63,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Security")
                 } footer: {
-                    Text("Approving a sign-in always needs Face ID, whether or not the app itself is locked.")
+                    Text("Approving a sign-in always needs \(Biometrics.name), whether or not the app itself is locked.")
                 }
 
                 Section {
@@ -173,7 +173,7 @@ struct MacDetailView: View {
                         hasScreenLogin = false
                     }
                 } footer: {
-                    Text("The Mac account name and password for screen sharing, kept on this iPhone behind Face ID.")
+                    Text("The Mac account name and password for screen sharing, kept on this iPhone behind \(Biometrics.name).")
                 }
             }
             if model.macs.count > 1, model.activeMac?.id != mac.id {
@@ -260,7 +260,7 @@ struct AboutView: View {
                 }
                 AboutSection(title: "Your passwords", symbol: "key.horizontal", lines: [
                     "They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden's own command line tool; this iPhone never talks to Bitwarden.",
-                    "A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with Face ID or your passcode.",
+                    "A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with \(Biometrics.name) or your passcode.",
                     "aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither the iPhone nor the Mac keeps it.",
                     "Without Bitwarden, your password app's AutoFill fills the fields in the request; aOS sends them once, encrypted over SSH, and doesn't keep them.",
                 ])
@@ -274,7 +274,7 @@ struct AboutView: View {
                 ])
                 AboutSection(title: "The screen", symbol: "display", lines: [
                     "The pictures of your Mac and the workspace travel through the same SSH connection and aren't stored.",
-                    "The Mac account name and password for its screen stay on this iPhone behind Face ID and only go to the Mac's screen sharing.",
+                    "The Mac account name and password for its screen stay on this iPhone behind \(Biometrics.name) and only go to the Mac's screen sharing.",
                 ])
             }
             .padding()

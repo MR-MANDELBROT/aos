@@ -129,6 +129,8 @@ final class AppModel {
             guard let self, let target = TerminalSession.Target(key: key) else { return }
             await self.endTerminal(target)
         }
+        // A terminal window closed for good: its terminal lets go.
+        TerminalWindows.onDiscard = { [weak self] target in self?.closeTerminalWindow(target) }
         keepAlive.terminalsChanged()
     }
 

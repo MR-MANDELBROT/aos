@@ -1016,3 +1016,31 @@ DE.update({
     "Open in New Window": "In neuem Fenster öffnen",
     "This session is open in another window.": "Diese Sitzung ist in einem anderen Fenster offen.",
 })
+
+# The device's own words (2026-11-20): Face ID, Touch ID or Optic ID by name (Biometrics.name, %@), and "iPad" on an
+# iPad. The iPad's German isn't written here: Tools/device_variations.py derives it from these texts (iPhone -> iPad,
+# the same grammar in German), as String Catalog device variations.
+DE.update({
+    "A sign-in request shows which of your Bitwarden logins fit the website, by name and user name, never a password. You approve one with %@ or your passcode.":
+        "Eine Anmeldeanfrage zeigt, welche deiner Bitwarden-Anmeldungen zur Website passen, mit Name und Benutzername, nie mit Passwort. Du gibst eine mit %@ oder deinem Code frei.",
+    "Approving a sign-in always needs %@, whether or not the app itself is locked.":
+        "Eine Anmeldung freizugeben braucht immer %@, ob die App selbst gesperrt ist oder nicht.",
+    "Kept on this iPhone behind %@. It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network.":
+        "Bleibt auf diesem iPhone hinter %@ und geht nur an die Bildschirmfreigabe des Macs, über die SSH-Verbindung oder direkt im selben Netzwerk.",
+    "Set a passcode for this iPhone first (Settings > %@).":
+        "Leg zuerst einen Code für dieses iPhone fest (Einstellungen > %@).",
+    "Set a passcode for this iPhone first (Settings > %@). Approving a sign-in needs %@ or the passcode.":
+        "Leg zuerst einen Code für dieses iPhone fest (Einstellungen > %1$@). Eine Anmeldung freizugeben braucht %2$@ oder den Code.",
+    "The Mac account name and password for its screen stay on this iPhone behind %@ and only go to the Mac's screen sharing.":
+        "Accountname und Passwort für den Bildschirm des Macs bleiben auf diesem iPhone hinter %@ und gehen nur an die Bildschirmfreigabe des Macs.",
+    "The Mac account name and password for screen sharing, kept on this iPhone behind %@.":
+        "Accountname und Passwort des Macs für die Bildschirmfreigabe, auf diesem iPhone hinter %@.",
+    "Turn on %@ for aOS": "%@ für aOS einschalten",
+    "Your agent asks, you approve with %@. It never sees the password.":
+        "Dein Agent fragt, du gibst mit %@ frei. Er sieht das Passwort nie.",
+    "Your password app (1Password, Passwords, Bitwarden's app) fills these fields with its own %@. aOS sends them once and doesn't keep them.":
+        "Deine Passwort-App (1Password, Passwörter, die App von Bitwarden) füllt diese Felder mit ihrem eigenen %@. aOS sendet sie einmal und behält sie nicht.",
+    "Your passwords stay in Bitwarden. You approve every sign-in with %@.":
+        "Deine Passwörter bleiben in Bitwarden. Jede Anmeldung gibst du mit %@ frei.",
+    "%@ & Passcode": "%@ & Code",
+})
