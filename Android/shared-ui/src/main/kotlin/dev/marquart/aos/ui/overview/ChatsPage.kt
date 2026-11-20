@@ -43,6 +43,11 @@ import dev.marquart.aos.ui.platform.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.runtime.key
+import dev.marquart.aos.ui.layout.PanePlaceholder
+import dev.marquart.aos.ui.layout.TwoPane
+import dev.marquart.aos.ui.layout.contextClick
 import dev.marquart.aos.R
 import dev.marquart.aos.connection.MacConnection
 import dev.marquart.aos.core.ChatList
@@ -122,7 +127,7 @@ private fun PollChats(connection: MacConnection?) {
 /** The Claude Code chats aOS keeps reachable for the Claude app, in the Mac's order; a tap opens a chat's page, a long
  *  press its actions. */
 @Composable
-fun ChatsPage() {
+fun ChatsPage(selected: String? = null) {
     val ui = LocalAosUi.current
     val connection by ui.model.connection.collectAsState()
     val c = connection
@@ -142,8 +147,8 @@ fun ChatsPage() {
         else if (command is ChatCommand.Start) actions.run(command.action, conn, chat.id)
     }
 
-    Page(stringResource(R.string.chats), onBack = { ui.overview.pop() }, bottom = { BottomProblem(actions.problem) }) { padding ->
-        PageColumn(padding) {
+    Page(stringResource(R.string.chats), onBack = { ui.overview.set() }, bottom = { BottomProblem(actions.problem) }) { padding ->
+        PageColumn(padding, scrollKey = "overview/${OverviewPage.Chats}") {
             status?.newChats?.let { newChats ->
                 Section {
                     SectionRow(divider = false) {
@@ -164,8 +169,8 @@ fun ChatsPage() {
                         else if (list.chats.isEmpty()) TextRow(stringResource(R.string.chats_none), divider = false, color = AosTheme.colors.secondary)
                         list.chats.forEachIndexed { index, chat ->
                             ChatRow(chat, list, ChatOffer.now(chat, list, features), busy = actions.isRunning(chat.id),
-                                divider = index < list.chats.lastIndex,
-                                onOpen = { ui.overview.push(OverviewPage.Chat(chat.id)) }, onCommand = { perform(it, chat) })
+                                divider = index < list.chats.lastIndex, selected = chat.id == selected,
+                                onOpen = { ui.overview.set(OverviewPage.Chats, OverviewPage.Chat(chat.id)) }, onCommand = { perform(it, chat) })
                         }
                     }
                 }
@@ -180,13 +185,16 @@ fun ChatsPage() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ChatRow(chat: ChatList.Chat, list: ChatList, offer: ChatOffer, busy: Boolean, divider: Boolean, onOpen: () -> Unit,
-                    onCommand: (ChatCommand) -> Unit) {
+private fun ChatRow(chat: ChatList.Chat, list: ChatList, offer: ChatOffer, busy: Boolean, divider: Boolean, selected: Boolean,
+                    onOpen: () -> Unit, onCommand: (ChatCommand) -> Unit) {
     val colors = AosTheme.colors
     var menu by remember { mutableStateOf(false) }
     Box {
         Row(
-            Modifier.fillMaxWidth().combinedClickable(onClick = onOpen, onLongClick = { if (!offer.isEmpty) menu = true })
+            // The chat shown beside the list is marked; a secondary click opens the menu a long press opens.
+            Modifier.fillMaxWidth().background(if (selected) colors.indigo.copy(alpha = 0.12f) else Color.Transparent)
+                .contextClick { if (!offer.isEmpty) menu = true }
+                .combinedClickable(onClick = onOpen, onLongClick = { if (!offer.isEmpty) menu = true })
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -264,9 +272,26 @@ fun BottomProblem(text: String?) {
     }
 }
 
-/** A chat's page: what aOS does with it and why, its actions, where it is. */
+/** The chats and one of them side by side (wide windows): the chosen one, else the first. */
 @Composable
-fun ChatPage(id: String) {
+fun ChatsPanes(selected: String?) {
+    val ui = LocalAosUi.current
+    val connection by ui.model.connection.collectAsState()
+    val list = connection?.chats?.collectAsState()?.value
+    val shown = selected ?: list?.chats?.firstOrNull()?.id
+    TwoPane(
+        list = { ChatsPage(selected = shown) },
+        detail = {
+            if (shown != null) key(shown) { ChatPage(shown, inPane = true) }
+            else PanePlaceholder(Icons.Rounded.QuestionAnswer, stringResource(R.string.chats_none))
+        },
+    )
+}
+
+/** A chat's page: what aOS does with it and why, its actions, where it is. `inPane`: beside the list (no way back
+ *  of its own, the list shows what went wrong). */
+@Composable
+fun ChatPage(id: String, inPane: Boolean = false) {
     val ui = LocalAosUi.current
     val connection by ui.model.connection.collectAsState()
     val c = connection
@@ -278,8 +303,9 @@ fun ChatPage(id: String) {
     val colors = AosTheme.colors
     PollChats(c)
 
-    Page(stringResource(R.string.chat), onBack = { ui.overview.pop() }, bottom = { BottomProblem(actions.problem) }) { padding ->
-        PageColumn(padding) {
+    Page(stringResource(R.string.chat), onBack = if (inPane) null else ({ ui.overview.pop() }),
+        bottom = { if (!inPane) BottomProblem(actions.problem) }) { padding ->
+        PageColumn(padding, scrollKey = "overview/${OverviewPage.Chat(id)}") {
             if (list == null || chat == null) {
                 EmptyState(Icons.Rounded.QuestionAnswer, stringResource(R.string.chat_gone))
                 return@PageColumn
@@ -330,7 +356,7 @@ fun ChatPage(id: String) {
     asking?.let { q ->
         ChatQuestionDialog(q, onDismiss = { asking = null }) {
             c?.let { conn ->
-                actions.run(q.action, conn, q.chat.id) { if (q.action == MacAction.CHATS_DELETE) ui.overview.pop() }
+                actions.run(q.action, conn, q.chat.id) { if (q.action == MacAction.CHATS_DELETE) ui.overview.set(OverviewPage.Chats) }
             }
         }
     }

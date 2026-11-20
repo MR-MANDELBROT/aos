@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_overview">Übersicht</string>
+    <string name="shortcut_terminal">Terminal</string>
+    <string name="shortcut_screen">Bildschirm</string>
+    <string name="shortcut_settings">Einstellungen</string>
+    <string name="shortcut_new_session">Neue Terminal-Sitzung</string>
+    <string name="shortcut_paste">Ins Terminal einsetzen</string>
+    <string name="shortcut_copy_screen">Bildschirm des Terminals kopieren</string>
+    <string name="shortcut_bigger_text">Größere Schrift im Terminal</string>
+    <string name="shortcut_smaller_text">Kleinere Schrift im Terminal</string>
+</resources>

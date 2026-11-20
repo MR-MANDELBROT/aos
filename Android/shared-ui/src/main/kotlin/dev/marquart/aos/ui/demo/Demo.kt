@@ -1,5 +1,6 @@
 package dev.marquart.aos.ui.demo
 
+import dev.marquart.aos.core.ScreenTarget
 import dev.marquart.aos.companion.MockCompanionServer
 import dev.marquart.aos.connection.FixedNetworkMonitor
 import dev.marquart.aos.connection.MacConnection
@@ -52,7 +53,8 @@ import java.time.Instant
  *
  * - `aos.demo.tab` overview|terminal|screen|settings
  * - `aos.demo.sheet` signin|signin-code|signin-none|signin-locked|signin-off|approval|help|requests|pairing|pairing-scan|
- *   lock|chats|chat|apps|routines|routine-edit|settings|connection|mac|key|about|licenses|license
+ *   lock|chats|chat|apps|routines|routine-edit|settings|connection|mac|key|about|licenses|license|terminal-session|
+ *   screen-session
  * - `aos.demo.unpaired` true: the welcome page
  * - `aos.demo.theme` light|dark (instead of the system's)
  * - `aos.demo.session` needsLogin; `aos.demo.display` off|none; `aos.demo.chats` off; `aos.demo.sleeping` true;
@@ -222,6 +224,9 @@ object Demo {
                 else ui.overview.set(OverviewPage.Chats)
             }
             "apps" -> ui.overview.set(OverviewPage.Apps)
+            // The terminal with a session open, a running screen session (the large-screen screenshots).
+            "terminal-session" -> model.openNewTerminal()
+            "screen-session" -> model.showScreen(ScreenTarget.WORKSPACE)
             "routines", "routine-edit" -> ui.overview.set(OverviewPage.Routines)
         }
         // The help request opens the Screen tab like a real one; for its banner on the Overview, back there.

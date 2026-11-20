@@ -85,7 +85,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import dev.marquart.aos.R
+import dev.marquart.aos.ui.layout.Columns
+import dev.marquart.aos.ui.layout.LocalWindowLayout
 import dev.marquart.aos.connection.MacConnection
 import dev.marquart.aos.core.MacAction
 import dev.marquart.aos.core.MacOffer
@@ -120,13 +125,19 @@ import kotlinx.coroutines.launch
 @Composable
 fun OverviewTab() {
     val ui = LocalAosUi.current
+    val twoPane = LocalWindowLayout.current.twoPane
     val page = ui.overview.top
-    BackHandler(enabled = page != null) { ui.overview.pop() }
-    AnimatedContent(targetState = page, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "overview") { shown ->
+    BackHandler(enabled = page != null) {
+        // Beside its list a chat isn't a page of its own: back leaves the chats.
+        if (twoPane && page is OverviewPage.Chat) ui.overview.set() else ui.overview.pop()
+    }
+    AnimatedContent(targetState = page, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "overview",
+        // In two panes choosing another chat changes the detail, not the page.
+        contentKey = { if (twoPane && it is OverviewPage.Chat) OverviewPage.Chats else it }) { shown ->
         when (shown) {
             null -> OverviewScreen()
-            OverviewPage.Chats -> ChatsPage()
-            is OverviewPage.Chat -> ChatPage(shown.id)
+            OverviewPage.Chats -> if (twoPane) ChatsPanes(null) else ChatsPage()
+            is OverviewPage.Chat -> if (twoPane) ChatsPanes(shown.id) else ChatPage(shown.id)
             OverviewPage.Apps -> AppsPage()
             OverviewPage.Routines -> RoutinesPage(onBack = { ui.overview.pop() })
         }
@@ -179,28 +190,53 @@ private fun OverviewScreen() {
             },
             modifier = Modifier.fillMaxSize().padding(padding),
         ) {
-            val scroll = rememberScrollState()
+            val scroll = ui.scroll("overview")
             LaunchedEffect(ui.demo?.scrollToBottom) {
                 if (ui.demo?.scrollToBottom == true) {
                     delay(900)
                     scroll.animateScrollTo(scroll.maxValue)
                 }
             }
+            val columns = LocalWindowLayout.current.overviewColumns
             Column(
                 Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp).padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 val c = connection
-                if (c != null) {
+                if (c == null) {
+                    Box(Modifier.widthIn(max = 560.dp)) { WelcomeView() }
+                    return@Column
+                }
+                val macStatus by c.macStatus.collectAsState()
+                val sleeping by c.sleepingSince.collectAsState()
+                val showsAos = macStatus != null && companion == MacConnection.CompanionState.Ready && sleeping == null
+                val requests = questions.isNotEmpty() || help.isNotEmpty()
+                if (columns == 1) {
                     MacCard(c)
-                    if (questions.isNotEmpty() || help.isNotEmpty()) RequestsCard(model)
+                    if (requests) RequestsCard(model)
                     WorkspaceCard(c)
-                    val macStatus by c.macStatus.collectAsState()
-                    val sleeping by c.sleepingSince.collectAsState()
-                    if (macStatus != null && companion == MacConnection.CompanionState.Ready && sleeping == null) AosCardView(c)
+                    if (showsAos) AosCardView(c)
                     PromiseCard()
                 } else {
-                    WelcomeView()
+                    // A wide window: what waits for the person across the top, then the cards in columns.
+                    if (requests) RequestsCard(model)
+                    Columns(columns, 16.dp) { index ->
+                        when {
+                            index == 0 -> {
+                                MacCard(c)
+                                if (columns == 2) PromiseCard()
+                            }
+                            index == 1 -> {
+                                WorkspaceCard(c)
+                                if (columns == 2 && showsAos) AosCardView(c)
+                            }
+                            else -> {
+                                if (showsAos) AosCardView(c)
+                                PromiseCard()
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -209,6 +245,7 @@ private fun OverviewScreen() {
 
 // Mac
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MacCard(connection: MacConnection) {
     val ui = LocalAosUi.current
@@ -292,7 +329,8 @@ private fun MacCard(connection: MacConnection) {
                         HorizontalDivider(color = colors.separator)
                         MacStatusRows(status!!, connection, actions)
                         val offer = MacOffer.now(status!!, hello?.features ?: emptySet(), sleeping != null)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        // (A narrow card, as in a column of a tablet held upright: whole buttons go to the next line.)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), itemVerticalAlignment = Alignment.CenterVertically) {
                             val enabled = actions.running == null
                             if (offer.sleep) ActionButton(Icons.Rounded.Bedtime, stringResource(R.string.mac_sleep), enabled) { confirmSleep = true }
                             if (offer.displayOff) ActionButton(Icons.Rounded.Monitor, stringResource(R.string.mac_display_off_action), enabled) {
@@ -333,7 +371,7 @@ fun ActionButton(icon: ImageVector?, title: String, enabled: Boolean = true, bus
         // While it is under way, the spinner takes the symbol's place (the button keeps its size).
         if (busy) SmallSpinner() else if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         if (busy || icon != null) Spacer(Modifier.size(6.dp))
-        Text(title)
+        Text(title, maxLines = 1, softWrap = false)
     }
 }
 
@@ -344,7 +382,7 @@ private fun MacStatusRows(status: MacStatus, connection: MacConnection, actions:
         val power = status.power
         val display = status.display
         if (power != null || display != null) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (power != null) {
                     StatusTile(batteryIcon(power), MacStatusText.batteryValue(power).text(), MacStatusText.batteryCaption(power).text(),
                         Modifier.weight(1f), tint = batteryTint(power))
@@ -480,6 +518,7 @@ fun agentName(agent: String): String = agent.ifEmpty { stringResource(R.string.y
 
 // Workspace
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WorkspaceCard(connection: MacConnection) {
     val ui = LocalAosUi.current
@@ -542,7 +581,7 @@ private fun WorkspaceCard(connection: MacConnection) {
             val closing = actions.running == MacAction.WORKSPACE_STOP || operation?.kind == WorkspaceOperation.Kind.STOP
             val viewable = state == "open" || state == "running" || (closing && (operation?.from ?: "") in listOf("open", "running"))
             val enabled = actions.running == null && operation == null
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (viewable) {
                     ActionButton(Icons.Rounded.DesktopWindows, stringResource(R.string.workspace_show_screen), enabled = enabled) {
                         ui.model.showScreen(ScreenTarget.WORKSPACE)

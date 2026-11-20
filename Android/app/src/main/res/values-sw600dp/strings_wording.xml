@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A tablet, an unfolded foldable, a Chromebook (smallest width 600 dp and more): "this device" where the shared
+     texts say "this phone". Made from shared-ui's strings by the rule in LargeScreenTextTests, which checks they still match. -->
+<resources>
+    <string name="screen_note_ssh">Through SSH your Mac keeps its own size. In the device\'s size it comes directly: in the same Wi-Fi, or with the Tailscale app\'s VPN on.</string>
+    <string name="screen_note_tailnet">Through aOS\'s Tailscale your Mac keeps its own size. In the device\'s size it comes with the Tailscale app\'s VPN on, or in the same Wi-Fi.</string>
+    <string name="screen_login_kept">Kept on this device behind its screen lock. It only goes to the Mac\'s screen sharing, through the SSH connection or directly in the same network.</string>
+    <string name="screen_set_screen_lock">Set a screen lock for this device first (Settings &gt; Security).</string>
+    <string name="screen_matches_phone">Screens in the device\'s size</string>
+    <string name="screen_display_footer">Both screens take the device\'s shape and turn with it: aOS resizes the workspace\'s display, your Mac gets a virtual display in Open Screen Sharing\'s high performance mode, directly in the same Wi-Fi or with the Tailscale app\'s VPN. Through SSH alone your Mac keeps its own size. More resolution gives more room and less sharpness.</string>
+    <string name="screen_oss_text">The screen of the workspace and of the Mac is based on Open Screen Sharing by nekohasekai, used under the GNU General Public License, version 3. aOS changed it for its own use: the screens are reached through the connection to your Mac (your Mac in the device\'s size also directly), and aOS\'s sign-in replaces the app\'s own.</string>
+    <string name="term_sessions_footer">They keep running when the connection drops, also with the app closed, and this device picks up where it left off. End the ones you no longer need.</string>
+    <string name="term_open_here_phone">Open on this device</string>
+    <string name="mac_pair_again_explain">aOS on the Mac now takes requests only when this device signs them, with a key it gets when you pair. Show the pairing code on the Mac and scan it.</string>
+    <string name="mac_sleep_explain">This device loses the connection until the Mac wakes up again (open the lid or press a key). The workspace and your agents pause meanwhile.</string>
+    <string name="promise_ssh">The device talks to your Mac over SSH with a key that never leaves this device.</string>
+    <string name="welcome_title">aOS on your device</string>
+    <string name="signin_needs_screen_lock">Set a screen lock for this device first (the device\'s settings &gt; Security). Approving a sign-in needs your fingerprint, face or screen lock.</string>
+    <string name="pair_newer_code">This code is from a newer aOS. Update the app on this device.</string>
+    <string name="pair_fact_key">This device makes its own key. Only its public half goes to the Mac.</string>
+    <string name="pair_only_own_mac">Pair only with your own Mac. aOS on the Mac adds this device\'s key to your user\'s SSH keys there.</string>
+    <string name="pair_how_reached">How the device reaches it</string>
+    <string name="pair_way_aos">On the go through aOS\'s own Tailscale. After pairing, set it up on this device too, with the same Tailscale account.</string>
+    <string name="pair_way_app">On the go through the Tailscale app. On this device you need it too, signed in with the same account (or aOS\'s own Tailscale, in Settings &gt; Connection).</string>
+    <string name="pair_way_lan">Only on the same network: on the go the device doesn\'t reach this Mac.</string>
+    <string name="pair_key_footer">The device accepts the Mac only with exactly this key, now and later.</string>
+    <string name="pair_device_name">Name of this device</string>
+    <string name="pair_done_text">The device now reaches your Mac by itself whenever the app is open.</string>
+    <string name="pair_error_unreachable">The Mac didn\'t answer. Check that the device is on the same network as the Mac and that the pairing code is still shown.</string>
+    <string name="pair_error_invalid_answer">The Mac\'s answer wasn\'t understood. Update aOS on the Mac and on this device.</string>
+    <string name="error_pair_again">Pair again to keep approving from this device.</string>
+    <string name="error_update_mac">Update aOS on the Mac to see the workspace from this device.</string>
+    <string name="conn_not_accepted">The Mac no longer accepts this device. Pair again in aOS on the Mac.</string>
+    <string name="conn_unreachable_set_up_aos">The Mac isn\'t reachable. On the go, set up aOS\'s Tailscale on this device: Settings &gt; Connection.</string>
+    <string name="conn_unreachable_aos_off">The Mac isn\'t reachable, and aOS\'s Tailscale on this device isn\'t connected (Settings &gt; Connection).</string>
+    <string name="conn_unreachable_switch_on">The Mac isn\'t reachable. On the go, switch on Tailscale on this device (the Tailscale app, or aOS\'s Tailscale in Settings &gt; Connection).</string>
+    <string name="settings_this_phone">This device</string>
+    <string name="settings_ssh_key">SSH key of this device</string>
+    <string name="mac_unpair_footer">This device forgets the Mac. To remove the device\'s key from the Mac too, open aOS on the Mac and remove it from the paired devices.</string>
+    <string name="mac_unpair_explain">Sign-in requests and help requests from this Mac no longer reach this device.</string>
+    <string name="key_public_footer">To log in to another computer with this device\'s key, add this line to ~/.ssh/authorized_keys there. The public key isn\'t secret.</string>
+    <string name="key_hardware_footer">The private key was made in this device\'s secure hardware and can\'t leave it.</string>
+    <string name="key_software_footer">The private key is in this device\'s keystore without secure hardware and is never synced.</string>
+    <string name="about_passwords_1">They stay in your Bitwarden account. aOS on your Mac signs in to it with Bitwarden\'s own command line tool; this device never talks to Bitwarden.</string>
+    <string name="about_passwords_3">aOS on your Mac then gets exactly that login from Bitwarden and types it into the workspace. Neither the device nor the Mac keeps it.</string>
+    <string name="about_connection_1">The device reaches your Mac over SSH (the Mac\'s Remote Login), with a key made on this device that never leaves it. The Mac\'s key is checked every time.</string>
+    <string name="about_screen_2">The Mac account name and password for its screen stay on this device, encrypted, and only go to the Mac\'s screen sharing.</string>
+    <string name="ack_tailscale">aOS\'s own Tailscale on this device is Tailscale\'s open source code (tailscale.com), under the BSD 3-Clause License.</string>
+    <string name="conn_footer">The device tries the same network first, then the tailnet, then the Mac\'s name on the network.</string>
+    <string name="conn_tailscale_app">Tailscale app on this device</string>
+    <string name="conn_app_footer">Your Mac uses the Tailscale app. On this device the Tailscale app, signed in with the same account, reaches it too; so does aOS\'s own Tailscale below.</string>
+    <string name="conn_node_header">aOS\'s Tailscale on this device</string>
+    <string name="conn_node_footer">No VPN and no Tailscale app needed. aOS only reaches your Mac through it, and nothing on this device is reachable in your tailnet. Its keys stay on this device, out of backups.</string>
+    <string name="conn_node_can">aOS can bring Tailscale along on this device too: no VPN, no extra app. You sign in once with your Tailscale account, the same as on the Mac.</string>
+    <string name="conn_needs_approval">Signed in. The tailnet\'s admin still has to approve this device in the Tailscale admin console.</string>
+    <string name="conn_sign_out_footer">Sign Out removes this device from the tailnet and deletes its Tailscale keys here.</string>
+    <string name="conn_sign_out_question">Sign out of Tailscale on this device?</string>
+    <string name="conn_sign_out_explain">This device leaves your tailnet. On the go it then reaches the Mac only through the Tailscale app, if it has it.</string>
+</resources>

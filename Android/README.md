@@ -38,7 +38,8 @@ Android/
     src/test/                SSH, companion, connection, model, pairing, terminal keys, routing, gestures, video, live
   shared-ui/                 the Compose UI both apps compile in (a source folder, not a Gradle module)
     src/main/kotlin/dev/marquart/aos/
-      ui/                    AosRoot (tabs; `rail = true`: a navigation rail for wide windows), AosUi, Txt, Errors,
+      ui/                    AosRoot (tabs: bar, rail or drawer by the window), AosUi, Txt, Errors, layout/ (WindowLayout:
+                             the large-screen decisions; Panes: TwoPane, Columns, AdaptiveSheet, contextClick),
                              components/, theme/, overview/, signin/ (sheets), settings/ (SettingsSlots: terminal,
                              screen, device), pairing/PairingScreen (camera through Platform.pairingScanner), lock/AppLock,
                              tailnet/TailnetControl, demo/Demo (sample data; Android's intent and the desktop's
@@ -54,7 +55,7 @@ Android/
       ui/platform/           AndroidPlatform (Custom Tabs, clipboard, biometrics, notification permission, back,
                              the QR camera), Resources.kt (Android's side of the shared declarations)
       ui/lock/Biometrics, ui/notify/RequestNotifier, ui/pairing/QrScanner + CameraBox, ui/tabs/TabSlots,
-      ui/demo/DemoIntent     Android only
+      ui/demo/DemoIntent, ui/layout/WindowLayouts (size class and fold), ui/keys/Shortcuts     Android only
       keys/AndroidKeys.kt    AndroidKeystoreKeys (StrongBox, else TEE), KeystoreSigner, KeystoreOrMemoryKeys
       store/AndroidStores.kt DataStore stores, KeystoreSecretStore
       connection/            AndroidNetworkMonitor, NsdServiceDiscovery
@@ -91,14 +92,84 @@ Tools/desktop.sh             the desktop packages (repo root Tools/)
 Strings stay in Android's XML (English `values`, German `values-de`); the desktop picks German when the system's
 language is German (`AOS_LANG=en|de` or `--lang=` to choose).
 
+## Large screens: tablets, foldables, desktop windows
+
+The same app (`dev.marquart.aos`) adapts to its window; there is no tablet app. The decisions are in one place,
+`shared-ui/.../ui/layout/WindowLayout.kt` (pure Kotlin, `WindowLayoutTests`), and the views only ask
+`LocalWindowLayout.current`:
+
+| Window (dp) | Tabs | Pages |
+|---|---|---|
+| compact width (< 600): a phone, a third of a tablet in split screen | bar at the bottom | one pane, sheets from the bottom |
+| medium (600 to 839): a tablet upright, half a tablet | rail at the side | one pane, Overview in two columns, questions as a dialog |
+| expanded (840 to 1199): an unfolded foldable, a small tablet on its side | rail | list and detail side by side |
+| large (1200 and more): a tablet on its side, a desktop window | drawer that stays open (with the Mac and its state) | list and detail, Overview in two or three columns |
+| compact height (< 480): a phone on its side | rail, never the drawer | one pane, sheets from the bottom |
+
+- **Where the size comes from.** Android: `app/.../ui/layout/WindowLayouts.kt` (`rememberWindowLayout`): material3-adaptive's
+  `currentWindowAdaptiveInfo()` (Jetpack's WindowSizeClass of the window, so split screen, freeform and desktop windows
+  count as what they are) and `WindowInfoTracker`'s FoldingFeature; MainActivity passes it to `AosRoot(ui, window = ...)`.
+  The desktop: `AosRoot(ui, rail = true)` measures its window and never goes below the rail.
+- **List and detail** (`TwoPane` in `ui/layout/Panes.kt`): Chats (the list, the chosen chat or the first), Routines (the
+  list, the routine being changed), Apps (the phone's connection, the installs), Settings (the list, the chosen page or
+  the paired Mac's; a page it pushes, a license, replaces it there with a way back) and, on Android, the Terminal (the
+  Mac's sessions beside the terminal). The row shown beside the list is marked. Back leaves the pair, not the detail.
+- **Overview**: `Columns` puts the cards side by side (the Mac and what is where; the workspace and aOS; requests across
+  the top). Forms keep a readable width in the middle (`PageColumn`, 720 dp).
+- **Sheets** (`AdaptiveSheet`): the sign-in and approval questions and the terminal's and the screen's settings come from
+  the bottom edge on a phone and are a dialog in the middle of a large window (560 dp wide).
+- **Foldables.** A fold nothing should straddle (half opened, or a hinge that hides pixels) splits the layout: upright
+  like a book, `TwoPane` and the Overview's two columns go to its sides; standing on its lower half (tabletop), the
+  terminal is above the fold and the key bar below it, the screen session shows the picture above and the key row and
+  controls below, and a dialog stays above the fold. A flat fold changes nothing.
+- **State.** MainActivity handles the configuration changes of size, shape, orientation, keyboard and light/dark itself
+  (`configChanges`), so turning, resizing, folding and plugging a keyboard in don't restart it: the terminal's view and a
+  running screen session stay. One place holds the tab's content whatever the navigation is, the terminal and the
+  routine editor are movable content (they keep their state when they move beside the list), scroll positions belong
+  to the page (`AosUi.scroll`, kept in the activity's ViewModel), and what was chosen or typed in a question lives
+  outside the sheet or dialog that shows it. Language, font scale and density still restart the activity.
+- **Keyboard** (`app/.../ui/keys/Shortcuts.kt`, listed in the system's shortcuts helper through
+  `onProvideKeyboardShortcuts`): Ctrl+1 to 4 the tabs, Ctrl+Shift+T a new terminal session, Ctrl+Shift+V paste into
+  the terminal, Ctrl+Shift+C copy its screen, Ctrl+Shift+plus and minus its text size. Ctrl+letter stays the shell's.
+  A hardware keyboard types into the terminal (and onto the Mac in a screen session) whatever was clicked last on that
+  screen: Tab, Esc and the arrows don't move the focus around. For that the terminal's and the picture's views keep
+  the focus while they are on screen (they take it back after a click on a key of the bar, the title bar or the list;
+  without it Android uses the next Tab or arrow to place the focus and swallows it), a key that still finds them
+  unfocused is handed to them (`MainActivity.dispatchKeyEvent`, the session window's callback), and Android's default
+  focus highlight (a gray tint over the focused view once a keyboard is used) is off for both. A screen session is a
+  window of its own and gets every key for the Mac; while its menu is open the keys are the menu's.
+- **Mouse and trackpad**: hover states are Material's; a secondary click opens the menus a long press opens
+  (`Modifier.contextClick`: chats, routines, terminal sessions, the Mac's screen card); the wheel scrolls lists, the
+  terminal's scrollback and the Mac. Text dragged from another window onto the terminal is pasted (with the usual
+  question before several lines run).
+- **Wording.** With a smallest width of 600 dp and more the texts say "this device" instead of "this phone"
+  (`app/src/main/res/values-sw600dp`, `values-de-sw600dp`; `LargeScreenTextTests` keeps them in step with the shared texts).
+- **Manifest**: resizable, no fixed orientation or aspect ratio, touchscreen and camera not required (Chromebooks). On
+  a phone a screen session still turns to a Mac screen that keeps its own shape; on anything larger it never asks for
+  an orientation.
+
+Screenshots (German, light and dark, both orientations): `build/android-tablet-screenshots` (the debug demo, e.g.
+`--es aos.demo.sheet terminal-session`, `screen-session`; the demo's terminal shows what is typed in caret notation,
+`^I` for Tab, `^[` for Esc, so a check sees which keys arrived), with `live/` (keys, rotation, resizing, split screen,
+freeform, the shortcuts helper) and `foldable/` (book, tabletop, closed and open again).
+
+Checked on the emulator on 2026-11-20 (API 36, google_apis): a Pixel Tablet AVD (`avdmanager create avd -n aos_tablet
+-k "system-images;android-36;google_apis;arm64-v8a" -d pixel_tablet`, `hw.keyboard=yes`) and a Pixel Fold AVD (`-d
+pixel_fold`; postures with `adb shell cmd device_state state 0|1|2` for closed, half opened, opened, and
+`settings put system user_rotation 1` to stand it on its lower half; `screencap -d <display id>` there). Turning,
+`wm size` through every size class, split screen (`dumpsys activity service SystemUIService WMShell splitscreen
+moveToSideStage <task> 1`), a freeform window (`am start --windowingMode 5`, `am task resize`), folding onto the outer
+screen and back: one `onCreate` each time, the demo's terminal and screen session kept what was typed.
+
 ## Build and test
 
 ```sh
 Tools/android.sh :core:test                    # 73 tests
 Tools/android.sh :shared:test                  # 116 tests (+ LiveMacTests, skipped without a link)
-Tools/android.sh :app:testDebugUnitTest        # 70 tests (MacTerminalTests with Termux, screen, UI texts; + LiveTerminalTests)
+Tools/android.sh :app:testDebugUnitTest        # 92 tests (MacTerminalTests with Termux, screen, UI texts, the large-screen
+                                               #   layout, shortcuts and wording; + LiveTerminalTests)
 Tools/android.sh :app:assembleDebug            # app/build/outputs/apk/debug/app-debug.apk
-Tools/android.sh :desktop:test                 # 38 tests (desktop pieces, JediTerm terminal, the Go library's screen
+Tools/android.sh :desktop:test                 # 52 tests (desktop pieces, JediTerm terminal, the Go library's screen
                                                #   session on this Mac, the shared UI tests again; + LiveDesktopTests)
 Tools/android.sh :desktop:runDesktop -Paos.args="--demo"        # the desktop app on this Mac with sample data
 Tools/android.sh :desktop:runDesktop -Paos.args="--shots=$PWD/../build/desktop-screenshots"   # the screenshots

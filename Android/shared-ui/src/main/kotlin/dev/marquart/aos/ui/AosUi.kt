@@ -1,6 +1,7 @@
 package dev.marquart.aos.ui
 
 import dev.marquart.aos.ui.platform.PlatformContext
+import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,8 +41,14 @@ class AosUi(
     /** The chats' actions, one at a time, shared by the list and a chat's page. */
     val chatActions = ActionState(scope, context)
 
-    val overview = PageStack<OverviewPage>()
-    val settingsPages = PageStack<SettingsPage>()
+    /** Scroll positions by page, kept while the window changes its shape (a pane becomes a page and back), while
+     *  another tab is on screen and across the activity's restarts. A page that is popped forgets its own. */
+    private val scrolls = HashMap<String, ScrollState>()
+
+    fun scroll(key: String): ScrollState = scrolls.getOrPut(key) { ScrollState(0) }
+
+    val overview = PageStack<OverviewPage> { scrolls.remove("overview/$it") }
+    val settingsPages = PageStack<SettingsPage> { scrolls.remove("settings/$it") }
 
     /** Pairing is shown (over everything but the lock), with the link that opened the app if there was one. */
     var pairing by mutableStateOf<PairingStart?>(null)
@@ -76,8 +83,8 @@ sealed interface SettingsPage {
 
 enum class LicenseKind { GPL3, OPEN_SCREEN_SHARING, APACHE2, TAILSCALE_BSD3 }
 
-/** Pages pushed on a tab, the newest last. */
-class PageStack<T> {
+/** Pages pushed on a tab, the newest last. `onRemoved`: a page left the stack. */
+class PageStack<T>(private val onRemoved: (T) -> Unit = {}) {
     val pages = mutableStateListOf<T>()
     val top: T? get() = pages.lastOrNull()
 
@@ -86,12 +93,14 @@ class PageStack<T> {
     }
 
     fun pop() {
-        if (pages.isNotEmpty()) pages.removeAt(pages.lastIndex)
+        if (pages.isNotEmpty()) onRemoved(pages.removeAt(pages.lastIndex))
     }
 
     fun set(vararg new: T) {
+        val old = pages.toList()
         pages.clear()
         pages.addAll(new)
+        old.filter { it !in new }.forEach(onRemoved)
     }
 }
 

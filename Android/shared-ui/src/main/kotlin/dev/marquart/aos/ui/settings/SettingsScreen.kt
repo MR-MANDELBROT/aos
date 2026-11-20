@@ -52,7 +52,11 @@ import androidx.compose.ui.Modifier
 import dev.marquart.aos.ui.platform.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.CompositionLocalProvider
 import dev.marquart.aos.R
+import dev.marquart.aos.ui.components.LocalPaneRoot
+import dev.marquart.aos.ui.layout.LocalWindowLayout
+import dev.marquart.aos.ui.layout.TwoPane
 import dev.marquart.aos.core.PairedMac
 import dev.marquart.aos.keys.DeviceKey
 import dev.marquart.aos.keys.KeyStorage
@@ -93,31 +97,52 @@ object SettingsSlots {
     var device: (@Composable () -> Unit)? = null
 }
 
-/** The Settings tab and the pages it pushes. */
+/** The Settings tab and the pages it pushes. In a wide window the list stays and the page is beside it (the paired
+ *  Mac's until another is chosen); pages a page pushes (a license) replace it there, with their way back. */
 @Composable
 fun SettingsTab() {
     val ui = LocalAosUi.current
-    val page = ui.settingsPages.top
-    val back = { ui.settingsPages.pop() }
-    BackHandler(enabled = page != null) { back() }
-    AnimatedContent(targetState = page, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "settings") { shown ->
-        when (shown) {
-            null -> SettingsScreen()
-            is SettingsPage.Mac -> MacDetailPage(shown.id, back)
-            SettingsPage.Connection -> ConnectionPage(back)
-            SettingsPage.DeviceKey -> DeviceKeyPage(back)
-            SettingsPage.About -> AboutPage(back)
-            SettingsPage.Acknowledgements -> AcknowledgementsPage(back)
-            is SettingsPage.License -> LicensePage(shown.kind, back)
-            SettingsPage.Routines -> RoutinesPage(onBack = back)
-            SettingsPage.Terminal -> SettingsSlots.terminal?.invoke(back) ?: back()
-            SettingsPage.Screen -> SettingsSlots.screen?.invoke(back) ?: back()
+    val twoPane = LocalWindowLayout.current.twoPane
+    val pages = ui.settingsPages
+    val page = pages.top
+    val back = { pages.pop() }
+    BackHandler(enabled = if (twoPane) pages.pages.size > 1 else page != null) { back() }
+    if (twoPane) {
+        val macs by ui.model.macs.collectAsState()
+        val detail = page ?: macs.firstOrNull()?.let { SettingsPage.Mac(it.id) } ?: SettingsPage.Connection
+        TwoPane(
+            list = { SettingsScreen(selected = pages.pages.firstOrNull() ?: detail) },
+            detail = {
+                AnimatedContent(targetState = detail, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "settings detail") { shown ->
+                    CompositionLocalProvider(LocalPaneRoot provides (pages.pages.size <= 1)) { SettingsDetail(shown, back, inPane = true) }
+                }
+            },
+        )
+    } else {
+        AnimatedContent(targetState = page, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "settings") { shown ->
+            if (shown == null) SettingsScreen() else SettingsDetail(shown, back, inPane = false)
         }
     }
 }
 
 @Composable
-private fun SettingsScreen() {
+private fun SettingsDetail(shown: SettingsPage, back: () -> Unit, inPane: Boolean) {
+    when (shown) {
+        is SettingsPage.Mac -> MacDetailPage(shown.id, back)
+        SettingsPage.Connection -> ConnectionPage(back)
+        SettingsPage.DeviceKey -> DeviceKeyPage(back)
+        SettingsPage.About -> AboutPage(back)
+        SettingsPage.Acknowledgements -> AcknowledgementsPage(back)
+        is SettingsPage.License -> LicensePage(shown.kind, back)
+        // Beside the settings' list the routines stay one pane.
+        SettingsPage.Routines -> RoutinesPage(onBack = back, panes = !inPane, scrollKey = "settings/$shown")
+        SettingsPage.Terminal -> SettingsSlots.terminal?.invoke(back) ?: back()
+        SettingsPage.Screen -> SettingsSlots.screen?.invoke(back) ?: back()
+    }
+}
+
+@Composable
+private fun SettingsScreen(selected: SettingsPage? = null) {
     val ui = LocalAosUi.current
     val colors = AosTheme.colors
     val context = platformContext()
@@ -130,20 +155,23 @@ private fun SettingsScreen() {
     val companion = connection?.companionState?.collectAsState()?.value
     // The routines' row needs the Mac's status (the Overview asks for it while it is on screen).
     LaunchedEffect(connection, companion) { connection?.refreshMacStatus() }
+    // A page from the list: beside it (two panes) it takes the place of the one shown, else it is pushed.
+    val open: (SettingsPage) -> Unit = { ui.settingsPages.set(it) }
 
     Page(stringResource(R.string.settings)) { padding ->
-        PageColumn(padding) {
+        PageColumn(padding, scrollKey = "settings") {
             Section(header = stringResource(R.string.settings_paired_macs)) {
                 macs.forEachIndexed { index, mac ->
                     NavRow(Icons.Rounded.Laptop, mac.name, detail = "${mac.user}@${mac.lastHost ?: mac.hosts.firstOrNull() ?: ""}" +
-                        if (index == 0 && macs.size > 1) " · " + stringResource(R.string.settings_in_use) else "") {
-                        ui.settingsPages.push(SettingsPage.Mac(mac.id))
-                    }
+                        if (index == 0 && macs.size > 1) " · " + stringResource(R.string.settings_in_use) else "",
+                        selected = selected == SettingsPage.Mac(mac.id)) { open(SettingsPage.Mac(mac.id)) }
                 }
                 ActionRow(Icons.Rounded.QrCodeScanner, stringResource(R.string.pair_with_a_mac), divider = false) { ui.startPairing() }
             }
             Section {
-                NavRow(Icons.Rounded.Hub, stringResource(R.string.connection), divider = false) { ui.settingsPages.push(SettingsPage.Connection) }
+                NavRow(Icons.Rounded.Hub, stringResource(R.string.connection), divider = false, selected = selected == SettingsPage.Connection) {
+                    open(SettingsPage.Connection)
+                }
             }
             Section(header = stringResource(R.string.settings_security), footer = stringResource(R.string.settings_security_footer)) {
                 SectionRow(divider = requireUnlock) {
@@ -177,25 +205,28 @@ private fun SettingsScreen() {
             val screen = SettingsSlots.screen
             if (terminal != null || screen != null) {
                 Section {
-                    if (terminal != null) NavRow(Icons.Rounded.Terminal, stringResource(R.string.terminal), divider = screen != null) {
-                        ui.settingsPages.push(SettingsPage.Terminal)
-                    }
-                    if (screen != null) NavRow(Icons.Rounded.DesktopWindows, stringResource(R.string.screen), divider = false) {
-                        ui.settingsPages.push(SettingsPage.Screen)
-                    }
+                    if (terminal != null) NavRow(Icons.Rounded.Terminal, stringResource(R.string.terminal), divider = screen != null,
+                        selected = selected == SettingsPage.Terminal) { open(SettingsPage.Terminal) }
+                    if (screen != null) NavRow(Icons.Rounded.DesktopWindows, stringResource(R.string.screen), divider = false,
+                        selected = selected == SettingsPage.Screen) { open(SettingsPage.Screen) }
                 }
             }
             if (status?.routines != null) {
                 Section(header = stringResource(R.string.settings_aos_session), footer = stringResource(R.string.settings_routines_footer)) {
-                    NavRow(Icons.Rounded.Schedule, stringResource(R.string.routines), divider = false) { ui.settingsPages.push(SettingsPage.Routines) }
+                    NavRow(Icons.Rounded.Schedule, stringResource(R.string.routines), divider = false, selected = selected == SettingsPage.Routines) {
+                        open(SettingsPage.Routines)
+                    }
                 }
             }
             Section(header = stringResource(R.string.settings_this_phone)) {
-                NavRow(Icons.Rounded.Key, stringResource(R.string.settings_ssh_key), divider = false) { ui.settingsPages.push(SettingsPage.DeviceKey) }
+                NavRow(Icons.Rounded.Key, stringResource(R.string.settings_ssh_key), divider = false, selected = selected == SettingsPage.DeviceKey) {
+                    open(SettingsPage.DeviceKey)
+                }
             }
             Section {
-                NavRow(Icons.Rounded.Info, stringResource(R.string.about_title)) { ui.settingsPages.push(SettingsPage.About) }
-                NavRow(Icons.Rounded.VolunteerActivism, stringResource(R.string.acknowledgements)) { ui.settingsPages.push(SettingsPage.Acknowledgements) }
+                NavRow(Icons.Rounded.Info, stringResource(R.string.about_title), selected = selected == SettingsPage.About) { open(SettingsPage.About) }
+                NavRow(Icons.Rounded.VolunteerActivism, stringResource(R.string.acknowledgements),
+                    selected = selected == SettingsPage.Acknowledgements) { open(SettingsPage.Acknowledgements) }
                 LabeledRow(stringResource(R.string.version), Platform.current.appVersion, divider = false)
             }
         }

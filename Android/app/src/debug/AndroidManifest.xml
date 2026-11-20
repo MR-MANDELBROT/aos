@@ -5,6 +5,8 @@
         <activity
             android:name=".screen.ScreenDemoActivity"
             android:exported="true"
+            android:resizeableActivity="true"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|touchscreen|uiMode"
             android:theme="@android:style/Theme.Material.NoActionBar" />
     </application>
 </manifest>

@@ -42,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.WindowInsets
 import dev.marquart.aos.R
+import dev.marquart.aos.ui.LocalAosUi
+import dev.marquart.aos.ui.layout.WindowLayout
 import dev.marquart.aos.ui.theme.AosTheme
 
 /** A card with rounded corners on the grouped background (the iPhone's glass cards); `tint` colors it lightly. */
@@ -179,7 +182,7 @@ fun NoticeCard(icon: ImageVector, text: String, tint: Color) {
 fun StatusTile(icon: ImageVector, value: String, caption: String, modifier: Modifier = Modifier,
                tint: Color = AosTheme.colors.indigo, captionTint: Color = AosTheme.colors.secondary) {
     Column(
-        modifier.clip(RoundedCornerShape(14.dp)).background(AosTheme.colors.gray.copy(alpha = 0.12f)).padding(vertical = 10.dp, horizontal = 4.dp),
+        modifier.clip(RoundedCornerShape(14.dp)).background(AosTheme.colors.gray.copy(alpha = 0.12f)).padding(vertical = 10.dp, horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
@@ -199,6 +202,9 @@ fun AppIconImage(size: Dp = 72.dp) {
 
 // Pages
 
+/** True where a page is the detail beside its list: its title bar shows no back arrow (the list is right there). */
+val LocalPaneRoot = compositionLocalOf { false }
+
 /** A page with a title bar (back arrow when it was pushed) on the grouped background. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -216,7 +222,8 @@ fun Page(
             TopAppBar(
                 title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
-                    if (onBack != null) {
+                    // The first page beside its list has no way back of its own (LocalPaneRoot).
+                    if (onBack != null && !LocalPaneRoot.current) {
                         IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
@@ -232,15 +239,22 @@ fun Page(
     )
 }
 
-/** A scrolling column of sections and cards, as the iPhone's forms. */
+/**
+ * A scrolling column of sections and cards, as the iPhone's forms. In a wide window or pane it keeps a readable
+ * width in the middle (the whole width scrolls). `scrollKey`: the scroll position is the page's (AosUi.scroll), so it
+ * stays when the window changes its shape.
+ */
 @Composable
-fun PageColumn(padding: PaddingValues, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)
-            .padding(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        content = content,
-    )
+fun PageColumn(padding: PaddingValues, scrollKey: String? = null, maxWidth: Dp = WindowLayout.MAX_PAGE_WIDTH.dp,
+               content: @Composable ColumnScope.() -> Unit) {
+    val scroll = if (scrollKey != null) LocalAosUi.current.scroll(scrollKey) else rememberScrollState()
+    Box(Modifier.fillMaxSize().padding(padding).verticalScroll(scroll), contentAlignment = Alignment.TopCenter) {
+        Column(
+            Modifier.widthIn(max = maxWidth).fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            content = content,
+        )
+    }
 }
 
 /** A group of rows on a card, with a header above and a footer below (a Form's section). */
@@ -293,8 +307,9 @@ fun LabeledRow(label: String, value: String, divider: Boolean = true, valueColor
 /** A row that opens a page. */
 @Composable
 fun NavRow(icon: ImageVector?, title: String, detail: String? = null, divider: Boolean = true, tint: Color = AosTheme.colors.indigo,
-           onClick: () -> Unit) {
-    SectionRow(onClick = onClick, divider = divider) {
+           selected: Boolean = false, onClick: () -> Unit) {
+    // `selected`: its page is the one shown beside the list (two panes).
+    SectionRow(if (selected) Modifier.background(AosTheme.colors.indigo.copy(alpha = 0.12f)) else Modifier, onClick = onClick, divider = divider) {
         if (icon != null) Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)

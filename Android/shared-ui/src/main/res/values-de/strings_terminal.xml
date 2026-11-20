@@ -7,6 +7,7 @@
     <string name="term_sessions_header">Sitzungen auf dem Mac</string>
     <string name="term_sessions_footer">Sie laufen weiter, wenn die Verbindung abreißt, auch bei geschlossener App, und dieses Telefon macht weiter, wo es war. Beende die, die du nicht mehr brauchst.</string>
     <string name="term_no_sessions">Keine Sitzungen auf dem Mac. „Neue Sitzung“ startet eine.</string>
+    <string name="term_pane_empty">Hier ist keine Sitzung offen. Wähle eine aus der Liste oder starte eine neue.</string>
     <string name="term_no_mac">Noch kein Mac</string>
     <string name="term_no_mac_text">Kopple deinen Mac, um dort ein Terminal zu öffnen.</string>
     <string name="term_connecting_mac">Verbinde mit dem Mac …</string>

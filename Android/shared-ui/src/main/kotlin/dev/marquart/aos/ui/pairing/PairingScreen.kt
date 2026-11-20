@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -251,7 +253,7 @@ private fun ConfirmStep(padding: androidx.compose.foundation.layout.PaddingValue
 
 @Composable
 private fun WorkingStep(padding: androidx.compose.foundation.layout.PaddingValues, progress: AppModel.PairingStepKind?) {
-    Column(Modifier.fillMaxSize().padding(padding).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
+    Column(Modifier.fillMaxSize().padding(padding).wrapContentWidth().widthIn(max = 560.dp).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(22.dp, Alignment.CenterVertically)) {
         CircularProgressIndicator(Modifier.size(48.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -283,7 +285,7 @@ private fun DoneStep(padding: androidx.compose.foundation.layout.PaddingValues, 
     val ui = LocalAosUi.current
     val colors = AosTheme.colors
     val tailnet = ui.tailnet
-    Column(Modifier.fillMaxSize().padding(padding).padding(24.dp).verticalScroll(rememberScrollState()),
+    Column(Modifier.fillMaxSize().padding(padding).wrapContentWidth().widthIn(max = 560.dp).padding(24.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Spacer(Modifier.height(40.dp))
         HeroSymbol(Icons.Rounded.Check, tint = colors.mint, size = 84.dp)
@@ -309,7 +311,7 @@ private fun DoneStep(padding: androidx.compose.foundation.layout.PaddingValues, 
 @Composable
 private fun FailedStep(padding: androidx.compose.foundation.layout.PaddingValues, message: String, retry: () -> Unit, scanAgain: () -> Unit) {
     val colors = AosTheme.colors
-    Column(Modifier.fillMaxSize().padding(padding).padding(24.dp).verticalScroll(rememberScrollState()),
+    Column(Modifier.fillMaxSize().padding(padding).wrapContentWidth().widthIn(max = 560.dp).padding(24.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Spacer(Modifier.height(40.dp))
         HeroSymbol(Icons.Rounded.PriorityHigh, tint = colors.orange, size = 84.dp)

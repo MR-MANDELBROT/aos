@@ -52,7 +52,26 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.PermanentDrawerSheet
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import dev.marquart.aos.R
+import dev.marquart.aos.connection.MacConnection
+import dev.marquart.aos.ui.components.StatusDot
+import dev.marquart.aos.ui.layout.LocalWindowLayout
+import dev.marquart.aos.ui.layout.Navigation
+import dev.marquart.aos.ui.layout.WindowLayout
 import dev.marquart.aos.model.AppModel
 import dev.marquart.aos.ui.components.AppIconImage
 import dev.marquart.aos.ui.overview.OverviewTab
@@ -68,115 +87,181 @@ import kotlinx.coroutines.launch
  * The app's frame (iOS RootView): the tabs (Overview, Terminal, Screen, Settings), the sheet with the agent's questions,
  * pairing, and the lock above everything. No sheet and no pairing above the lock.
  *
- * `rail`: the tabs in a navigation rail at the side instead of the bar at the bottom (wide windows: the desktop; a
- * tablet layout can choose it by the window's width).
+ * Where the tabs are follows the window (ui/layout/WindowLayout.kt): a bar at the bottom of a compact window, a rail
+ * at the side of a medium or expanded one, a drawer that stays open in a large one. `window`: the layout the app
+ * worked out (Android: the window's size class and its fold); without it the root measures itself. `rail`: at least
+ * the rail (the desktop).
  */
 @Composable
-fun AosRoot(ui: AosUi, rail: Boolean = false) {
+fun AosRoot(ui: AosUi, rail: Boolean = false, window: WindowLayout? = null) {
     CompositionLocalProvider(LocalAosUi provides ui) {
-        val model = ui.model
-        val tab by model.tab.collectAsState()
-        val locked by ui.lock.isLocked.collectAsState()
-        val questions by model.questions.collectAsState()
-        val help by model.helpRequests.collectAsState()
-        val waiting = questions.size + help.size
-        AskForNotifications()
-
-        Box(Modifier.fillMaxSize()) {
-            val content: @Composable () -> Unit = {
-                when (tab) {
-                    AppModel.Tab.OVERVIEW -> OverviewTab()
-                    AppModel.Tab.TERMINAL -> TerminalTabSlot(model, Modifier.fillMaxSize())
-                    // Only while it is the tab on screen (iOS: behind the others it started its screen by itself).
-                    AppModel.Tab.SCREEN -> ScreenTabSlot(model, Modifier.fillMaxSize())
-                    AppModel.Tab.SETTINGS -> SettingsTab()
-                }
+        if (window != null) {
+            CompositionLocalProvider(LocalWindowLayout provides window) { RootContent(ui) }
+        } else {
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+                val measured = WindowLayout(maxWidth.value, maxHeight.value,
+                    minimumNavigation = if (rail) Navigation.RAIL else Navigation.BAR)
+                CompositionLocalProvider(LocalWindowLayout provides measured) { RootContent(ui) }
             }
-            if (rail) {
-                Row(Modifier.fillMaxSize().background(AosTheme.colors.background)) {
-                    NavigationRail(containerColor = AosTheme.colors.card, modifier = Modifier.fillMaxHeight()) {
-                        Spacer(Modifier.height(12.dp))
-                        RailItem(AppModel.Tab.OVERVIEW, tab, Icons.Rounded.GridView, R.string.overview, badge = waiting)
-                        RailItem(AppModel.Tab.TERMINAL, tab, Icons.Rounded.Terminal, R.string.terminal)
-                        RailItem(AppModel.Tab.SCREEN, tab, Icons.Rounded.DesktopWindows, R.string.screen)
-                        RailItem(AppModel.Tab.SETTINGS, tab, Icons.Rounded.Settings, R.string.settings)
-                    }
-                    Box(Modifier.weight(1f).fillMaxHeight()) { content() }
-                }
-            } else {
-                Scaffold(
-                    containerColor = AosTheme.colors.background,
-                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                    bottomBar = {
-                        NavigationBar(containerColor = AosTheme.colors.card) {
-                            TabItem(AppModel.Tab.OVERVIEW, tab, Icons.Rounded.GridView, R.string.overview, badge = waiting)
-                            TabItem(AppModel.Tab.TERMINAL, tab, Icons.Rounded.Terminal, R.string.terminal)
-                            TabItem(AppModel.Tab.SCREEN, tab, Icons.Rounded.DesktopWindows, R.string.screen)
-                            TabItem(AppModel.Tab.SETTINGS, tab, Icons.Rounded.Settings, R.string.settings)
-                        }
-                    },
-                ) { padding ->
-                    Box(Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) { content() }
-                }
-            }
-            val pairing = ui.pairing
-            if (pairing != null && !locked) {
-                Surface(Modifier.fillMaxSize(), color = AosTheme.colors.background) {
-                    PairingScreen(pairing.link, onClose = { ui.pairing = null })
-                }
-            }
-            QuestionSheetHost(locked)
-            AnimatedVisibility(locked, enter = fadeIn(), exit = fadeOut()) { LockScreen() }
         }
     }
 }
 
+private class TabEntry(val tab: AppModel.Tab, val icon: ImageVector, val label: Int)
+
+private val Tabs = listOf(
+    TabEntry(AppModel.Tab.OVERVIEW, Icons.Rounded.GridView, R.string.overview),
+    TabEntry(AppModel.Tab.TERMINAL, Icons.Rounded.Terminal, R.string.terminal),
+    TabEntry(AppModel.Tab.SCREEN, Icons.Rounded.DesktopWindows, R.string.screen),
+    TabEntry(AppModel.Tab.SETTINGS, Icons.Rounded.Settings, R.string.settings),
+)
+
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.TabItem(
-    item: AppModel.Tab, selected: AppModel.Tab, icon: ImageVector, label: Int, badge: Int = 0,
-) {
-    val ui = LocalAosUi.current
-    NavigationBarItem(
-        selected = item == selected,
-        onClick = {
-            // Tapping the tab on screen again goes back to its first page.
-            if (item == selected) {
-                if (item == AppModel.Tab.OVERVIEW) ui.overview.set()
-                if (item == AppModel.Tab.SETTINGS) ui.settingsPages.set()
+private fun RootContent(ui: AosUi) {
+    val model = ui.model
+    val layout = LocalWindowLayout.current
+    val navigation = layout.navigation
+    val tab by model.tab.collectAsState()
+    val locked by ui.lock.isLocked.collectAsState()
+    val questions by model.questions.collectAsState()
+    val help by model.helpRequests.collectAsState()
+    val waiting = questions.size + help.size
+    AskForNotifications()
+
+    // Tapping the tab on screen again goes back to its first page.
+    val select: (AppModel.Tab) -> Unit = { item ->
+        if (item == tab) {
+            if (item == AppModel.Tab.OVERVIEW) ui.overview.set()
+            if (item == AppModel.Tab.SETTINGS) ui.settingsPages.set()
+        }
+        model.selectTab(item)
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        // One place for the tab's content whatever the navigation is: turning the device or resizing the window moves
+        // the tabs from the bottom to the side, and the page keeps its state.
+        // (The Surface also gives the tabs' content its text color.)
+        Surface(Modifier.fillMaxSize(), color = AosTheme.colors.background, contentColor = MaterialTheme.colorScheme.onBackground) {
+        Row(Modifier.fillMaxSize()) {
+            when (navigation) {
+                Navigation.RAIL -> NavigationRail(containerColor = AosTheme.colors.card,
+                    modifier = Modifier.width(WindowLayout.RAIL_WIDTH.dp).fillMaxHeight()) {
+                    Spacer(Modifier.height(12.dp))
+                    for (entry in Tabs) RailItem(entry, tab, if (entry.tab == AppModel.Tab.OVERVIEW) waiting else 0, select)
+                }
+                Navigation.DRAWER -> TabDrawer(tab, waiting, select)
+                Navigation.BAR -> Unit
             }
-            ui.model.selectTab(item)
-        },
-        icon = {
-            if (badge > 0) BadgedBox(badge = { Badge { Text(badge.toString()) } }) { Icon(icon, contentDescription = null) }
-            else Icon(icon, contentDescription = null)
-        },
-        label = { Text(stringResource(label), maxLines = 1) },
+            Column(Modifier.weight(1f).fillMaxHeight()) {
+                val sides = if (navigation == Navigation.BAR) WindowInsetsSides.Horizontal else WindowInsetsSides.End
+                Box(
+                    Modifier.weight(1f).fillMaxWidth().windowInsetsPadding(WindowInsets.safeDrawing.only(sides))
+                        // Beside a rail nothing takes the system's bar at the bottom: the content stays above it.
+                        .then(if (navigation == Navigation.BAR) Modifier else Modifier.windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))),
+                ) {
+                    when (tab) {
+                        AppModel.Tab.OVERVIEW -> OverviewTab()
+                        AppModel.Tab.TERMINAL -> TerminalTabSlot(model, Modifier.fillMaxSize())
+                        // Only while it is the tab on screen (iOS: behind the others it started its screen by itself).
+                        AppModel.Tab.SCREEN -> ScreenTabSlot(model, Modifier.fillMaxSize())
+                        AppModel.Tab.SETTINGS -> SettingsTab()
+                    }
+                }
+                if (navigation == Navigation.BAR) {
+                    NavigationBar(containerColor = AosTheme.colors.card) {
+                        for (entry in Tabs) TabItem(entry, tab, if (entry.tab == AppModel.Tab.OVERVIEW) waiting else 0, select)
+                    }
+                }
+            }
+        }
+        }
+        val pairing = ui.pairing
+        if (pairing != null && !locked) {
+            Surface(Modifier.fillMaxSize(), color = AosTheme.colors.background) {
+                PairingScreen(pairing.link, onClose = { ui.pairing = null })
+            }
+        }
+        QuestionSheetHost(locked)
+        AnimatedVisibility(locked, enter = fadeIn(), exit = fadeOut()) { LockScreen() }
+    }
+}
+
+@Composable
+private fun TabIcon(entry: TabEntry, badge: Int) {
+    if (badge > 0) BadgedBox(badge = { Badge { Text(badge.toString()) } }) { Icon(entry.icon, contentDescription = null) }
+    else Icon(entry.icon, contentDescription = null)
+}
+
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.TabItem(entry: TabEntry, selected: AppModel.Tab, badge: Int, select: (AppModel.Tab) -> Unit) {
+    NavigationBarItem(
+        selected = entry.tab == selected,
+        onClick = { select(entry.tab) },
+        icon = { TabIcon(entry, badge) },
+        label = { Text(stringResource(entry.label), maxLines = 1) },
         colors = NavigationBarItemDefaults.colors(indicatorColor = AosTheme.colors.indigo.copy(alpha = 0.16f),
             selectedIconColor = AosTheme.colors.indigo, selectedTextColor = AosTheme.colors.indigo),
     )
 }
 
-/** The same tab in the navigation rail (wide windows). */
+/** The same tab in the navigation rail (medium and expanded windows). */
 @Composable
-private fun RailItem(item: AppModel.Tab, selected: AppModel.Tab, icon: ImageVector, label: Int, badge: Int = 0) {
-    val ui = LocalAosUi.current
+private fun RailItem(entry: TabEntry, selected: AppModel.Tab, badge: Int, select: (AppModel.Tab) -> Unit) {
     NavigationRailItem(
-        selected = item == selected,
-        onClick = {
-            if (item == selected) {
-                if (item == AppModel.Tab.OVERVIEW) ui.overview.set()
-                if (item == AppModel.Tab.SETTINGS) ui.settingsPages.set()
-            }
-            ui.model.selectTab(item)
-        },
-        icon = {
-            if (badge > 0) BadgedBox(badge = { Badge { Text(badge.toString()) } }) { Icon(icon, contentDescription = null) }
-            else Icon(icon, contentDescription = null)
-        },
-        label = { Text(stringResource(label), maxLines = 1) },
+        selected = entry.tab == selected,
+        onClick = { select(entry.tab) },
+        icon = { TabIcon(entry, badge) },
+        label = { Text(stringResource(entry.label), maxLines = 1) },
         colors = NavigationRailItemDefaults.colors(indicatorColor = AosTheme.colors.indigo.copy(alpha = 0.16f),
             selectedIconColor = AosTheme.colors.indigo, selectedTextColor = AosTheme.colors.indigo),
     )
+}
+
+/** The tabs in a drawer that stays open (large windows): the app's name, the tabs, and the Mac with its state. */
+@Composable
+private fun TabDrawer(selected: AppModel.Tab, waiting: Int, select: (AppModel.Tab) -> Unit) {
+    val colors = AosTheme.colors
+    val ui = LocalAosUi.current
+    PermanentDrawerSheet(Modifier.width(WindowLayout.DRAWER_WIDTH.dp).fillMaxHeight(), drawerContainerColor = colors.card) {
+        Row(Modifier.padding(start = 20.dp, end = 16.dp, top = 20.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            AppIconImage(36.dp)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
+        }
+        for (entry in Tabs) {
+            val badge = if (entry.tab == AppModel.Tab.OVERVIEW) waiting else 0
+            NavigationDrawerItem(
+                selected = entry.tab == selected,
+                onClick = { select(entry.tab) },
+                icon = { Icon(entry.icon, contentDescription = null) },
+                label = { Text(stringResource(entry.label), maxLines = 1) },
+                badge = if (badge > 0) ({ Badge { Text(badge.toString()) } }) else null,
+                colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = colors.indigo.copy(alpha = 0.16f),
+                    selectedIconColor = colors.indigo, selectedTextColor = colors.indigo, unselectedContainerColor = Color.Transparent),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+            )
+        }
+        Spacer(Modifier.weight(1f))
+        val connection by ui.model.connection.collectAsState()
+        connection?.let { c ->
+            val mac by c.mac.collectAsState()
+            val state by c.state.collectAsState()
+            val sleeping by c.sleepingSince.collectAsState()
+            val tint = when {
+                sleeping != null -> colors.indigo
+                state is MacConnection.State.Connected -> colors.green
+                state is MacConnection.State.Unreachable -> colors.orange
+                state is MacConnection.State.NeedsAttention -> colors.red
+                else -> colors.gray
+            }
+            Row(Modifier.padding(horizontal = 24.dp, vertical = 20.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                StatusDot(tint)
+                Text(mac.name, style = MaterialTheme.typography.bodyMedium, color = colors.secondary, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
 }
 
 /** Android 13 asks before an app may post notifications: once, after pairing (requests that come while the app is in
@@ -209,7 +294,9 @@ fun LockScreen() {
     }
     LaunchedEffect(Unit) { if (!ui.isDemo) unlock() }
     Surface(Modifier.fillMaxSize(), color = AosTheme.colors.background) {
-        Column(Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        // (In a wide window the button keeps a button's width.)
+        Column(Modifier.fillMaxSize().safeDrawingPadding().wrapContentWidth().widthIn(max = 480.dp).padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.weight(1f))
             AppIconImage(84.dp)
             Spacer(Modifier.height(20.dp))

@@ -1,5 +1,16 @@
 package dev.marquart.aos.terminal
 
+import androidx.compose.runtime.movableContentOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
+import dev.marquart.aos.ui.layout.AdaptiveSheet
+import dev.marquart.aos.ui.layout.LocalWindowLayout
+import dev.marquart.aos.ui.layout.PanePlaceholder
+import dev.marquart.aos.ui.layout.TwoPane
+import dev.marquart.aos.ui.layout.contextClick
 import android.Manifest
 import android.content.ClipboardManager
 import android.content.pm.PackageManager
@@ -141,10 +152,29 @@ fun TerminalTab(model: AppModel, modifier: Modifier = Modifier) {
         }
     }
 
+    val twoPane = LocalWindowLayout.current.twoPane
+    // The terminal keeps its view (scrollback position, selection, keyboard) while the window changes its shape and
+    // the terminal moves beside the list or back to a page of its own.
+    val terminalScreen = remember(controller) {
+        movableContentOf<MacTerminal, PairedMac, Boolean> { terminal, shownMac, inPane ->
+            TerminalScreen(controller, terminal, shownMac, inPane) { controller.showing.value = null }
+        }
+    }
     Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         when {
             mac == null -> NoMac()
-            showing == mac.id -> TerminalScreen(controller, controller.terminal(mac), mac) { controller.showing.value = null }
+            // A wide window: the sessions beside the terminal.
+            twoPane -> TwoPane(
+                listWidth = 320.dp,
+                list = { SessionList(controller, mac, inPane = true, shown = showing == mac.id) },
+                detail = {
+                    if (showing == mac.id) terminalScreen(controller.terminal(mac), mac, true)
+                    else PanePlaceholder(Icons.Rounded.Terminal, stringResource(R.string.term_pane_empty)) {
+                        Button(onClick = { controller.openNewTerminal(mac) }) { Text(stringResource(R.string.term_new_session)) }
+                    }
+                },
+            )
+            showing == mac.id -> terminalScreen(controller.terminal(mac), mac, false)
             else -> SessionList(controller, mac)
         }
     }
@@ -174,7 +204,7 @@ private fun NoMac() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SessionList(controller: TerminalController, mac: PairedMac) {
+private fun SessionList(controller: TerminalController, mac: PairedMac, inPane: Boolean = false, shown: Boolean = false) {
     val model = controller.model
     val scope = rememberCoroutineScope()
     val sessions by controller.sessions.sessions.collectAsState()
@@ -249,9 +279,11 @@ private fun SessionList(controller: TerminalController, mac: PairedMac) {
                     }
                 }
                 items(sessions, key = { it.id }) { session ->
-                    val shown = if (terminal != null && terminalPhase.isOpenPhase()) terminalHolder else null
-                    val holder = session.holder(shown, connection?.phoneId, terminalHolder ?: controller.settings.holderId(mac.id))
-                    SessionRow(session, home, holder, onOpen = { open(session) }, onEnd = { ending = session })
+                    val open = if (terminal != null && terminalPhase.isOpenPhase()) terminalHolder else null
+                    val holder = session.holder(open, connection?.phoneId, terminalHolder ?: controller.settings.holderId(mac.id))
+                    // Beside the terminal: the session it shows is marked.
+                    SessionRow(session, home, holder, selected = inPane && shown && session.id == terminalHolder,
+                        onOpen = { open(session) }, onEnd = { ending = session })
                 }
                 item { Footnote(stringResource(R.string.term_sessions_footer)) }
             }
@@ -296,7 +328,8 @@ private fun connectionNote(model: AppModel, connection: MacConnection?): Pair<St
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-private fun SessionRow(session: MacTermSession, home: String, holder: MacTermSession.Holder, onOpen: () -> Unit, onEnd: () -> Unit) {
+private fun SessionRow(session: MacTermSession, home: String, holder: MacTermSession.Holder, selected: Boolean = false, onOpen: () -> Unit,
+                       onEnd: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     val dismiss = rememberSwipeToDismissBoxState(confirmValueChange = { value ->
         // Swiped to end: ask first; the row springs back.
@@ -319,8 +352,10 @@ private fun SessionRow(session: MacTermSession, home: String, holder: MacTermSes
     ) {
         Box {
             ListItem(
-                modifier = Modifier.combinedClickable(onClick = onOpen, onLongClick = { menu = true }),
-                colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background),
+                // A secondary click (mouse, trackpad) opens the menu a long press opens.
+                modifier = Modifier.contextClick { menu = true }.combinedClickable(onClick = onOpen, onLongClick = { menu = true }),
+                colors = ListItemDefaults.colors(containerColor = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    .compositeOver(MaterialTheme.colorScheme.background) else MaterialTheme.colorScheme.background),
                 leadingContent = {
                     Icon(Icons.Rounded.Terminal, contentDescription = null,
                         tint = if (holder == MacTermSession.Holder.Nobody) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary)
@@ -403,7 +438,7 @@ private fun EndConfirmation(onEnd: () -> Unit, onCancel: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun TerminalScreen(controller: TerminalController, terminal: MacTerminal, mac: PairedMac, onBack: () -> Unit) {
+private fun TerminalScreen(controller: TerminalController, terminal: MacTerminal, mac: PairedMac, inPane: Boolean, onBack: () -> Unit) {
     val context = LocalContext.current
     val model = controller.model
     val settings = controller.settings
@@ -424,7 +459,13 @@ private fun TerminalScreen(controller: TerminalController, terminal: MacTerminal
     val home = "/Users/${mac.user}"
     val sessionName = controller.sessions.name(holderId, home) { it.place(home) }
 
-    BackHandler(onBack = onBack)
+    // Beside the session list the terminal isn't a page of its own: back leaves the app as from any tab.
+    BackHandler(enabled = !inPane, onBack = onBack)
+    val layout = LocalWindowLayout.current
+    val density = LocalDensity.current
+    // A device standing on its lower half: the terminal above the fold, the key bar below it.
+    val table = layout.tableFold
+    var top by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(terminal) {
         if (terminal.phase.value == MacTerminal.Phase.Idle) {
@@ -451,72 +492,84 @@ private fun TerminalScreen(controller: TerminalController, terminal: MacTerminal
         }
     }
 
-    Column(Modifier.fillMaxSize().imePadding()) {
-        TopAppBar(
-            navigationIcon = {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.term_back)) }
-            },
-            title = {
-                Column {
-                    val title by terminal.title.collectAsState()
-                    Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
-                    if (sessionName != null) {
-                        Text(sessionName, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(
+        Modifier.fillMaxSize().then(if (table == null) Modifier.imePadding() else Modifier)
+            .onGloballyPositioned { top = with(density) { it.positionInWindow().y.toDp().value } },
+    ) {
+        // The title bar and the terminal: all of the screen, or its part above the fold.
+        Column(if (table != null) Modifier.height((table.top - top).coerceAtLeast(160f).dp) else Modifier.weight(1f)) {
+            TopAppBar(
+                navigationIcon = {
+                    if (!inPane) {
+                        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.term_back)) }
                     }
-                }
-            },
-            actions = {
-                IconButton(onClick = { if (keyboardShown) host?.hideKeyboard() else host?.showKeyboard() }) {
-                    Icon(if (keyboardShown) Icons.Rounded.KeyboardHide else Icons.Rounded.Keyboard,
-                        contentDescription = stringResource(if (keyboardShown) R.string.term_hide_keyboard else R.string.term_show_keyboard))
-                }
-                TerminalMenu(controller, terminal, mac, sessions.filter { it.id != holderId }, home,
-                    topRow = { host?.view?.topRow ?: 0 }, onSettings = { showSettings = true })
-            },
-        )
-        Box(Modifier.weight(1f).fillMaxWidth()) {
-            AndroidView(
-                factory = { TerminalHost(it, terminal, settings).also { created -> host = created } },
-                onRelease = { it.release() },
-                modifier = Modifier.fillMaxSize(),
+                },
+                title = {
+                    Column {
+                        val title by terminal.title.collectAsState()
+                        Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
+                        if (sessionName != null) {
+                            Text(sessionName, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { if (keyboardShown) host?.hideKeyboard() else host?.showKeyboard() }) {
+                        Icon(if (keyboardShown) Icons.Rounded.KeyboardHide else Icons.Rounded.Keyboard,
+                            contentDescription = stringResource(if (keyboardShown) R.string.term_hide_keyboard else R.string.term_show_keyboard))
+                    }
+                    TerminalMenu(controller, terminal, mac, sessions.filter { it.id != holderId }, home,
+                        topRow = { host?.view?.topRow ?: 0 }, onSettings = { showSettings = true })
+                },
             )
-            when (phase) {
-                MacTerminal.Phase.Connecting -> Surface(Modifier.align(Alignment.Center), shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh, tonalElevation = 4.dp) {
-                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.5.dp)
-                        Spacer(Modifier.size(12.dp))
-                        Text(stringResource(R.string.term_connecting))
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                AndroidView(
+                    factory = { TerminalHost(it, terminal, settings).also { created -> host = created } },
+                    onRelease = { it.release() },
+                    modifier = Modifier.fillMaxSize(),
+                )
+                when (phase) {
+                    MacTerminal.Phase.Connecting -> Surface(Modifier.align(Alignment.Center), shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh, tonalElevation = 4.dp) {
+                        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.5.dp)
+                            Spacer(Modifier.size(12.dp))
+                            Text(stringResource(R.string.term_connecting))
+                        }
                     }
+                    is MacTerminal.Phase.Failed -> StateOverlay(Icons.Rounded.Warning,
+                        (phase as MacTerminal.Phase.Failed).message ?: stringResource(R.string.term_doesnt_start),
+                        stringResource(R.string.term_try_again)) { terminal.connect() }
+                    MacTerminal.Phase.Ended -> when (endReason) {
+                        MacTerminal.EndReason.TAKEN -> StateOverlay(Icons.Rounded.Logout, stringResource(R.string.term_taken),
+                            stringResource(R.string.term_open_it_here)) { terminal.connect() }
+                        MacTerminal.EndReason.EXITED -> StateOverlay(Icons.Rounded.PowerSettingsNew, stringResource(R.string.term_shell_ended),
+                            stringResource(R.string.term_new_session)) { controller.openNewTerminal(mac) }
+                        MacTerminal.EndReason.ENDED -> StateOverlay(Icons.Rounded.PowerSettingsNew, stringResource(R.string.term_session_was_ended),
+                            stringResource(R.string.term_new_session)) { controller.openNewTerminal(mac) }
+                        MacTerminal.EndReason.CLOSED -> StateOverlay(Icons.Rounded.PowerSettingsNew, stringResource(R.string.term_session_ended),
+                            stringResource(R.string.term_connect_again)) { terminal.connect() }
+                    }
+                    else -> Unit
                 }
-                is MacTerminal.Phase.Failed -> StateOverlay(Icons.Rounded.Warning,
-                    (phase as MacTerminal.Phase.Failed).message ?: stringResource(R.string.term_doesnt_start),
-                    stringResource(R.string.term_try_again)) { terminal.connect() }
-                MacTerminal.Phase.Ended -> when (endReason) {
-                    MacTerminal.EndReason.TAKEN -> StateOverlay(Icons.Rounded.Logout, stringResource(R.string.term_taken),
-                        stringResource(R.string.term_open_it_here)) { terminal.connect() }
-                    MacTerminal.EndReason.EXITED -> StateOverlay(Icons.Rounded.PowerSettingsNew, stringResource(R.string.term_shell_ended),
-                        stringResource(R.string.term_new_session)) { controller.openNewTerminal(mac) }
-                    MacTerminal.EndReason.ENDED -> StateOverlay(Icons.Rounded.PowerSettingsNew, stringResource(R.string.term_session_was_ended),
-                        stringResource(R.string.term_new_session)) { controller.openNewTerminal(mac) }
-                    MacTerminal.EndReason.CLOSED -> StateOverlay(Icons.Rounded.PowerSettingsNew, stringResource(R.string.term_session_ended),
-                        stringResource(R.string.term_connect_again)) { terminal.connect() }
+                val banner: Pair<String, ImageVector>? = when {
+                    phase == MacTerminal.Phase.Reconnecting && sleeping != null -> stringResource(R.string.term_mac_sleeping) to Icons.Rounded.Bedtime
+                    phase == MacTerminal.Phase.Reconnecting -> stringResource(R.string.term_reconnecting) to Icons.Rounded.Sync
+                    else -> notice?.let { noticeText(it) to null }?.let { (text, _) -> text to Icons.Rounded.Terminal }
                 }
-                else -> Unit
+                Banner(banner, showIcon = phase == MacTerminal.Phase.Reconnecting, modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp))
             }
-            val banner: Pair<String, ImageVector>? = when {
-                phase == MacTerminal.Phase.Reconnecting && sleeping != null -> stringResource(R.string.term_mac_sleeping) to Icons.Rounded.Bedtime
-                phase == MacTerminal.Phase.Reconnecting -> stringResource(R.string.term_reconnecting) to Icons.Rounded.Sync
-                else -> notice?.let { noticeText(it) to null }?.let { (text, _) -> text to Icons.Rounded.Terminal }
-            }
-            Banner(banner, showIcon = phase == MacTerminal.Phase.Reconnecting, modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp))
         }
+        // Nothing under the hinge.
+        if (table != null) Spacer(Modifier.height((table.bottom - table.top).dp))
         TerminalKeyBar(terminal, arrows, onPaste = {
             val clip = context.getSystemService(ClipboardManager::class.java)?.primaryClip
             val text = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(context)?.toString()
             if (!text.isNullOrEmpty()) terminal.paste(text)
         })
+        // The lower half below the key bar: where the on-screen keyboard comes up.
+        if (table != null) Spacer(Modifier.weight(1f))
     }
 
     pendingPaste?.let { text ->
@@ -650,8 +703,9 @@ private fun TerminalMenu(controller: TerminalController, terminal: MacTerminal, 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsSheet(onDone: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDone, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+    // From the bottom edge on a phone, a dialog in the middle of a large window.
+    AdaptiveSheet(onDismiss = onDone, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(top = 12.dp, bottom = 24.dp)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.term_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                 TextButton(onClick = onDone) { Text(stringResource(R.string.term_done)) }

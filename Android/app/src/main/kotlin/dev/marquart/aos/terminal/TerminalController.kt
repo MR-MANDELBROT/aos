@@ -1,5 +1,6 @@
 package dev.marquart.aos.terminal
 
+import dev.marquart.aos.ui.keys.AppShortcut
 import android.app.Activity
 import android.app.Application
 import android.content.ClipData
@@ -112,6 +113,28 @@ class TerminalController private constructor(private val app: Application, val m
             }
             terminal.endSession()
         }
+    }
+
+    /** A keyboard shortcut for the terminal on screen (ui/keys/Shortcuts.kt); false while none is shown. */
+    fun perform(shortcut: AppShortcut): Boolean {
+        val terminal = showing.value?.let(terminals::get) ?: return false
+        when (shortcut) {
+            AppShortcut.PASTE -> {
+                val clip = app.getSystemService(ClipboardManager::class.java)?.primaryClip
+                val text = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(app)?.toString()
+                if (!text.isNullOrEmpty()) terminal.paste(text)
+            }
+            AppShortcut.COPY_SCREEN -> terminal.copyScreen()
+            AppShortcut.BIGGER_TEXT, AppShortcut.SMALLER_TEXT -> {
+                val step = if (shortcut == AppShortcut.BIGGER_TEXT) 1 else -1
+                val size = (terminal.fontSize.value + step).coerceIn(TerminalFontSize.MIN, TerminalFontSize.MAX)
+                terminal.setFontSize(size)
+                settings.setFontSize(size)
+                terminal.showFontSize()
+            }
+            else -> return false
+        }
+        return true
     }
 
     // Keeping the connection in the background

@@ -7,6 +7,7 @@
     <string name="term_sessions_header">Sessions on the Mac</string>
     <string name="term_sessions_footer">They keep running when the connection drops, also with the app closed, and this phone picks up where it left off. End the ones you no longer need.</string>
     <string name="term_no_sessions">No sessions on the Mac. New Session starts one.</string>
+    <string name="term_pane_empty">No session open here. Choose one from the list, or start a new one.</string>
     <string name="term_no_mac">No Mac yet</string>
     <string name="term_no_mac_text">Pair your Mac to open a terminal on it.</string>
     <string name="term_connecting_mac">Connecting to the Mac …</string>

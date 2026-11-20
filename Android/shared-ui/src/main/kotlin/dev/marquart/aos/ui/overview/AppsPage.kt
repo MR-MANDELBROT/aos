@@ -33,6 +33,9 @@ import dev.marquart.aos.ui.platform.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.marquart.aos.R
+import dev.marquart.aos.ui.OverviewPage
+import dev.marquart.aos.ui.layout.LocalWindowLayout
+import dev.marquart.aos.ui.layout.TwoPane
 import dev.marquart.aos.connection.MacConnection
 import dev.marquart.aos.core.MacStatus
 import dev.marquart.aos.ui.LocalAosUi
@@ -71,30 +74,53 @@ fun AppsPage() {
         }
     }
 
+    val twoPane = LocalWindowLayout.current.twoPane
+    val phone: @Composable () -> Unit = {
+        if (apps != null) Section {
+            SectionRow(divider = true) {
+                OverviewRow(connectionIcon(apps), AppsText.connectionTitle(apps).text(), detail = AppsText.connectionExplanation(apps)?.text(),
+                    tint = when (apps.state) {
+                        "connected" -> colors.green
+                        "notPaired" -> colors.orange
+                        else -> colors.secondary
+                    })
+            }
+            apps.device?.takeIf { it.isNotEmpty() }?.let { LabeledRow(stringResource(R.string.apps_device), it) }
+            if (apps.isConnected) apps.since?.let { LabeledRow(stringResource(R.string.apps_connected_since), AppsText.since(it).text()) }
+            if (apps.isConnected) apps.network?.let { LabeledRow(stringResource(R.string.apps_network), AppsText.networkName(it).text()) }
+            apps.previousSeconds?.let { LabeledRow(stringResource(R.string.apps_previous), AppsText.duration(it).text(), divider = false) }
+        }
+    }
+    val installs: @Composable (Boolean) -> Unit = { header ->
+        if (apps != null) Section(header = if (header) stringResource(R.string.apps_installs) else null, footer = stringResource(R.string.apps_footer)) {
+            if (apps.jobs.isEmpty()) TextRow(stringResource(R.string.apps_nothing_yet), divider = false, color = colors.secondary)
+            apps.jobs.forEachIndexed { index, job -> JobRow(job, divider = index < apps.jobs.lastIndex) }
+        }
+    }
+    if (twoPane && apps != null) {
+        // A wide window: the connection to the phone on one side, what was installed on the other.
+        TwoPane(
+            list = {
+                Page(stringResource(R.string.apps), onBack = { ui.overview.pop() }) { padding ->
+                    PageColumn(padding, scrollKey = "overview/${OverviewPage.Apps}") { phone() }
+                }
+            },
+            detail = {
+                Page(stringResource(R.string.apps_installs)) { padding ->
+                    PageColumn(padding, scrollKey = "overview/${OverviewPage.Apps}/installs") { installs(false) }
+                }
+            },
+        )
+        return
+    }
     Page(stringResource(R.string.apps), onBack = { ui.overview.pop() }) { padding ->
-        PageColumn(padding) {
+        PageColumn(padding, scrollKey = "overview/${OverviewPage.Apps}") {
             if (apps == null) {
                 EmptyState(Icons.Rounded.Apps, stringResource(R.string.apps_off_title), stringResource(R.string.apps_off_text))
                 return@PageColumn
             }
-            Section {
-                SectionRow(divider = true) {
-                    OverviewRow(connectionIcon(apps), AppsText.connectionTitle(apps).text(), detail = AppsText.connectionExplanation(apps)?.text(),
-                        tint = when (apps.state) {
-                            "connected" -> colors.green
-                            "notPaired" -> colors.orange
-                            else -> colors.secondary
-                        })
-                }
-                apps.device?.takeIf { it.isNotEmpty() }?.let { LabeledRow(stringResource(R.string.apps_device), it) }
-                if (apps.isConnected) apps.since?.let { LabeledRow(stringResource(R.string.apps_connected_since), AppsText.since(it).text()) }
-                if (apps.isConnected) apps.network?.let { LabeledRow(stringResource(R.string.apps_network), AppsText.networkName(it).text()) }
-                apps.previousSeconds?.let { LabeledRow(stringResource(R.string.apps_previous), AppsText.duration(it).text(), divider = false) }
-            }
-            Section(header = stringResource(R.string.apps_installs), footer = stringResource(R.string.apps_footer)) {
-                if (apps.jobs.isEmpty()) TextRow(stringResource(R.string.apps_nothing_yet), divider = false, color = colors.secondary)
-                apps.jobs.forEachIndexed { index, job -> JobRow(job, divider = index < apps.jobs.lastIndex) }
-            }
+            phone()
+            installs(true)
         }
     }
 }

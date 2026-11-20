@@ -5,6 +5,10 @@
 
 package dev.marquart.aos.screen
 
+import androidx.compose.runtime.rememberUpdatedState
+import dev.marquart.aos.ui.layout.AdaptiveSheet
+import dev.marquart.aos.ui.layout.LocalWindowLayout
+import dev.marquart.aos.ui.layout.contextClick
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -117,13 +121,14 @@ fun ScreenTab(model: AppModel, modifier: Modifier = Modifier) {
     val activeHelp by model.activeHelp.collectAsState()
     val tab by model.tab.collectAsState()
     val screenRequest by model.screenRequest.collectAsState()
-    val connectionState by (connection?.state ?: flowOf(MacConnection.State.Idle)).collectAsState(MacConnection.State.Idle)
-    val companionState by (connection?.companionState ?: flowOf(MacConnection.CompanionState.NotStarted))
-        .collectAsState(MacConnection.CompanionState.NotStarted)
-    val macStatus by (connection?.macStatus ?: flowOf(null)).collectAsState(null)
-    val workspaceStatus by (connection?.workspace ?: flowOf(null)).collectAsState(null)
-    val operation by (connection?.workspaceOperation ?: flowOf(null)).collectAsState(null)
-    val timeout by (connection?.workspaceTimeout ?: flowOf(null)).collectAsState(null)
+    // The connection's own values from the first composition on: a request that comes with the tab ("Show the screen"
+    // on the Overview) must not see "not connected" only because nothing was collected yet.
+    val connectionState = connection?.state?.collectAsState()?.value ?: MacConnection.State.Idle
+    val companionState = connection?.companionState?.collectAsState()?.value ?: MacConnection.CompanionState.NotStarted
+    val macStatus = connection?.macStatus?.collectAsState()?.value
+    val workspaceStatus = connection?.workspace?.collectAsState()?.value
+    val operation = connection?.workspaceOperation?.collectAsState()?.value
+    val timeout = connection?.workspaceTimeout?.collectAsState()?.value
     val matchesPhone by hub.store.matchesPhone.collectAsState()
 
     var notice by remember { mutableStateOf<String?>(null) }
@@ -144,10 +149,11 @@ fun ScreenTab(model: AppModel, modifier: Modifier = Modifier) {
     val workspaceViewable = connected && (workspaceState == "open" || workspaceState == "running")
     val setupIncomplete = macStatus?.workspace?.setupComplete == false
 
+    // The session fills the window (split screen, a freeform or desktop window: its size, not the display's).
+    val window by rememberUpdatedState(LocalWindowLayout.current)
     fun area(): ScreenArea {
-        val metrics = context.resources.displayMetrics
-        return ScreenArea(metrics.widthPixels / metrics.density.toDouble(), metrics.heightPixels / metrics.density.toDouble(),
-            metrics.density.toDouble(), hub.store.resolutionScale.value)
+        val density = context.resources.displayMetrics.density.toDouble()
+        return ScreenArea(window.widthDp.toDouble(), window.heightDp.toDouble(), density, hub.store.resolutionScale.value)
     }
 
     fun options() = ScreenOptions(hub.store.matchesPhone.value, hub.store.resolutionScale.value)
@@ -444,8 +450,9 @@ fun ScreenTab(model: AppModel, modifier: Modifier = Modifier) {
         )
     }
     if (showSettings) {
-        ModalBottomSheet(onDismissRequest = { showSettings = false }) {
-            Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+        // From the bottom edge on a phone, a dialog in the middle of a large window.
+        AdaptiveSheet(onDismiss = { showSettings = false }, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(top = 12.dp, bottom = 24.dp)) {
                 ScreenSettingsSection()
             }
         }
@@ -512,7 +519,10 @@ private fun ScreenCard(
     onLongClick: (() -> Unit)? = null,
 ) {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+            // A secondary click (mouse, trackpad) opens the menu a long press opens.
+            .then(if (onLongClick != null) Modifier.contextClick(onLongClick) else Modifier)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Box(

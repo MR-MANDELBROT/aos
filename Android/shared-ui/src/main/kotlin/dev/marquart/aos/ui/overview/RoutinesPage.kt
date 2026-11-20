@@ -58,7 +58,15 @@ import dev.marquart.aos.ui.platform.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.key
+import androidx.compose.runtime.movableContentOf
+import androidx.compose.runtime.rememberUpdatedState
 import dev.marquart.aos.R
+import dev.marquart.aos.ui.OverviewPage
+import dev.marquart.aos.ui.layout.LocalWindowLayout
+import dev.marquart.aos.ui.layout.PanePlaceholder
+import dev.marquart.aos.ui.layout.TwoPane
+import dev.marquart.aos.ui.layout.contextClick
 import dev.marquart.aos.core.MacAction
 import dev.marquart.aos.core.MacStatus
 import dev.marquart.aos.ui.LocalAosUi
@@ -85,9 +93,10 @@ fun weekdayNames(): Pair<List<String>, Int> {
 }
 
 /** aOS's session's routines on the Mac: on or off, run now, add, change, delete; reminders waiting and what went in
- *  lately. Every change goes to the Mac as a signed action and comes back in its status. */
+ *  lately. Every change goes to the Mac as a signed action and comes back in its status. In a wide window the list
+ *  and the routine being changed are side by side (`panes = false`: never, the page is a pane itself). */
 @Composable
-fun RoutinesPage(onBack: () -> Unit) {
+fun RoutinesPage(onBack: () -> Unit, panes: Boolean = true, scrollKey: String = "overview/${OverviewPage.Routines}") {
     val ui = LocalAosUi.current
     val colors = AosTheme.colors
     val connection by ui.model.connection.collectAsState()
@@ -98,81 +107,111 @@ fun RoutinesPage(onBack: () -> Unit) {
     var editing by remember { mutableStateOf<MacStatus.Routines.Item?>(null) }
     var deleting by remember { mutableStateOf<MacStatus.Routines.Item?>(null) }
     val (names, firstDay) = weekdayNames()
+    val twoPane = panes && LocalWindowLayout.current.twoPane
     LaunchedEffect(c) { c?.refreshMacStatus() }
     LaunchedEffect(ui.demo?.sheet, routines != null) {
         if (ui.demo?.sheet == "routine-edit") routines?.items?.firstOrNull()?.let { editing = it }
+    }
+    // Beside the list there is always a routine: the first one until another is chosen.
+    LaunchedEffect(twoPane, routines?.items?.firstOrNull()?.id) {
+        if (twoPane && editing == null) editing = routines?.items?.firstOrNull()
     }
 
     fun save(r: MacStatus.Routines.Item) {
         c?.let { actions.run(MacAction.ROUTINE_SET, it, r.json) }
     }
 
-    editing?.let { r ->
-        val isNew = routines?.items?.none { it.id == r.id } ?: true
-        RoutineEditor(r, isNew, onSave = { save(it); editing = null }, onCancel = { editing = null })
-        return
+    val onSave by rememberUpdatedState<(MacStatus.Routines.Item) -> Unit> { saved ->
+        save(saved)
+        editing = if (twoPane) saved else null
+    }
+    val isNew: (MacStatus.Routines.Item) -> Boolean = { r -> routines?.items?.none { it.id == r.id } ?: true }
+    // The editor keeps what was typed while the window changes its shape (beside the list, or a page of its own).
+    val editor = remember {
+        movableContentOf<MacStatus.Routines.Item, Boolean, Boolean> { r, new, inPane ->
+            key(r.id) { RoutineEditor(r, new, inPane, onSave = { onSave(it) }, onCancel = { editing = null }) }
+        }
     }
 
-    Page(stringResource(R.string.routines), onBack = onBack, bottom = { BottomProblem(actions.problem) }, actions = {
-        if (routines != null) {
-            IconButton(onClick = {
-                editing = MacStatus.Routines.Item(UUID.randomUUID().toString().uppercase(), "", "0 8 * * *", "", true)
-            }) { Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.routine_add)) }
+    val list: @Composable () -> Unit = {
+        Page(stringResource(R.string.routines), onBack = onBack, bottom = { BottomProblem(actions.problem) }, actions = {
+            if (routines != null) {
+                IconButton(onClick = {
+                    editing = MacStatus.Routines.Item(UUID.randomUUID().toString().uppercase(), "", "0 8 * * *", "", true)
+                }) { Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.routine_add)) }
+            }
+        }) { padding ->
+            PageColumn(padding, scrollKey = scrollKey) {
+                if (routines == null) {
+                    EmptyState(Icons.Rounded.Schedule, stringResource(R.string.not_available), stringResource(R.string.not_available_explain))
+                    return@PageColumn
+                }
+                Section(footer = stringResource(R.string.routines_footer)) {
+                    if (routines.items.isEmpty()) TextRow(stringResource(R.string.routines_none), divider = false, color = colors.secondary)
+                    routines.items.forEachIndexed { index, r ->
+                        RoutineRow(r, names, firstDay, busy = actions.running != null, divider = index < routines.items.lastIndex,
+                            selected = twoPane && editing?.id == r.id,
+                            onToggle = { on -> save(r.copy(enabled = on)) },
+                            onEdit = { editing = r }, onRun = { actions.run(MacAction.ROUTINE_RUN, c, r.id) },
+                            onDelete = { deleting = r })
+                    }
+                }
+                if (routines.reminders.isNotEmpty() || routines.queued > 0) {
+                    Section(header = stringResource(R.string.routines_waiting)) {
+                        if (routines.queued > 0) {
+                            SectionRow(divider = routines.reminders.isNotEmpty()) {
+                                Icon(Icons.Rounded.HourglassTop, contentDescription = null, tint = colors.secondary)
+                                Text(Txt.plural(R.plurals.routines_queued, routines.queued).text(), color = colors.secondary,
+                                    modifier = Modifier.weight(1f))
+                            }
+                        }
+                        routines.reminders.forEachIndexed { i, r ->
+                            SectionRow(divider = i < routines.reminders.lastIndex) {
+                                Icon(Icons.Rounded.Notifications, contentDescription = null, tint = colors.indigo)
+                                Text(r.name, maxLines = 2, modifier = Modifier.weight(1f))
+                                Text(Txt.Time(r.at, Txt.TimeStyle.DATE_TIME).text(), style = MaterialTheme.typography.bodySmall, color = colors.secondary)
+                            }
+                        }
+                    }
+                }
+                if (routines.recent.isNotEmpty()) {
+                    Section(header = stringResource(R.string.routines_recent)) {
+                        routines.recent.forEachIndexed { i, d ->
+                            SectionRow(divider = i < routines.recent.lastIndex) {
+                                Icon(when (d.kind) {
+                                    "reminder" -> Icons.Rounded.Notifications
+                                    "note" -> Icons.AutoMirrored.Rounded.Message
+                                    "start" -> Icons.Rounded.PowerSettingsNew
+                                    else -> Icons.Rounded.Schedule
+                                }, contentDescription = null, tint = colors.indigo)
+                                Text(sentTitle(d).text(), modifier = Modifier.weight(1f))
+                                Text(Txt.Time(d.at, Txt.TimeStyle.RELATIVE).text(), style = MaterialTheme.typography.bodySmall, color = colors.secondary)
+                            }
+                        }
+                    }
+                }
+            }
         }
-    }) { padding ->
-        PageColumn(padding) {
-            if (routines == null) {
-                EmptyState(Icons.Rounded.Schedule, stringResource(R.string.not_available), stringResource(R.string.not_available_explain))
-                return@PageColumn
-            }
-            Section(footer = stringResource(R.string.routines_footer)) {
-                if (routines.items.isEmpty()) TextRow(stringResource(R.string.routines_none), divider = false, color = colors.secondary)
-                routines.items.forEachIndexed { index, r ->
-                    RoutineRow(r, names, firstDay, busy = actions.running != null, divider = index < routines.items.lastIndex,
-                        onToggle = { on -> save(r.copy(enabled = on)) },
-                        onEdit = { editing = r }, onRun = { actions.run(MacAction.ROUTINE_RUN, c, r.id) },
-                        onDelete = { deleting = r })
-                }
-            }
-            if (routines.reminders.isNotEmpty() || routines.queued > 0) {
-                Section(header = stringResource(R.string.routines_waiting)) {
-                    if (routines.queued > 0) {
-                        SectionRow(divider = routines.reminders.isNotEmpty()) {
-                            Icon(Icons.Rounded.HourglassTop, contentDescription = null, tint = colors.secondary)
-                            Text(Txt.plural(R.plurals.routines_queued, routines.queued).text(), color = colors.secondary,
-                                modifier = Modifier.weight(1f))
-                        }
-                    }
-                    routines.reminders.forEachIndexed { i, r ->
-                        SectionRow(divider = i < routines.reminders.lastIndex) {
-                            Icon(Icons.Rounded.Notifications, contentDescription = null, tint = colors.indigo)
-                            Text(r.name, maxLines = 2, modifier = Modifier.weight(1f))
-                            Text(Txt.Time(r.at, Txt.TimeStyle.DATE_TIME).text(), style = MaterialTheme.typography.bodySmall, color = colors.secondary)
-                        }
-                    }
-                }
-            }
-            if (routines.recent.isNotEmpty()) {
-                Section(header = stringResource(R.string.routines_recent)) {
-                    routines.recent.forEachIndexed { i, d ->
-                        SectionRow(divider = i < routines.recent.lastIndex) {
-                            Icon(when (d.kind) {
-                                "reminder" -> Icons.Rounded.Notifications
-                                "note" -> Icons.AutoMirrored.Rounded.Message
-                                "start" -> Icons.Rounded.PowerSettingsNew
-                                else -> Icons.Rounded.Schedule
-                            }, contentDescription = null, tint = colors.indigo)
-                            Text(sentTitle(d).text(), modifier = Modifier.weight(1f))
-                            Text(Txt.Time(d.at, Txt.TimeStyle.RELATIVE).text(), style = MaterialTheme.typography.bodySmall, color = colors.secondary)
-                        }
-                    }
-                }
-            }
-        }
+    }
+
+    val shown = editing
+    when {
+        twoPane -> TwoPane(
+            list = { list() },
+            detail = {
+                if (shown != null) editor(shown, isNew(shown), true)
+                else PanePlaceholder(Icons.Rounded.Schedule, stringResource(R.string.routines_none))
+            },
+        )
+        shown != null -> editor(shown, isNew(shown), false)
+        else -> list()
     }
     deleting?.let { r ->
         ConfirmDialog(stringResource(R.string.routine_delete_question), r.name, stringResource(R.string.delete),
-            onConfirm = { c?.let { actions.run(MacAction.ROUTINE_DELETE, it, r.id) } }, onDismiss = { deleting = null })
+            onConfirm = {
+                c?.let { actions.run(MacAction.ROUTINE_DELETE, it, r.id) }
+                if (editing?.id == r.id) editing = null
+            }, onDismiss = { deleting = null })
     }
 }
 
@@ -185,12 +224,13 @@ fun sentTitle(d: MacStatus.Routines.Sent): Txt = when (d.kind) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun RoutineRow(r: MacStatus.Routines.Item, names: List<String>, firstDay: Int, busy: Boolean, divider: Boolean,
+private fun RoutineRow(r: MacStatus.Routines.Item, names: List<String>, firstDay: Int, busy: Boolean, divider: Boolean, selected: Boolean,
                        onToggle: (Boolean) -> Unit, onEdit: () -> Unit, onRun: () -> Unit, onDelete: () -> Unit) {
     val colors = AosTheme.colors
     var menu by remember { mutableStateOf(false) }
     Box {
-        SectionRow(Modifier.combinedClickable(onClick = onEdit, onLongClick = { menu = true }), divider = divider) {
+        SectionRow(Modifier.background(if (selected) colors.indigo.copy(alpha = 0.12f) else Color.Transparent)
+            .contextClick { menu = true }.combinedClickable(onClick = onEdit, onLongClick = { menu = true }), divider = divider) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(r.name, maxLines = 1)
                 Text(RoutineSchedule.text(r.schedule, names, firstDay).text(), style = MaterialTheme.typography.bodySmall, color = colors.secondary)
@@ -217,10 +257,12 @@ private enum class Mode { TIMES, INTERVAL, CRON }
 /** Adding or changing a routine: a name, the message, and when: at times on weekdays, every few hours, or cron. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RoutineEditor(routine: MacStatus.Routines.Item, isNew: Boolean, onSave: (MacStatus.Routines.Item) -> Unit, onCancel: () -> Unit) {
+private fun RoutineEditor(routine: MacStatus.Routines.Item, isNew: Boolean, inPane: Boolean, onSave: (MacStatus.Routines.Item) -> Unit,
+                          onCancel: () -> Unit) {
     val colors = AosTheme.colors
     val (names, firstDay) = weekdayNames()
-    BackHandler(onBack = onCancel)
+    // Beside the list back leaves the routines; alone it closes the editor.
+    BackHandler(enabled = !inPane, onBack = onCancel)
     val simple = remember { RoutineSchedule.simple(routine.schedule) }
     val interval = remember { RoutineSchedule.interval(routine.schedule) }
     var name by remember { mutableStateOf(routine.name) }
@@ -251,7 +293,7 @@ private fun RoutineEditor(routine: MacStatus.Routines.Item, isNew: Boolean, onSa
     val valid = name.isNotBlank() && prompt.isNotBlank() && RoutineSchedule.looksValid(schedule) &&
         (mode == Mode.CRON || weekdays.isNotEmpty()) && (mode != Mode.TIMES || times.isNotEmpty())
 
-    Page(if (isNew) stringResource(R.string.routine_new) else routine.name, onBack = onCancel, actions = {
+    Page(if (isNew) stringResource(R.string.routine_new) else routine.name, onBack = if (inPane) null else onCancel, actions = {
         TextButton(onClick = {
             onSave(routine.copy(name = name.trim(), prompt = prompt.trim(), schedule = schedule, enabled = enabled))
         }, enabled = valid) { Text(stringResource(if (isNew) R.string.add else R.string.save)) }

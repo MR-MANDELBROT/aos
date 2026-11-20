@@ -6,6 +6,19 @@
 
 package dev.marquart.aos.screen
 
+import android.view.KeyEvent
+import android.view.Window
+import androidx.compose.runtime.SideEffect
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.platform.LocalConfiguration
+import dev.marquart.aos.ui.layout.LocalWindowLayout
 import android.content.pm.ActivityInfo
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
@@ -103,6 +116,28 @@ internal fun SessionScreen(
     ) {
         val view = LocalView.current
         val window = (view.parent as? DialogWindowProvider)?.window
+        val keys = remember { SessionKeys() }
+        // A hardware keyboard types on the Mac whatever was touched or clicked last here (a key of the row, the menu's
+        // handle): Tab, Esc and the arrows are the Mac's, they don't move the focus around the controls. While the
+        // menu is open the keys are its own.
+        DisposableEffect(window) {
+            val original = window?.callback
+            if (window != null && original != null) {
+                window.callback = object : Window.Callback by original {
+                    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+                        val screen = keys.view
+                        if (screen != null && !keys.menuOpen && !event.isSystem && screen.isShown && !screen.hasFocus()) {
+                            // Straight to the picture's view (Compose would still take a Tab or an arrow for the
+                            // control that had the focus); the next keys find it focused.
+                            screen.requestFocus()
+                            return screen.dispatchKeyEvent(event)
+                        }
+                        return original.dispatchKeyEvent(event)
+                    }
+                }
+            }
+            onDispose { if (window != null && original != null) window.callback = original }
+        }
         DisposableEffect(window) {
             window?.let {
                 it.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
@@ -122,8 +157,14 @@ internal fun SessionScreen(
             }
             onDispose { }
         }
-        SessionContent(session, hub, help, isWorkspace, onShowWorkspace, onHelpDone, onClose)
+        SessionContent(session, hub, help, isWorkspace, keys, onShowWorkspace, onHelpDone, onClose)
     }
+}
+
+/** Where the session window's keys go: the picture's view, unless the menu is open. */
+private class SessionKeys {
+    var view: RemoteScreenView? = null
+    var menuOpen = false
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -133,6 +174,7 @@ private fun SessionContent(
     hub: ScreenHub,
     help: HelpRequest?,
     isWorkspace: Boolean,
+    keys: SessionKeys,
     onShowWorkspace: () -> Unit,
     onHelpDone: (HelpRequest) -> Unit,
     onClose: () -> Unit,
@@ -142,14 +184,30 @@ private fun SessionContent(
     var menuOpen by remember { mutableStateOf(false) }
     var keyboardUp by remember { mutableStateOf(false) }
     var screenView by remember { mutableStateOf<RemoteScreenView?>(null) }
+    SideEffect {
+        keys.view = screenView
+        keys.menuOpen = menuOpen
+    }
+    // The picture keeps the focus while the menu is closed: a click on the handle or a key of the row takes it away,
+    // and Android would use the next Tab or arrow of a hardware keyboard to put the focus somewhere (and swallow it).
+    DisposableEffect(screenView) {
+        val view = screenView
+        view?.setOnFocusChangeListener { v, hasFocus ->
+            if (!hasFocus) v.post { if (v.isAttachedToWindow && !keys.menuOpen && !v.hasFocus()) v.requestFocus() }
+        }
+        onDispose { view?.onFocusChangeListener = null }
+    }
+    LaunchedEffect(menuOpen) { if (!menuOpen) screenView?.requestFocus() }
 
     // Turning the phone: a picture in the window's shape follows it; a screen in its own size turns the phone to it.
     val activity = remember(context) { context.findActivity() }
     val follows = session.picturesFollowWindow
     val landscape = session.imageWidth >= session.imageHeight
-    DisposableEffect(activity, follows, landscape, session.hasPicture) {
+    // Only a phone: a tablet, an unfolded foldable or a window is never turned or locked, the picture fits itself in.
+    val phone = LocalConfiguration.current.smallestScreenWidthDp < 600
+    DisposableEffect(activity, follows, landscape, session.hasPicture, phone) {
         activity?.requestedOrientation = when {
-            follows || !session.hasPicture -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            !phone || follows || !session.hasPicture -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             landscape -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         }
@@ -163,10 +221,16 @@ private fun SessionContent(
 
     BackHandler { menuOpen = !menuOpen }
 
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    // A device standing on its lower half (tabletop): the picture above the fold, the keys and controls below it,
+    // nothing under the hinge. The session's window fills the activity's, so the fold is at the same place.
+    val table = LocalWindowLayout.current.tableFold
+
+    Box(
+        Modifier.fillMaxSize().background(Color.Black),
+    ) {
         AndroidView(
             factory = { RemoteScreenView(it).also { v -> screenView = v } },
-            modifier = Modifier.fillMaxSize(),
+            modifier = if (table != null) Modifier.fillMaxWidth().height(table.top.dp) else Modifier.fillMaxSize(),
             update = { v ->
                 v.session = session
                 v.touchMode = touchMode
@@ -187,8 +251,32 @@ private fun SessionContent(
 
         StatusOverlay(session, onClose)
 
-        // The menu's handle at the top, as OSS's toolbar handle
-        Box(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 4.dp)) {
+        if (table != null) {
+            Surface(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight()
+                    .padding(top = table.bottom.dp).windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)),
+                color = MaterialTheme.colorScheme.surface,
+            ) {
+                Column {
+                    KeyRow(session, Modifier) { screenView?.showKeyboard(false) }
+                    ControlPanel(
+                        session = session, hub = hub, touchMode = touchMode, keyboardUp = keyboardUp,
+                        pictureFitted = screenView?.viewport?.isActualSize != true, showDone = false,
+                        onKeyboard = { screenView?.showKeyboard(!keyboardUp) },
+                        onFit = { fit -> if (fit) screenView?.fit() else screenView?.actualSize() },
+                        onDismiss = {},
+                        onDisconnect = {
+                            screenView?.showKeyboard(false)
+                            session.close()
+                            onClose()
+                        },
+                    )
+                }
+            }
+        }
+
+        // The menu's handle at the top, as OSS's toolbar handle (in the tabletop posture the controls are below)
+        if (table == null) Box(Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 4.dp)) {
             Surface(
                 onClick = { menuOpen = !menuOpen },
                 shape = RoundedCornerShape(50),
@@ -203,11 +291,11 @@ private fun SessionContent(
 
         help?.let { HelpPill(it, if (isWorkspace) null else onShowWorkspace, menuOpen) { onHelpDone(it) } }
 
-        if (keyboardUp) {
+        if (keyboardUp && table == null) {
             KeyRow(session, Modifier.align(Alignment.BottomCenter).imePadding()) { screenView?.showKeyboard(false) }
         }
 
-        AnimatedVisibility(menuOpen, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter)) {
+        AnimatedVisibility(menuOpen && table == null, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter)) {
             ControlMenu(
                 session = session,
                 hub = hub,
@@ -343,7 +431,6 @@ private fun ControlMenu(
     onDismiss: () -> Unit,
     onDisconnect: () -> Unit,
 ) {
-    val controlling = session.isControlling
     Box(Modifier.fillMaxSize().clickable(interactionSource = null, indication = null, onClick = onDismiss)) {
         Surface(
             Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 44.dp, start = 12.dp, end = 12.dp)
@@ -353,84 +440,103 @@ private fun ControlMenu(
             tonalElevation = 6.dp,
             shadowElevation = 12.dp,
         ) {
-            Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                    MenuButton(if (keyboardUp) Icons.Outlined.KeyboardHide else Icons.Outlined.Keyboard,
-                        stringResource(if (keyboardUp) R.string.screen_hide_keyboard else R.string.screen_show_keyboard), controlling, onKeyboard)
-                    if (!session.picturesFollowWindow) {
-                        if (pictureFitted) MenuButton(Icons.Outlined.Fullscreen, stringResource(R.string.screen_actual_size), true) { onFit(false) }
-                        else MenuButton(Icons.Outlined.FullscreenExit, stringResource(R.string.screen_zoom_to_fit), true) { onFit(true) }
-                    }
-                    MenuButton(Icons.AutoMirrored.Outlined.Logout, stringResource(R.string.screen_disconnect), true, onDisconnect)
-                    MenuButton(Icons.Outlined.Close, stringResource(R.string.screen_done), true, onDismiss)
+            ControlPanel(session, hub, touchMode, keyboardUp, pictureFitted, showDone = true, onKeyboard, onFit, onDismiss, onDisconnect)
+        }
+    }
+}
+
+/** The controls themselves: in the floating menu, or below the fold of a device that stands on its lower half. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ControlPanel(
+    session: SessionModel,
+    hub: ScreenHub,
+    touchMode: TouchMode,
+    keyboardUp: Boolean,
+    pictureFitted: Boolean,
+    showDone: Boolean,
+    onKeyboard: () -> Unit,
+    onFit: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+    onDisconnect: () -> Unit,
+) {
+    val controlling = session.isControlling
+    Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            MenuButton(if (keyboardUp) Icons.Outlined.KeyboardHide else Icons.Outlined.Keyboard,
+                stringResource(if (keyboardUp) R.string.screen_hide_keyboard else R.string.screen_show_keyboard), controlling, onKeyboard)
+            if (!session.picturesFollowWindow) {
+                if (pictureFitted) MenuButton(Icons.Outlined.Fullscreen, stringResource(R.string.screen_actual_size), true) { onFit(false) }
+                else MenuButton(Icons.Outlined.FullscreenExit, stringResource(R.string.screen_zoom_to_fit), true) { onFit(true) }
+            }
+            MenuButton(Icons.AutoMirrored.Outlined.Logout, stringResource(R.string.screen_disconnect), true, onDisconnect)
+            if (showDone) MenuButton(Icons.Outlined.Close, stringResource(R.string.screen_done), true, onDismiss)
+        }
+        HorizontalDivider()
+        SectionTitle(stringResource(R.string.screen_controls))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Chip(stringResource(R.string.screen_mission_control), controlling) { session.perform(SystemCommand.MISSION_CONTROL); onDismiss() }
+            Chip(stringResource(R.string.screen_app_windows), controlling) { session.perform(SystemCommand.APP_WINDOWS); onDismiss() }
+            Chip(stringResource(R.string.screen_desktop), controlling) { session.perform(SystemCommand.SHOW_DESKTOP); onDismiss() }
+            if (session.canPerform(SystemCommand.LAUNCHPAD)) {
+                Chip(stringResource(R.string.screen_apps), controlling) { session.perform(SystemCommand.LAUNCHPAD); onDismiss() }
+            }
+            Chip(stringResource(R.string.screen_app_switcher), controlling) { session.keyboard.sendChord(KeyChord.APP_SWITCHER); onDismiss() }
+            Chip(stringResource(R.string.screen_spotlight), controlling) { session.keyboard.sendChord(KeyChord.SPOTLIGHT); onDismiss() }
+            Chip(stringResource(R.string.screen_force_quit), controlling) { session.keyboard.sendChord(KeyChord.FORCE_QUIT); onDismiss() }
+            Chip(stringResource(R.string.screen_screenshot), controlling) { session.keyboard.sendChord(KeyChord.SCREENSHOT); onDismiss() }
+        }
+        SectionTitle(stringResource(R.string.screen_function_keys))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Chip("esc", controlling) { session.keyboard.typeKey(MacKey.ESCAPE) }
+            for (n in 1..12) Chip("F$n", controlling) { session.keyboard.typeKey(MacKey.function(n)) }
+            Chip("⌦", controlling) { session.keyboard.typeKey(MacKey.FORWARD_DELETE) }
+            Chip("⇞", controlling) { session.keyboard.typeKey(MacKey.PAGE_UP) }
+            Chip("⇟", controlling) { session.keyboard.typeKey(MacKey.PAGE_DOWN) }
+            Chip("↖", controlling) { session.keyboard.typeKey(MacKey.HOME) }
+            Chip("↘", controlling) { session.keyboard.typeKey(MacKey.END) }
+        }
+        SectionTitle(stringResource(R.string.screen_touch))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(touchMode == TouchMode.TRACKPAD, { hub.store.setTouchMode(TouchMode.TRACKPAD) }, { Text(stringResource(R.string.screen_touch_trackpad)) })
+            FilterChip(touchMode == TouchMode.DIRECT, { hub.store.setTouchMode(TouchMode.DIRECT) }, { Text(stringResource(R.string.screen_touch_direct)) })
+        }
+        if (session.offersResolution) {
+            SectionTitle(stringResource(R.string.screen_resolution))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (scale in DisplayMode.resolutionScales) {
+                    FilterChip(session.resolutionScale == scale, { session.changeResolutionScale(scale) },
+                        { Text(DisplayMode.resolutionTitle(scale, stringResource(R.string.screen_native))) }, enabled = controlling)
                 }
-                HorizontalDivider()
-                SectionTitle(stringResource(R.string.screen_controls))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Chip(stringResource(R.string.screen_mission_control), controlling) { session.perform(SystemCommand.MISSION_CONTROL); onDismiss() }
-                    Chip(stringResource(R.string.screen_app_windows), controlling) { session.perform(SystemCommand.APP_WINDOWS); onDismiss() }
-                    Chip(stringResource(R.string.screen_desktop), controlling) { session.perform(SystemCommand.SHOW_DESKTOP); onDismiss() }
-                    if (session.canPerform(SystemCommand.LAUNCHPAD)) {
-                        Chip(stringResource(R.string.screen_apps), controlling) { session.perform(SystemCommand.LAUNCHPAD); onDismiss() }
-                    }
-                    Chip(stringResource(R.string.screen_app_switcher), controlling) { session.keyboard.sendChord(KeyChord.APP_SWITCHER); onDismiss() }
-                    Chip(stringResource(R.string.screen_spotlight), controlling) { session.keyboard.sendChord(KeyChord.SPOTLIGHT); onDismiss() }
-                    Chip(stringResource(R.string.screen_force_quit), controlling) { session.keyboard.sendChord(KeyChord.FORCE_QUIT); onDismiss() }
-                    Chip(stringResource(R.string.screen_screenshot), controlling) { session.keyboard.sendChord(KeyChord.SCREENSHOT); onDismiss() }
-                }
-                SectionTitle(stringResource(R.string.screen_function_keys))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Chip("esc", controlling) { session.keyboard.typeKey(MacKey.ESCAPE) }
-                    for (n in 1..12) Chip("F$n", controlling) { session.keyboard.typeKey(MacKey.function(n)) }
-                    Chip("⌦", controlling) { session.keyboard.typeKey(MacKey.FORWARD_DELETE) }
-                    Chip("⇞", controlling) { session.keyboard.typeKey(MacKey.PAGE_UP) }
-                    Chip("⇟", controlling) { session.keyboard.typeKey(MacKey.PAGE_DOWN) }
-                    Chip("↖", controlling) { session.keyboard.typeKey(MacKey.HOME) }
-                    Chip("↘", controlling) { session.keyboard.typeKey(MacKey.END) }
-                }
-                SectionTitle(stringResource(R.string.screen_touch))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(touchMode == TouchMode.TRACKPAD, { hub.store.setTouchMode(TouchMode.TRACKPAD) }, { Text(stringResource(R.string.screen_touch_trackpad)) })
-                    FilterChip(touchMode == TouchMode.DIRECT, { hub.store.setTouchMode(TouchMode.DIRECT) }, { Text(stringResource(R.string.screen_touch_direct)) })
-                }
-                if (session.offersResolution) {
-                    SectionTitle(stringResource(R.string.screen_resolution))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        for (scale in DisplayMode.resolutionScales) {
-                            FilterChip(session.resolutionScale == scale, { session.changeResolutionScale(scale) },
-                                { Text(DisplayMode.resolutionTitle(scale, stringResource(R.string.screen_native))) }, enabled = controlling)
-                        }
-                    }
-                    Text(stringResource(R.string.screen_resolution_footer), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                if (!session.usesHighPerformance && session.server?.quality != false) {
-                    SectionTitle(stringResource(R.string.screen_quality))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(!session.fullQuality, { session.changeFullQuality(false) }, { Text(stringResource(R.string.screen_quality_adaptive)) })
-                        FilterChip(session.fullQuality, { session.changeFullQuality(true) }, { Text(stringResource(R.string.screen_quality_full)) })
-                    }
-                }
-                if (session.server?.clipboard != false) {
-                    SectionTitle(stringResource(R.string.screen_clipboard))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.screen_sync_clipboard), Modifier.weight(1f))
-                        Switch(session.clipboardSharing, { session.changeClipboardSharing(it) })
-                    }
-                    if (!session.clipboardSharing) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Chip(stringResource(R.string.screen_receive_clipboard), session.server?.clipboardRequest == true) {
-                                session.receiveClipboardFromMac(); onDismiss()
-                            }
-                            Chip(stringResource(R.string.screen_send_clipboard), controlling) { session.sendClipboardToMac(); onDismiss() }
-                        }
-                    }
-                }
-                Text(
-                    stringResource(if (session.usesHighPerformance) R.string.screen_mode_high_performance else R.string.screen_mode_standard),
-                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            }
+            Text(stringResource(R.string.screen_resolution_footer), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (!session.usesHighPerformance && session.server?.quality != false) {
+            SectionTitle(stringResource(R.string.screen_quality))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(!session.fullQuality, { session.changeFullQuality(false) }, { Text(stringResource(R.string.screen_quality_adaptive)) })
+                FilterChip(session.fullQuality, { session.changeFullQuality(true) }, { Text(stringResource(R.string.screen_quality_full)) })
             }
         }
+        if (session.server?.clipboard != false) {
+            SectionTitle(stringResource(R.string.screen_clipboard))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.screen_sync_clipboard), Modifier.weight(1f))
+                Switch(session.clipboardSharing, { session.changeClipboardSharing(it) })
+            }
+            if (!session.clipboardSharing) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Chip(stringResource(R.string.screen_receive_clipboard), session.server?.clipboardRequest == true) {
+                        session.receiveClipboardFromMac(); onDismiss()
+                    }
+                    Chip(stringResource(R.string.screen_send_clipboard), controlling) { session.sendClipboardToMac(); onDismiss() }
+                }
+            }
+        }
+        Text(
+            stringResource(if (session.usesHighPerformance) R.string.screen_mode_high_performance else R.string.screen_mode_standard),
+            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

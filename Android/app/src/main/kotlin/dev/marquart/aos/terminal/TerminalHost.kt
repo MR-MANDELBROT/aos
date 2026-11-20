@@ -1,5 +1,7 @@
 package dev.marquart.aos.terminal
 
+import android.content.ClipDescription
+import android.view.DragEvent
 import android.annotation.SuppressLint
 import android.content.ClipboardManager
 import android.content.Context
@@ -93,6 +95,8 @@ class TerminalHost(context: Context, val terminal: MacTerminal, private val sett
         view.setTerminalViewClient(Client())
         view.isFocusable = true
         view.isFocusableInTouchMode = true
+        // With a hardware keyboard Android tints the focused view (its default focus highlight): not the terminal.
+        view.defaultFocusHighlightEnabled = false
         view.keepScreenOn = false
         applyFontSize(terminal.fontSize.value)
         addView(view, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
@@ -102,6 +106,12 @@ class TerminalHost(context: Context, val terminal: MacTerminal, private val sett
         view.attachSession(session)
         terminal.onScreenChanged = { view.onScreenUpdated() }
         terminal.onClearSelection = { if (view.isSelectingText) view.stopTextSelectionMode() }
+        // The terminal keeps the focus while it is on screen: a click on a key of the bar, the title bar or the list
+        // beside it takes it away, and Android would then use the next Tab or arrow of a hardware keyboard to put the
+        // focus somewhere (and swallow it) instead of sending it to the shell.
+        view.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) post { if (isAttachedToWindow && shown === this && !view.hasFocus() && mayHoldFocus()) view.requestFocus() }
+        }
         view.setOnCreateContextMenuListener { menu, _, _ ->
             // Termux's "More…" after a selection: the selected text if it is a link, and copying.
             val link = view.storedSelectedText?.let(TerminalText::singleLink)
@@ -118,11 +128,13 @@ class TerminalHost(context: Context, val terminal: MacTerminal, private val sett
         scope.launch { terminal.fontSize.collect(::applyFontSize) }
         scope.launch { settings.swipeArrows.collect { swipeArrows = it } }
         view.onScreenUpdated()
+        shown = this
         // As on the iPhone: the terminal takes the keys when it appears (a hardware keyboard types into it at once).
         post { showKeyboard() }
     }
 
     override fun onDetachedFromWindow() {
+        if (shown === this) shown = null
         scope?.cancel()
         scope = null
         stopSwipe()
@@ -137,6 +149,25 @@ class TerminalHost(context: Context, val terminal: MacTerminal, private val sett
         RemoteTerminalSessions.close(session)
         if (terminal.onScreenChanged != null) terminal.onScreenChanged = null
         terminal.onClearSelection = null
+    }
+
+    /** Text dragged in from another window (split screen, a desktop window) is pasted, with the usual question
+     *  before several lines run. */
+    override fun onDragEvent(event: DragEvent): Boolean = when (event.action) {
+        DragEvent.ACTION_DRAG_STARTED -> event.clipDescription?.let {
+            it.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) || it.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML)
+        } == true
+        DragEvent.ACTION_DROP -> {
+            val clip = event.clipData
+            val text = (0 until (clip?.itemCount ?: 0)).mapNotNull { clip?.getItemAt(it)?.coerceToText(context)?.toString() }
+                .joinToString("\n")
+            if (text.isNotEmpty()) {
+                view.requestFocus()
+                terminal.paste(text)
+            }
+            text.isNotEmpty()
+        }
+        else -> true
     }
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
@@ -278,9 +309,20 @@ class TerminalHost(context: Context, val terminal: MacTerminal, private val sett
         override fun logStackTrace(tag: String?, e: Exception?) {}
     }
 
+    companion object {
+        /** The terminal on screen, if one is: a hardware keyboard's keys are its (MainActivity.dispatchKeyEvent). */
+        var shown: TerminalHost? = null
+            private set
+
+        /** False while something over the terminal needs the keys itself (the lock, pairing, another tab). */
+        var mayHoldFocus: () -> Boolean = { true }
+    }
+
     // Swiping for arrow keys (TerminalSwipe has the rule; iOS ArrowSwipeRecognizer)
 
     private enum class Swipe { NONE, POSSIBLE, ARROWS, FAILED }
+
+    private val windowPlace = IntArray(2)
 
     private var swipe = Swipe.NONE
     private var startX = 0f
@@ -318,10 +360,12 @@ class TerminalHost(context: Context, val terminal: MacTerminal, private val sett
                 startTime = event.eventTime
                 dx = 0f
                 dy = 0f
-                // The screen's edges belong to Android's back gesture.
-                val screenX = event.rawX / density
-                val screenWidth = resources.displayMetrics.widthPixels / density
-                swipe = if (!swipeArrows || TerminalSwipe.inEdge(screenX, screenWidth)) Swipe.FAILED else Swipe.POSSIBLE
+                // The window's edges belong to Android's back gesture (the window's, not the display's: in split
+                // screen or a freeform window, and beside the session list, the terminal's own edge is no such edge).
+                getLocationInWindow(windowPlace)
+                val windowX = (windowPlace[0] + event.x) / density
+                val windowWidth = (rootView?.width ?: resources.displayMetrics.widthPixels) / density
+                swipe = if (!swipeArrows || TerminalSwipe.inEdge(windowX, windowWidth)) Swipe.FAILED else Swipe.POSSIBLE
             }
             MotionEvent.ACTION_POINTER_DOWN -> swipe = Swipe.FAILED // a pinch or two fingers
             MotionEvent.ACTION_MOVE -> if (swipe == Swipe.POSSIBLE) {

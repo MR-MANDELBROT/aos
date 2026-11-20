@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android only: the keyboard shortcuts as the system's shortcuts helper lists them (ui/keys/Shortcuts.kt). -->
+    <string name="shortcut_overview">Overview</string>
+    <string name="shortcut_terminal">Terminal</string>
+    <string name="shortcut_screen">Screen</string>
+    <string name="shortcut_settings">Settings</string>
+    <string name="shortcut_new_session">New terminal session</string>
+    <string name="shortcut_paste">Paste into the terminal</string>
+    <string name="shortcut_copy_screen">Copy the terminal\'s screen</string>
+    <string name="shortcut_bigger_text">Bigger text in the terminal</string>
+    <string name="shortcut_smaller_text">Smaller text in the terminal</string>
+</resources>

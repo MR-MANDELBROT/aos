@@ -84,6 +84,8 @@ class RemoteScreenView(context: Context) : GLSurfaceView(context) {
         renderMode = RENDERMODE_WHEN_DIRTY
         isFocusable = true
         isFocusableInTouchMode = true
+        // With a hardware keyboard Android tints the focused view (its default focus highlight): not the Mac's picture.
+        defaultFocusHighlightEnabled = false
         renderer.onVideoSurface = { surface ->
             videoSurface = surface
             session?.setVideoSurface(surface)

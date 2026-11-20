@@ -79,6 +79,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.marquart.aos.R
+import dev.marquart.aos.ui.layout.AdaptiveSheet
+import dev.marquart.aos.ui.layout.LocalWindowLayout
+import kotlinx.coroutines.CoroutineScope
 import dev.marquart.aos.core.ApprovalRequest
 import dev.marquart.aos.core.ApprovalResult
 import dev.marquart.aos.core.BitwardenState
@@ -99,7 +102,9 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 
 /** The agent's questions in one sheet, in the order they came (AppModel.presentedQuestion); "Later" keeps one waiting
- *  in the Overview. */
+ *  in the Overview. A sheet from the bottom edge on a phone, a dialog in the middle of a large window (AdaptiveSheet).
+ *  What was chosen and typed, and an answer on its way, are kept here, outside both: they stay when the window
+ *  changes from one to the other. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuestionSheetHost(locked: Boolean) {
@@ -107,21 +112,20 @@ fun QuestionSheetHost(locked: Boolean) {
     val presented by ui.model.presentedQuestion.collectAsState()
     val question = presented
     if (question == null || locked) return
+    val dialog = LocalWindowLayout.current.dialogSheets
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+    val scroll = rememberScrollState()
+    val signIn = remember(question.id) { (question as? AppModel.Question.SignIn)?.let { SignInDraft(it.request) } }
+    val approval = remember(question.id) { ApprovalDraft() }
     val later: () -> Unit = {
         scope.launch {
-            state.hide()
+            if (!dialog) state.hide()
             ui.model.closeQuestionSheet()
         }
     }
-    ModalBottomSheet(
-        onDismissRequest = { ui.model.closeQuestionSheet() },
-        sheetState = state,
-        containerColor = AosTheme.colors.background,
-        dragHandle = null,
-    ) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding()) {
+    AdaptiveSheet(onDismiss = { ui.model.closeQuestionSheet() }, sheetState = state) {
+        Column(Modifier.fillMaxWidth().verticalScroll(scroll).then(if (dialog) Modifier else Modifier.navigationBarsPadding())) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = later) { Text(stringResource(R.string.later)) }
                 Text(
@@ -131,11 +135,26 @@ fun QuestionSheetHost(locked: Boolean) {
                 )
             }
             when (question) {
-                is AppModel.Question.SignIn -> SignInContent(question.request, close = later)
-                is AppModel.Question.Approval -> ApprovalContent(question.request, close = later)
+                is AppModel.Question.SignIn -> SignInContent(question.request, signIn ?: SignInDraft(question.request), scope, close = later)
+                is AppModel.Question.Approval -> ApprovalContent(question.request, approval, scope, close = later)
             }
         }
     }
+}
+
+/** What the person chose and typed for a sign-in, and how far its answer is. */
+private class SignInDraft(request: SignInRequest) {
+    var phase by mutableStateOf<Phase>(Phase.Choosing)
+    var selection by mutableStateOf(request.choices.firstOrNull()?.id)
+    var showOther by mutableStateOf(request.choices.isEmpty())
+    var otherUser by mutableStateOf("")
+    var otherPassword by mutableStateOf("")
+    var code by mutableStateOf("")
+}
+
+private class ApprovalDraft {
+    var phase by mutableStateOf<Phase>(Phase.Choosing)
+    var answered by mutableStateOf<Boolean?>(null)
 }
 
 /** Seconds left until `expires`, updated every second. */
@@ -179,19 +198,18 @@ private sealed interface Phase {
 // Sign-in
 
 @Composable
-private fun SignInContent(request: SignInRequest, close: () -> Unit) {
+private fun SignInContent(request: SignInRequest, draft: SignInDraft, scope: CoroutineScope, close: () -> Unit) {
     val ui = LocalAosUi.current
     val colors = AosTheme.colors
     val context = platformContext()
-    val scope = rememberCoroutineScope()
     val results by ui.model.signInResults.collectAsState()
     val result = results[request.id]
-    var phase by remember(request.id) { mutableStateOf<Phase>(Phase.Choosing) }
-    var selection by remember(request.id) { mutableStateOf(request.choices.firstOrNull()?.id) }
-    var showOther by remember(request.id) { mutableStateOf(request.choices.isEmpty()) }
-    var otherUser by remember(request.id) { mutableStateOf("") }
-    var otherPassword by remember(request.id) { mutableStateOf("") }
-    var code by remember(request.id) { mutableStateOf("") }
+    var phase by draft::phase
+    var selection by draft::selection
+    var showOther by draft::showOther
+    var otherUser by draft::otherUser
+    var otherPassword by draft::otherPassword
+    var code by draft::code
     val left = secondsLeft(request.expires)
     val expired = left != null && left <= 0
     val isCode = request.field == SignInRequest.Field.CODE
@@ -475,15 +493,14 @@ private fun SignInOutcome(result: SignInResult) {
 // Approval
 
 @Composable
-private fun ApprovalContent(request: ApprovalRequest, close: () -> Unit) {
+private fun ApprovalContent(request: ApprovalRequest, draft: ApprovalDraft, scope: CoroutineScope, close: () -> Unit) {
     val ui = LocalAosUi.current
     val colors = AosTheme.colors
     val context = platformContext()
-    val scope = rememberCoroutineScope()
     val results by ui.model.approvalResults.collectAsState()
     val result = results[request.id]
-    var phase by remember(request.id) { mutableStateOf<Phase>(Phase.Choosing) }
-    var answered by remember(request.id) { mutableStateOf<Boolean?>(null) }
+    var phase by draft::phase
+    var answered by draft::answered
     val left = secondsLeft(request.expires)
     val expired = left != null && left <= 0
 

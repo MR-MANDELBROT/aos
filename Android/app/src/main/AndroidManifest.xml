@@ -18,6 +18,11 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <!-- Tablets, foldables, Chromebooks and desktop windows: a mouse or trackpad and a keyboard do everything, so a
+         touchscreen isn't needed (the link can be typed or opened instead of scanned). -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature android:name="android.hardware.faketouch" android:required="false" />
 
     <!-- Tailscale's sign-in page opens in a Custom Tab. -->
     <queries>
@@ -36,11 +41,22 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
+        android:resizeableActivity="true"
         android:theme="@style/Theme.AOS">
+        <!-- Several windows side by side stay live at once (Chromebooks before Android 10 asked for this). -->
+        <meta-data android:name="android.allow_multiple_resumed_activities" android:value="true" />
+        <!-- One app for phones, tablets, foldables and desktop windows: resizable (split screen, freeform), every
+             orientation, no fixed aspect ratio. Changes of the window's size or shape, of the keyboard and of light
+             and dark don't restart the activity (configChanges): Compose lays out again, and the terminal's view and
+             a running screen session stay (MainActivity.onConfigurationChanged). Language, font scale and density
+             still restart it; the UI's state is kept across that (MainActivity.UiHolder). -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:screenOrientation="unspecified"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|touchscreen|uiMode"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -89,6 +89,9 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    // Large screens: the window's size class and the fold (ui/layout/WindowLayouts.kt).
+    implementation(libs.androidx.compose.material3.adaptive)
+    implementation(libs.androidx.window)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)

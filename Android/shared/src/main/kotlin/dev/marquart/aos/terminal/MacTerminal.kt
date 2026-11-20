@@ -536,12 +536,29 @@ class MacTerminal(
 
     /** Shows sample output (the demo), as the session `holder` of the demo's list. */
     fun showDemo(text: String, holder: String? = null) {
+        demoEcho = true
         scope.launch {
             if (holder != null) _holderId.value = holder
             setPhase(Phase.Connected)
             startAfresh(ByteArray(0))
             feed(text.toByteArray())
         }
+    }
+
+    private var demoEcho = false
+
+    private fun demoEchoOf(bytes: ByteArray): ByteArray {
+        val out = StringBuilder()
+        for (b in bytes) {
+            val c = b.toInt() and 0xff
+            when {
+                c == 0x0d -> out.append("\r\n")
+                c == 0x7f -> out.append("\b \b")
+                c < 0x20 -> out.append('^').append((c + 0x40).toChar())
+                else -> out.append(c.toChar())
+            }
+        }
+        return out.toString().toByteArray(Charsets.ISO_8859_1)
     }
 
     private fun stopWriting() {
@@ -592,7 +609,12 @@ class MacTerminal(
     }
 
     private fun sendNow(bytes: ByteArray) {
-        val input = writer ?: return
+        val input = writer ?: run {
+            // The demo has no shell: what is typed shows in caret notation (^I for Tab, ^[ for Esc, ^[[A for an
+            // arrow), so a check of the keyboard sees which keys arrived.
+            if (demoEcho) feed(demoEchoOf(bytes))
+            return
+        }
         input.trySend(bytes)
         // Return at the shell: where the next command's output begins ("Copy Last Output").
         if (bytes.size == 1 && bytes[0] == 0x0d.toByte()) {
