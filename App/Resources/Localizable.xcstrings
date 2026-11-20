@@ -2381,6 +2381,16 @@
         }
       }
     },
+    "Copy Link" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link kopieren"
+          }
+        }
+      }
+    },
     "Counted from unlocking. Bitwarden also locks when this Mac goes to sleep or restarts. While it is locked, sign-in requests show no Bitwarden logins until you unlock it here or in the sign-in window." : {
       "localizations" : {
         "de" : {
@@ -3013,6 +3023,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ordner"
+          }
+        }
+      }
+    },
+    "For %@ on Android, scan the code the same way. On a Windows or Linux computer, paste the link into %@ there." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit %@ auf Android scannst du den Code genauso. Auf einem Windows- oder Linux-Computer fügst du den Link dort in %@ ein."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "For %1$@ on Android, scan the code the same way. On a Windows or Linux computer, paste the link into %2$@ there."
           }
         }
       }
@@ -3783,6 +3809,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilen wie SCHLÜSSEL=Wert für die Werkzeuge der Sitzung. %@ zeigt und protokolliert die Werte nie."
+          }
+        }
+      }
+    },
+    "Link Copied" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link kopiert"
           }
         }
       }

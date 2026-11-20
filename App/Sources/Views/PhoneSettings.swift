@@ -96,6 +96,7 @@ struct PairingView: View {
     @Environment(\.dismiss) private var dismiss
     /// Inside the setup page instead of a sheet: no Cancel/Done button (the page has its own).
     var inline = false
+    @State private var copiedLink = false
 
     var body: some View {
         VStack(spacing: 18) {
@@ -120,6 +121,19 @@ struct PairingView: View {
                     Label("\(Brand.name) isn't on your iPhone yet?", systemImage: "arrow.down.app")
                 }
                 .font(.callout)
+                // Devices without a camera for this (aOS on Windows, Linux, a tablet in a window) take the link as text.
+                if let url = model.pairing?.url {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(url, forType: .string)
+                        copiedLink = true
+                    } label: {
+                        Label(copiedLink ? "Link Copied" : "Copy Link", systemImage: copiedLink ? "checkmark" : "doc.on.doc")
+                    }
+                    .buttonStyle(.glass)
+                    Text("For \(Brand.name) on Android, scan the code the same way. On a Windows or Linux computer, paste the link into \(Brand.name) there.")
+                        .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                }
                 if let expires = model.pairing?.expires {
                     Text("The code is valid until \(expires.formatted(date: .omitted, time: .shortened)) and only once.")
                         .font(.caption).foregroundStyle(.secondary)
