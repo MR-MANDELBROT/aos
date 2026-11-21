@@ -310,6 +310,7 @@ public final class SessionSupervisor: @unchecked Sendable {
         let text = String(decoding: data, as: UTF8.self)
             .replacingOccurrences(of: "\u{1B}\\[[0-9;?]*[A-Za-z]", with: "", options: .regularExpression)
         recentText = String((recentText + text).suffix(4000))
+        messenger.output(text)
         switch SessionOutput.classify(recentText) {
         case .question:
             setStatus(.needsAttention, "Claude Code is asking a question")

@@ -43,6 +43,31 @@ final class SessionMessenger {
     private var sentAt: Date?
     private var resent = false
     private var startMessageDue: Date?
+    /// Claude Code's user settings, where `/model` and `/effort` save their value as the new default (aOS puts the
+    /// user's own back).
+    var claudeSettings = ClaudeUserSettings.standard
+    /// The model and effort aOS set with its own commands since the session started (nil: the session's own).
+    private(set) var applied = SessionSetup()
+    /// Commands still to type before the head of the queue (or to go back to the session's own).
+    private var lines: [SetupLine] = []
+    /// The command typed last, while its answer is awaited.
+    private var command: Command?
+    /// The user's defaults to put back once Claude Code saved a command's value over them.
+    private var defaults: [Default] = []
+
+    private struct Command {
+        var line: SetupLine
+        var at: Date
+        var output = ""
+        var confirmed = false
+    }
+
+    private struct Default {
+        var key: String
+        var before: String?
+        var written: String?
+        var until: Date
+    }
 
     init(paths: Paths) {
         self.paths = paths
@@ -72,12 +97,28 @@ final class SessionMessenger {
     func sessionStarted() {
         startMessageDue = Date().addingTimeInterval(60)
         sentAt = nil
+        // A new process starts with the session's own model and effort
+        applied = SessionSetup()
+        lines = []
+        command = nil
+    }
+
+    /// The session's terminal output (escape sequences removed): the answer to a command aOS typed lets the next
+    /// line go in at once.
+    func output(_ text: String, now: Date = Date()) {
+        guard var c = command else { return }
+        c.output = String((c.output + text).suffix(4000))
+        command = c
+        if SessionSetupPlan.reply(to: c.line.kind, in: c.output) != .none {
+            deliver(now: now)
+            save()
+        }
     }
 
     /// A routine right now (Run Now in the app or on the iPhone).
     func runNow(_ id: String) {
         guard let r = settings().routines.first(where: { $0.id == id }) else { return }
-        enqueue(SessionDelivery(kind: .routine, name: r.name, text: r.prompt, due: Date(), ref: r.id))
+        enqueue(SessionDelivery(kind: .routine, name: r.name, text: r.prompt, due: Date(), ref: r.id, setup: r.setup))
         save()
     }
 
@@ -171,7 +212,21 @@ final class SessionMessenger {
                 return
             }
         }
-        guard !state.queue.isEmpty, ready() else { return }
+        putBackDefaults(now: now)
+        if command != nil, !finishCommand(now: now) { return }
+        guard ready() else { return }
+        // The model and effort the head of the queue wants (nothing waiting: the session's own again)
+        if lines.isEmpty {
+            let plan = SessionSetupPlan.lines(want: state.queue.first?.setup ?? SessionSetup(), applied: applied,
+                                              sessionEffort: settings().sessionEffort)
+            lines = plan.lines
+            applied = plan.applied
+        }
+        if !lines.isEmpty {
+            typeCommand(lines.removeFirst(), now: now)
+            return
+        }
+        guard !state.queue.isEmpty else { return }
         let d = state.queue.removeFirst()
         // Bracketed paste: the lines arrive as one message; Enter sends it.
         var bytes = Data("\u{1B}[200~".utf8)
@@ -184,5 +239,63 @@ final class SessionMessenger {
         state.recent.insert(.init(kind: d.kind, name: d.name, due: d.due, at: now), at: 0)
         state.recent = Array(state.recent.prefix(20))
         log("session messages: sent \(d.kind.rawValue) \(d.name.isEmpty ? d.ref : "\"\(d.name)\"")")
+    }
+
+    /// Types `/model X` or `/effort X` as its own line. Claude Code answers such a command at once, without working
+    /// (its registry stays "idle"), so aOS waits for the answer in the terminal output instead.
+    private func typeCommand(_ line: SetupLine, now: Date) {
+        let key = ClaudeUserSettings.key(line.kind)
+        if case .some(let before) = claudeSettings.value(key) {
+            let written: String? = line.value == (line.kind == .model ? "default" : "auto") ? nil : line.value
+            defaults.append(Default(key: key, before: before, written: written, until: now.addingTimeInterval(30)))
+        }
+        type(Data(line.text.utf8), 0)
+        type(Data("\r".utf8), 0.6)
+        command = Command(line: line, at: now)
+        log("session messages: typed \(line.text)")
+    }
+
+    /// Whether the command typed last is through: answered, or no answer within 20 s. Confirms Claude Code's
+    /// "Switch model?" (the conversation's cache is warm) once; closes any other question it asks (usage credits, a
+    /// hook that wants a person) with Escape.
+    private func finishCommand(now: Date) -> Bool {
+        guard var c = command else { return true }
+        switch SessionSetupPlan.reply(to: c.line.kind, in: c.output) {
+        case .done:
+            command = nil
+            putBackDefaults(now: now)
+            return true
+        case .confirm where !c.confirmed:
+            type(Data("\r".utf8), 0)
+            c.confirmed = true
+            c.output = ""
+            command = c
+            log("session messages: confirmed switching the model")
+            return false
+        case .refuse, .confirm:
+            if ready() { type(Data("\u{1B}".utf8), 0) }
+            command = nil
+            log("session messages: \(c.line.text) asks something aOS doesn't answer, closed it")
+            return false
+        case .none:
+            guard now.timeIntervalSince(c.at) > 20 else { return false }
+            command = nil
+            log("session messages: no answer to \(c.line.text) within 20 s")
+            putBackDefaults(now: now)
+            return true
+        }
+    }
+
+    /// `/model` and `/effort` saved their value as the user's default for new sessions: the user's own goes back
+    /// (only while the file still holds what the command wrote, so a change of the user's own stays).
+    private func putBackDefaults(now: Date) {
+        for d in defaults {
+            guard case .some(let current) = claudeSettings.value(d.key), current != d.before,
+                  current?.lowercased() == d.written?.lowercased() else { continue }
+            if claudeSettings.set(d.key, to: d.before) {
+                log("session messages: put the user's default \(d.key) back in Claude Code's settings")
+            }
+        }
+        defaults.removeAll { now > $0.until }
     }
 }

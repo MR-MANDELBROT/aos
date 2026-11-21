@@ -8,16 +8,42 @@ public struct Routine: Codable, Sendable, Equatable, Identifiable {
     public var schedule: String
     public var prompt: String
     public var enabled: Bool
+    /// Claude Code's model for this routine (an alias like "sonnet", or a model id); nil: the session's own.
+    /// aOS types `/model` before the prompt and goes back to the session's own model afterwards.
+    public var model: String?
+    /// Claude Code's effort for this routine (`effortChoices`); nil: the session's own.
+    public var effort: String?
 
-    public init(id: String = UUID().uuidString, name: String, schedule: String, prompt: String, enabled: Bool = true) {
+    public init(id: String = UUID().uuidString, name: String, schedule: String, prompt: String, enabled: Bool = true,
+                model: String? = nil, effort: String? = nil) {
         self.id = id
         self.name = name
         self.schedule = schedule
         self.prompt = prompt
         self.enabled = enabled
+        self.model = model?.isEmpty == true ? nil : model
+        self.effort = effort?.isEmpty == true ? nil : effort
     }
 
     public var cron: CronSet? { CronSet(schedule) }
+
+    /// What the session needs for it (nil fields: the session's own).
+    public var setup: SessionSetup { SessionSetup(model: model, effort: effort) }
+
+    /// The models the editors offer (Claude Code's aliases; "[1m]": with the 1M token context). Fable is left out: it
+    /// uses usage credits and asks for a consent in the session first, which aOS can't answer.
+    public static let modelChoices = ["opus", "opus[1m]", "sonnet", "sonnet[1m]", "haiku"]
+    /// The effort levels Claude Code's `/effort` takes.
+    public static let effortChoices = ["low", "medium", "high", "xhigh", "max"]
+
+    /// A model name that is safe to type into the session's terminal: an alias or a model id (letters, digits and
+    /// . _ - : / @ [ ]), no spaces, no control characters, at most 100 characters.
+    public static func isSafeModel(_ s: String) -> Bool {
+        guard !s.isEmpty, s.count <= 100, let first = s.unicodeScalars.first,
+              CharacterSet.alphanumerics.contains(first), first.isASCII else { return false }
+        let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-:/@[]")
+        return s.unicodeScalars.allSatisfy { allowed.contains($0) }
+    }
 }
 
 /// A message for the session that someone else left in aOS's inbox (`<aOS>/inbox/*.json`): a reminder for a time
@@ -79,13 +105,16 @@ public struct SessionDelivery: Codable, Sendable, Equatable {
     public var due: Date
     /// The routine's or message's id (routines: to note when it last ran).
     public var ref: String
+    /// The model and effort it goes in with (a routine's own; nil: the session's).
+    public var setup: SessionSetup?
 
-    public init(kind: Kind, name: String, text: String, due: Date, ref: String) {
+    public init(kind: Kind, name: String, text: String, due: Date, ref: String, setup: SessionSetup? = nil) {
         self.kind = kind
         self.name = name
         self.text = text
         self.due = due
         self.ref = ref
+        self.setup = setup?.isEmpty == false ? setup : nil
     }
 
     /// What arrives in the session: a header line that says where it comes from, then the text.
@@ -128,7 +157,7 @@ public enum RoutinePlanner {
             guard r.enabled, let cron = r.cron, let since = lastRun[r.id],
                   let t = cron.latest(atOrBefore: now, notAfter: routineCatchUp, notBefore: since, calendar: calendar)
             else { return nil }
-            return SessionDelivery(kind: .routine, name: r.name, text: r.prompt, due: t, ref: r.id)
+            return SessionDelivery(kind: .routine, name: r.name, text: r.prompt, due: t, ref: r.id, setup: r.setup)
         }
     }
 
