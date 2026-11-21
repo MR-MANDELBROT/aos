@@ -256,6 +256,7 @@ final class MockCompanionServer: @unchecked Sendable {
                 .object(["id": .string("7D0B3C52-6F7E-4B0F-9F4F-4C3B2C1E0A02"), "name": .string("Routine-Check"),
                          "schedule": .string("13 14 * * *"),
                          "prompt": .string("Lies prompts/routine-check.md und arbeite den Ablauf ab."),
+                         "model": .string("sonnet"), "effort": .string("low"),
                          "enabled": .bool(true), "next": .string(ISO8601.format(Date().addingTimeInterval(2 * 3600)))]),
                 .object(["id": .string("7D0B3C52-6F7E-4B0F-9F4F-4C3B2C1E0A03"), "name": .string("Wochenplanung"),
                          "schedule": .string("30 17 * * 0"),
@@ -267,6 +268,7 @@ final class MockCompanionServer: @unchecked Sendable {
             "queued": .number(0),
             "recent": .array([.object(["kind": .string("routine"), "name": .string("Routine-Check"),
                                        "at": .string(ISO8601.format(Date().addingTimeInterval(-2 * 3600)))])]),
+            "overrides": .bool(true),
         ]),
         // Installing apps on the iPhone: connected over Wi-Fi, one install going on, earlier ones done and failed.
         "apps": .object([
@@ -335,9 +337,12 @@ final class MockCompanionServer: @unchecked Sendable {
                    let routine = try? JSONDecoder().decode(MacStatus.Routines.Item.self, from: data) {
                     var r = status["routines"]?.object ?? [:]
                     var items = r["items"]?.array ?? []
-                    let entry: JSONValue = .object(["id": .string(routine.id), "name": .string(routine.name),
-                                                    "schedule": .string(routine.schedule), "prompt": .string(routine.prompt),
-                                                    "enabled": .bool(routine.enabled)])
+                    var fields: [String: JSONValue] = ["id": .string(routine.id), "name": .string(routine.name),
+                                                       "schedule": .string(routine.schedule), "prompt": .string(routine.prompt),
+                                                       "enabled": .bool(routine.enabled)]
+                    if let m = routine.model { fields["model"] = .string(m) }
+                    if let e = routine.effort { fields["effort"] = .string(e) }
+                    let entry: JSONValue = .object(fields)
                     if let i = items.firstIndex(where: { $0.object?["id"]?.string == routine.id }) { items[i] = entry }
                     else { items.append(entry) }
                     r["items"] = .array(items)

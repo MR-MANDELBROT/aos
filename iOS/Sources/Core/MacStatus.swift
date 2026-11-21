@@ -126,8 +126,50 @@ struct MacStatus: Equatable, Sendable {
             var prompt: String
             var enabled: Bool
             var next: Date?
+            /// Claude Code's model and effort for this routine (nil: the session's own; AOSKit `Routine`).
+            var model: String?
+            var effort: String?
 
-            private enum CodingKeys: String, CodingKey { case id, name, schedule, prompt, enabled }
+            init(id: String, name: String, schedule: String, prompt: String, enabled: Bool, next: Date?,
+                 model: String? = nil, effort: String? = nil) {
+                self.id = id
+                self.name = name
+                self.schedule = schedule
+                self.prompt = prompt
+                self.enabled = enabled
+                self.next = next
+                self.model = model?.isEmpty == true ? nil : model
+                self.effort = effort?.isEmpty == true ? nil : effort
+            }
+
+            private enum CodingKeys: String, CodingKey { case id, name, schedule, prompt, enabled, model, effort }
+
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                self.init(id: try c.decode(String.self, forKey: .id), name: try c.decode(String.self, forKey: .name),
+                          schedule: try c.decode(String.self, forKey: .schedule),
+                          prompt: try c.decode(String.self, forKey: .prompt), enabled: try c.decode(Bool.self, forKey: .enabled),
+                          next: nil, model: try c.decodeIfPresent(String.self, forKey: .model),
+                          effort: try c.decodeIfPresent(String.self, forKey: .effort))
+            }
+
+            /// To the Mac: model and effort always ("": the session's own), so the Mac can tell a cleared one from a
+            /// phone that doesn't know them.
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(id, forKey: .id)
+                try c.encode(name, forKey: .name)
+                try c.encode(schedule, forKey: .schedule)
+                try c.encode(prompt, forKey: .prompt)
+                try c.encode(enabled, forKey: .enabled)
+                try c.encode(model ?? "", forKey: .model)
+                try c.encode(effort ?? "", forKey: .effort)
+            }
+
+            /// The models the editor offers (Claude Code's aliases; AOSKit `Routine.modelChoices`).
+            static let models = ["opus", "opus[1m]", "sonnet", "sonnet[1m]", "haiku"]
+            /// The effort levels (AOSKit `Routine.effortChoices`).
+            static let efforts = ["low", "medium", "high", "xhigh", "max"]
         }
         struct Upcoming: Equatable, Sendable {
             var name: String
@@ -143,6 +185,8 @@ struct MacStatus: Equatable, Sendable {
         var reminders: [Upcoming] = []
         var queued = 0
         var recent: [Sent] = []
+        /// The Mac takes a model and an effort per routine (false: an older aOS, the editor leaves them out).
+        var overrides = false
 
         /// The routine that runs next.
         var next: Item? { items.filter { $0.enabled && $0.next != nil }.min { $0.next! < $1.next! } }
@@ -252,7 +296,8 @@ struct MacStatus: Equatable, Sendable {
                 guard let i = v.object, let id = i["id"]?.string, let name = i["name"]?.string,
                       let schedule = i["schedule"]?.string else { return nil }
                 return Routines.Item(id: id, name: name, schedule: schedule, prompt: i["prompt"]?.string ?? "",
-                                     enabled: i["enabled"]?.bool ?? true, next: date(i["next"]))
+                                     enabled: i["enabled"]?.bool ?? true, next: date(i["next"]),
+                                     model: i["model"]?.string, effort: i["effort"]?.string)
             }
             let reminders = (r["reminders"]?.array ?? []).compactMap { v -> Routines.Upcoming? in
                 guard let i = v.object, let at = date(i["at"]) else { return nil }
@@ -262,7 +307,8 @@ struct MacStatus: Equatable, Sendable {
                 guard let i = v.object, let at = date(i["at"]) else { return nil }
                 return Routines.Sent(kind: i["kind"]?.string ?? "routine", name: i["name"]?.string ?? "", at: at)
             }
-            routines = Routines(items: items, reminders: reminders, queued: r["queued"]?.int ?? 0, recent: recent)
+            routines = Routines(items: items, reminders: reminders, queued: r["queued"]?.int ?? 0, recent: recent,
+                                overrides: r["overrides"]?.bool ?? false)
         }
         if let a = o["apps"]?.object {
             let jobs = (a["jobs"]?.array ?? []).compactMap { v -> Apps.Job? in

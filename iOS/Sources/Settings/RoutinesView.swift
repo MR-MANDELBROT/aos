@@ -101,7 +101,8 @@ struct RoutinesPage: View {
         .task { await connection?.refreshMacStatus() }
         .sheet(item: $editing) { r in
             NavigationStack {
-                RoutineEditorView(routine: r, isNew: !(routines?.items.contains { $0.id == r.id } ?? false)) { saved in
+                RoutineEditorView(routine: r, isNew: !(routines?.items.contains { $0.id == r.id } ?? false),
+                                  overrides: routines?.overrides ?? false) { saved in
                     save(saved)
                     editing = nil
                 } cancel: {
@@ -160,6 +161,9 @@ struct RoutineRowView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(routine.name).lineLimit(1)
                 Text(RoutineSchedule.text(routine.schedule)).font(.footnote).foregroundStyle(.secondary)
+                if let setup = RoutineSetupText.setup(routine) {
+                    Text(setup).font(.footnote).foregroundStyle(.secondary)
+                }
                 if routine.enabled, let next = routine.next {
                     Text("Next \(next.formatted(.relative(presentation: .named)))").font(.footnote).foregroundStyle(.tertiary)
                 }
@@ -178,6 +182,8 @@ struct RoutineEditorView: View {
 
     @State var routine: MacStatus.Routines.Item
     let isNew: Bool
+    /// The Mac takes a model and an effort per routine.
+    let overrides: Bool
     let save: (MacStatus.Routines.Item) -> Void
     let cancel: () -> Void
     @State private var mode: Mode
@@ -189,10 +195,11 @@ struct RoutineEditorView: View {
     @State private var minute: Int
     @State private var cronText: String
 
-    init(routine: MacStatus.Routines.Item, isNew: Bool, save: @escaping (MacStatus.Routines.Item) -> Void,
+    init(routine: MacStatus.Routines.Item, isNew: Bool, overrides: Bool, save: @escaping (MacStatus.Routines.Item) -> Void,
          cancel: @escaping () -> Void) {
         _routine = State(initialValue: routine)
         self.isNew = isNew
+        self.overrides = overrides
         self.save = save
         self.cancel = cancel
         func at(_ h: Int, _ m: Int) -> Date { Calendar.current.date(bySettingHour: h, minute: m, second: 0, of: Date()) ?? Date() }
@@ -291,6 +298,28 @@ struct RoutineEditorView: View {
             } footer: {
                 Text(mode == .cron ? String(localized: "Five fields in the Mac's time, like 0 6 * * 1-5 (Monday to Friday at 6:00); several separated by ;.")
                                    : RoutineSchedule.text(schedule))
+            }
+            if overrides {
+                Section {
+                    Picker("Model", selection: Binding(get: { routine.model ?? "" },
+                                                       set: { routine.model = $0.isEmpty ? nil : $0 })) {
+                        Text("Session default").tag("")
+                        ForEach(RoutineSetupText.models(including: routine.model), id: \.self) { m in
+                            Text(RoutineSetupText.model(m)).tag(m)
+                        }
+                    }
+                    Picker("Effort", selection: Binding(get: { routine.effort ?? "" },
+                                                        set: { routine.effort = $0.isEmpty ? nil : $0 })) {
+                        Text("Session default").tag("")
+                        ForEach(MacStatus.Routines.Item.efforts, id: \.self) { e in
+                            Text(RoutineSetupText.effort(e)).tag(e)
+                        }
+                    }
+                } header: {
+                    Text("Claude Code")
+                } footer: {
+                    Text("For this routine only. Afterwards the session goes back to its own model and effort.")
+                }
             }
             Section {
                 Toggle("On", isOn: $routine.enabled)
@@ -468,5 +497,47 @@ enum RoutineSchedule {
         let times = s.times.map { clock($0.hour, $0.minute) }.joined(separator: ", ")
         guard let d = daysText(s.weekdays) else { return String(localized: "Daily at \(times)") }
         return String(localized: "\(d) at \(times)")
+    }
+}
+
+/// A routine's own model and effort, as the editor and the list show them.
+enum RoutineSetupText {
+    /// The models to choose from, with the routine's own when it is another one (set on the Mac).
+    static func models(including current: String?) -> [String] {
+        let list = MacStatus.Routines.Item.models
+        guard let current, !list.contains(current) else { return list }
+        return list + [current]
+    }
+
+    static func model(_ m: String) -> String {
+        switch m {
+        case "opus": return "Opus"
+        case "opus[1m]": return String(localized: "Opus (1M context)")
+        case "sonnet": return "Sonnet"
+        case "sonnet[1m]": return String(localized: "Sonnet (1M context)")
+        case "haiku": return "Haiku"
+        default: return m
+        }
+    }
+
+    static func effort(_ e: String) -> String {
+        switch e {
+        case "low": return String(localized: "Low")
+        case "medium": return String(localized: "Medium")
+        case "high": return String(localized: "High")
+        case "xhigh": return String(localized: "Extra high")
+        case "max": return String(localized: "Max")
+        default: return e
+        }
+    }
+
+    /// "Sonnet, Low effort"; nil: the session's own.
+    static func setup(_ r: MacStatus.Routines.Item) -> String? {
+        switch (r.model, r.effort) {
+        case (nil, nil): return nil
+        case (let m?, nil): return model(m)
+        case (nil, let e?): return String(localized: "\(effort(e)) effort")
+        case (let m?, let e?): return String(localized: "\(model(m)), \(effort(e)) effort")
+        }
     }
 }
