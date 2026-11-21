@@ -226,6 +226,10 @@ struct RoutineRow: View {
                 Text(routine.name.isEmpty ? String(localized: "Routine") : routine.name).lineLimit(1)
                 HStack(spacing: 6) {
                     Text(RoutineText.schedule(routine.schedule)).font(.caption).foregroundStyle(.secondary)
+                    if let setup = RoutineText.setup(routine) {
+                        Text("·").font(.caption).foregroundStyle(.tertiary)
+                        Text(setup).font(.caption).foregroundStyle(.secondary)
+                    }
                     if routine.enabled, let next {
                         Text("·").font(.caption).foregroundStyle(.tertiary)
                         Text("next \(next.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.tertiary)
@@ -369,6 +373,25 @@ struct RoutineEditor: View {
                         .font(.caption)
                         .foregroundStyle(CronSet(schedule) == nil ? .orange : .secondary)
                 }
+                Section {
+                    Picker("Model", selection: Binding(get: { routine.model ?? "" },
+                                                       set: { routine.model = $0.isEmpty ? nil : $0 })) {
+                        Text("Session default").tag("")
+                        ForEach(RoutineText.models(including: routine.model), id: \.self) { m in
+                            Text(RoutineText.model(m)).tag(m)
+                        }
+                    }
+                    Picker("Effort", selection: Binding(get: { routine.effort ?? "" },
+                                                        set: { routine.effort = $0.isEmpty ? nil : $0 })) {
+                        Text("Session default").tag("")
+                        ForEach(Routine.effortChoices, id: \.self) { e in Text(RoutineText.effort(e)).tag(e) }
+                    }
+                } header: {
+                    Text("Claude Code")
+                } footer: {
+                    Text("For this routine only. Afterwards the session goes back to its own model and effort.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Toggle("On", isOn: $routine.enabled)
             }
             .formStyle(.grouped)
@@ -389,7 +412,7 @@ struct RoutineEditor: View {
             }
             .padding()
         }
-        .frame(minWidth: 500, minHeight: 520)
+        .frame(minWidth: 500, minHeight: 600)
         .confirmationDialog("Delete this routine?", isPresented: $confirmDelete) {
             Button("Delete", role: .destructive, action: delete)
         }
@@ -423,6 +446,44 @@ struct WeekdayPicker: View {
 /// A schedule in words: "Daily at 06:00", "Mon to Fri at 08:00, 12:00", "Every 2 hours from 10:00 to 18:00", else
 /// the cron text.
 enum RoutineText {
+    /// The models to choose from, with the routine's own when it is another one (set elsewhere).
+    static func models(including current: String?) -> [String] {
+        guard let current, !Routine.modelChoices.contains(current) else { return Routine.modelChoices }
+        return Routine.modelChoices + [current]
+    }
+
+    static func model(_ m: String) -> String {
+        switch m {
+        case "opus": return "Opus"
+        case "opus[1m]": return String(localized: "Opus (1M context)")
+        case "sonnet": return "Sonnet"
+        case "sonnet[1m]": return String(localized: "Sonnet (1M context)")
+        case "haiku": return "Haiku"
+        default: return m
+        }
+    }
+
+    static func effort(_ e: String) -> String {
+        switch e {
+        case "low": return String(localized: "Low")
+        case "medium": return String(localized: "Medium")
+        case "high": return String(localized: "High")
+        case "xhigh": return String(localized: "Extra high")
+        case "max": return String(localized: "Max")
+        default: return e
+        }
+    }
+
+    /// The routine's own model and effort for its row ("Sonnet, Low effort"); nil: the session's.
+    static func setup(_ r: Routine) -> String? {
+        switch (r.model, r.effort) {
+        case (nil, nil): return nil
+        case (let m?, nil): return model(m)
+        case (nil, let e?): return String(localized: "\(effort(e)) effort")
+        case (let m?, let e?): return String(localized: "\(model(m)), \(effort(e)) effort")
+        }
+    }
+
     static func days(_ set: Set<Int>) -> String? {
         if set.count == 7 { return nil }
         if set == Set(1...5) { return String(localized: "Mon to Fri") }

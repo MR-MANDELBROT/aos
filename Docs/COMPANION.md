@@ -262,6 +262,13 @@ with `error` (English) and `code`, which the phone says in its own words.
   - `newChats`: `{"enabled":true,"state":"off|waitingForNetwork|starting|running|needsLogin|needsTrust|missingClaude|restarting"}`
   - `kept`: `{"enabled":true,"running":2}` (kept conversations)
   - `bitwarden`: `{"state":"unlocked|locked|signedOut|needsHelper|unknown","until":"<ISO, if it locks by itself>"}`
+  - `routines`: `{"items":[{"id","name","schedule","prompt","enabled","next"?,"model"?,"effort"?}],"reminders":[{"name","at"}],"queued":0,"recent":[{"kind","name","at"}],"overrides":true}`
+    (aOS's session's routines; `model` (a Claude Code alias such as `sonnet` or a model id) and `effort`
+    (`low|medium|high|xhigh|max`) only when the routine has its own, else the session's own applies; `overrides`:
+    this Mac takes them, an older one sends neither and the phone leaves the pickers out). `routines.set` takes the
+    routine as JSON with `model` and `effort` always present (`""`: the session's own); a phone that leaves the keys
+    out (older) keeps what the routine had. The Mac refuses an effort it doesn't know and a model that isn't letters,
+    digits and `. _ - : / @ [ ]` (it is typed into the terminal).
   - `apps` (only while Settings > Apps is on): `{"state":"connected|searching|connecting|notPaired|starting|stopped","since":"<ISO>","network":"wifi|cellular","device":"iPhone von Max","previousSeconds":4210,"jobs":[{"id","name","bundleId","state":"queued|installing|done|failed","created","version"?,"source"?,"finished"?,"seconds"?,"network"?,"message"?}]}`
     (the tunnel aOS holds to the iPhone for installing apps, see Docs/DESIGN.md; `since` and `network` while
     connected, `previousSeconds`: how long the previous tunnel held, `jobs`: the latest 10, newest first, `message`

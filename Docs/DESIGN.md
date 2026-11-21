@@ -78,6 +78,18 @@ iPhone shows and edits the routines under Settings > Routines and the next one i
   which covers permission and question dialogs). Without a reaction after 10 s, Enter once more. Each message starts
   with a header line: `[aOS routine "<name>", scheduled <time>]` (`, delivered late …` after sleep), `[aOS reminder
   for <time> from <source>]`, `[aOS note from <source>]`, `[aOS: the session just started]`.
+- **Model and effort per routine** (`Routine.model`, `Routine.effort`; nil: the session's own): before such a
+  routine the messenger types `/model <alias or id>` and `/effort <level>`, each as its own line, then the prompt.
+  Claude Code answers these commands without working (its registry stays `idle`), so the messenger waits for the
+  answer in the terminal output ("Set model to", "Set effort level to", ...; 20 s at most), confirms Claude Code's
+  "Switch model?" (asked when the conversation's cache is warm: the next answer re-reads the history) once with
+  Enter, and closes any other question with Escape (Fable's usage-credit consent, a PreModelSwitch hook that wants a
+  person). Before the next delivery without them (reminders, notes, other routines), or once the session is idle with
+  nothing waiting, it goes back: `/model default`, and `/effort` with `sessionEffort` or `auto`. What aOS set is
+  tracked in memory (nothing typed when nothing changes) and forgotten when the session restarts. In an interactive
+  session `/model` and `/effort` also save their value as the default for new sessions in `~/.claude/settings.json`
+  (`model`, `effortLevel`; Claude Code 2.1.330): aOS notes both before each command and puts the user's own value back
+  right after Claude Code wrote it (only that key's line changes; only while the file still holds the command's value).
 - **Status** for the app and the iPhone: `run/routines.json` (next times, reminders waiting, queued, recently sent).
 
 Cloupi (2026-11-09): folder `~/cloupi`, effort max, mode auto, environment from `~/cloupi/config/aos-session.env` and

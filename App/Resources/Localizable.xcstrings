@@ -185,6 +185,16 @@
         }
       }
     },
+    "%@ effort" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denkaufwand: %@"
+          }
+        }
+      }
+    },
     "%@ gives your coding agent its own Mac: a virtual Mac with its own screen and browser, separate from yours. Your agent uses it for tasks that need a website or an app; you approve every time it opens." : {
       "localizations" : {
         "de" : {
@@ -387,6 +397,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ möchte sich anmelden"
+          }
+        }
+      }
+    },
+    "%@, %@ effort" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, Denkaufwand: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@ effort"
           }
         }
       }
@@ -3073,6 +3099,16 @@
         }
       }
     },
+    "For this routine only. Afterwards the session goes back to its own model and effort." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur für diese Routine. Danach kehrt die Sitzung zu ihrem eigenen Modell und Denkaufwand zurück."
+          }
+        }
+      }
+    },
     "For up to %lld minutes. You can watch and close it any time." : {
       "localizations" : {
         "de" : {
@@ -4135,6 +4171,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "gemischt"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modell"
           }
         }
       }
@@ -5234,6 +5280,16 @@
         }
       }
     },
+    "Opus (1M context)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opus (1M Kontext)"
+          }
+        }
+      }
+    },
     "Other programs can leave the session a message: a JSON file with \"text\" (and \"at\" for a time, \"source\" for who sends it) in %@. Reminders more than 30 minutes late are dropped." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5978,6 +6034,16 @@
         }
       }
     },
+    "Session default" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie die Sitzung"
+          }
+        }
+      }
+    },
     "Set Up" : {
       "localizations" : {
         "de" : {
@@ -6523,6 +6589,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Damit der Mac mit geschlossenem Deckel wach bleibt: „Anmeldeobjekte & Erweiterungen“, „Im Hintergrund erlauben“."
+          }
+        }
+      }
+    },
+    "Sonnet (1M context)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonnet (1M Kontext)"
           }
         }
       }
