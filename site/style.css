@@ -961,6 +961,8 @@ p { text-wrap: pretty; }
 .cta h2.big { margin: 0 auto; }
 .cta .lede { margin: 16px auto 30px; }
 .cta .note { margin: 22px auto 0; max-width: 560px; }
+.cta .dl { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.cta .dl-more { margin-top: 12px; }
 
 .footer {
   border-top: 1px solid var(--line);

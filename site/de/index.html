@@ -279,7 +279,7 @@
     <div class="center">
       <span class="caps reveal">aOS für iPhone</span>
       <h2 class="big reveal" style="--d:.05s">Dein Mac in der Hosentasche.</h2>
-      <p class="lede reveal" style="--d:.1s">aOS für iPhone koppelst du per QR-Code mit deinem Mac. Kein Konto, keine Cloud von uns: Die App spricht direkt mit deinem Mac, verschlüsselt über SSH.</p>
+      <p class="lede reveal" style="--d:.1s">aOS für iPhone und Android koppelst du per QR-Code mit deinem Mac. Kein Konto, keine Cloud von uns: Die App spricht direkt mit deinem Mac, verschlüsselt über SSH.</p>
     </div>
     <div class="phones">
       <div class="iphone reveal" role="img" aria-label="aOS für iPhone mit dem Bildschirm des Arbeitsplatzes: Claude Code bittet um Hilfe beim Captcha auf einer Anmeldeseite, mit einem Knopf Fertig">
@@ -354,7 +354,7 @@
       <svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg>
       <p><b>Zu Hause und unterwegs.</b> Im selben WLAN oder wenn dein Mac im Hotspot deines iPhones ist, verbindet sich die App direkt. Von überall sonst brauchst du ein VPN wie Tailscale.</p>
     </div>
-    <p class="note reveal">aOS für iPhone ist auf dem Weg in den App Store. Zum Koppeln klickst du in der Menüleiste deines Macs auf aOS und dann bei „iPhone“ auf Koppeln.</p>
+    <p class="note reveal">aOS für iPhone und Android lädst du <a href="#download">weiter unten</a>. Zum Koppeln klickst du in der Menüleiste deines Macs auf aOS und dann bei „iPhone“ auf Koppeln.</p>
   </div>
 </section>
 
@@ -530,9 +530,19 @@
   <div class="container">
     <img class="reveal" src="../img/icon.png" alt="" width="96" height="96" loading="lazy">
     <h2 class="big reveal" style="--d:.05s">Gib deinem Agent einen eigenen Mac.</h2>
-    <p class="lede reveal" style="--d:.1s">Kostenlos für macOS 27 auf Apple Silicon.</p>
-    <span class="btn btn-primary btn-soon reveal" style="--d:.15s" aria-disabled="true">Bald verfügbar</span>
-    <p class="note reveal" style="--d:.2s">aOS für iPhone ist auf dem Weg in den App Store.</p>
+    <p class="lede reveal" style="--d:.1s">Kostenlos und Open Source, für macOS 27 auf Apple Silicon.</p>
+    <div class="dl reveal" style="--d:.15s"><a class="btn btn-primary" href="https://github.com/MR-MANDELBROT/aos/releases/latest/download/aOS.dmg">Für Mac herunterladen</a></div>
+    <div class="dl dl-more reveal" style="--d:.2s">
+      <a class="btn btn-ghost" href="https://github.com/MR-MANDELBROT/aos/releases/latest/download/aOS-android.apk">Android-App (APK)</a>
+      <a class="btn btn-ghost" href="https://github.com/MR-MANDELBROT/aos/releases/latest/download/aOS-iphone.ipa">iPhone-App (IPA)</a>
+    </div>
+    <div class="dl dl-more reveal" style="--d:.22s">
+      <a class="btn btn-ghost" href="https://github.com/MR-MANDELBROT/aos/releases/latest/download/aOS-Setup-x64.exe">Windows</a>
+      <a class="btn btn-ghost" href="https://github.com/MR-MANDELBROT/aos/releases/latest/download/aOS-Setup-arm64.exe">Windows auf ARM</a>
+      <a class="btn btn-ghost" href="https://github.com/MR-MANDELBROT/aos/releases/latest/download/aOS-linux-amd64.deb">Linux (.deb)</a>
+      <a class="btn btn-ghost" href="https://github.com/MR-MANDELBROT/aos/releases/latest/download/aOS-linux-arm64.deb">Linux auf ARM (.deb)</a>
+    </div>
+    <p class="note reveal" style="--d:.25s">Android 10 oder neuer: Öffne die APK und erlaube deinem Browser, sie zu installieren. Die iPhone-App gibt es nicht im App Store: Installiere die IPA mit AltStore oder SideStore, signiert mit deiner eigenen Apple-ID. Windows warnt vor dem Installer, weil er noch nicht signiert ist: Wähle „Weitere Informationen“ und dann „Trotzdem ausführen“. Zip- und tar.gz-Pakete findest du auf der <a href="https://github.com/MR-MANDELBROT/aos/releases/latest">Release-Seite</a>. Quellcode und alle Versionen liegen auf <a href="https://github.com/MR-MANDELBROT/aos">GitHub</a> (GPL-3.0).</p>
   </div>
 </section>
 

@@ -21,7 +21,7 @@ settings:
   base:
     DEVELOPMENT_TEAM: S3725YB7V6
     MARKETING_VERSION: 0.1.0
-    CURRENT_PROJECT_VERSION: 26
+    CURRENT_PROJECT_VERSION: 27
     ENABLE_HARDENED_RUNTIME: YES
     SWIFT_VERSION: "5.0"
     MACOSX_DEPLOYMENT_TARGET: "27.0"
@@ -130,7 +130,7 @@ targets:
           - _aos-pair._tcp
         NSHumanReadableCopyright: "© 2026 Maximilian Marquart"
         SUFeedURL: https://marquart.dev/aos/appcast.xml
-        SUPublicEDKey: REPLACE_WITH_SPARKLE_PUBLIC_KEY
+        SUPublicEDKey: qRNsBB4Ywy28GH7WSTS8kW1szcwL8e3Tdk30OZqC+MY=
         SUEnableInstallerLauncherService: false
     postBuildScripts:
       # aos-powerd starts it as the hidden user _aostailnet (Docs/DESIGN.md, "Reaching the Mac on the go")

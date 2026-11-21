@@ -92,7 +92,9 @@ STAGE="$OUT/dmg"
 mkdir -p "$STAGE"
 ditto "$APP" "$STAGE/aOS.app"
 ln -s /Applications "$STAGE/Applications"
-DMG="$OUT/aOS-$VERSION.dmg"
+# One name for every release: the website links releases/latest/download/aOS.dmg.
+DMG="$OUT/aOS.dmg"
+TAG="v$VERSION-$BUILD"
 hdiutil create -volname "aOS $VERSION" -srcfolder "$STAGE" -ov -format ULFO "$DMG" >/dev/null
 rm -rf "$STAGE"
 codesign --sign "Developer ID Application: Maximilian Marquart ($TEAM)" --timestamp "$DMG"
@@ -113,10 +115,10 @@ cat > "$OUT/appcast-item.xml" <<EOF
       <sparkle:version>$BUILD</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
-      <enclosure url="https://marquart.dev/aos/download/aOS-$VERSION.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
+      <enclosure url="https://github.com/MR-MANDELBROT/aos/releases/download/$TAG/aOS.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
     </item>
 EOF
 unregister_copies
 shasum -a 256 "$DMG" | tee "$OUT/SHA256SUMS"
 say "done: $DMG"
-say "next: create the GitHub release v$VERSION with the DMG, add appcast-item.xml to site/appcast.xml"
+say "next: GitHub release $TAG with aOS.dmg (and aOS-android.apk, aOS-iphone.ipa), appcast-item.xml into site/appcast.xml"

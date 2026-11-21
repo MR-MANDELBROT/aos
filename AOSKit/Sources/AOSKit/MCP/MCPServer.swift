@@ -260,7 +260,7 @@ public enum MCPTools {
             [
                 "name": "workspace_close",
                 "title": "Close the workspace",
-                "description": "Close the workspace when the task is done. Shuts the VM down (sign-ins on websites expire).",
+                "description": "Close the workspace when the task is done. Website sign-ins expire or stay, as the user chose (workspace_status says which).",
                 "inputSchema": schema([:]),
             ],
             [
