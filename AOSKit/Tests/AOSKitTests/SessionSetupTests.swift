@@ -167,6 +167,9 @@ final class SessionSetupTests: XCTestCase {
         XCTAssertEqual(typed, ["/model default", "\r"])
         m.output("Set model to Default (Opus)", now: t0.addingTimeInterval(21))
         XCTAssertEqual(Array(typed.suffix(2)), ["/effort high", "\r"])
+        m.tick(now: t0.addingTimeInterval(30))  // no answer after 8 s: Enter once more
+        XCTAssertEqual(typed.last, "\r")
+        XCTAssertEqual(typed.count, 5)
         m.tick(now: t0.addingTimeInterval(45))  // no answer within 20 s: goes on anyway
         XCTAssertEqual(m.applied, SessionSetup())
         typed = []

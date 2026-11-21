@@ -60,6 +60,7 @@ final class SessionMessenger {
         var at: Date
         var output = ""
         var confirmed = false
+        var resent = false
     }
 
     private struct Default {
@@ -255,7 +256,7 @@ final class SessionMessenger {
         log("session messages: typed \(line.text)")
     }
 
-    /// Whether the command typed last is through: answered, or no answer within 20 s. Confirms Claude Code's
+    /// Whether the command typed last is through: answered, or no answer within 20 s (Enter once more after 8 s). Confirms Claude Code's
     /// "Switch model?" (the conversation's cache is warm) once; closes any other question it asks (usage credits, a
     /// hook that wants a person) with Escape.
     private func finishCommand(now: Date) -> Bool {
@@ -278,6 +279,13 @@ final class SessionMessenger {
             log("session messages: \(c.line.text) asks something aOS doesn't answer, closed it")
             return false
         case .none:
+            // The first Enter may have gone to the command menu: once more after 8 s
+            if !c.resent, !c.confirmed, now.timeIntervalSince(c.at) > 8, ready() {
+                type(Data("\r".utf8), 0)
+                c.resent = true
+                command = c
+                return false
+            }
             guard now.timeIntervalSince(c.at) > 20 else { return false }
             command = nil
             log("session messages: no answer to \(c.line.text) within 20 s")
