@@ -150,6 +150,8 @@ data class MacStatus(
         val reminders: List<Upcoming> = emptyList(),
         val queued: Int = 0,
         val recent: List<Sent> = emptyList(),
+        /** The Mac takes a model and an effort per routine (false: an older aOS, the editor leaves them out). */
+        val overrides: Boolean = false,
     ) {
         data class Item(
             val id: String,
@@ -159,14 +161,27 @@ data class MacStatus(
             val prompt: String,
             val enabled: Boolean,
             val next: Instant? = null,
+            /** Claude Code's model and effort for this routine (null: the session's own; AOSKit `Routine`). */
+            val model: String? = null,
+            val effort: String? = null,
         ) {
-            /** The routine as `routines.set` sends it (without its next time, which is the Mac's). */
+            /** The routine as `routines.set` sends it (without its next time, which is the Mac's). Model and effort
+             *  always ("": the session's own), so the Mac can tell a cleared one from a phone that doesn't know them. */
             val json: String
                 get() = Json.encode(sortedJsonObject("id" to kotlinx.serialization.json.JsonPrimitive(id),
                     "name" to kotlinx.serialization.json.JsonPrimitive(name),
                     "schedule" to kotlinx.serialization.json.JsonPrimitive(schedule),
                     "prompt" to kotlinx.serialization.json.JsonPrimitive(prompt),
-                    "enabled" to kotlinx.serialization.json.JsonPrimitive(enabled)))
+                    "enabled" to kotlinx.serialization.json.JsonPrimitive(enabled),
+                    "model" to kotlinx.serialization.json.JsonPrimitive(model ?: ""),
+                    "effort" to kotlinx.serialization.json.JsonPrimitive(effort ?: "")))
+
+            companion object {
+                /** The models the editor offers (Claude Code's aliases; AOSKit `Routine.modelChoices`). */
+                val models = listOf("opus", "opus[1m]", "sonnet", "sonnet[1m]", "haiku")
+                /** The effort levels (AOSKit `Routine.effortChoices`). */
+                val efforts = listOf("low", "medium", "high", "xhigh", "max")
+            }
         }
 
         data class Upcoming(val name: String, val at: Instant)
@@ -242,7 +257,8 @@ data class MacStatus(
                     val id = i["id"].str ?: return@mapNotNull null
                     val name = i["name"].str ?: return@mapNotNull null
                     val schedule = i["schedule"].str ?: return@mapNotNull null
-                    Routines.Item(id, name, schedule, i["prompt"].str ?: "", i["enabled"].bool ?: true, date(i["next"]))
+                    Routines.Item(id, name, schedule, i["prompt"].str ?: "", i["enabled"].bool ?: true, date(i["next"]),
+                        i["model"].str?.takeIf { it.isNotEmpty() }, i["effort"].str?.takeIf { it.isNotEmpty() })
                 }
                 val reminders = (r["reminders"].arr ?: emptyArray).mapNotNull { v ->
                     val i = v.obj ?: return@mapNotNull null
@@ -252,7 +268,7 @@ data class MacStatus(
                     val i = v.obj ?: return@mapNotNull null
                     date(i["at"])?.let { Routines.Sent(i["kind"].str ?: "routine", i["name"].str ?: "", it) }
                 }
-                Routines(items, reminders, r["queued"].int ?: 0, recent)
+                Routines(items, reminders, r["queued"].int ?: 0, recent, r["overrides"].bool ?: false)
             }
             val apps = o["apps"].obj?.let { a ->
                 val jobs = (a["jobs"].arr ?: emptyArray).mapNotNull { v ->
