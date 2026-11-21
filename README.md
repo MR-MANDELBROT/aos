@@ -109,3 +109,17 @@ Tools/release.sh       # signed, notarized DMG and Sparkle appcast item
 ```
 
 `AOSKit/Sources/aosctl` is a development tool that drives the engine without the app.
+
+Android, Windows and Linux companions live in `Android/` (see `Android/README.md`).
+
+## Download
+
+Releases are on the [releases page](https://github.com/MR-MANDELBROT/aos/releases) and on
+[marquart.dev/aos](https://marquart.dev/aos/): the Mac app (notarized DMG), the Android app (APK) and the iPhone app
+(an unsigned IPA to sideload with AltStore or SideStore).
+
+## License
+
+aOS is free software under the GNU General Public License, version 3 (see `LICENSE`). The iPhone, Android, Windows
+and Linux apps include Open Screen Sharing's libsharing (GPL-3.0), and the other third-party parts keep their own
+licenses next to their code.
