@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Der Terminal-Tab (dev.marquart.aos.terminal), Wortlaut wie auf dem iPhone (iOS/Tools/translations_de.py). -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="term_title">Terminal</string>
     <string name="term_new_session">Neue Sitzung</string>
     <string name="term_new_session_footer">Startet eine weitere Shell auf %1$s. Die anderen laufen weiter.</string>
@@ -113,7 +113,7 @@
     <string name="term_notification_end">Sitzung beenden</string>
 
     <!-- Termux's selection toolbar (terminal-view's own strings, here in German). -->
-    <string name="paste_text">Einsetzen</string>
-    <string name="copy_text">Kopieren</string>
-    <string name="text_selection_more">Mehr …</string>
+    <string name="paste_text" tools:ignore="ExtraTranslation">Einsetzen</string>
+    <string name="copy_text" tools:ignore="ExtraTranslation">Kopieren</string>
+    <string name="text_selection_more" tools:ignore="ExtraTranslation">Mehr …</string>
 </resources>

@@ -1,8 +1,19 @@
+import java.util.Properties
+
 // The Go library (libsharing and tailnetkit, one aar: third_party/README.md), built by Tools/go-android.sh and not
 // checked in. Without it the app still builds: no node of aOS's own (src/notailnet instead of src/tailnet).
 val aosgo: File = rootProject.file("third_party/aosgo/aosgo.aar")
 // -Paos.withoutGo=true builds as if it were missing.
 val hasAosgo = aosgo.isFile && providers.gradleProperty("aos.withoutGo").orNull != "true"
+
+// The release key (for the APK on the website and the releases page) is in keystore.properties, never in the
+// repository: storeFile, storePassword, keyAlias, keyPassword. Without it a release build stays unsigned.
+val releaseKey = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.isFile) f.inputStream().use { load(it) }
+}
+// -Paos.abis=arm64-v8a builds the phones' ABI only (the published APK); default both (a phone, the emulator).
+val abis: List<String> = (providers.gradleProperty("aos.abis").orNull ?: "arm64-v8a,x86_64").split(",").map { it.trim() }
 
 plugins {
     alias(libs.plugins.android.application)
@@ -23,7 +34,7 @@ android {
         versionName = "0.1.0"
         // The Go library has these two (a phone, the emulator).
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        ndk { abiFilters += abis }
     }
 
     // The UI shared with the desktop app (../shared-ui: Compose code and its strings, see README.md).
@@ -34,8 +45,18 @@ android {
     // The screen's session engine: libsharing from the Go library (dev.marquart.aos.screen), else a stand-in.
     sourceSets.getByName("main").kotlin.directories.add(if (hasAosgo) "src/libsharing/kotlin" else "src/nolibsharing/kotlin")
 
+    signingConfigs {
+        if (releaseKey.getProperty("storeFile") != null) create("release") {
+            storeFile = file(releaseKey.getProperty("storeFile"))
+            storePassword = releaseKey.getProperty("storePassword")
+            keyAlias = releaseKey.getProperty("keyAlias")
+            keyPassword = releaseKey.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         release {
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
