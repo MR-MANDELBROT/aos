@@ -27,6 +27,12 @@ supervisor.onKeeperRestart = { id in keeper.restart(id) }
 let remote = RemoteServer(paths: paths)
 remote.log = supervisor.log
 signal(SIGTERM, SIG_IGN)
+// A write to a socket whose other end is gone must fail with EPIPE, not end this process. The app's commands
+// ("Restart", from the Mac or the iPhone) connect, send and close at once; when the accept comes after the close,
+// SO_NOSIGPIPE can't be set any more (EINVAL), and writing the scrollback raised SIGPIPE: aos-session ended
+// (2026-11-22, three times, "exited due to SIGPIPE") and took the server's chats, the kept conversations and the
+// session down with it. The children start with every signal at its default (PTY.spawn, Subprocess).
+signal(SIGPIPE, SIG_IGN)
 let term = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
 term.setEventHandler {
     supervisor.stop()
