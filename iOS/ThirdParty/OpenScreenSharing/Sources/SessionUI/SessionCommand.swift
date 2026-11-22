@@ -12,6 +12,8 @@ enum SessionCommand: String, CaseIterable, Identifiable {
     case observe = "control"
     // aOS: no `passwordFill` (the fork's password fill panel): aOS signs in through its own requests.
     case pointerLock, keyboard
+    // aOS: the saved password of the Mac's own screen into its password field (aOS asks Face ID first).
+    case typePassword
     case missionControl, appWindows, showDesktop, launchpad
     case home, appSwitcher, lock
     case clipboard
@@ -33,6 +35,7 @@ enum SessionCommand: String, CaseIterable, Identifiable {
         case .pointerLock: "Pointer Lock"
         case .nativeTouch: "Native Touch"
         case .keyboard: "Keyboard"
+        case .typePassword: "Type Password"
         case .missionControl, .appWindows, .showDesktop, .launchpad: systemCommand!.title
         case .home: "Home Screen"
         case .appSwitcher: "App Switcher"
@@ -56,6 +59,7 @@ enum SessionCommand: String, CaseIterable, Identifiable {
         case .pointerLock: "computermouse"
         case .nativeTouch: "hand.tap"
         case .keyboard: "keyboard"
+        case .typePassword: "key"
         case .missionControl, .appWindows, .showDesktop, .launchpad: systemCommand!.systemImage
         case .home: "house"
         case .appSwitcher: if #available(iOS 18, *) { "iphone.app.switcher" } else { "square.stack" }
@@ -69,7 +73,7 @@ enum SessionCommand: String, CaseIterable, Identifiable {
         switch self {
         case .zoomMode, .scale, .displays, .quality, .resolution, .hdr: .view
         case .audio, .sendAudio: .sound
-        case .observe, .pointerLock, .nativeTouch, .keyboard, .missionControl, .appWindows,
+        case .observe, .pointerLock, .nativeTouch, .keyboard, .typePassword, .missionControl, .appWindows,
             .showDesktop, .launchpad, .home, .appSwitcher, .lock:
             .control
         case .clipboard: .clipboard
@@ -91,7 +95,7 @@ enum SessionCommand: String, CaseIterable, Identifiable {
         switch self {
         case .home, .appSwitcher, .lock: platform == .iOS
         case .displays, .quality, .resolution, .hdr: platform != .iOS
-        case .missionControl, .appWindows, .showDesktop, .launchpad: platform == .mac
+        case .missionControl, .appWindows, .showDesktop, .launchpad, .typePassword: platform == .mac
         case .zoomMode, .scale, .audio, .sendAudio, .observe, .pointerLock, .clipboard, .debugInfo: true
         #if os(iOS)
         case .keyboard: true
@@ -120,6 +124,8 @@ enum SessionCommand: String, CaseIterable, Identifiable {
                 && controller.networkSupportsHDR
         case .observe: return offers(.control) && offers(.observe)
         case .keyboard, .lock: return offers(.control)
+        // aOS: only where aOS handles it (the Mac's own screen, not the workspace)
+        case .typePassword: return offers(.control) && controller.onTypePassword != nil
         case .nativeTouch: return capabilities.contains(.touch)
         #if os(iOS)
         case .pointerLock: return offers(.control) && PointerLock.hasMouse
@@ -143,7 +149,7 @@ enum SessionCommand: String, CaseIterable, Identifiable {
         case .hdr: return controller.canUseHDR
         case .observe: return controller.capabilities.contains(.control)
         case .pointerLock: return controller.canLockPointer
-        case .nativeTouch, .keyboard, .missionControl, .appWindows, .showDesktop, .launchpad, .home,
+        case .nativeTouch, .keyboard, .typePassword, .missionControl, .appWindows, .showDesktop, .launchpad, .home,
             .appSwitcher, .lock:
             return controller.isControlling
         }
@@ -264,6 +270,13 @@ struct SessionCommandView: View {
                     systemImage: controller.isKeyboardVisible ? "keyboard.chevron.compact.down" : "keyboard"
                 )
             }
+        case .typePassword:
+            Button {
+                if style == .barItem, controller.isToolbarVisible {
+                    controller.toggleToolbar()
+                }
+                controller.onTypePassword?()
+            } label: { label }
         case .missionControl, .appWindows, .showDesktop, .launchpad:
             let systemCommand = command.systemCommand!
             Button {

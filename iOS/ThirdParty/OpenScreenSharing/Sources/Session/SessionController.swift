@@ -217,6 +217,9 @@ final class SessionController: Identifiable {
     /// work (not reachable, the connection breaks, high performance fails or isn't offered), the session ends
     /// without showing a failure and aOS goes back to the SSH tunnel (standard mode).
     @PerceptionIgnored var onDirectPathFailed: ((SessionFailure) -> Void)?
+    /// aOS: the toolbar's "Type Password" (only the Mac's own screen sets it: aOS asks Face ID and types the saved
+    /// password with `typePassword`).
+    @PerceptionIgnored var onTypePassword: (() -> Void)?
 
     @PerceptionIgnored private var session: LibsharingRemoteSession?
     @PerceptionIgnored private var sink: SessionEventSink?
@@ -2295,7 +2298,56 @@ final class SessionController: Identifiable {
         tapKey(key)
     }
 
-    // aOS: the fork's password fill (showPasswordFill, fillCredentials and their checks) is left out.
+    // aOS: the fork's password fill panel (showPasswordFill, fillCredentials) is left out; its password step
+    // (fillPassword and its checks) stays for aOS's "Type Password" and its unlock of a locked Mac.
+
+    /// aOS: whether the Mac reports secure input now (a password field, or Terminal's Secure Keyboard Entry, has the
+    /// keyboard). The Mac reports it a moment after focus moves; a new connection starts without it.
+    var reportsSecureInput: Bool { secureInput }
+
+    /// aOS: what typing a password did.
+    enum PasswordTyping: Equatable {
+        case typed
+        case notControlling
+        /// The Mac doesn't report secure input: no password field has the keyboard.
+        case noSecureInput
+        /// A Mac password field takes printable ASCII only.
+        case unsupportedCharacters
+        case failed
+    }
+
+    /// aOS: types a password (from the fork's `fillPassword`): only through sendText as key presses, never the
+    /// clipboard, and only while the Mac reports secure input. Every character must be printable ASCII, as a Mac
+    /// password field takes nothing else (see typeText), and all keys and modifiers are released first, so no key
+    /// becomes a shortcut. Nothing is typed unless every check passes. `pressingReturn` presses Return after it (the
+    /// lock screen's unlock), as a plain key press.
+    func typePassword(_ password: String, pressingReturn: Bool) -> PasswordTyping {
+        guard isControlling, let session else { return .notControlling }
+        guard secureInput else { return .noSecureInput }
+        guard Self.typesAsPassword(password) else { return .unsupportedCharacters }
+        releaseAllKeys()
+        stickyModifiers = []
+        textCursorMayHaveMoved()
+        do {
+            try session.sendText(password)
+        } catch {
+            return .failed
+        }
+        if pressingReturn { tap(.returnKey, modifiers: []) }
+        return .typed
+    }
+
+    /// aOS: a Mac password field takes printable ASCII only (see typeText); from the fork.
+    nonisolated static func typesAsPassword(_ password: String) -> Bool {
+        !password.isEmpty && password.unicodeScalars.allSatisfy { (0x20...0x7e).contains($0.value) }
+    }
+
+    /// aOS: presses and releases Shift, which changes nothing anywhere: it wakes a sleeping display, and a locked Mac
+    /// behind its screen saver shows its lock screen with the password field.
+    func tapShift() {
+        guard isControlling else { return }
+        tap(.shift, modifiers: [])
+    }
 
     private func tapKey(_ key: MacKey) {
         let sticky = stickyModifiers

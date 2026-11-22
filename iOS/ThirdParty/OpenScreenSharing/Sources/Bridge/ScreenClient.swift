@@ -300,6 +300,56 @@ public final class ScreenClientSession: Identifiable {
         }
     }
 
+    // MARK: Passwords (aOS: the Mac's own screen)
+
+    /// What typing a password did.
+    public enum PasswordTyping: Equatable, Sendable {
+        case typed
+        /// Not connected, or observe mode is on.
+        case notControlling
+        /// The Mac doesn't report a password field with the keyboard (secure input).
+        case noPasswordField
+        /// The password has characters a Mac password field doesn't take over screen sharing (printable ASCII only).
+        case unsupportedCharacters
+        case failed
+    }
+
+    /// The Mac reports secure input now: a password field (or Terminal's Secure Keyboard Entry) has the keyboard.
+    /// It comes a moment after focus moves; a new connection starts without it.
+    public var reportsPasswordField: Bool { controller.reportsSecureInput }
+
+    /// Types a password into the Mac's focused field as key presses (never the clipboard), only while the Mac reports
+    /// secure input and only printable ASCII; `pressingReturn` presses Return after it. Nothing is typed unless every
+    /// check passes.
+    public func typePassword(_ password: String, pressingReturn: Bool) -> PasswordTyping {
+        switch controller.typePassword(password, pressingReturn: pressingReturn) {
+        case .typed: .typed
+        case .notControlling: .notControlling
+        case .noSecureInput: .noPasswordField
+        case .unsupportedCharacters: .unsupportedCharacters
+        case .failed: .failed
+        }
+    }
+
+    /// Whether a password can be typed into a Mac password field over screen sharing (printable ASCII).
+    nonisolated public static func canType(password: String) -> Bool { SessionController.typesAsPassword(password) }
+
+    /// Presses Shift: wakes a sleeping display, and brings a locked Mac's lock screen out from behind its screen saver.
+    public func pressShift() {
+        controller.tapShift()
+    }
+
+    /// The toolbar's "Type Password" (set it for the Mac's own screen only; without it the toolbar doesn't offer it).
+    public var onTypePassword: (() -> Void)? {
+        get { controller.onTypePassword }
+        set { controller.onTypePassword = newValue }
+    }
+
+    /// A short message over the session (Open Screen Sharing's alert, with OK).
+    public func showNotice(_ title: String, message: String = "") {
+        controller.alert = AlertState(title: title, message: message)
+    }
+
     /// The session ended: closed here, or from its own close button or after a failure.
     public private(set) var isClosed = false
 

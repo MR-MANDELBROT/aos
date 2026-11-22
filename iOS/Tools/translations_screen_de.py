@@ -289,4 +289,6 @@ DE.update({
     'the Mac refused the login in the check through SSH': 'der Mac hat die Anmeldung bei der Prüfung über SSH abgelehnt',
     'the check through SSH failed: %@': 'die Prüfung über SSH ist gescheitert: %@',
     'nothing answered at %@, port %lld': 'unter %@, Port %lld, hat nichts geantwortet',
+    # aOS: the Mac screen's toolbar
+    'Type Password': 'Passwort eingeben',
 })

@@ -9,7 +9,9 @@ import SwiftUI
 @Perceptible
 final class ToolbarLayout {
     static let mac = ToolbarLayout(
-        platform: .mac, key: "SessionToolbar", defaultBar: [.displays, .audio, .pointerLock, .keyboard, .clipboard])
+        platform: .mac, key: "SessionToolbar",
+        // aOS: Type Password after the keyboard (offered only on the Mac's own screen)
+        defaultBar: [.displays, .audio, .pointerLock, .keyboard, .typePassword, .clipboard])
     static let iOS = ToolbarLayout(
         platform: .iOS, key: "SessionToolbar.iOS", defaultBar: [.pointerLock, .keyboard, .home, .appSwitcher, .clipboard])
     static let pc = ToolbarLayout(
@@ -41,6 +43,16 @@ final class ToolbarLayout {
         if let stored = store.value([String].self, for: key) {
             bar = stored.compactMap(SessionCommand.init(rawValue:))
             isCustomized = true
+            // aOS: a bar customized before Type Password existed gets it once, after the keyboard (removing it
+            // afterwards is the person's choice and stays).
+            let added = "\(key).typePasswordAdded"
+            if defaultBar.contains(.typePassword), store.value(Bool.self, for: added) != true {
+                if !bar.contains(.typePassword) {
+                    bar.insert(.typePassword, at: bar.firstIndex(of: .keyboard).map { $0 + 1 } ?? bar.endIndex)
+                    _ = store.set(bar.map(\.rawValue), for: key)
+                }
+                _ = store.set(true, for: added)
+            }
         } else {
             bar = defaultBar
             isCustomized = false

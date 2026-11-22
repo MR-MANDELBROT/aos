@@ -29,6 +29,7 @@ final class FakeRFBServer: @unchecked Sendable {
         private var keys: [(down: Bool, keysym: UInt32)] = []
         private var updates = 0
         private var logins: [Account] = []
+        private var secureInput = false
         func addPointer(_ b: UInt8, _ x: Int, _ y: Int) { lock.withLock { pointer.append((b, x, y)) } }
         func addKey(_ down: Bool, _ k: UInt32) { lock.withLock { keys.append((down, k)) } }
         func addUpdate() { lock.withLock { updates += 1 } }
@@ -38,6 +39,16 @@ final class FakeRFBServer: @unchecked Sendable {
         var updateCount: Int { lock.withLock { updates } }
         /// The account logins the server received (decrypted), right or wrong.
         var receivedLogins: [Account] { lock.withLock { logins } }
+        /// The server reports secure input (a password field has the keyboard) with every picture from now on, as
+        /// Apple's screen sharing does in its keyboard source (pseudo-encoding 1109).
+        var reportsSecureInput: Bool {
+            get { lock.withLock { secureInput } }
+            set { lock.withLock { secureInput = newValue } }
+        }
+        /// The keysyms pressed (down), modifiers left out.
+        var typedKeysyms: [UInt32] {
+            keyEvents.filter { $0.down && !(0xffe1...0xffee).contains($0.keysym) }.map(\.keysym)
+        }
     }
 
     static func start(width: Int = 64, height: Int = 48, account: Account? = nil) async throws -> FakeRFBServer {
@@ -240,14 +251,26 @@ private final class RFBSession: ChannelInboundHandler, @unchecked Sendable {
 
     private func sendFrame(_ context: ChannelHandlerContext) {
         log.addUpdate()
+        let secureInput = log.reportsSecureInput
         var out = ByteBuffer()
         out.writeBytes([0, 0])
-        out.writeInteger(UInt16(1))
+        out.writeInteger(UInt16(secureInput ? 2 : 1))
         out.writeInteger(UInt16(0)); out.writeInteger(UInt16(0))
         out.writeInteger(UInt16(width)); out.writeInteger(UInt16(height))
         out.writeInteger(Int32(0))  // raw
         // Mint-colored pixels in the client's RGBX format
         for _ in 0..<(width * height) { out.writeBytes([0x3D, 0xD9, 0xB4, 0]) }
+        if secureInput {
+            // Apple's keyboard source: flags (bit 0: secure input) at 2, the input source's id after its length at 6
+            let id = Array("com.apple.keylayout.US".utf8)
+            out.writeInteger(UInt16(0)); out.writeInteger(UInt16(0)); out.writeInteger(UInt16(0)); out.writeInteger(UInt16(0))
+            out.writeInteger(Int32(1109))
+            out.writeInteger(UInt16(8 + id.count))
+            out.writeInteger(UInt16(0))
+            out.writeInteger(UInt32(1))
+            out.writeInteger(UInt16(id.count))
+            out.writeBytes(id)
+        }
         context.writeAndFlush(wrapOutboundOut(out), promise: nil)
     }
 }
