@@ -48,7 +48,7 @@ settings:
   base:
     DEVELOPMENT_TEAM: S3725YB7V6
     MARKETING_VERSION: 0.1.0
-    CURRENT_PROJECT_VERSION: 13
+    CURRENT_PROJECT_VERSION: 14
     SWIFT_VERSION: "6.0"
     IPHONEOS_DEPLOYMENT_TARGET: "27.0"
     # iPhone (with the foldable iPhone Duo) and iPad: one universal app, windows of any size (iOS/NOTES.md, "iPad and
