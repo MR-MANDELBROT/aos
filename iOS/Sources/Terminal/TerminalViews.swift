@@ -8,6 +8,7 @@ struct TerminalTab: View {
     @Environment(AppModel.self) private var model
     @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     /// The terminal was opened (narrow: it is the column on screen).
     @State private var opened = false
     @State private var ending: MacTermSession?
@@ -39,6 +40,10 @@ struct TerminalTab: View {
                 }
             }
         }
+        // The terminal gets the rows the tab bar would take, but only while it is the column on screen: decided here,
+        // not in TerminalScreen, which stays in the hierarchy behind the list while its session runs (and kept the tab
+        // bar hidden after going back to the list). Beside the list, in a wide window, the tabs stay.
+        .toolbar(horizontalSizeClass == .compact && opened ? .hidden : .visible, for: .tabBar)
         .onAppear {
             #if DEBUG
             if model.isDemo, Demo.tab == "terminal", let mac = model.activeMac, !opened, Demo.sheet == "shell" {
@@ -362,9 +367,6 @@ struct TerminalScreen: View {
         .navigationTitle(session.title)
         .navigationSubtitle(model.macSessions.name(of: session.holderID, home: home) ?? "")
         .navigationBarTitleDisplayMode(.inline)
-        // The terminal gets the rows the tab bar would take (where it comes over the list; beside the list, in a wide
-        // window, the tabs stay).
-        .toolbar(horizontalSizeClass == .regular || inOwnWindow ? .automatic : .hidden, for: .tabBar)
         // The Terminal menu and its shortcuts act on the terminal on screen
         .focusedSceneValue(\.terminalSession, visible ? session : nil)
         .toolbar {
