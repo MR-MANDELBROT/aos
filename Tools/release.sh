@@ -107,7 +107,6 @@ say "Sparkle signature"
 SIGN_UPDATE="$(find build/DerivedData/SourcePackages/artifacts -name sign_update -type f | head -1)"
 [ -x "$SIGN_UPDATE" ] || die "sign_update not found (build once so Sparkle is downloaded)"
 SIG="$("$SIGN_UPDATE" "$DMG")"
-SIZE="$(stat -f %z "$DMG")"
 cat > "$OUT/appcast-item.xml" <<EOF
     <item>
       <title>Version $VERSION</title>
@@ -115,7 +114,7 @@ cat > "$OUT/appcast-item.xml" <<EOF
       <sparkle:version>$BUILD</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
-      <enclosure url="https://github.com/MR-MANDELBROT/aos/releases/download/$TAG/aOS.dmg" length="$SIZE" type="application/octet-stream" $SIG/>
+      <enclosure url="https://github.com/MR-MANDELBROT/aos/releases/download/$TAG/aOS.dmg" type="application/octet-stream" $SIG/>
     </item>
 EOF
 unregister_copies

@@ -6,5 +6,13 @@
     <description>Updates for aOS</description>
     <language>en</language>
     <!-- Tools/release.sh writes build/release/<version>/appcast-item.xml; paste new items here, newest first. -->
+    <item>
+      <title>Version 0.1.0</title>
+      <pubDate>Sun, 22 Nov 2026 02:23:49 +0000</pubDate>
+      <sparkle:version>27</sparkle:version>
+      <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/MR-MANDELBROT/aos/releases/download/v0.1.0-27/aOS.dmg" type="application/octet-stream" sparkle:edSignature="PfYOq/N8KP7e9Bn/hGdH7A80hnB9id8w+3NfIbjHyEV5wdtXf0LKakWde0yLV04VEcC3V/N09AepHhGu0XrgCg==" length="24050460"/>
+    </item>
   </channel>
 </rss>
