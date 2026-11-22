@@ -1060,3 +1060,51 @@ DE.update({
     "%@ effort": "Denkaufwand: %@",
     "%@, %@ effort": "%@, Denkaufwand: %@",
 })
+
+# The Mac's login: Settings > Screen > Mac Login, unlocking a locked Mac, Type Password in the Mac's screen
+DE.update({
+    'Type the password of %@': 'Passwort von %@ eingeben',
+    'Your Mac stayed locked': 'Dein Mac blieb gesperrt',
+    "aOS typed the saved password into the lock screen once, but the Mac didn't unlock. Unlock it yourself. aOS won't type it there again until you save the login anew (Settings > Screen > Mac Login).":
+        'aOS hat das gesicherte Passwort einmal in den Sperrbildschirm eingegeben, aber der Mac wurde nicht entsperrt. Entsperre ihn selbst. aOS gibt es dort erst wieder ein, wenn du die Anmeldung neu sicherst (Einstellungen > Bildschirm > Mac-Anmeldung).',
+    "aOS didn't unlock your Mac": 'aOS hat deinen Mac nicht entsperrt',
+    'The lock screen is for the account %@, the saved login is for another one.':
+        'Der Sperrbildschirm gehört zum Account %@, die gesicherte Anmeldung zu einem anderen.',
+    "The Mac didn't report its password field. Click into the field on the lock screen, then use Type Password in the toolbar.":
+        'Der Mac hat sein Passwortfeld nicht gemeldet. Klick auf dem Sperrbildschirm in das Feld und nimm dann „Passwort eingeben“ in der Leiste.',
+    "The saved password has characters screen sharing can't type into a password field (it types English letters, digits and symbols only).":
+        'Das gesicherte Passwort hat Zeichen, die die Bildschirmfreigabe nicht in ein Passwortfeld eingeben kann (sie gibt nur englische Buchstaben, Ziffern und Symbole ein).',
+    "The saved login couldn't be read": 'Die gesicherte Anmeldung ließ sich nicht lesen',
+    'Save it again in Settings > Screen > Mac Login.': 'Sichere sie neu unter Einstellungen > Bildschirm > Mac-Anmeldung.',
+    'No password field on your Mac': 'Kein Passwortfeld auf deinem Mac',
+    "aOS types the password only into a password field. Click into it on your Mac's screen, then tap Type Password again.":
+        'aOS gibt das Passwort nur in ein Passwortfeld ein. Klick auf dem Bildschirm deines Macs in das Feld und tippe dann noch einmal auf „Passwort eingeben“.',
+    "The password can't be typed": 'Das Passwort lässt sich nicht eingeben',
+    'Screen sharing types only English letters, digits and symbols into a password field, and the saved password has other characters.':
+        'Die Bildschirmfreigabe gibt in ein Passwortfeld nur englische Buchstaben, Ziffern und Symbole ein, und das gesicherte Passwort hat andere Zeichen.',
+    "The screen isn't connected, or observe mode is on.": 'Der Bildschirm ist nicht verbunden, oder der Beobachtungsmodus ist an.',
+    'The login of %@': 'Die Anmeldung von %@',
+    "The name and password of your Mac account: for the Mac's screen sharing, and for its lock screen and password fields.":
+        'Name und Passwort deines Mac-Accounts: für die Bildschirmfreigabe des Macs und für seinen Sperrbildschirm und seine Passwortfelder.',
+    "When your Mac's screen is locked as you connect, aOS types the password into its lock screen, once. You can turn that off in Settings > Screen > Mac Login.":
+        'Ist der Bildschirm deines Macs beim Verbinden gesperrt, gibt aOS das Passwort einmal in den Sperrbildschirm ein. Das kannst du unter Einstellungen > Bildschirm > Mac-Anmeldung ausschalten.',
+    'Save and type': 'Sichern und eingeben',
+    'Saved': 'Gesichert',
+    'Not saved': 'Nicht gesichert',
+    'Mac Login': 'Mac-Anmeldung',
+    'The name and password of your Mac account, for its screen sharing and its lock screen.':
+        'Name und Passwort deines Mac-Accounts, für seine Bildschirmfreigabe und seinen Sperrbildschirm.',
+    'Login of %@': 'Anmeldung von %@',
+    'Change Login': 'Anmeldung ändern',
+    'Save Login': 'Anmeldung sichern',
+    'Delete Login': 'Anmeldung löschen',
+    "The name and password of your Mac account, kept on this iPhone behind %@, which every use asks for. They go only to your Mac's screen sharing.":
+        'Name und Passwort deines Mac-Accounts, auf diesem iPhone hinter %@ gesichert, das bei jeder Verwendung fragt. Sie gehen nur an die Bildschirmfreigabe deines Macs.',
+    'Unlock the Mac when connecting': 'Mac beim Verbinden entsperren',
+    "Last time your Mac stayed locked after the saved password. aOS doesn't type it into the lock screen again until you save the login anew.":
+        'Beim letzten Mal blieb dein Mac nach dem gesicherten Passwort gesperrt. aOS gibt es erst wieder in den Sperrbildschirm ein, wenn du die Anmeldung neu sicherst.',
+    "If your Mac's screen is locked when you connect, aOS types the saved password into the lock screen and presses Return: once per connect, and only when the Mac reports its screen locked for this account and its password field in front. In your Mac's screen, Type Password (the key in the toolbar) types it into a password field after %@, without Return.":
+        'Ist der Bildschirm deines Macs beim Verbinden gesperrt, gibt aOS das gesicherte Passwort in den Sperrbildschirm ein und drückt den Zeilenschalter: einmal pro Verbindung, und nur wenn der Mac meldet, dass sein Bildschirm für diesen Account gesperrt ist und sein Passwortfeld vorne liegt. Im Bildschirm deines Macs gibt „Passwort eingeben“ (der Schlüssel in der Leiste) es nach %@ in ein Passwortfeld ein, ohne Zeilenschalter.',
+    'Delete the login of %@?': 'Anmeldung von %@ löschen?',
+    "The Mac's screen then asks for it again when you connect.": 'Der Bildschirm des Macs fragt dann beim Verbinden wieder danach.',
+})

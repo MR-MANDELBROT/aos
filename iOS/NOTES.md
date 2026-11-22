@@ -134,6 +134,9 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   iPhone") are signed like `type`: op `companion.<op>`, the value only in `text`. A refusal carries `code`
   (`sleep-disabled`, `other-service`, `sleep-held`, `not-set-up`, `no-session`), which the phone words itself
   (`MacRefusal`). `hello`'s `features` tells whether the Mac has them; without, the Mac card says to update aOS.
+- `mac.status`'s `screen` (since 2026-11-22): `{"state":"locked|unlocked|away","user":"…","name":"…"}`, this user's
+  console session (AOSKit `MacScreenLockStatus`). The iPhone types the Mac's password into the lock screen only on
+  `locked` for the saved login's account; without the field (an older aOS) it never does.
 - The terminal on the paired Mac: a pty-req plus exec of
   `'<companion>' term attach [--id ID [--have N]] --client <phone id>`, notes `ESC ] 7730 ; <JSON> BEL` in the output
   (Docs/COMPANION.md, "Terminal sessions"; `replaced` for this iPhone's own older connection, `taken` only for another
@@ -371,7 +374,9 @@ is aOS's interface (`ScreenClientSession`, `ScreenClientView`, `ScreenCard`, `Sc
 `displaySize`, `checkServer`, `record(of:)`, orientation, license texts).
 
 **The Screen tab** (`ScreenTab`): OSS's selection view with two cards, the workspace and the Mac: the last picture
-(16:10, OSS's thumbnail; the device's icon before there is one), a dot that is green while the screen can be reached
+(16:10, OSS's thumbnail; the device's icon before there is one; every picture fills the picture area from its top,
+aspect fill clipped to the card's rounded shape, also a portrait one such as the workspace in the iPhone's shape,
+which OSS showed whole in the middle with bars on both sides: `ComputerCard.thumbnailFrame`, 2026-11-22), a dot that is green while the screen can be reached
 (the Mac: connected; the workspace: connected and `open` or `running`), the name and one line (the workspace's state;
 the Mac's "Last connected ..."). One column on an iPhone held upright, two otherwise. While a screen connects, a spinner
 sits in the middle of its card's picture (an overlay in the picture's 16:10 shape at the card's top; centered on the
@@ -389,7 +394,9 @@ padding it sat a point up and to the left of the circle's middle (Max saw it; me
   closes says to start it once it's closed. The state as the overview reads it (mac.status, else the older status),
   polled every 15 s while the cards are on screen.
 - Failures stay as a banner above the cards until dismissed or the next tap. The Mac's login form is a sheet ("Save
-  and connect" above the keyboard); the card's context menu has "Change login".
+  and connect" above the keyboard); the card's context menu has "Change login". Settings > Screen > Mac Login saves,
+  changes and deletes it ahead of time (the same keychain item; "Saved" is read from the item's attributes only, which
+  user presence doesn't guard, so no Face ID) and has "Unlock the Mac when connecting" (below).
 - **Face ID: once per connect.** The Mac's login is read once per tap (Face ID, then the keychain item with that same
   authentication, `ScreenSession.unlockLogin`) and stays in memory for that connect only: OSS reconnecting, the tunnel
   taking over from the direct path and the return from the background ask no more; a login just typed into the form
@@ -403,6 +410,37 @@ padding it sat a point up and to the left of the circle's middle (Max saw it; me
 - **The last pictures** (`ScreenPictures`): one JPEG per screen in Application Support/Screen Pictures, written with
   complete file protection (readable only while the iPhone is unlocked), the folder out of backups, deleted when the
   Mac is unpaired. In the demo in memory only.
+
+**Unlocking the Mac** (2026-11-22, `ScreenSession.unlockIfLocked`, the decision in `Core/MacUnlock.swift`). When the
+Mac's screen is locked at connecting, the login already unlocked with Face ID for this connect goes into the lock
+screen with Return, no second prompt. Only when every check holds, else nothing is typed:
+1. The session is the Mac's (never the workspace), connected, in control, with a picture, waiting for no one.
+2. A fresh `mac.status` (not the 15 s poll) says `screen.state` `locked` for the saved login's account (its account
+   name or full name). `unlocked`, `away` (another session on the console), a missing field (an older aOS) or no
+   answer: nothing, silently. Another account or a password with other than printable ASCII: a message.
+3. The Mac reports secure input (Apple's keyboard source, pseudo-encoding 1109: a password field has the keyboard).
+   If not within 2 s, one Shift (wakes a dark display, brings the lock screen out from behind the screen saver), then
+   up to 3 s more; still none: a message ("click into the field, then Type Password").
+4. Right before typing: a fresh `mac.status` again, the same session still current, the app active, secure input on.
+   Then the password and Return as key presses (`SessionController.typePassword`, the fork's `fillPassword`: keys
+   released first, never the clipboard, printable ASCII only, only with secure input; it checks that again itself).
+5. Afterwards `mac.status` every 1.5 s up to 9 s: `unlocked` is done; still `locked` shows "Your Mac stayed locked",
+   and the Mac goes into `AppSettings.screenUnlockFailed` (its id, UserDefaults, not secret): no more typing into its
+   lock screen until a login is saved anew (a wrong password at every connect would lock the account).
+At most once per connect (a handover to the tunnel doesn't start another; coming back from the background is a new
+connect). The setting is on by default and only has an effect with a saved login. Not verified on a real locked Mac
+(needs Max): whether macOS 27 still publishes `CGSSessionScreenIsLocked` (a missing key reads as unlocked, so it would
+just never type), whether the lock screen reports secure input right after connecting, and the virtual display in the
+iPhone's size: the lock screen's password field may be on the Mac's main display, not on the virtual one; keyboard
+input goes to the field either way, which step 5 checks. Tests: `MacUnlockTests`, `MacUnlockSessionTests` (against
+`FakeRFBServer`, which reports secure input when told to).
+
+**Type Password** (the key in the Mac screen's toolbar, after the keyboard; `SessionCommand.typePassword`, offered only
+where aOS sets `onTypePassword`: the Mac, not the workspace; a toolbar customized before gets it once): every tap asks
+Face ID with a new `LAContext` (no reuse) and reads the item with it, then types the password into the focused field
+without Return, only while the Mac reports secure input (otherwise "No password field on your Mac"), printable ASCII
+only (otherwise it says so instead of typing something wrong). Without a saved login the login form comes over the
+session ("Save and type": it types what was just entered, without Face ID).
 
 **One setting for both screens** (Settings > Screen > Display): "Screens in the iPhone's size" (on by default) and
 OSS's resolution (Native, 1.25x to 2x). Both screens are sized the same way, OSS's `VirtualDisplayMode`: the picture

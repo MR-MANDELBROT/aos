@@ -17,16 +17,20 @@ struct ScreenOptions: Equatable, Sendable {
     var matchesPhone = true
     /// Open Screen Sharing's resolution (1x to 2x): more room on the screen, less sharp.
     var resolutionScale = ScreenClient.defaultResolutionScale
+    /// The Mac's saved password goes into its lock screen when the Mac reports it locked (`MacUnlock`).
+    var unlocksMac = false
 
     @MainActor
     init(settings: AppSettings) {
         matchesPhone = settings.screenMatchesPhone
         resolutionScale = settings.screenResolution
+        unlocksMac = settings.screenUnlocksMac
     }
 
-    init(matchesPhone: Bool = true, resolutionScale: Double = ScreenClient.defaultResolutionScale) {
+    init(matchesPhone: Bool = true, resolutionScale: Double = ScreenClient.defaultResolutionScale, unlocksMac: Bool = false) {
         self.matchesPhone = matchesPhone
         self.resolutionScale = resolutionScale
+        self.unlocksMac = unlocksMac
     }
 }
 
@@ -167,8 +171,28 @@ final class ScreenSession {
     /// What exactly went wrong on the direct path (shown on the card, for finding the cause).
     private(set) var tunnelDetail: String?
 
+    /// The Mac's screen's "Type Password" found no saved login: the login form shows over the session ("Save and
+    /// type").
+    var asksForLogin = false
+    /// What the unlock of a locked Mac did in this connect (nil: nothing yet, or nothing to do).
+    private(set) var unlock: UnlockStep?
+
+    enum UnlockStep: Equatable {
+        /// The password went into the lock screen; the Mac reported it unlocked afterwards.
+        case unlocked
+        /// The Mac stayed locked after the password: not typed again until a new login is saved.
+        case stayedLocked
+        /// Typed, but the Mac didn't say afterwards.
+        case unknown
+        /// Not typed although the Mac is locked.
+        case skipped(MacUnlock.Skip)
+    }
+
     /// The person changed the resolution in the session (aOS keeps one setting for both screens).
     @ObservationIgnored var onResolutionScale: ((Double) -> Void)?
+    /// The app's settings: whether the Mac is unlocked at connecting, and the Macs whose lock screen didn't take the
+    /// saved password.
+    @ObservationIgnored weak var settings: AppSettings?
     /// The window the screen is shown in (the Screen tab's): its size and safe areas give the picture's first shape,
     /// also when the screen comes back from the background.
     @ObservationIgnored weak var window: UIWindow?
@@ -184,6 +208,9 @@ final class ScreenSession {
     /// When the direct path last failed and why, per address: not tried again for a while.
     @ObservationIgnored private var directFailures: [String: (at: Date, reason: String)] = [:]
     @ObservationIgnored private var resuming = false
+    @ObservationIgnored private var unlockTask: Task<Void, Never>?
+    /// The unlock ran in this start (at most once: the direct path handing over to the tunnel doesn't start another).
+    @ObservationIgnored private var unlockTried = false
     /// Macs whose screen sharing offers no high performance (learned this run).
     @ObservationIgnored private var withoutHighPerformance: Set<UUID> = []
     #if DEBUG
@@ -210,6 +237,24 @@ final class ScreenSession {
 
     /// How long a direct session may take to show a picture before the tunnel takes over.
     static var directPictureTimeout: Duration = .seconds(15)
+
+    /// Where the Mac's lock state comes from instead of a fresh `mac.status` (tests).
+    @ObservationIgnored var screenLockSource: (@MainActor () async -> MacStatus.ScreenLock?)?
+
+    /// Whether the Mac's screen is locked, asked fresh each time (never the status of the last poll).
+    private func currentScreenLock() async -> MacStatus.ScreenLock? {
+        if let screenLockSource { return await screenLockSource() }
+        return await mac?.freshScreenLock()
+    }
+
+    /// "Type Password": Face ID every time, with a context of its own that reuses no earlier unlock, then the keychain
+    /// item with that same authentication. Nil: none saved.
+    static var unlockForTyping: @MainActor (PairedMac) async throws -> SecretStore.ScreenLogin? = { mac in
+        guard SecretStore.hasScreenLogin(for: mac) else { return nil }
+        let context = try await Biometrics.authenticate(reason: String(localized: "Type the password of \(mac.name)"))
+        defer { context.invalidate() }
+        return try SecretStore.screenLogin(for: mac, context: context)
+    }
 
     init(target: ScreenTarget) {
         self.target = target
@@ -278,6 +323,8 @@ final class ScreenSession {
         self.options = options
         self.mac = mac
         self.login = login
+        unlockTried = false
+        unlock = nil
         if target == .mac {
             tunnelReason = nil
             tunnelDetail = nil
@@ -388,6 +435,11 @@ final class ScreenSession {
             client.onLoginRefused = { [weak self] in
                 self?.showNeedsLogin(problem: String(localized: "The Mac didn't accept the account name or password for screen sharing."))
             }
+            // The toolbar's "Type Password": only the Mac's own screen, never the workspace
+            client.onTypePassword = { [weak self] in
+                guard let self else { return }
+                Task { await self.typeSavedPassword() }
+            }
         }
         if case .direct(let address, _) = path {
             client.onDirectPathFailed = { [weak self, weak client] reason in
@@ -401,6 +453,10 @@ final class ScreenSession {
         phase = .running
         watchTask?.cancel()
         watchTask = path.isDirect ? watchDirectPicture(of: client, address: host) : nil
+        if route.target == .mac, options.unlocksMac, login != nil, !unlockTried {
+            unlockTried = true
+            unlockTask = Task { [weak self] in await self?.unlockIfLocked() }
+        }
         // The one it replaces (the direct path that failed) lets go; its view's close comes back to nothing.
         previous?.close()
         log.info("Screen \(route.target.rawValue, privacy: .public) through \(host, privacy: .public):\(port)")
@@ -454,6 +510,184 @@ final class ScreenSession {
         throw ScreenError.notConnected
     }
 
+    // MARK: Unlocking the Mac
+
+    /// When the Mac's screen is locked at connecting, the password unlocked for this connect goes into its lock screen,
+    /// with Return: once per connect, only while every check holds (`MacUnlock`), checked again right before typing.
+    /// 1. The session shows the Mac's picture and waits for no one.
+    /// 2. The Mac reports this user's screen locked (a fresh `mac.status`); otherwise nothing happens.
+    /// 3. The Mac reports a password field (secure input); if not yet, Shift wakes the lock screen once.
+    /// 4. Right before typing: a fresh `mac.status` again, the same session still connected and in control, the app in
+    ///    front, secure input still on; then the password and Return as key presses (`typePassword`).
+    /// 5. Afterwards the Mac must report unlocked. If it stays locked, aOS says so and doesn't type it there again until
+    ///    a new login is saved (a wrong password typed at every connect would lock the account).
+    private func unlockIfLocked() async {
+        guard let client = await waitForMacPicture(), let login, !Task.isCancelled else { return }
+        let macID = mac?.mac.id
+        if let macID, settings?.unlockFailed(for: macID) == true { return }
+        let first = await currentScreenLock()
+        guard !Task.isCancelled, first?.isLocked == true else { return }
+        if let first, !MacUnlock.isAccount(of: first, login.username) {
+            return skipUnlock(.otherAccount(first.user), on: client)
+        }
+        guard MacUnlock.canType(login.password) else { return skipUnlock(.unsupportedCharacters, on: client) }
+        if !(await waitForPasswordField(client, seconds: 2)) {
+            guard isCurrent(client) else { return }
+            client.pressShift()
+            guard await waitForPasswordField(client, seconds: 3) else {
+                guard isCurrent(client) else { return }
+                return skipUnlock(.noPasswordField, on: client)
+            }
+        }
+        // Right before typing: is it still the locked Mac, with its password field in front?
+        let now = await currentScreenLock()
+        guard isCurrent(client), Self.appIsActive() else { return }
+        switch MacUnlock.verdict(lock: now, username: login.username, password: login.password,
+                                 secureInput: client.reportsPasswordField) {
+        case .skip(let reason):
+            if reason.isWorthSaying { skipUnlock(reason, on: client) } else { unlock = .skipped(reason) }
+            return
+        case .type:
+            break
+        }
+        switch client.typePassword(login.password, pressingReturn: true) {
+        case .typed: break
+        case .noPasswordField: return skipUnlock(.noPasswordField, on: client)
+        case .unsupportedCharacters: return skipUnlock(.unsupportedCharacters, on: client)
+        case .notControlling, .failed: return
+        }
+        log.info("Typed the saved password into the Mac's lock screen")
+        // Did it unlock? The lock screen takes a moment.
+        var outcome = MacUnlock.Outcome.unknown
+        for _ in 0..<6 {
+            try? await Task.sleep(for: Self.unlockCheckInterval)
+            guard !Task.isCancelled else { return }
+            outcome = MacUnlock.outcome(await currentScreenLock())
+            if outcome == .unlocked { break }
+        }
+        switch outcome {
+        case .unlocked:
+            unlock = .unlocked
+            if let macID { settings?.noteUnlock(true, for: macID) }
+        case .stillLocked:
+            unlock = .stayedLocked
+            if let macID { settings?.noteUnlock(false, for: macID) }
+            if isCurrent(client) {
+                client.showNotice(String(localized: "Your Mac stayed locked"),
+                                  message: String(localized: "aOS typed the saved password into the lock screen once, but the Mac didn't unlock. Unlock it yourself. aOS won't type it there again until you save the login anew (Settings > Screen > Mac Login)."))
+            }
+        case .unknown:
+            unlock = .unknown
+        }
+    }
+
+    /// The wait between the checks after typing (tests shorten it).
+    static var unlockCheckInterval: Duration = .milliseconds(1500)
+
+    private func skipUnlock(_ reason: MacUnlock.Skip, on client: ScreenClientSession) {
+        unlock = .skipped(reason)
+        guard isCurrent(client) else { return }
+        let title = String(localized: "aOS didn't unlock your Mac")
+        switch reason {
+        case .otherAccount(let user):
+            client.showNotice(title, message: String(localized: "The lock screen is for the account \(user), the saved login is for another one."))
+        case .noPasswordField:
+            client.showNotice(title, message: String(localized: "The Mac didn't report its password field. Click into the field on the lock screen, then use Type Password in the toolbar."))
+        case .unsupportedCharacters:
+            client.showNotice(title, message: String(localized: "The saved password has characters screen sharing can't type into a password field (it types English letters, digits and symbols only)."))
+        case .unknown, .unlocked, .away:
+            break
+        }
+    }
+
+    /// The session shown now is `client`, connected, in control of the Mac (not waiting for anyone).
+    private func isCurrent(_ client: ScreenClientSession) -> Bool {
+        !Task.isCancelled && phase == .running && self.client === client && client.state == .connected
+            && !client.waitsForPerson
+    }
+
+    static var appIsActive: @MainActor () -> Bool = { UIApplication.shared.applicationState == .active }
+
+    /// The Mac's session once it shows a picture (the direct path may hand over to the tunnel meanwhile: the one
+    /// shown then). Nil after 30 s, or when the screen closes.
+    private func waitForMacPicture() async -> ScreenClientSession? {
+        for _ in 0..<120 {
+            guard !Task.isCancelled, phase == .running || phase == .preparing else { return nil }
+            if let client, client.state == .connected, client.hasPicture, !client.waitsForPerson { return client }
+            try? await Task.sleep(for: .milliseconds(250))
+        }
+        return nil
+    }
+
+    private func waitForPasswordField(_ client: ScreenClientSession, seconds: Int) async -> Bool {
+        for _ in 0..<(seconds * 10) {
+            guard isCurrent(client) else { return false }
+            if client.reportsPasswordField { return true }
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        return isCurrent(client) && client.reportsPasswordField
+    }
+
+    // MARK: Type Password
+
+    /// The Mac screen's "Type Password": Face ID every time (no earlier unlock counts), then the saved password into
+    /// the Mac's focused field, without Return, only while the Mac reports a password field there. Without a saved
+    /// login the login form shows ("Save and type").
+    func typeSavedPassword() async {
+        guard target == .mac, phase == .running, let client, let mac = mac?.mac else { return }
+        let login: SecretStore.ScreenLogin
+        do {
+            guard let saved = try await Self.unlockForTyping(mac) else {
+                asksForLogin = true
+                return
+            }
+            login = saved
+        } catch Biometrics.Failure.cancelled {
+            return
+        } catch {
+            client.showNotice(String(localized: "The saved login couldn't be read"),
+                              message: String(localized: "Save it again in Settings > Screen > Mac Login."))
+            return
+        }
+        type(login.password, into: client)
+    }
+
+    /// The login was just typed into the form ("Save and type"): typed as it is, without Face ID.
+    func typeNewPassword(_ login: SecretStore.ScreenLogin) {
+        asksForLogin = false
+        guard target == .mac, phase == .running, let client else { return }
+        Task {
+            // The sheet closes first and the Mac's field gets the keyboard back
+            try? await Task.sleep(for: .milliseconds(600))
+            type(login.password, into: client)
+        }
+    }
+
+    private func type(_ password: String, into client: ScreenClientSession) {
+        Task {
+            // The Mac reports secure input a moment after focus moves (a click just before the tap)
+            for _ in 0..<10 where !client.reportsPasswordField && isCurrent(client) {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            guard self.client === client, phase == .running else { return }
+            switch client.typePassword(password, pressingReturn: false) {
+            case .typed:
+                break
+            case .noPasswordField:
+                client.showNotice(String(localized: "No password field on your Mac"),
+                                  message: String(localized: "aOS types the password only into a password field. Click into it on your Mac's screen, then tap Type Password again."))
+            case .unsupportedCharacters:
+                client.showNotice(String(localized: "The password can't be typed"),
+                                  message: String(localized: "Screen sharing types only English letters, digits and symbols into a password field, and the saved password has other characters."))
+            case .notControlling:
+                client.showNotice(String(localized: "The password can't be typed"),
+                                  message: String(localized: "The screen isn't connected, or observe mode is on."))
+            case .failed:
+                client.showNotice(String(localized: "The password can't be typed"))
+            }
+        }
+    }
+
     // MARK: The background
 
     /// The app has been in the background for a while (`AppModel`): the session ends (its last picture is kept), and
@@ -502,6 +736,21 @@ final class ScreenSession {
             path: .tunnel, host: host, port: Int(port))
     }
 
+    /// Tests: the Mac's screen straight from a server that asks for no login, with `login` as this connect's login
+    /// and the Mac's lock state from `screenLock` (the unlock runs as at a connect).
+    func startMacForTesting(host: String, port: Int, login: SecretStore.ScreenLogin,
+                            screenLock: @escaping @MainActor () async -> MacStatus.ScreenLock?) {
+        stop()
+        self.login = login
+        options.unlocksMac = true
+        unlockTried = false
+        unlock = nil
+        screenLockSource = screenLock
+        run(ScreenRoute(target: .mac, name: "Mac", screenID: ScreenRoute.screenID(named: "test\n\(host):\(port)"),
+                        targetHost: host, targetPort: port, login: .none, followsWindowShape: false),
+            path: .tunnel, host: host, port: port)
+    }
+
     /// The demo: a screen sharing server in the app that shows a picture (no Mac, no SSH).
     func startDemo(_ picture: CGImage, name: String, screenID: UUID) async {
         stop()
@@ -525,6 +774,9 @@ final class ScreenSession {
         self.client = nil
         watchTask?.cancel()
         watchTask = nil
+        unlockTask?.cancel()
+        unlockTask = nil
+        asksForLogin = false
         displayTask?.cancel()
         displayTask = nil
         renewTask?.cancel()

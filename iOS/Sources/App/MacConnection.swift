@@ -191,6 +191,15 @@ final class MacConnection {
         if let result = try? await companion.mac(.status), let status = result.status { macStatus = status }
     }
 
+    /// Whether the Mac's screen is locked right now: a fresh `mac.status`, not the last one (that can be 15 s old). Nil
+    /// when the Mac can't tell (an older aOS) or doesn't answer: then the iPhone never types the Mac's password.
+    func freshScreenLock() async -> MacStatus.ScreenLock? {
+        guard let companion, companionState == .ready, !macStatusUnsupported else { return nil }
+        guard let result = try? await companion.mac(.status), let status = result.status else { return nil }
+        macStatus = status
+        return status.screen
+    }
+
     /// An action of the Overview (signed like every request). The status that comes back is shown at once. Starting
     /// and closing the workspace stay under way until the Mac reports it done (`workspaceOperation`).
     @discardableResult

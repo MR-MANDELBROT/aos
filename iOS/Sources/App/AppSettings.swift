@@ -32,6 +32,21 @@ final class AppSettings {
     /// Open Screen Sharing's resolution for both (1x to 2x): more room, less sharp.
     var screenResolution: Double { didSet { defaults.set(screenResolution, forKey: "screenResolution") } }
 
+    /// The Mac's saved password goes into its lock screen when the Mac's screen is locked at connecting (MacUnlock).
+    var screenUnlocksMac: Bool { didSet { defaults.set(screenUnlocksMac, forKey: "screenUnlocksMac") } }
+    /// Macs (their ids) whose lock screen didn't take the saved password: aOS doesn't type it there again until the
+    /// login is saved anew (a wrong password typed at every connect would lock the account). Not secret.
+    private(set) var screenUnlockFailed: Set<String> {
+        didSet { defaults.set(screenUnlockFailed.sorted(), forKey: "screenUnlockFailed") }
+    }
+
+    func unlockFailed(for mac: UUID) -> Bool { screenUnlockFailed.contains(mac.uuidString) }
+
+    /// What the last unlock did (false: the Mac stayed locked), or nil to forget it (a new login was saved).
+    func noteUnlock(_ worked: Bool?, for mac: UUID) {
+        if worked == false { screenUnlockFailed.insert(mac.uuidString) } else { screenUnlockFailed.remove(mac.uuidString) }
+    }
+
     static let autoLockChoices = [0, 1, 5, 15, 60]
 
     init(defaults: UserDefaults = .standard) {
@@ -50,6 +65,8 @@ final class AppSettings {
         terminalKeepAliveLocation = bool("terminalKeepAliveLocation", false)
         // Before: the workspace alone took the iPhone's shape ("matchWorkspaceShape")
         screenMatchesPhone = bool("screenMatchesPhone", bool("matchWorkspaceShape", true))
+        screenUnlocksMac = bool("screenUnlocksMac", true)
+        screenUnlockFailed = Set(defaults.stringArray(forKey: "screenUnlockFailed") ?? [])
         let resolution = defaults.double(forKey: "screenResolution")
         screenResolution = (1...2).contains(resolution) ? resolution : 1
     }

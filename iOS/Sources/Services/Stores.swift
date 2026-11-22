@@ -56,7 +56,8 @@ enum ConfigStore {
 
 /// The Mac account for the Mac's own screen. Every read needs Face ID (or the passcode).
 enum SecretStore {
-    private static let screenService = "dev.marquart.aos.macscreen"
+    /// (Tests use their own.)
+    nonisolated(unsafe) static var screenService = "dev.marquart.aos.macscreen"
 
     struct ScreenLogin: Codable, Equatable, Sendable {
         var username: String
@@ -72,6 +73,8 @@ enum SecretStore {
                              prompt: String(localized: "Unlock the login for the screen of \(mac.name)"))
     }
 
+    /// Whether a login is saved, without Face ID: only the items' attributes are read, never their data, which is what
+    /// user presence guards (so nothing asks).
     static func hasScreenLogin(for mac: PairedMac) -> Bool {
         ((try? Keychain.accounts(service: screenService)) ?? []).contains(mac.id.uuidString)
     }

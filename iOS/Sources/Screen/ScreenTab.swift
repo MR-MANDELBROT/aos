@@ -76,6 +76,22 @@ struct ScreenTab: View {
                     .presentationSizing(.form)
                 }
             }
+            // "Type Password" in the Mac's screen without a saved login: the form over the session, then it types
+            .sheet(isPresented: typeLoginShown) {
+                if let mac = model.activeMac {
+                    NavigationStack {
+                        MacScreenLoginForm(mac: mac, purpose: .type) { login in
+                            model.macScreen.typeNewPassword(login)
+                        }
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") { model.macScreen.asksForLogin = false }
+                            }
+                        }
+                    }
+                    .presentationSizing(.form)
+                }
+            }
             .confirmationDialog("The workspace is closed", isPresented: $confirmStart, titleVisibility: .visible) {
                 Button("Start and show") { startWorkspace(showing: true) }
             } message: {
@@ -140,6 +156,11 @@ struct ScreenTab: View {
             sidebarWasShown = false
             tabs.sidebar.isHidden = false
         }
+    }
+
+    private var typeLoginShown: Binding<Bool> {
+        Binding(get: { model.macScreen.asksForLogin && shown === model.macScreen },
+                set: { if !$0 { model.macScreen.asksForLogin = false } })
     }
 
     private var loginShown: Binding<Bool> {
@@ -672,9 +693,15 @@ private struct NoticeBanner: View {
 /// The Mac account for the Mac's own screen sharing, entered once. A form: the field with the focus scrolls into view,
 /// and "Save and connect" stays above the keyboard (Return in the password field does the same).
 struct MacScreenLoginForm: View {
+    /// What the form is for: connecting the Mac's screen ("Save and connect"), saving it ahead (Settings > Screen >
+    /// Mac Login, "Save"), or "Type Password" in the Mac's screen without one saved ("Save and type").
+    enum Purpose { case connect, save, type }
+
+    @Environment(AppModel.self) private var model
     let mac: PairedMac
     var problem: String?
-    /// The login, saved: this connect uses it right away (no Face ID for what was just typed).
+    var purpose: Purpose = .connect
+    /// The login, saved: this connect (or this typing) uses it right away (no Face ID for what was just typed).
     let saved: (SecretStore.ScreenLogin) -> Void
     @State private var username = ""
     @State private var password = ""
@@ -690,9 +717,15 @@ struct MacScreenLoginForm: View {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                     HeroSymbol(systemName: "person.crop.square", size: 56)
-                    Text("Log in to the screen of \(mac.name)").font(.title3.weight(.semibold))
-                    Text("Screen sharing on the Mac asks for the name and password of your Mac account, once.")
-                        .foregroundStyle(.secondary)
+                    if purpose == .connect {
+                        Text("Log in to the screen of \(mac.name)").font(.title3.weight(.semibold))
+                        Text("Screen sharing on the Mac asks for the name and password of your Mac account, once.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("The login of \(mac.name)").font(.title3.weight(.semibold))
+                        Text("The name and password of your Mac account: for the Mac's screen sharing, and for its lock screen and password fields.")
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .padding(.vertical, 4)
                 .listRowBackground(Color.clear)
@@ -715,6 +748,7 @@ struct MacScreenLoginForm: View {
             }
             Section {
                 FactRow(symbol: Biometrics.symbol, text: "Kept on this iPhone behind \(Biometrics.name). It only goes to the Mac's screen sharing, through the SSH connection or directly in the same network.")
+                FactRow(symbol: "lock.open", text: "When your Mac's screen is locked as you connect, aOS types the password into its lock screen, once. You can turn that off in Settings > Screen > Mac Login.")
                 FactRow(symbol: "switch.2", text: "Screen Sharing must be on, on the Mac: System Settings > General > Sharing.")
             }
         }
@@ -724,7 +758,7 @@ struct MacScreenLoginForm: View {
             Button {
                 save()
             } label: {
-                Text("Save and connect").frame(maxWidth: .infinity)
+                Text(saveTitle).frame(maxWidth: .infinity)
             }
             .buttonStyle(.glassProminent)
             .controlSize(.large)
@@ -748,6 +782,14 @@ struct MacScreenLoginForm: View {
         }
     }
 
+    private var saveTitle: LocalizedStringKey {
+        switch purpose {
+        case .connect: "Save and connect"
+        case .save: "Save"
+        case .type: "Save and type"
+        }
+    }
+
     private func save() {
         guard canSave else { return }
         let login = SecretStore.ScreenLogin(username: username, password: password)
@@ -760,6 +802,8 @@ struct MacScreenLoginForm: View {
             }
             #endif
             try SecretStore.setScreenLogin(login, for: mac)
+            // A new login may go into the lock screen again (after one that didn't unlock it)
+            model.settings.noteUnlock(nil, for: mac.id)
             password = ""
             focus = nil
             saved(login)

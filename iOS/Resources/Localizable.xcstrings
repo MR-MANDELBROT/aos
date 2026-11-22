@@ -1061,6 +1061,16 @@
         }
       }
     },
+    "aOS didn't unlock your Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS hat deinen Mac nicht entsperrt"
+          }
+        }
+      }
+    },
     "aOS doesn't run this chat on the Mac right now, so there is nothing to restart." : {
       "localizations" : {
         "de" : {
@@ -1521,6 +1531,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "aOS schickt eine Routine in seine Sitzung auf dem Mac, sobald sie fällig ist und Claude Code gerade nichts tut. Hat der Mac geschlafen, kommt sie bis zu 6 Stunden später."
+          }
+        }
+      }
+    },
+    "aOS typed the saved password into the lock screen once, but the Mac didn't unlock. Unlock it yourself. aOS won't type it there again until you save the login anew (Settings > Screen > Mac Login)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS hat das gesicherte Passwort einmal in den Sperrbildschirm eingegeben, aber der Mac wurde nicht entsperrt. Entsperre ihn selbst. aOS gibt es dort erst wieder ein, wenn du die Anmeldung neu sicherst (Einstellungen > Bildschirm > Mac-Anmeldung)."
+          }
+        }
+      }
+    },
+    "aOS types the password only into a password field. Click into it on your Mac's screen, then tap Type Password again." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aOS gibt das Passwort nur in ein Passwortfeld ein. Klick auf dem Bildschirm deines Macs in das Feld und tippe dann noch einmal auf „Passwort eingeben“."
           }
         }
       }
@@ -2199,6 +2229,16 @@
       }
     },
     "Change login" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung ändern"
+          }
+        }
+      }
+    },
+    "Change Login" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3222,6 +3262,16 @@
         }
       }
     },
+    "Delete Login" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung löschen"
+          }
+        }
+      }
+    },
     "Delete Mapping" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3229,6 +3279,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zuordnung löschen"
+          }
+        }
+      }
+    },
+    "Delete the login of %@?" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung von %@ löschen?"
           }
         }
       }
@@ -3331,7 +3391,7 @@
       }
     },
     "Disconnect" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4363,6 +4423,16 @@
         }
       }
     },
+    "If your Mac's screen is locked when you connect, aOS types the saved password into the lock screen and presses Return: once per connect, and only when the Mac reports its screen locked for this account and its password field in front. In your Mac's screen, Type Password (the key in the toolbar) types it into a password field after %@, without Return." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ist der Bildschirm deines Macs beim Verbinden gesperrt, gibt aOS das gesicherte Passwort in den Sperrbildschirm ein und drückt den Zeilenschalter: einmal pro Verbindung, und nur wenn der Mac meldet, dass sein Bildschirm für diesen Account gesperrt ist und sein Passwortfeld vorne liegt. Im Bildschirm deines Macs gibt „Passwort eingeben“ (der Schlüssel in der Leiste) es nach %@ in ein Passwortfeld ein, ohne Zeilenschalter."
+          }
+        }
+      }
+    },
     "Import" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4967,6 +5037,16 @@
         }
       }
     },
+    "Last time your Mac stayed locked after the saved password. aOS doesn't type it into the lock screen again until you save the login anew." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim letzten Mal blieb dein Mac nach dem gesicherten Passwort gesperrt. aOS gibt es erst wieder in den Sperrbildschirm ein, wenn du die Anmeldung neu sicherst."
+          }
+        }
+      }
+    },
     "Last used" : {
       "localizations" : {
         "de" : {
@@ -5129,6 +5209,16 @@
         }
       }
     },
+    "Login of %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung von %@"
+          }
+        }
+      }
+    },
     "Lost the Connection to “%@”" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5167,6 +5257,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mac-Account"
+          }
+        }
+      }
+    },
+    "Mac Login" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac-Anmeldung"
           }
         }
       }
@@ -5795,6 +5895,16 @@
         }
       }
     },
+    "No password field on your Mac" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Passwortfeld auf deinem Mac"
+          }
+        }
+      }
+    },
     "No picture" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6106,6 +6216,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht erreichbar: %@"
+          }
+        }
+      }
+    },
+    "Not saved" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht gesichert"
           }
         }
       }
@@ -7916,6 +8036,46 @@
         }
       }
     },
+    "Save and type" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichern und eingeben"
+          }
+        }
+      }
+    },
+    "Save it again in Settings > Screen > Mac Login." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichere sie neu unter Einstellungen > Bildschirm > Mac-Anmeldung."
+          }
+        }
+      }
+    },
+    "Save Login" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung sichern"
+          }
+        }
+      }
+    },
+    "Saved" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesichert"
+          }
+        }
+      }
+    },
     "Saves data" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8015,6 +8175,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Bildschirmfreigabe des Macs fragt einmal nach Name und Passwort deines Mac-Accounts."
+          }
+        }
+      }
+    },
+    "Screen sharing types only English letters, digits and symbols into a password field, and the saved password has other characters." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bildschirmfreigabe gibt in ein Passwortfeld nur englische Buchstaben, Ziffern und Symbole ein, und das gesicherte Passwort hat andere Zeichen."
           }
         }
       }
@@ -10169,6 +10339,26 @@
         }
       }
     },
+    "The lock screen is for the account %@, the saved login is for another one." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Sperrbildschirm gehört zum Account %@, die gesicherte Anmeldung zu einem anderen."
+          }
+        }
+      }
+    },
+    "The login of %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldung von %@"
+          }
+        }
+      }
+    },
     "The Mac account for screen sharing is missing." : {
       "localizations" : {
         "de" : {
@@ -10338,6 +10528,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "The Mac didn't report its password field. Click into the field on the lock screen, then use Type Password in the toolbar." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac hat sein Passwortfeld nicht gemeldet. Klick auf dem Sperrbildschirm in das Feld und nimm dann „Passwort eingeben“ in der Leiste."
           }
         }
       }
@@ -10819,12 +11019,82 @@
         }
       }
     },
+    "The Mac's screen then asks for it again when you connect." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirm des Macs fragt dann beim Verbinden wieder danach."
+          }
+        }
+      }
+    },
     "The Mac's SSH key" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "SSH-Schlüssel des Macs"
+          }
+        }
+      }
+    },
+    "The name and password of your Mac account, for its screen sharing and its lock screen." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name und Passwort deines Mac-Accounts, für seine Bildschirmfreigabe und seinen Sperrbildschirm."
+          }
+        }
+      }
+    },
+    "The name and password of your Mac account, kept on this iPhone behind %@, which every use asks for. They go only to your Mac's screen sharing." : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Name und Passwort deines Mac-Accounts, auf diesem iPad hinter %@ gesichert, das bei jeder Verwendung fragt. Sie gehen nur an die Bildschirmfreigabe deines Macs."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Name und Passwort deines Mac-Accounts, auf diesem iPhone hinter %@ gesichert, das bei jeder Verwendung fragt. Sie gehen nur an die Bildschirmfreigabe deines Macs."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The name and password of your Mac account, kept on this iPad behind %@, which every use asks for. They go only to your Mac's screen sharing."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The name and password of your Mac account, kept on this iPhone behind %@, which every use asks for. They go only to your Mac's screen sharing."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "The name and password of your Mac account: for the Mac's screen sharing, and for its lock screen and password fields." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name und Passwort deines Mac-Accounts: für die Bildschirmfreigabe des Macs und für seinen Sperrbildschirm und seine Passwortfelder."
           }
         }
       }
@@ -10845,6 +11115,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Seite fragt nach dem Benutzernamen."
+          }
+        }
+      }
+    },
+    "The password can't be typed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Passwort lässt sich nicht eingeben"
           }
         }
       }
@@ -10941,12 +11221,32 @@
         }
       }
     },
+    "The saved login couldn't be read" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die gesicherte Anmeldung ließ sich nicht lesen"
+          }
+        }
+      }
+    },
     "The saved login couldn't be read. Enter it again." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die gespeicherte Anmeldung konnte nicht gelesen werden. Gib sie noch einmal ein."
+          }
+        }
+      }
+    },
+    "The saved password has characters screen sharing can't type into a password field (it types English letters, digits and symbols only)." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das gesicherte Passwort hat Zeichen, die die Bildschirmfreigabe nicht in ein Passwortfeld eingeben kann (sie gibt nur englische Buchstaben, Ziffern und Symbole ein)."
           }
         }
       }
@@ -10979,6 +11279,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Bildschirmverbindung ist beendet."
+          }
+        }
+      }
+    },
+    "The screen isn't connected, or observe mode is on." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirm ist nicht verbunden, oder der Beobachtungsmodus ist an."
           }
         }
       }
@@ -12153,6 +12463,17 @@
         }
       }
     },
+    "Type Password" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort eingeben"
+          }
+        }
+      }
+    },
     "Type Shortcut" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12170,6 +12491,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tippe den Code unten ein, oder lehne ab."
+          }
+        }
+      }
+    },
+    "Type the password of %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort von %@ eingeben"
           }
         }
       }
@@ -12222,6 +12553,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldung für den Bildschirm von %@ entsperren"
+          }
+        }
+      }
+    },
+    "Unlock the Mac when connecting" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac beim Verbinden entsperren"
           }
         }
       }
@@ -12689,6 +13030,16 @@
         }
       }
     },
+    "When your Mac's screen is locked as you connect, aOS types the password into its lock screen, once. You can turn that off in Settings > Screen > Mac Login." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ist der Bildschirm deines Macs beim Verbinden gesperrt, gibt aOS das Passwort einmal in den Sperrbildschirm ein. Das kannst du unter Einstellungen > Bildschirm > Mac-Anmeldung ausschalten."
+          }
+        }
+      }
+    },
     "While a terminal is open and connected." : {
       "localizations" : {
         "de" : {
@@ -13024,6 +13375,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dein Mac behält seine eigene Größe: Seine Bildschirmfreigabe hat keinen Hochleistungsmodus (dafür braucht es macOS 14 oder neuer)."
+          }
+        }
+      }
+    },
+    "Your Mac stayed locked" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Mac blieb gesperrt"
           }
         }
       }

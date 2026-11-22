@@ -68,6 +68,18 @@ struct MacStatus: Equatable, Sendable {
         var external: Int
     }
 
+    /// Whether the user's screen is locked (AOSKit `MacScreenLockStatus`); nil from an older aOS or when the Mac can't
+    /// tell. Only `locked` lets the iPhone type the Mac's password into the lock screen (`MacUnlock`).
+    struct ScreenLock: Equatable, Sendable {
+        /// locked, unlocked, away (another session or the login window is on the Mac's screen); others as they come
+        var state: String
+        /// The session's account name and full name.
+        var user: String
+        var name: String?
+
+        var isLocked: Bool { state == "locked" }
+    }
+
     struct Awake: Equatable, Sendable {
         var setting: MacStayAwake
         var holding: Bool
@@ -237,6 +249,8 @@ struct MacStatus: Equatable, Sendable {
     var power: Power?
     /// nil from an older aOS (it doesn't say).
     var display: Display?
+    /// nil from an older aOS (it doesn't say), or when the Mac can't tell.
+    var screen: ScreenLock?
     var awake: Awake?
     var workspace: Workspace?
     var session: Session?
@@ -268,6 +282,9 @@ struct MacStatus: Equatable, Sendable {
         }
         if let d = o["display"]?.object, let state = d["state"]?.string {
             display = Display(state: state, external: d["external"]?.int ?? 0)
+        }
+        if let l = o["screen"]?.object, let state = l["state"]?.string, let user = l["user"]?.string, !user.isEmpty {
+            screen = ScreenLock(state: state, user: user, name: l["name"]?.string)
         }
         if let a = o["awake"]?.object, let setting = a["setting"]?.string.flatMap(MacStayAwake.init(rawValue:)) {
             awake = Awake(setting: setting, holding: a["holding"]?.bool ?? false, lidClosedMode: a["lidClosedMode"]?.bool ?? false,

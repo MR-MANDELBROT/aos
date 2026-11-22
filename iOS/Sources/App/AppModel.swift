@@ -124,6 +124,7 @@ final class AppModel {
             loadDeviceKey()
         }
         makeConnection()
+        macScreen.settings = settings
         // The Live Activity's End button (it runs in this process; iOS starts the app for it if needed).
         TerminalActivityActions.onEnd = { [weak self] key in
             guard let self, let target = TerminalSession.Target(key: key) else { return }
@@ -274,6 +275,7 @@ final class AppModel {
 
     func unpair(_ mac: PairedMac) {
         SecretStore.deleteScreenLogin(for: mac)
+        settings.noteUnlock(nil, for: mac.id)
         ScreenSession.forget(mac)
         try? saveMacs(macs.filter { $0.id != mac.id })
         macScreen.stop()
