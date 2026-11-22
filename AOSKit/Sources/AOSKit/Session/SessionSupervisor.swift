@@ -42,6 +42,9 @@ public final class SessionSupervisor: @unchecked Sendable {
     private var remoteControl: RemoteControlTail?
     private var remoteControlHealth = RemoteControlHealth()
     private var remoteControlRestart = false
+    /// The last time a "sign in" that wasn't one restarted the session (`checkSignIn`), and whether a check runs.
+    private var signInRestartAt: Date?
+    private var signInChecking = false
     private var remoteControlTimer: DispatchSourceTimer?
     public var log: (String) -> Void = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) } {
         didSet { messenger.log = log }
@@ -116,7 +119,7 @@ public final class SessionSupervisor: @unchecked Sendable {
         messageTimer = t
         let rc = DispatchSource.makeTimerSource(queue: queue)
         rc.schedule(deadline: .now() + 30, repeating: 30, leeway: .seconds(5))
-        rc.setEventHandler { [weak self] in self?.watchRemoteControl() }
+        rc.setEventHandler { [weak self] in self?.watchRemoteControl(); self?.checkSignIn() }
         rc.resume()
         remoteControlTimer = rc
     }
@@ -134,6 +137,31 @@ public final class SessionSupervisor: @unchecked Sendable {
             + "(\(remoteControlHealth.restarts). time)")
         remoteControlRestart = true
         kill(child, SIGTERM)
+    }
+
+    /// "Sign in to Claude Code" that isn't one: Claude Code prints "OAuth token refresh failed, run /login" when its
+    /// Remote Control loses the token for a moment (several sessions refreshing at once), and nothing it prints later
+    /// clears that. While the state says sign-in, nothing is delivered (routines wait) and the Remote Control watch
+    /// doesn't look. So: a minute after it, ask `claude auth status`; signed in means the session's Remote Control
+    /// is what broke, and the session starts again with the same conversation (at most once in 10 minutes).
+    private func checkSignIn() {
+        guard child > 0, status.state == .needsLogin, !signInChecking, !remoteControlRestart,
+              Date().timeIntervalSince(status.since) > 60,
+              signInRestartAt.map({ Date().timeIntervalSince($0) > 600 }) ?? true else { return }
+        signInChecking = true
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let signedIn = ClaudeCode.signedIn().signedIn
+            self?.queue.async {
+                guard let self else { return }
+                self.signInChecking = false
+                guard signedIn, self.child > 0, self.status.state == .needsLogin else { return }
+                self.log("session: Claude Code is signed in, the sign-in request was its Remote Control; restarting it")
+                self.signInRestartAt = Date()
+                self.recentText = ""
+                self.remoteControlRestart = true
+                kill(self.child, SIGTERM)
+            }
+        }
     }
 
     /// The conversation the session continues (run/session-conversation.json): its own, in its folder; never just
