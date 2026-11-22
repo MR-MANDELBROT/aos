@@ -78,6 +78,22 @@ struct ComputerCard: View {
     }
 }
 
+extension ComputerCard {
+    /// aOS: where a picture of `picture`'s size is drawn in a card's picture area of `card`'s size: scaled to cover the
+    /// area (aspect fill), centered across, its top at the area's top (the top of the screen shows: the menu bar, a
+    /// phone's status bar). What lies outside is clipped by the card.
+    nonisolated static func thumbnailFrame(picture: CGSize, in card: CGSize) -> CGRect {
+        guard picture.width > 0, picture.height > 0, card.width > 0, card.height > 0 else {
+            return CGRect(origin: .zero, size: card)
+        }
+        // The side that fits exactly is the card's own (no rounding), the other one runs over
+        let size = card.width / picture.width >= card.height / picture.height
+            ? CGSize(width: card.width, height: picture.height * card.width / picture.width)
+            : CGSize(width: picture.width * card.height / picture.height, height: card.height)
+        return CGRect(x: (card.width - size.width) / 2, y: 0, width: size.width, height: size.height)
+    }
+}
+
 struct ComputerRow: View {
     let name: String
     let detail: String?
@@ -177,11 +193,17 @@ private struct ComputerThumbnail: View {
     }
 
     var body: some View {
-        Group {
+        // aOS: every picture fills the card's width and height (aspect fill) from the top, also a portrait one (the
+        // workspace or the Mac in the iPhone's shape), which Open Screen Sharing showed whole in the middle with
+        // bars on both sides. The card's rounded shape clips the rest.
+        GeometryReader { proxy in
             if let image {
+                let frame = ComputerCard.thumbnailFrame(picture: CGSize(width: image.width, height: image.height),
+                                                        in: proxy.size)
                 Image(decorative: image, scale: 1)
                     .resizable()
-                    .aspectRatio(contentMode: image.height > image.width ? .fit : .fill)
+                    .frame(width: frame.width, height: frame.height)
+                    .offset(x: frame.minX, y: frame.minY)
                     .saturation(dimmed ? 0 : 1)
                     .opacity(dimmed ? 0.5 : 1)
             }
