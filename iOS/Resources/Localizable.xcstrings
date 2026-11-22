@@ -265,16 +265,6 @@
         }
       }
     },
-    "%@ effort" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denkaufwand: %@"
-          }
-        }
-      }
-    },
     "%@ failed %lld min ago, tried again after 10 minutes: %@" : {
       "localizations" : {
         "de" : {
@@ -376,22 +366,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ möchte den Arbeitsplatz öffnen"
-          }
-        }
-      }
-    },
-    "%@, %@ effort" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@, Denkaufwand: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@ effort"
           }
         }
       }
@@ -2350,16 +2324,6 @@
         }
       }
     },
-    "Claude Code" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude Code"
-          }
-        }
-      }
-    },
     "Claude Code asks something on the Mac" : {
       "localizations" : {
         "de" : {
@@ -3650,16 +3614,6 @@
         }
       }
     },
-    "Effort" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denkaufwand"
-          }
-        }
-      }
-    },
     "Elsewhere" : {
       "localizations" : {
         "de" : {
@@ -3835,16 +3789,6 @@
         }
       }
     },
-    "Extra high" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sehr hoch"
-          }
-        }
-      }
-    },
     "Extra keys above the keyboard" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3999,16 +3943,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Für %lld Minuten"
-          }
-        }
-      }
-    },
-    "For this routine only. Afterwards the session goes back to its own model and effort." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nur für diese Routine. Danach kehrt die Sitzung zu ihrem eigenen Modell und Denkaufwand zurück."
           }
         }
       }
@@ -4306,16 +4240,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Symbolleiste ausblenden"
-          }
-        }
-      }
-    },
-    "High" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hoch"
           }
         }
       }
@@ -5230,16 +5154,6 @@
         }
       }
     },
-    "Low" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Niedrig"
-          }
-        }
-      }
-    },
     "Mac" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5282,26 +5196,6 @@
         }
       }
     },
-    "Max" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maximal"
-          }
-        }
-      }
-    },
-    "Medium" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mittel"
-          }
-        }
-      }
-    },
     "Message to the session" : {
       "localizations" : {
         "de" : {
@@ -5339,16 +5233,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mission Control"
-          }
-        }
-      }
-    },
-    "Model" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modell"
           }
         }
       }
@@ -6955,16 +6839,6 @@
         }
       }
     },
-    "Opus (1M context)" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opus (1M Kontext)"
-          }
-        }
-      }
-    },
     "Or paste the link" : {
       "localizations" : {
         "de" : {
@@ -8387,16 +8261,6 @@
         }
       }
     },
-    "Session default" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wie die Sitzung"
-          }
-        }
-      }
-    },
     "Sessions keep running on the Mac until you end them." : {
       "localizations" : {
         "de" : {
@@ -9213,16 +9077,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jemand am Mac muss die Anfrage annehmen."
-          }
-        }
-      }
-    },
-    "Sonnet (1M context)" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sonnet (1M Kontext)"
           }
         }
       }

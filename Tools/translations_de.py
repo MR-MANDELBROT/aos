@@ -983,12 +983,4 @@ DE.update({
     "Signed out of all websites.": "Auf allen Websites abgemeldet.",
     "The workspace is closed: it signs out when it starts next, before anyone uses it.": "Der Arbeitsplatz ist geschlossen: Er meldet sich beim nächsten Start ab, bevor ihn jemand nutzt.",
     "Didn't work: %@. The next start tries again.": "Hat nicht geklappt: %@. Der nächste Start versucht es noch einmal.",
-    "Model": "Modell",
-    "Session default": "Wie die Sitzung",
-    "Opus (1M context)": "Opus (1M Kontext)",
-    "Sonnet (1M context)": "Sonnet (1M Kontext)",
-    "For this routine only. Afterwards the session goes back to its own model and effort.":
-        "Nur für diese Routine. Danach kehrt die Sitzung zu ihrem eigenen Modell und Denkaufwand zurück.",
-    "%@ effort": "Denkaufwand: %@",
-    "%@, %@ effort": "%@, Denkaufwand: %@",
 })

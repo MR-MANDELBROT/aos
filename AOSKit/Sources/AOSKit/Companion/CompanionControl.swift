@@ -257,28 +257,14 @@ public enum CompanionControl {
     public static let routineDelete = "companion.routines.delete"
     public static let routineRun = "companion.routines.run"
 
-    /// A routine from the phone, checked: a name, a message, a valid schedule, sensible lengths, an effort Claude
-    /// Code knows and a model name that is safe to type into the terminal (empty: the session's own). A phone from
-    /// before routines had a model and an effort sends neither key: the routine keeps the ones it had (`existing`).
-    public static func routine(fromPhone text: String?, existing: [Routine] = []) -> Routine? {
-        guard let data = text?.data(using: .utf8), var r = try? JSONDecoder().decode(Routine.self, from: data),
-              let keys = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return nil }
+    /// A routine from the phone, checked: a name, a message, a valid schedule, sensible lengths.
+    public static func routine(fromPhone text: String?) -> Routine? {
+        guard let data = text?.data(using: .utf8), var r = try? JSONDecoder().decode(Routine.self, from: data) else { return nil }
         r.name = r.name.trimmingCharacters(in: .whitespacesAndNewlines)
         r.prompt = r.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !r.name.isEmpty, r.name.count <= 80, !r.prompt.isEmpty, r.prompt.count <= 8000,
               let cron = CronSet(r.schedule), cron.schedules.count <= 24, UUID(uuidString: r.id) != nil else { return nil }
         r.schedule = cron.text
-        let before = existing.first { $0.id == r.id }
-        if keys["model"] == nil { r.model = before?.model }
-        if keys["effort"] == nil { r.effort = before?.effort }
-        if let m = r.model?.trimmingCharacters(in: .whitespaces) {
-            guard m.isEmpty || Routine.isSafeModel(m) else { return nil }
-            r.model = m.isEmpty ? nil : m
-        }
-        if let e = r.effort?.lowercased() {
-            guard e.isEmpty || Routine.effortChoices.contains(e) else { return nil }
-            r.effort = e.isEmpty ? nil : e
-        }
         return r
     }
 
@@ -411,14 +397,10 @@ extension WorkspaceController {
             "items": settings.routines.map { r -> [String: Any] in
                 var item: [String: Any] = ["id": r.id, "name": r.name, "schedule": r.schedule, "prompt": r.prompt,
                                            "enabled": r.enabled]
-                if let m = r.model { item["model"] = m }
-                if let e = r.effort { item["effort"] = e }
                 if r.enabled, let next = r.cron?.next(after: now) { item["next"] = iso.string(from: next) }
                 return item
             },
             "queued": routinesStatus?.queued ?? 0,
-            // This Mac takes a model and an effort per routine (older ones ignore them)
-            "overrides": true,
         ]
         if let rs = routinesStatus {
             routines["reminders"] = rs.reminders.prefix(10).map { ["name": $0.name, "at": iso.string(from: $0.at)] }
@@ -524,12 +506,10 @@ extension WorkspaceController {
 
         case CompanionControl.routineSet:
             guard let routine = CompanionControl.routine(fromPhone: r.text) else {
-                return .failure(r.id, "Not a routine: it needs a name, a message, a valid schedule, and a known model and effort.")
+                return .failure(r.id, "Not a routine: it needs a name, a message and a valid schedule.")
             }
             guard let controls = macControls else { return .failure(r.id, "\(Brand.name) can't do that right now.") }
             controls.updateRoutines { list in
-                // An older phone leaves out model and effort: the ones the routine had stay
-                let routine = CompanionControl.routine(fromPhone: r.text, existing: list) ?? routine
                 if let i = list.firstIndex(where: { $0.id == routine.id }) { list[i] = routine } else { list.append(routine) }
             }
             log("\(from) saved the routine \"\(routine.name)\"")

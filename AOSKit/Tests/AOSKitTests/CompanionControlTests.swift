@@ -382,16 +382,6 @@ final class CompanionControlTests: XCTestCase {
         _ = await c.handle(phone.sign(request(CompanionControl.routineSet, text: changed)))
         XCTAssertEqual(controls.routines.count, 1)
         XCTAssertEqual(controls.routines.first?.schedule, "13 14 * * *")
-        // A model and an effort; an older phone that leaves them out keeps them
-        let withSetup = changed.replacingOccurrences(of: #""enabled":true"#, with: #""enabled":true,"model":"haiku","effort":"low""#)
-        let setupSaved = await c.handle(phone.sign(request(CompanionControl.routineSet, text: withSetup)))
-        XCTAssertTrue(setupSaved.ok, setupSaved.text)
-        _ = await c.handle(phone.sign(request(CompanionControl.routineSet, text: changed)))
-        XCTAssertEqual(controls.routines.first?.model, "haiku")
-        XCTAssertEqual(controls.routines.first?.effort, "low")
-        let badEffort = await c.handle(phone.sign(request(CompanionControl.routineSet,
-                                                          text: withSetup.replacingOccurrences(of: "\"low\"", with: "\"turbo\""))))
-        XCTAssertFalse(badEffort.ok)
         // Not a schedule, no name, not JSON: refused
         for bad in [json.replacingOccurrences(of: "3  10 * * *", with: "jeden Tag"),
                     json.replacingOccurrences(of: " Routine-Check ", with: " "), "kein json"] {
@@ -406,7 +396,6 @@ final class CompanionControlTests: XCTestCase {
         XCTAssertTrue(controls.routines.isEmpty)
         let status = try XCTUnwrap(try object(deleted)["status"] as? [String: Any])
         XCTAssertNotNil((status["routines"] as? [String: Any])?["items"] as? [Any])
-        XCTAssertEqual((status["routines"] as? [String: Any])?["overrides"] as? Bool, true)
     }
 
     @MainActor

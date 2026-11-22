@@ -109,11 +109,11 @@ object Demo {
         val extra = Json.parseObject(Bytes.utf8("""
             {"routines":{"items":[
                {"id":"A1","name":"Morgenbriefing","schedule":"30 7 * * 1-5","prompt":"Fasse Mails und Termine zusammen","enabled":true,"next":"${at(14 * 3600)}"},
-               {"id":"A2","name":"Repos aufräumen","schedule":"0 9-18/3 * * *","prompt":"Prüfe offene Branches","model":"sonnet","effort":"low","enabled":true,"next":"${at(5400)}"},
+               {"id":"A2","name":"Repos aufräumen","schedule":"0 9-18/3 * * *","prompt":"Prüfe offene Branches","enabled":true,"next":"${at(5400)}"},
                {"id":"A3","name":"Wochenrückblick","schedule":"0 18 * * 0","prompt":"Schreib den Rückblick der Woche","enabled":false}],
              "reminders":[{"name":"Rechnung an die TUM schicken","at":"${at(26 * 3600)}"}],
              "queued":1,
-             "recent":[{"kind":"routine","name":"Morgenbriefing","at":"${at(-3 * 3600)}"},{"kind":"note","name":"Cloupi","at":"${at(-7200)}"}],"overrides":true},
+             "recent":[{"kind":"routine","name":"Morgenbriefing","at":"${at(-3 * 3600)}"},{"kind":"note","name":"Cloupi","at":"${at(-7200)}"}]},
              "apps":{"state":"connected","since":"${at(-3 * 3600)}","network":"wifi","device":"iPhone von Max","previousSeconds":4210,
               "jobs":[{"id":"j3","name":"Tabby Focus","bundleId":"dev.marquart.saldo","state":"installing","created":"${at(-40)}","version":"1.4","source":"Claude Code"},
                       {"id":"j2","name":"aOS","bundleId":"dev.marquart.aos","state":"done","created":"${at(-3600)}","finished":"${at(-3570)}","seconds":28.4,"version":"0.1.0","source":"Claude Code"},

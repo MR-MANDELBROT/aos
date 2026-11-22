@@ -8,19 +8,15 @@ struct RoutinesTests {
         let json = """
         {"routines":{"items":[
             {"id":"A","name":"Morgen-Briefing","schedule":"0 6 * * *","prompt":"Briefing","enabled":true,"next":"2026-11-10T05:00:00Z"},
-            {"id":"B","name":"Wochenplanung","schedule":"30 17 * * 0","prompt":"Planung","enabled":false,"model":"sonnet","effort":"low"},
+            {"id":"B","name":"Wochenplanung","schedule":"30 17 * * 0","prompt":"Planung","enabled":false},
             {"name":"ohne id"}],
           "reminders":[{"name":"Zahnarzt","at":"2026-11-10T07:05:00Z"}],"queued":1,
-          "recent":[{"kind":"routine","name":"Routine-Check","at":"2026-11-09T13:13:00Z"}],"overrides":true}}
+          "recent":[{"kind":"routine","name":"Routine-Check","at":"2026-11-09T13:13:00Z"}]}}
         """
         let object = try #require(try JSONDecoder().decode(JSONValue.self, from: Data(json.utf8)).object)
         let routines = try #require(MacStatus(object).routines)
         #expect(routines.items.map(\.id) == ["A", "B"])
         #expect(routines.items[1].enabled == false)
-        #expect(routines.items[1].model == "sonnet")
-        #expect(routines.items[1].effort == "low")
-        #expect(routines.items[0].model == nil)
-        #expect(routines.overrides)
         #expect(routines.next?.id == "A")
         #expect(routines.reminders.first?.name == "Zahnarzt")
         #expect(routines.queued == 1)
@@ -33,18 +29,7 @@ struct RoutinesTests {
         let item = MacStatus.Routines.Item(id: "A", name: "Check", schedule: "3 10 * * *", prompt: "Mach", enabled: true,
                                            next: Date())
         let object = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(item)) as? [String: Any])
-        #expect(Set(object.keys) == ["id", "name", "schedule", "prompt", "enabled", "model", "effort"])
-        // The session's own: empty, so the Mac clears what the routine had
-        #expect(object["model"] as? String == "")
-        var set = item
-        set.model = "sonnet"
-        set.effort = "low"
-        let setObject = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(set)) as? [String: Any])
-        #expect(setObject["model"] as? String == "sonnet")
-        #expect(setObject["effort"] as? String == "low")
-        #expect(RoutineSetupText.setup(set) != nil)
-        #expect(RoutineSetupText.setup(item) == nil)
-        #expect(RoutineSetupText.models(including: "claude-opus-5-5").last == "claude-opus-5-5")
+        #expect(Set(object.keys) == ["id", "name", "schedule", "prompt", "enabled"])
         #expect(MacAction.routineSet.rawValue == "routines.set")
     }
 

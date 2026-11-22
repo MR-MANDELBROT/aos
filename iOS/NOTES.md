@@ -249,10 +249,7 @@ workspace card then says "No news from the Mac", without its purpose and buttons
 companion back to not started, so nothing reads as ready any more).
 Workspace card: Start (closed),
 Close (asks first while an agent has it), Show the screen. aOS card: Claude Code session (Restart, asks first),
-Routines (a page; a routine can have its own Claude Code model and effort, pickers "Session default" plus the
-aliases and the five levels, shown only when the Mac's status says `routines.overrides`; the row names them; the
-phone always sends `model` and `effort`, `""` for the session's own, see Docs/COMPANION.md), Chats (a page, below),
-Bitwarden (Lock). When Claude Code on the Mac needs a sign-in (the
+Routines (a page), Chats (a page, below), Bitwarden (Lock). When Claude Code on the Mac needs a sign-in (the
 session or new chats say `needsLogin`), the card says what to do: run `claude` once in a terminal on the Mac and sign
 in; "Open Terminal" opens the Terminal tab in a new session on the Mac to do it from here. An older Mac without these
 ops: the card says to update aOS.

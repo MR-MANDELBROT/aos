@@ -1043,22 +1043,6 @@ DE.update({
     "Your passwords stay in Bitwarden. You approve every sign-in with %@.":
         "Deine Passwörter bleiben in Bitwarden. Jede Anmeldung gibst du mit %@ frei.",
     "%@ & Passcode": "%@ & Code",
-    # A routine's own model and effort
-    "Claude Code": "Claude Code",
-    "Model": "Modell",
-    "Effort": "Denkaufwand",
-    "Session default": "Wie die Sitzung",
-    "Opus (1M context)": "Opus (1M Kontext)",
-    "Sonnet (1M context)": "Sonnet (1M Kontext)",
-    "Low": "Niedrig",
-    "Medium": "Mittel",
-    "High": "Hoch",
-    "Extra high": "Sehr hoch",
-    "Max": "Maximal",
-    "For this routine only. Afterwards the session goes back to its own model and effort.":
-        "Nur für diese Routine. Danach kehrt die Sitzung zu ihrem eigenen Modell und Denkaufwand zurück.",
-    "%@ effort": "Denkaufwand: %@",
-    "%@, %@ effort": "%@, Denkaufwand: %@",
 })
 
 # The Mac's login: Settings > Screen > Mac Login, unlocking a locked Mac, Type Password in the Mac's screen

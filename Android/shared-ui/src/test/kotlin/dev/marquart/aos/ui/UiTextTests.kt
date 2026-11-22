@@ -23,7 +23,6 @@ import dev.marquart.aos.ui.overview.ChatCommand
 import dev.marquart.aos.ui.overview.ChatQuestion
 import dev.marquart.aos.ui.overview.ChatsText
 import dev.marquart.aos.ui.overview.MacStatusText
-import dev.marquart.aos.ui.overview.RoutineSetupText
 import dev.marquart.aos.ui.overview.WorkspaceText
 import dev.marquart.aos.ui.overview.chatCommands
 import dev.marquart.aos.ui.pairing.PairingStep
@@ -123,17 +122,6 @@ class UiTextTests {
         ))
         assertEquals(res(R.string.routines_next, "Briefing", Txt.Time(at, Txt.TimeStyle.TIME_OR_WEEKDAY)), AosText.routines(routines))
         assertEquals(res(R.string.routines_all_off), AosText.routines(MacStatus.Routines(emptyList())))
-    }
-
-    @Test fun aRoutinesOwnModelAndEffort() {
-        val plain = MacStatus.Routines.Item("a", "Check", "0 9 * * *", "", true)
-        assertEquals(null, RoutineSetupText.setup(plain))
-        assertEquals(Txt.raw("Sonnet"), RoutineSetupText.setup(plain.copy(model = "sonnet")))
-        assertEquals(res(R.string.routine_setup_effort, res(R.string.routine_effort_low)), RoutineSetupText.setup(plain.copy(effort = "low")))
-        assertEquals(res(R.string.routine_setup_both, res(R.string.routine_model_opus_1m), res(R.string.routine_effort_xhigh)),
-            RoutineSetupText.setup(plain.copy(model = "opus[1m]", effort = "xhigh")))
-        assertEquals("claude-opus-5-5", RoutineSetupText.models("claude-opus-5-5").last())
-        assertEquals(MacStatus.Routines.Item.models, RoutineSetupText.models("haiku"))
     }
 
     private val list = ChatList(enabled = true, hours = 48, max = 6, canRestart = true, chats = listOf(

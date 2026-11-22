@@ -256,17 +256,13 @@ class AppsAndRoutinesTests {
         val routines = status("""
         {"routines":{"items":[
             {"id":"A","name":"Morgen-Briefing","schedule":"0 6 * * *","prompt":"Briefing","enabled":true,"next":"2026-11-10T05:00:00Z"},
-            {"id":"B","name":"Wochenplanung","schedule":"30 17 * * 0","prompt":"Planung","enabled":false,"model":"sonnet","effort":"low"},
+            {"id":"B","name":"Wochenplanung","schedule":"30 17 * * 0","prompt":"Planung","enabled":false},
             {"name":"ohne id"}],
           "reminders":[{"name":"Zahnarzt","at":"2026-11-10T07:05:00Z"}],"queued":1,
-          "recent":[{"kind":"routine","name":"Routine-Check","at":"2026-11-09T13:13:00Z"}],"overrides":true}}
+          "recent":[{"kind":"routine","name":"Routine-Check","at":"2026-11-09T13:13:00Z"}]}}
         """).routines!!
         assertEquals(listOf("A", "B"), routines.items.map { it.id })
         assertFalse(routines.items[1].enabled)
-        assertEquals("sonnet", routines.items[1].model)
-        assertEquals("low", routines.items[1].effort)
-        assertNull(routines.items[0].model)
-        assertTrue(routines.overrides)
         assertEquals("A", routines.next?.id)
         assertEquals("Zahnarzt", routines.reminders.first().name)
         assertEquals(1, routines.queued)
@@ -276,10 +272,6 @@ class AppsAndRoutinesTests {
 
     @Test fun aRoutineGoesToTheMacWithoutItsNextTime() {
         val item = MacStatus.Routines.Item("A", "Check", "3 10 * * *", "Mach", true, Instant.now())
-        val sent = Json.parseObject(item.json.toByteArray())!!
-        assertEquals(setOf("id", "name", "schedule", "prompt", "enabled", "model", "effort"), sent.keys)
-        // The session's own: empty, so the Mac clears what the routine had
-        assertEquals("", sent["model"].str)
-        assertEquals("low", Json.parseObject(item.copy(effort = "low").json.toByteArray())!!["effort"].str)
+        assertEquals(setOf("id", "name", "schedule", "prompt", "enabled"), Json.parseObject(item.json.toByteArray())!!.keys)
     }
 }

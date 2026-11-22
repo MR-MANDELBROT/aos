@@ -129,7 +129,7 @@ fun RoutinesPage(onBack: () -> Unit, panes: Boolean = true, scrollKey: String = 
     // The editor keeps what was typed while the window changes its shape (beside the list, or a page of its own).
     val editor = remember {
         movableContentOf<MacStatus.Routines.Item, Boolean, Boolean> { r, new, inPane ->
-            key(r.id) { RoutineEditor(r, new, inPane, routines?.overrides ?: false, onSave = { onSave(it) }, onCancel = { editing = null }) }
+            key(r.id) { RoutineEditor(r, new, inPane, onSave = { onSave(it) }, onCancel = { editing = null }) }
         }
     }
 
@@ -234,7 +234,6 @@ private fun RoutineRow(r: MacStatus.Routines.Item, names: List<String>, firstDay
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(r.name, maxLines = 1)
                 Text(RoutineSchedule.text(r.schedule, names, firstDay).text(), style = MaterialTheme.typography.bodySmall, color = colors.secondary)
-                RoutineSetupText.setup(r)?.let { Text(it.text(), style = MaterialTheme.typography.bodySmall, color = colors.secondary) }
                 if (r.enabled && r.next != null) {
                     Text(stringResource(R.string.routine_next, Txt.Time(r.next!!, Txt.TimeStyle.RELATIVE_INLINE).text()),
                         style = MaterialTheme.typography.bodySmall, color = colors.tertiary)
@@ -258,8 +257,8 @@ private enum class Mode { TIMES, INTERVAL, CRON }
 /** Adding or changing a routine: a name, the message, and when: at times on weekdays, every few hours, or cron. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RoutineEditor(routine: MacStatus.Routines.Item, isNew: Boolean, inPane: Boolean, overrides: Boolean,
-                          onSave: (MacStatus.Routines.Item) -> Unit, onCancel: () -> Unit) {
+private fun RoutineEditor(routine: MacStatus.Routines.Item, isNew: Boolean, inPane: Boolean, onSave: (MacStatus.Routines.Item) -> Unit,
+                          onCancel: () -> Unit) {
     val colors = AosTheme.colors
     val (names, firstDay) = weekdayNames()
     // Beside the list back leaves the routines; alone it closes the editor.
@@ -269,8 +268,6 @@ private fun RoutineEditor(routine: MacStatus.Routines.Item, isNew: Boolean, inPa
     var name by remember { mutableStateOf(routine.name) }
     var prompt by remember { mutableStateOf(routine.prompt) }
     var enabled by remember { mutableStateOf(routine.enabled) }
-    var model by remember { mutableStateOf(routine.model) }
-    var effort by remember { mutableStateOf(routine.effort) }
     var mode by remember {
         mutableStateOf(when {
             interval != null && (interval.hours > 1 || simple == null) -> Mode.INTERVAL
@@ -298,8 +295,7 @@ private fun RoutineEditor(routine: MacStatus.Routines.Item, isNew: Boolean, inPa
 
     Page(if (isNew) stringResource(R.string.routine_new) else routine.name, onBack = if (inPane) null else onCancel, actions = {
         TextButton(onClick = {
-            onSave(routine.copy(name = name.trim(), prompt = prompt.trim(), schedule = schedule, enabled = enabled,
-                model = model, effort = effort))
+            onSave(routine.copy(name = name.trim(), prompt = prompt.trim(), schedule = schedule, enabled = enabled))
         }, enabled = valid) { Text(stringResource(if (isNew) R.string.add else R.string.save)) }
     }) { padding ->
         PageColumn(padding) {
@@ -367,23 +363,6 @@ private fun RoutineEditor(routine: MacStatus.Routines.Item, isNew: Boolean, inPa
                             textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace), singleLine = true,
                             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false),
                             modifier = Modifier.fillMaxWidth())
-                    }
-                }
-            }
-            if (overrides) {
-                val sessionDefault = stringResource(R.string.routine_session_default)
-                Section(header = stringResource(R.string.routine_claude_code), footer = stringResource(R.string.routine_setup_footer)) {
-                    SectionRow {
-                        Text(stringResource(R.string.routine_model), modifier = Modifier.weight(1f))
-                        Picker(model?.let { RoutineSetupText.model(it).text() } ?: sessionDefault,
-                            listOf<Pair<String?, String>>(null to sessionDefault) +
-                                RoutineSetupText.models(model).map { it to RoutineSetupText.model(it).text() }) { model = it }
-                    }
-                    SectionRow(divider = false) {
-                        Text(stringResource(R.string.routine_effort), modifier = Modifier.weight(1f))
-                        Picker(effort?.let { RoutineSetupText.effort(it).text() } ?: sessionDefault,
-                            listOf<Pair<String?, String>>(null to sessionDefault) +
-                                MacStatus.Routines.Item.efforts.map { it to RoutineSetupText.effort(it).text() }) { effort = it }
                     }
                 }
             }
