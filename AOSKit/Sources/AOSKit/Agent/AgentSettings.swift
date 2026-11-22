@@ -19,6 +19,10 @@ public struct AgentSettings: Codable, Sendable, Equatable {
     /// Claude Code's effort for the session (`--effort`): low, medium, high, xhigh or max; empty: Claude Code's own.
     public var sessionEffort: String = ""
     public static let sessionEffortChoices = ["", "low", "medium", "high", "xhigh", "max"]
+    /// Claude Code's model for the session (`--model`, only on the command line, never `/model`, which Claude Code
+    /// saves as the person's global default): one of Claude Code's aliases; empty: Claude Code's own.
+    public var sessionModel: String = ""
+    public static let sessionModelChoices = ["", "opus", "opus[1m]", "sonnet", "sonnet[1m]", "haiku"]
     /// Claude Code's permission mode for the session (`--permission-mode`): auto, acceptEdits or plan; empty:
     /// Claude Code's own (asks for what the folder's rules don't allow).
     public var sessionPermissionMode: String = ""
@@ -114,7 +118,7 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         case reachWay
         case stayAwakeMinBattery
         case leaveHotspot
-        case sessionFolder, sessionEffort, sessionEnvFiles, sessionStartMessage, routines, sessionPermissionMode
+        case sessionFolder, sessionEffort, sessionModel, sessionEnvFiles, sessionStartMessage, routines, sessionPermissionMode
         case iphoneApps, iphoneAddress, iphoneHeartbeat, iphoneTeam, iphonePrefix
     }
 
@@ -160,6 +164,8 @@ public struct AgentSettings: Codable, Sendable, Equatable {
         sessionFolder = try c.decodeIfPresent(String.self, forKey: .sessionFolder) ?? d.sessionFolder
         let effort = try c.decodeIfPresent(String.self, forKey: .sessionEffort) ?? d.sessionEffort
         sessionEffort = Self.sessionEffortChoices.contains(effort) ? effort : d.sessionEffort
+        let sessionModel = (try? c.decodeIfPresent(String.self, forKey: .sessionModel)) ?? d.sessionModel
+        self.sessionModel = Self.sessionModelChoices.contains(sessionModel) ? sessionModel : d.sessionModel
         let mode = try c.decodeIfPresent(String.self, forKey: .sessionPermissionMode) ?? d.sessionPermissionMode
         sessionPermissionMode = Self.sessionPermissionModeChoices.contains(mode) ? mode : d.sessionPermissionMode
         sessionEnvFiles = try c.decodeIfPresent([String].self, forKey: .sessionEnvFiles) ?? d.sessionEnvFiles

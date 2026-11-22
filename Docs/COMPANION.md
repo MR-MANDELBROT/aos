@@ -262,8 +262,9 @@ with `error` (English) and `code`, which the phone says in its own words.
     (Settings > General > Staying awake; `holding`: aOS's helper holds the Mac for a closed lid now)
   - `workspace`: `{"state":"stopped|starting|running|open|closing|failed","setupComplete":true,"purpose":"...","until":"<ISO>","error":"..."}`
     (`open`: an agent has it; `running`: started without an agent, from the phone or the setup)
-  - `session`: `{"enabled":true,"state":"running|starting|restarting|waitingForNetwork|needsLogin|needsAttention|missingClaude|stopped|failed","detail":"...","since":"<ISO>"}`
-    (aOS's own Claude Code session)
+  - `session`: `{"enabled":true,"state":"running|starting|restarting|waitingForNetwork|needsLogin|needsAttention|missingClaude|stopped|failed","detail":"...","since":"<ISO>","model":"","effort":"high"}`
+    (aOS's own Claude Code session; `model` and `effort` since 2026-11-22: its defaults for the next start, `""` for
+    Claude Code's own, always both; an older Mac sends neither and the phone hides them)
   - `newChats`: `{"enabled":true,"state":"off|waitingForNetwork|starting|running|needsLogin|needsTrust|missingClaude|restarting"}`
   - `kept`: `{"enabled":true,"running":2}` (kept conversations)
   - `bitwarden`: `{"state":"unlocked|locked|signedOut|needsHelper|unknown","until":"<ISO, if it locks by itself>"}`
@@ -294,6 +295,12 @@ with `error` (English) and `code`, which the phone says in its own words.
   when it didn't work; the phone asks first and shows the button only when `hello` lists the feature).
   `mac.status`'s `workspace` says `signIns` (`kept`, `some`, `expire`) and `signOutPending`.
 - `bitwarden.lock`, `session.restart` (`no-session` when aOS's background process isn't running).
+- `{"op":"session.defaults","text":"{\"model\":\"opus[1m]\",\"effort\":\"high\"}"}` (since 2026-11-22): the
+  session's default model and effort (`AgentSettings.sessionModel`, `sessionEffort`). Both keys, each one of the fixed
+  choices (`""`, `opus`, `opus[1m]`, `sonnet`, `sonnet[1m]`, `haiku`; `""`, `low`, `medium`, `high`, `xhigh`, `max`),
+  else refused. Saved only: they apply the next time the session starts (`--model`, `--effort` on its command line,
+  never `/model` or `/effort`, which Claude Code would save as the person's global default), and the op never restarts
+  the session; the phone offers `session.restart` beside it.
 
 ### Chats (since 2026-11-09)
 

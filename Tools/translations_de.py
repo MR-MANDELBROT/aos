@@ -984,3 +984,15 @@ DE.update({
     "The workspace is closed: it signs out when it starts next, before anyone uses it.": "Der Arbeitsplatz ist geschlossen: Er meldet sich beim nächsten Start ab, bevor ihn jemand nutzt.",
     "Didn't work: %@. The next start tries again.": "Hat nicht geklappt: %@. Der nächste Start versucht es noch einmal.",
 })
+
+# The session's default model (Settings > Claude Code, beside Effort)
+DE.update({
+    "Model": "Modell",
+    "Opus": "Opus",
+    "Opus (1M context)": "Opus (1M Kontext)",
+    "Sonnet": "Sonnet",
+    "Sonnet (1M context)": "Sonnet (1M Kontext)",
+    "Haiku": "Haiku",
+    "Model and effort apply the next time the session starts.":
+        "Modell und Denkaufwand gelten ab dem nächsten Start der Sitzung.",
+})

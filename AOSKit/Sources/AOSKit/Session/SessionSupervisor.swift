@@ -204,11 +204,20 @@ public final class SessionSupervisor: @unchecked Sendable {
             // aOS's own folder has only the session's conversations
             args.append("--continue")
         }
-        args += ["--remote-control", settings.sessionName]
-        if !settings.sessionEffort.isEmpty { args += ["--effort", settings.sessionEffort] }
-        if !settings.sessionPermissionMode.isEmpty { args += ["--permission-mode", settings.sessionPermissionMode] }
+        args += ["--remote-control", settings.sessionName] + Self.options(settings)
         self.folder = folder
         spawn(args, folder: folder, settings: settings)
+    }
+
+    /// The session's model, effort and permission mode, as flags on its command line only: they hold for this
+    /// session's process and never touch Claude Code's own settings (typing `/model` or `/effort` would save them as
+    /// the person's global default). Empty: Claude Code's own.
+    static func options(_ settings: AgentSettings) -> [String] {
+        var args: [String] = []
+        if !settings.sessionModel.isEmpty { args += ["--model", settings.sessionModel] }
+        if !settings.sessionEffort.isEmpty { args += ["--effort", settings.sessionEffort] }
+        if !settings.sessionPermissionMode.isEmpty { args += ["--permission-mode", settings.sessionPermissionMode] }
+        return args
     }
 
     private func environment(_ settings: AgentSettings) -> [String] {

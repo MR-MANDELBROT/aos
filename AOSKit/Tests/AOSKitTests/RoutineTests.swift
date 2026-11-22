@@ -130,6 +130,38 @@ final class RoutineTests: XCTestCase {
         let odd = try JSONDecoder().decode(AgentSettings.self, from: Data(#"{"sessionEffort":"ultra"}"#.utf8))
         XCTAssertEqual(odd.sessionEffort, "")
     }
+
+    func testSessionModel() throws {
+        // Settings from before the model: Claude Code's own
+        let old = try JSONDecoder().decode(AgentSettings.self, from: Data(#"{"sessionEffort":"max"}"#.utf8))
+        XCTAssertEqual(old.sessionModel, "")
+        XCTAssertEqual(old.sessionEffort, "max")
+        var s = AgentSettings()
+        for m in AgentSettings.sessionModelChoices {
+            s.sessionModel = m
+            XCTAssertEqual(try JSONDecoder().decode(AgentSettings.self, from: JSONEncoder().encode(s)).sessionModel, m)
+        }
+        // Unknown or not a string: back to Claude Code's own, the rest of the settings stays
+        for odd in [#"{"sessionModel":"claude-opus-9","sessionName":"X"}"#, #"{"sessionModel":"opus --dangerously","sessionName":"X"}"#,
+                    #"{"sessionModel":3,"sessionName":"X"}"#] {
+            let d = try JSONDecoder().decode(AgentSettings.self, from: Data(odd.utf8))
+            XCTAssertEqual(d.sessionModel, "", odd)
+            XCTAssertEqual(d.sessionName, "X", odd)
+        }
+    }
+
+    func testSessionOptions() {
+        var s = AgentSettings()
+        XCTAssertEqual(SessionSupervisor.options(s), [])
+        s.sessionModel = "sonnet[1m]"
+        XCTAssertEqual(SessionSupervisor.options(s), ["--model", "sonnet[1m]"])
+        s.sessionEffort = "xhigh"
+        s.sessionPermissionMode = "auto"
+        XCTAssertEqual(SessionSupervisor.options(s), ["--model", "sonnet[1m]", "--effort", "xhigh", "--permission-mode", "auto"])
+        s.sessionModel = ""
+        XCTAssertEqual(SessionSupervisor.options(s), ["--effort", "xhigh", "--permission-mode", "auto"])
+        XCTAssertFalse(SessionSupervisor.options(s).contains("--model"))
+    }
 }
 
 final class SessionMessengerTests: XCTestCase {

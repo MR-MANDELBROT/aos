@@ -3213,6 +3213,16 @@
         }
       }
     },
+    "Haiku" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haiku"
+          }
+        }
+      }
+    },
     "Happens when the workspace starts next, before anyone uses it." : {
       "localizations" : {
         "de" : {
@@ -4135,6 +4145,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "gemischt"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modell"
+          }
+        }
+      }
+    },
+    "Model and effort apply the next time the session starts." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modell und Denkaufwand gelten ab dem nächsten Start der Sitzung."
           }
         }
       }
@@ -5230,6 +5260,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Optional: %@ kann auf diesem Mac eine Claude-Code-Sitzung am Laufen halten, die du aus der Claude-App auf dem Handy erreichst (Remote Control). Das Öffnen des Arbeitsplatzes bestätigst du gleich dort."
+          }
+        }
+      }
+    },
+    "Opus" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opus"
+          }
+        }
+      }
+    },
+    "Opus (1M context)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opus (1M Kontext)"
           }
         }
       }
@@ -6523,6 +6573,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Damit der Mac mit geschlossenem Deckel wach bleibt: „Anmeldeobjekte & Erweiterungen“, „Im Hintergrund erlauben“."
+          }
+        }
+      }
+    },
+    "Sonnet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonnet"
+          }
+        }
+      }
+    },
+    "Sonnet (1M context)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonnet (1M Kontext)"
           }
         }
       }

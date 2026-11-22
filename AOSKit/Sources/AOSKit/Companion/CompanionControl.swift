@@ -22,6 +22,9 @@ public protocol MacControls: AnyObject {
     func setDisplay(on: Bool) async
     /// Changes the session's routines in the settings.
     func updateRoutines(_ change: (inout [Routine]) -> Void)
+    /// The session's default model and effort (checked against the choices): saved for its next start, never a
+    /// restart by itself.
+    func setSessionDefaults(_ defaults: SessionDefaults)
     /// Pins, unpins, skips or allows a Claude Code conversation (the app owns the settings; the keeper follows them).
     func changeConversation(_ id: String, _ change: ConversationChange) -> MacControlRefusal?
 }
@@ -238,6 +241,18 @@ public struct MacScreenLockStatus: Codable, Equatable, Sendable {
     }
 }
 
+/// The session's model and effort for its next start (`AgentSettings.sessionModel`, `sessionEffort`; empty: Claude
+/// Code's own), as the phone sets them.
+public struct SessionDefaults: Codable, Equatable, Sendable {
+    public var model: String
+    public var effort: String
+
+    public init(model: String, effort: String) {
+        self.model = model
+        self.effort = effort
+    }
+}
+
 public enum CompanionControl {
     /// The ops (as the app gets them from aos-companion: "companion." and the phone's op).
     public static let status = "companion.mac.status"
@@ -252,6 +267,8 @@ public enum CompanionControl {
     public static let workspaceSignOut = "companion.workspace.sign-out"
     public static let bitwardenLock = "companion.bitwarden.lock"
     public static let sessionRestart = "companion.session.restart"
+    /// The session's default model and effort (JSON `{"model":…,"effort":…}` in `text`): for its next start.
+    public static let sessionDefaults = "companion.session.defaults"
     /// The session's routines: add or change one (JSON in `text`), delete one, send one now (its id in `text`).
     public static let routineSet = "companion.routines.set"
     public static let routineDelete = "companion.routines.delete"
@@ -266,6 +283,15 @@ public enum CompanionControl {
               let cron = CronSet(r.schedule), cron.schedules.count <= 24, UUID(uuidString: r.id) != nil else { return nil }
         r.schedule = cron.text
         return r
+    }
+
+    /// The session's model and effort from the phone, checked: both keys, each one of the fixed choices.
+    public static func sessionDefaults(fromPhone text: String?) -> SessionDefaults? {
+        guard let data = text?.data(using: .utf8), data.count <= 200,
+              let d = try? JSONDecoder().decode(SessionDefaults.self, from: data),
+              AgentSettings.sessionModelChoices.contains(d.model),
+              AgentSettings.sessionEffortChoices.contains(d.effort) else { return nil }
+        return d
     }
 
     /// The chats (CompanionChats.swift): the list, and pin, unpin, skip, unskip, restart one (its id in `text`).
@@ -283,8 +309,8 @@ public enum CompanionControl {
                                               chatsStart, chatsStop, chatsDelete]
 
     public static let ops: Set<String> = Set([status, sleep, displayOff, displayOn, stayAwake, batteryLimit, workspaceStart,
-                                              workspaceStop, workspaceSignOut, bitwardenLock, sessionRestart, routineSet, routineDelete,
-                                              routineRun]).union(chatOps)
+                                              workspaceStop, workspaceSignOut, bitwardenLock, sessionRestart, sessionDefaults,
+                                              routineSet, routineDelete, routineRun]).union(chatOps)
 
     /// What this Mac offers the phone beyond the first version (`hello` lists it): these ops and the terminal
     /// sessions (`aos-companion term`).
@@ -373,7 +399,9 @@ extension WorkspaceController {
         }
         if signOutPending { workspace["signOutPending"] = true }
         result["workspace"] = workspace
-        var session: [String: Any] = ["enabled": settings.sessionEnabled]
+        // Its default model and effort for the next start ("": Claude Code's own; an older Mac sends neither)
+        var session: [String: Any] = ["enabled": settings.sessionEnabled, "model": settings.sessionModel,
+                                      "effort": settings.sessionEffort]
         if let s = SessionSupervisor.readStatus(paths: paths) {
             session["state"] = s.state.rawValue
             session["since"] = iso.string(from: s.since)
@@ -528,6 +556,17 @@ extension WorkspaceController {
             }
             guard SessionCommand.run(routine: id).send(paths: paths) else { return refused(.noSession) }
             log("\(from) runs the routine \"\(routine.name)\" now")
+            return done()
+
+        case CompanionControl.sessionDefaults:
+            guard let defaults = CompanionControl.sessionDefaults(fromPhone: r.text) else {
+                return .failure(r.id, "Not a choice: a model and an effort \(Brand.name) offers.")
+            }
+            guard let controls = macControls else { return .failure(r.id, "\(Brand.name) can't do that right now.") }
+            // Saved for the next start only: the session keeps running as it is
+            controls.setSessionDefaults(defaults)
+            log("\(from) set the session's default model to \(defaults.model.isEmpty ? "Claude Code's" : defaults.model) "
+                + "and effort to \(defaults.effort.isEmpty ? "Claude Code's" : defaults.effort)")
             return done()
 
         case CompanionControl.sessionRestart:

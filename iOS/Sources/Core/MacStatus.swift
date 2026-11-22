@@ -17,6 +17,8 @@ enum MacAction: String, Sendable, CaseIterable {
     case workspaceSignOut = "workspace.sign-out"
     case bitwardenLock = "bitwarden.lock"
     case sessionRestart = "session.restart"
+    /// The session's default model and effort for its next start (JSON, `MacStatus.SessionDefaults`).
+    case sessionDefaults = "session.defaults"
     /// The session's routines: add or change one (JSON), delete one, send one now (its id).
     case routineSet = "routines.set"
     case routineDelete = "routines.delete"
@@ -114,6 +116,27 @@ struct MacStatus: Equatable, Sendable {
         var state: String?
         var detail: String?
         var since: Date?
+        /// Its default model and effort for the next start (nil: an older aOS, which can't change them).
+        var defaults: SessionDefaults? = nil
+    }
+
+    /// The session's model and effort for its next start ("": Claude Code's own; AOSKit `SessionDefaults`). The Mac
+    /// takes only the fixed choices.
+    struct SessionDefaults: Equatable, Sendable, Codable {
+        var model: String
+        var effort: String
+
+        /// Claude Code's aliases (AOSKit `AgentSettings.sessionModelChoices`), "" first.
+        static let models = ["", "opus", "opus[1m]", "sonnet", "sonnet[1m]", "haiku"]
+        /// AOSKit `AgentSettings.sessionEffortChoices`.
+        static let efforts = ["", "low", "medium", "high", "xhigh", "max"]
+
+        /// The value for `session.defaults`.
+        var json: String {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .sortedKeys
+            return (try? encoder.encode(self)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        }
     }
 
     struct NewChats: Equatable, Sendable {
@@ -254,8 +277,12 @@ struct MacStatus: Equatable, Sendable {
                                   signIns: w["signIns"]?.string, signOutPending: w["signOutPending"]?.bool ?? false)
         }
         if let s = o["session"]?.object {
+            // Both or neither: a Mac that sends them takes them (`session.defaults`)
+            let defaults = s["model"]?.string.flatMap { model in
+                s["effort"]?.string.map { SessionDefaults(model: model, effort: $0) }
+            }
             session = Session(enabled: s["enabled"]?.bool ?? true, state: s["state"]?.string, detail: s["detail"]?.string,
-                              since: date(s["since"]))
+                              since: date(s["since"]), defaults: defaults)
         }
         if let c = o["newChats"]?.object {
             newChats = NewChats(enabled: c["enabled"]?.bool ?? false, state: c["state"]?.string)

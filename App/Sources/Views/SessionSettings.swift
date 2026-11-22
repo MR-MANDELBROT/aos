@@ -24,6 +24,14 @@ struct SessionSettingsSections: View {
                     Button("Choose …", action: chooseFolder).buttonStyle(.glass)
                 }
             }
+            Picker("Model", selection: binding(\.sessionModel)) {
+                Text("Claude Code's default").tag("")
+                Text("Opus").tag("opus")
+                Text("Opus (1M context)").tag("opus[1m]")
+                Text("Sonnet").tag("sonnet")
+                Text("Sonnet (1M context)").tag("sonnet[1m]")
+                Text("Haiku").tag("haiku")
+            }
             Picker("Effort", selection: binding(\.sessionEffort)) {
                 Text("Claude Code's default").tag("")
                 Text("Low").tag("low")
@@ -76,8 +84,11 @@ struct SessionSettingsSections: View {
         } header: {
             Text("\(Brand.name)'s own session")
         } footer: {
-            Text("A chat that always runs, reachable in the Claude app. After a restart it continues its own conversation; after two restarts within 30 minutes it starts fresh.")
-                .font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("A chat that always runs, reachable in the Claude app. After a restart it continues its own conversation; after two restarts within 30 minutes it starts fresh.")
+                Text("Model and effort apply the next time the session starts.")
+            }
+            .font(.caption).foregroundStyle(.secondary)
         }
         .confirmationDialog("Start a fresh conversation?", isPresented: $confirmFresh) {
             Button("Start Fresh") { SessionCommand.fresh.send(paths: model.paths) }

@@ -34,6 +34,10 @@ final class CompanionControlTests: XCTestCase {
         func setBatteryLimit(_ percent: Int) -> MacControlRefusal? { batteryLimit = percent; return nil }
         var routines: [Routine] = []
         func updateRoutines(_ change: (inout [Routine]) -> Void) { change(&routines) }
+        /// The session defaults set, and what the app does with them (saves them in the settings).
+        var defaults: [SessionDefaults] = []
+        var applyDefaults: ((SessionDefaults) -> Void)?
+        func setSessionDefaults(_ d: SessionDefaults) { defaults.append(d); applyDefaults?(d) }
         /// The conversation changes, as the app would make them in its settings.
         var changes: [(String, ConversationChange)] = []
         func changeConversation(_ id: String, _ change: ConversationChange) -> MacControlRefusal? {
@@ -366,6 +370,48 @@ final class CompanionControlTests: XCTestCase {
         await fulfillment(of: [received], timeout: 5)
         XCTAssertEqual(SessionSupervisor.keeperRestart(in: Data(box.bytes)), recent)
         XCTAssertTrue(log.lines.contains { $0.contains("restarts the kept conversation") })
+    }
+
+    @MainActor
+    func testSessionDefaultsFromThePhone() async throws {
+        let (c, controls, log, _) = try controller()
+        controls.applyDefaults = { d in
+            var s = c.settings
+            s.sessionModel = d.model
+            s.sessionEffort = d.effort
+            try? c.updateSettings(s)
+        }
+        // The status says both, empty while they are Claude Code's own
+        let before = await c.handle(phone.sign(request(CompanionControl.status)))
+        var session = try XCTUnwrap(try object(before)["status"] as? [String: Any])["session"] as? [String: Any]
+        XCTAssertEqual(session?["model"] as? String, "")
+        XCTAssertEqual(session?["effort"] as? String, "")
+
+        let set = await c.handle(phone.sign(request(CompanionControl.sessionDefaults,
+                                                    text: #"{"model":"opus[1m]","effort":"high"}"#)))
+        XCTAssertTrue(set.ok, set.text)
+        XCTAssertEqual(controls.defaults, [SessionDefaults(model: "opus[1m]", effort: "high")])
+        session = try XCTUnwrap(try object(set)["status"] as? [String: Any])["session"] as? [String: Any]
+        XCTAssertEqual(session?["model"] as? String, "opus[1m]")
+        XCTAssertEqual(session?["effort"] as? String, "high")
+        XCTAssertTrue(log.lines.contains { $0.contains("default model to opus[1m] and effort to high") }, "\(log.lines)")
+        // Back to Claude Code's own
+        let cleared = await c.handle(phone.sign(request(CompanionControl.sessionDefaults, text: #"{"model":"","effort":""}"#)))
+        XCTAssertTrue(cleared.ok, cleared.text)
+        XCTAssertEqual(c.settings.sessionModel, "")
+        XCTAssertEqual(c.settings.sessionEffort, "")
+
+        // Only the fixed choices, both keys, JSON
+        for bad in [#"{"model":"opus; rm -rf ~","effort":"high"}"#, #"{"model":"claude-opus-4","effort":""}"#,
+                    #"{"model":"sonnet","effort":"ultra"}"#, #"{"model":"Sonnet","effort":""}"#, #"{"model":"sonnet"}"#,
+                    #"{"effort":"low"}"#, "sonnet", "", #"{"model":1,"effort":"low"}"#] {
+            let r = await c.handle(phone.sign(request(CompanionControl.sessionDefaults, text: bad)))
+            XCTAssertFalse(r.ok, bad)
+        }
+        let none = await c.handle(phone.sign(request(CompanionControl.sessionDefaults)))
+        XCTAssertFalse(none.ok)
+        XCTAssertEqual(controls.defaults.count, 2)
+        XCTAssertTrue(CompanionControl.features.contains("session.defaults"))
     }
 
     @MainActor

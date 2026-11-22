@@ -36,6 +36,11 @@ extension AppModel: MacControls {
         update { change(&$0.routines) }
     }
 
+    /// From the phone: saved for the session's next start (`save` restarts it only for its name or on/off).
+    func setSessionDefaults(_ defaults: SessionDefaults) {
+        update { $0.sessionModel = defaults.model; $0.sessionEffort = defaults.effort }
+    }
+
     /// The chats on the phone: the same as pin and skip in Settings > Claude Code (the keeper follows the settings).
     func changeConversation(_ id: String, _ change: ConversationChange) -> MacControlRefusal? {
         switch change {

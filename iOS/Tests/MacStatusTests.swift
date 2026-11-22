@@ -85,6 +85,44 @@ struct MacStatusTests {
         #expect(!AOSCard.needsSignIn(nil))
     }
 
+    @Test func theSessionDefaults() async throws {
+        func session(_ json: String) throws -> MacStatus.Session? {
+            MacStatus(try #require(try JSONDecoder().decode(JSONValue.self, from: Data(json.utf8)).object)).session
+        }
+        // A Mac that has them sends both ("": Claude Code's own); an older one neither: the Overview hides the row
+        let set = try session(#"{"session":{"enabled":true,"state":"running","model":"opus[1m]","effort":"high"}}"#)
+        #expect(set?.defaults == MacStatus.SessionDefaults(model: "opus[1m]", effort: "high"))
+        let own = try session(#"{"session":{"enabled":true,"model":"","effort":""}}"#)
+        #expect(own?.defaults == MacStatus.SessionDefaults(model: "", effort: ""))
+        #expect(try session(#"{"session":{"enabled":true,"state":"running"}}"#)?.defaults == nil)
+        #expect(try session(#"{"session":{"enabled":true,"model":"sonnet"}}"#)?.defaults == nil)
+        // To the Mac: both keys, the op Mac knows
+        let d = MacStatus.SessionDefaults(model: "sonnet[1m]", effort: "")
+        #expect(d.json == #"{"effort":"","model":"sonnet[1m]"}"#)
+        #expect(CompanionRequest.mac(.sessionDefaults, value: d.json).signatureFields(key: "k", ts: 1, nonce: "n").op
+                == "companion.session.defaults")
+        // In words
+        #expect(SessionDefaultsText.summary(.init(model: "", effort: "")) == String(localized: "Claude Code's default"))
+        #expect(SessionDefaultsText.summary(.init(model: "haiku", effort: "")) == "Haiku")
+        #expect(SessionDefaultsText.summary(.init(model: "", effort: "max")) == String(localized: "\(String(localized: "Max")) effort"))
+        #expect(SessionDefaultsText.summary(.init(model: "opus", effort: "low"))
+                == String(localized: "\("Opus"), \(String(localized: "Low")) effort"))
+        #expect(SessionDefaultsText.choices(MacStatus.SessionDefaults.models, including: "opus") == MacStatus.SessionDefaults.models)
+        #expect(SessionDefaultsText.choices(MacStatus.SessionDefaults.models, including: "fable").last == "fable")
+
+        // Against the mock: the choice comes back in the status, the session keeps running
+        let signer = CompanionSigner(phoneID: "4853150ceae1", key: CompanionKey.ephemeral())
+        let server = MockCompanionServer(keepsSecrets: true)
+        let publicKey = signer.key.publicKey
+        server.update { $0.trustedPhone = .init(phoneID: signer.phoneID, publicKey: publicKey) }
+        let client = CompanionClient(transport: server.makeTransport(), signer: signer)
+        await client.start()
+        let changed = try #require(try await client.mac(.sessionDefaults, value: d.json).status)
+        #expect(changed.session?.defaults == d)
+        #expect(changed.session?.state == "running")
+        #expect(server.received.last?.fields["text"] == .string(d.json))
+    }
+
     @Test func refusalsAreWordedHere() {
         #expect(MacRefusal(code: "sleep-disabled", message: "x").text.contains("pmset disablesleep"))
         #expect(MacRefusal(code: "unheard-of", message: "As the Mac says").text == "As the Mac says")

@@ -242,7 +242,8 @@ final class MockCompanionServer: @unchecked Sendable {
         "workspace": .object(["state": .string("open"), "setupComplete": .bool(true),
                               "purpose": .string("Rechnungen herunterladen"),
                               "until": .string(ISO8601.format(Date().addingTimeInterval(25 * 60)))]),
-        "session": .object(["enabled": .bool(true), "state": .string("running"),
+        "session": .object(["enabled": .bool(true), "state": .string("running"), "model": .string("opus[1m]"),
+                            "effort": .string("high"),
                             "since": .string(ISO8601.format(Date().addingTimeInterval(-3 * 3600)))]),
         "newChats": .object(["enabled": .bool(true), "state": .string("running")]),
         "kept": .object(["enabled": .bool(true), "running": .number(2)]),
@@ -323,6 +324,13 @@ final class MockCompanionServer: @unchecked Sendable {
                 if status["workspace"]?.object?["state"]?.string == "stopped" { set("workspace", "signOutPending", .bool(true)) }
             case .sessionRestart:
                 set("session", "state", .string("restarting"))
+            case .sessionDefaults:
+                // As the Mac does: only the fixed choices, for the next start (no restart)
+                if let value, let d = try? JSONDecoder().decode(MacStatus.SessionDefaults.self, from: Data(value.utf8)),
+                   MacStatus.SessionDefaults.models.contains(d.model), MacStatus.SessionDefaults.efforts.contains(d.effort) {
+                    set("session", "model", .string(d.model))
+                    set("session", "effort", .string(d.effort))
+                }
             case .displayOff:
                 set("display", "state", .string("off"))
             case .displayOn:

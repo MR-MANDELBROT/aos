@@ -265,6 +265,16 @@
         }
       }
     },
+    "%@ effort" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denkaufwand: %@"
+          }
+        }
+      }
+    },
     "%@ failed %lld min ago, tried again after 10 minutes: %@" : {
       "localizations" : {
         "de" : {
@@ -366,6 +376,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ möchte den Arbeitsplatz öffnen"
+          }
+        }
+      }
+    },
+    "%@, %@ effort" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, Denkaufwand: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@ effort"
           }
         }
       }
@@ -1733,6 +1759,16 @@
         }
       }
     },
+    "Applies the next time the session starts. Changing it doesn't restart the session." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gilt ab dem nächsten Start der Sitzung. Eine Änderung startet sie nicht neu."
+          }
+        }
+      }
+    },
     "Applies to the next key or click." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2370,6 +2406,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claude-Code-Sitzung"
+          }
+        }
+      }
+    },
+    "Claude Code's default" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard von Claude Code"
           }
         }
       }
@@ -3614,6 +3660,16 @@
         }
       }
     },
+    "Effort" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denkaufwand"
+          }
+        }
+      }
+    },
     "Elsewhere" : {
       "localizations" : {
         "de" : {
@@ -3785,6 +3841,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abgelaufen"
+          }
+        }
+      }
+    },
+    "Extra high" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sehr hoch"
           }
         }
       }
@@ -4240,6 +4306,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Symbolleiste ausblenden"
+          }
+        }
+      }
+    },
+    "High" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoch"
           }
         }
       }
@@ -5154,6 +5230,16 @@
         }
       }
     },
+    "Low" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niedrig"
+          }
+        }
+      }
+    },
     "Mac" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5196,6 +5282,26 @@
         }
       }
     },
+    "Max" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximal"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittel"
+          }
+        }
+      }
+    },
     "Message to the session" : {
       "localizations" : {
         "de" : {
@@ -5233,6 +5339,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mission Control"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modell"
           }
         }
       }
@@ -6839,6 +6955,16 @@
         }
       }
     },
+    "Opus (1M context)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opus (1M Kontext)"
+          }
+        }
+      }
+    },
     "Or paste the link" : {
       "localizations" : {
         "de" : {
@@ -7726,6 +7852,16 @@
         }
       }
     },
+    "Restart Session …" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung neu starten …"
+          }
+        }
+      }
+    },
     "Restart the Claude Code session" : {
       "localizations" : {
         "de" : {
@@ -8257,6 +8393,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gesendet. aOS trägt sie im Arbeitsplatz ein."
+          }
+        }
+      }
+    },
+    "Session default" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard der Sitzung"
+          }
+        }
+      }
+    },
+    "Session Default" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard der Sitzung"
           }
         }
       }
@@ -9077,6 +9233,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jemand am Mac muss die Anfrage annehmen."
+          }
+        }
+      }
+    },
+    "Sonnet (1M context)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonnet (1M Kontext)"
           }
         }
       }

@@ -59,8 +59,10 @@ Claude app (phone) ──Remote Control──▶ claude (pty) ◀── aos-sess
 Since build 17 aOS's own session can stand in for a persistent agent such as Cloupi's (Settings > Claude Code; the
 iPhone shows and edits the routines under Settings > Routines and the next one in the Overview):
 
-- **Folder, effort, permissions, environment**: `sessionFolder` (empty: aOS's own folder; another folder brings its own
-  `.claude` and `.mcp.json`, aOS changes nothing there), `sessionEffort` (`--effort`), `sessionPermissionMode`
+- **Folder, model, effort, permissions, environment**: `sessionFolder` (empty: aOS's own folder; another folder brings
+  its own `.claude` and `.mcp.json`, aOS changes nothing there), `sessionModel` (`--model`, Claude Code's aliases) and
+  `sessionEffort` (`--effort`; both only on the command line, never typed as `/model` or `/effort`, which Claude Code
+  saves as the global default; the iPhone sets them with `session.defaults`), `sessionPermissionMode`
   (`--permission-mode` auto, acceptEdits or plan), `sessionEnvFiles` (`KEY=VALUE` lines, `export` and quotes
   allowed; names logged, values never), `sessionStartMessage` (sent after each start).
 - **Its own conversation**: after a start aOS reads Claude Code's registry (`~/.claude/sessions/<pid>.json`) and

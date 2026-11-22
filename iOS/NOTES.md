@@ -130,7 +130,7 @@ Companion API (`Sources/Core/CompanionProtocol.swift`, `Sources/Companion/Compan
   its own vault, which is gone).
 - Exit status 127 of the exec channel is shown as "aOS isn't installed where it was paired; pair again".
 - The Overview's ops (`mac.status`, `mac.sleep`, `mac.display-off`, `mac.display-on`, `mac.stay-awake` with `text`,
-  `workspace.start`, `workspace.stop`, `bitwarden.lock`, `session.restart`; Docs/COMPANION.md "The Mac from the
+  `workspace.start`, `workspace.stop`, `bitwarden.lock`, `session.restart`, `session.defaults`; Docs/COMPANION.md "The Mac from the
   iPhone") are signed like `type`: op `companion.<op>`, the value only in `text`. A refusal carries `code`
   (`sleep-disabled`, `other-service`, `sleep-held`, `not-set-up`, `no-session`), which the phone words itself
   (`MacRefusal`). `hello`'s `features` tells whether the Mac has them; without, the Mac card says to update aOS.
@@ -249,6 +249,8 @@ workspace card then says "No news from the Mac", without its purpose and buttons
 companion back to not started, so nothing reads as ready any more).
 Workspace card: Start (closed),
 Close (asks first while an agent has it), Show the screen. aOS card: Claude Code session (Restart, asks first),
+Session default (since 2026-11-22, a page: the session's model and effort for its next start, `session.defaults`;
+only while `mac.status` has them; the page offers the restart with the same question, a change never restarts it),
 Routines (a page), Chats (a page, below), Bitwarden (Lock). When Claude Code on the Mac needs a sign-in (the
 session or new chats say `needsLogin`), the card says what to do: run `claude` once in a terminal on the Mac and sign
 in; "Open Terminal" opens the Terminal tab in a new session on the Mac to do it from here. An older Mac without these

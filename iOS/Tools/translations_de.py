@@ -1092,3 +1092,24 @@ DE.update({
     'Delete the login of %@?': 'Anmeldung von %@ löschen?',
     "The Mac's screen then asks for it again when you connect.": 'Der Bildschirm des Macs fragt dann beim Verbinden wieder danach.',
 })
+
+# The session's default model and effort (Overview > Session default)
+DE.update({
+    "Session default": "Standard der Sitzung",
+    "Session Default": "Standard der Sitzung",
+    "Model": "Modell",
+    "Effort": "Denkaufwand",
+    "Claude Code's default": "Standard von Claude Code",
+    "Opus (1M context)": "Opus (1M Kontext)",
+    "Sonnet (1M context)": "Sonnet (1M Kontext)",
+    "Low": "Niedrig",
+    "Medium": "Mittel",
+    "High": "Hoch",
+    "Extra high": "Sehr hoch",
+    "Max": "Maximal",
+    "%@ effort": "Denkaufwand: %@",
+    "%@, %@ effort": "%@, Denkaufwand: %@",
+    "Applies the next time the session starts. Changing it doesn't restart the session.":
+        "Gilt ab dem nächsten Start der Sitzung. Eine Änderung startet sie nicht neu.",
+    "Restart Session …": "Sitzung neu starten …",
+})

@@ -900,7 +900,7 @@ struct WorkspaceButtonLabel: View {
 
 // MARK: - aOS
 
-/// aOS on the Mac: its Claude Code session, its routines, the chats (a row that opens their page, with new chats from
+/// aOS on the Mac: its Claude Code session (and a row that opens its default model and effort), its routines, the chats (a row that opens their page, with new chats from
 /// the Claude app; an older Mac: new chats and the count of kept conversations), the apps it puts on this iPhone (a
 /// row that opens their page, while that is on on the Mac), Bitwarden.
 struct AOSCard: View {
@@ -925,6 +925,18 @@ struct AOSCard: View {
                                 .accessibilityLabel(Text("Restart the Claude Code session"))
                         }
                     }
+                }
+                // Its default model and effort for the next start (a Mac that reports them takes them)
+                if let defaults = connection.macStatus?.session?.defaults {
+                    NavigationLink {
+                        SessionDefaultsPage()
+                    } label: {
+                        OverviewRow(symbol: "slider.horizontal.3", title: String(localized: "Session default"),
+                                    detail: SessionDefaultsText.summary(defaults)) {
+                            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
                 if let routines = connection.macStatus?.routines, !routines.items.isEmpty {
                     NavigationLink {
