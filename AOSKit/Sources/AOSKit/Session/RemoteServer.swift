@@ -55,6 +55,18 @@ public final class RemoteServer: @unchecked Sendable {
     private var waitingSince: Date?
     private var lastWaitLog = Date.distantPast
     private var status = RemoteServerStatus(state: .off, detail: "", pid: nil, folder: "", since: Date())
+    /// The run of the server now (its children are noted per run, RemoteConversations.swift).
+    private var instance: RemoteConversations.Server?
+    /// Why aOS ends the server (nil: it ended by itself). Its children's end is noted once, at the asking.
+    private var ending: EndCause?
+    private var lastObserved = Date.distantPast
+
+    enum EndCause {
+        /// The person turned new chats off: the chats it ran end with it.
+        case turnedOff
+        /// Another folder, or aos-session ends (an update, launchd): the chats it ran are continued by the keeper.
+        case restart
+    }
 
     public init(paths: Paths) { self.paths = paths }
 
@@ -79,13 +91,61 @@ public final class RemoteServer: @unchecked Sendable {
         }
     }
 
-    /// Ends the server (aos-session is quitting). Synchronous enough for the 6 s aos-session waits.
+    /// Ends the server (aos-session is quitting). Synchronous enough for the 6 s aos-session waits. The chats it runs
+    /// end with it (Claude Code ends a server's children); they are noted as cut off, and the keeper of the next
+    /// aos-session continues them.
     public func stop() {
         queue.sync {
             timer?.cancel()
             timer = nil
-            terminate(waitForExit: true)
+            terminate(waitForExit: true, because: .restart)
             set(.off, "stopped")
+        }
+    }
+
+    // MARK: Its chats
+
+    /// Notes the chats the server runs now (its child processes and their conversations).
+    private func observeChildren(force: Bool = false) {
+        guard child > 0, ending == nil, let instance else { return }
+        guard force || Date().timeIntervalSince(lastObserved) >= 2 else { return }
+        lastObserved = Date()
+        let found = Self.children(of: child, folder: folder)
+        let before = RemoteConversations.read(paths).running.map(\.sessionId)
+        RemoteConversations.update(paths) { $0.observe(found, server: instance) }
+        let now = found.map(\.id)
+        for id in now where !before.contains(id) { log("remote: runs a chat from the Claude app (\(id))") }
+        for id in before where !now.contains(id) { log("remote: the chat \(id) ended") }
+    }
+
+    /// The Claude Code processes below the server and their conversations (from Claude Code's registry, else from
+    /// their command line: the server passes `--session-id`).
+    static func children(of server: pid_t, folder: String) -> [RemoteConversations.Child] {
+        ProcessTree.descendants(of: server, depth: 3).filter { ClaudeConversations.isClaude($0) }.compactMap { pid in
+            let id = ClaudeRegistry.entry(pid: pid)?.sessionId
+                ?? ProcessTree.arguments(of: pid).flatMap { ProcessTree.option("--session-id", in: $0) }
+            guard let id, UUID(uuidString: id) != nil else { return nil }
+            return RemoteConversations.Child(pid: pid, id: id, cwd: folder)
+        }
+    }
+
+    /// aOS ends the server (`cause`): what its children run is noted now, before they end with it.
+    private func noteEnding(_ cause: EndCause) {
+        guard ending == nil else { return }
+        observeChildren(force: true)
+        ending = cause
+    }
+
+    /// The server ended: the chats it ran then are cut off, unless the person turned it off.
+    private func noteEnded() {
+        guard let server = instance else { return }
+        instance = nil
+        let interrupting = ending != .turnedOff
+        ending = nil
+        let cut = RemoteConversations.update(paths) { $0.serverEnded(server, interrupting: interrupting) }
+        if !cut.isEmpty {
+            log("remote: \(cut.count) chat(s) from the Claude app ended with the server, the keeper continues them: "
+                + cut.joined(separator: ", "))
         }
     }
 
@@ -95,15 +155,16 @@ public final class RemoteServer: @unchecked Sendable {
         if status.state == .needsTrust { answerTrustIfAsked() }
         let s = settings(paths)
         guard s.newChats else {
-            if child > 0 { log("remote: turned off in the settings"); terminate(waitForExit: false) }
+            if child > 0, ending == nil { log("remote: turned off in the settings"); terminate(waitForExit: false, because: .turnedOff) }
             set(.off, "turned off in settings")
             return
         }
         let wanted = s.newChatsDirectory.path
         if child > 0 {
-            guard wanted != folder else { return }
+            guard wanted != folder else { return observeChildren() }
+            guard ending == nil else { return }
             log("remote: folder changed to \(wanted), starting again there")
-            terminate(waitForExit: false)
+            terminate(waitForExit: false, because: .restart)
             return  // the exit handler clears child; the next tick starts it in the new folder
         }
         guard Date() >= nextStart else { return }
@@ -146,6 +207,10 @@ public final class RemoteServer: @unchecked Sendable {
         self.folder = folder
         startedAt = Date()
         recentOutput = ""
+        ending = nil
+        let server = RemoteConversations.Server(pid: pid, started: startedAt)
+        instance = server
+        RemoteConversations.update(paths) { $0.observe([], server: server) }
         try? JSONEncoder().encode(["pid": Int(pid)]).write(to: childRecordURL, options: .atomic)
         set(.starting, "")
         log("remote: started in \(folder) (pid \(pid))")
@@ -219,6 +284,7 @@ public final class RemoteServer: @unchecked Sendable {
         child = 0
         master = -1
         try? FileManager.default.removeItem(at: childRecordURL)
+        noteEnded()
         let ran = Date().timeIntervalSince(startedAt)
         if ran < 60 { quickExits += 1 } else { quickExits = 0 }
         let wait = quickExits == 0 ? 5 : min(30 * pow(2, Double(quickExits - 1)), 600)
@@ -235,9 +301,14 @@ public final class RemoteServer: @unchecked Sendable {
     /// Ends the server with SIGTERM (it says goodbye to the Claude app and ends within a second or two), SIGKILL
     /// after 15 s. Never SIGHUP: after one, the server stops answering any signal. A server that was killed stays
     /// registered for some minutes, and a new one in the same folder is refused until then.
-    private func terminate(waitForExit: Bool) {
+    ///
+    /// Its chats end with it: on SIGTERM (and SIGINT, SIGHUP) Claude Code sends each child SIGTERM, stops its work
+    /// and kills what is left after 30 s; the children share its process group and its pseudo terminal, so they can't
+    /// outlive it. That is why `cause` is noted first.
+    private func terminate(waitForExit: Bool, because cause: EndCause) {
         let pid = child
         guard pid > 0 else { return }
+        noteEnding(cause)
         kill(pid, SIGTERM)
         guard waitForExit else {
             queue.asyncAfter(deadline: .now() + 15) { if kill(pid, 0) == 0 { kill(pid, SIGKILL) } }
@@ -268,8 +339,19 @@ public final class RemoteServer: @unchecked Sendable {
         ended(pid)
     }
 
-    /// A server left behind by an earlier run of aos-session that ended abruptly.
+    /// A server left behind by an earlier run of aos-session that ended abruptly. The chats it ran then ended with it
+    /// (aos-session's end hung up its terminal), or end now: they are cut off, the keeper continues them.
     private func reapLeftover() {
+        let previous = RemoteConversations.read(paths).server
+        defer {
+            if let previous {
+                let cut = RemoteConversations.update(paths) { $0.serverEnded(previous, interrupting: true) }
+                if !cut.isEmpty {
+                    log("remote: \(cut.count) chat(s) from the Claude app ended with the previous aos-session, the keeper "
+                        + "continues them: " + cut.joined(separator: ", "))
+                }
+            }
+        }
         guard let data = FileManager.default.contents(atPath: childRecordURL.path),
               let record = try? JSONDecoder().decode([String: Int].self, from: data), let raw = record["pid"] else { return }
         let pid = pid_t(raw)

@@ -46,6 +46,8 @@ public final class SessionSupervisor: @unchecked Sendable {
     private var signInRestartAt: Date?
     private var signInChecking = false
     private var remoteControlTimer: DispatchSourceTimer?
+    /// aos-session is ending (`stop`): nothing starts again in this process.
+    private var stopped = false
     public var log: (String) -> Void = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) } {
         didSet { messenger.log = log }
     }
@@ -197,7 +199,7 @@ public final class SessionSupervisor: @unchecked Sendable {
     }
 
     private func launch() {
-        guard child == 0 else { return }
+        guard child == 0, !stopped else { return }
         let settings = AgentSettings.load(paths)
         guard settings.sessionEnabled else { setStatus(.stopped, "turned off in settings"); return }
         // The same background process also keeps conversations reachable (SessionKeeper); aOS's own session only
@@ -228,8 +230,10 @@ public final class SessionSupervisor: @unchecked Sendable {
         var args = [claude.path]
         if let id = savedConversation(in: folder) {
             args += ["--resume", id]
-        } else if folder == paths.session.standardizedFileURL, ClaudeCode.hasConversation(in: folder) {
-            // aOS's own folder has only the session's conversations
+        } else if folder == paths.session.standardizedFileURL, ClaudeCode.hasConversation(in: folder),
+                  !(settings.newChats && settings.newChatsDirectory.standardizedFileURL == folder) {
+            // aOS's own folder has only the session's conversations (unless new chats from the Claude app start
+            // there too: then the newest may be one of theirs)
             args.append("--continue")
         }
         args += ["--remote-control", settings.sessionName] + Self.options(settings)
@@ -494,9 +498,11 @@ public final class SessionSupervisor: @unchecked Sendable {
         return UUID(uuidString: id) != nil ? id : nil
     }
 
-    /// Ends the session (SIGTERM, then SIGKILL).
+    /// Ends the session (SIGTERM, then SIGKILL) for good: aos-session is ending, and its exit handler doesn't start it
+    /// again in this process (before, it did, 5 s later, just before the process exited).
     public func stop() {
         queue.sync {
+            stopped = true
             guard child > 0 else { return }
             let pid = child
             kill(pid, SIGTERM)

@@ -363,7 +363,8 @@ struct ReachableSettings: View {
                                               ownConversation: own)) { c in
                         ConversationRow(conversation: c, entry: model.keeper?.entries.first { $0.id == c.id },
                                         reason: SessionKeeper.reason(c, settings: model.settings, exclude: ownFolder,
-                                                                     ownConversation: own, kept: wanted))
+                                                                     ownConversation: own,
+                                                                     interrupted: model.interruptedChats, kept: wanted))
                     }
                 } header: {
                     Text("Conversations")
@@ -388,8 +389,8 @@ struct ReachableSettings: View {
     /// What the keeper keeps by its rules (the same selection it makes; it may not have looked yet). `own`: the
     /// conversation of aOS's own session, never kept.
     func keptNow(_ own: String?) -> Set<String> {
-        Set(SessionKeeper.select(model.conversations, settings: model.settings, exclude: ownFolder, ownConversation: own)
-            .map(\.0.id))
+        Set(SessionKeeper.select(model.conversations, settings: model.settings, exclude: ownFolder, ownConversation: own,
+                                 interrupted: model.interruptedChats).map(\.0.id))
     }
 
     enum KeepChoice: Hashable { case pinned, app, appAndTerminal }

@@ -59,13 +59,27 @@ let startedFrom: (path: String, inode: ino_t)? = {
     return (path, st.st_ino)
 }()
 let updateWatch = DispatchSource.makeTimerSource(queue: .main)
+// Not in the middle of a turn: an update waits until no Claude Code process of this one works (at most 30 minutes).
+var updateNoticed: Date?
 updateWatch.schedule(deadline: .now() + 30, repeating: 30, leeway: .seconds(5))
 updateWatch.setEventHandler {
     guard let startedFrom else { return }
     var st = stat()
     // Gone for the moment (the app is being replaced): wait for the new file.
     guard stat(startedFrom.path, &st) == 0, st.st_ino != startedFrom.inode else { return }
-    supervisor.log("aOS was updated: restarting with the new version")
+    let noticed = updateNoticed ?? Date()
+    let busy = UpdateRestart.busyClaudeProcesses().count
+    if UpdateRestart.shouldWait(busy: busy, noticed: noticed) {
+        if updateNoticed == nil {
+            supervisor.log("aOS was updated: waiting until \(busy) Claude Code session(s) finish their turn "
+                           + "(at most \(Int(UpdateRestart.longestWait / 60)) minutes)")
+        }
+        updateNoticed = noticed
+        return
+    }
+    let waited = Date().timeIntervalSince(noticed)
+    supervisor.log("aOS was updated: restarting with the new version"
+                   + (waited > 1 ? " (after \(Int(waited / 60)) min\(busy > 0 ? ", \(busy) still working" : ""))" : ""))
     updateWatch.cancel()
     supervisor.stop()
     keeper.stopAll()

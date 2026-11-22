@@ -100,7 +100,9 @@ the keeper, when "keep conversations reachable" is on:
   `~/Library/Application Support/Claude/claude-code-sessions`), ones with Remote Control switched off, ones the user
   excluded, aOS's own session folder and, wherever it runs, its own session's conversation (by id, from
   `run/session-conversation.json`; pinned or not), automation (`sdk-cli`). Terminal conversations only when pinned or
-  with `keepTerminal`: tools like Cloupi manage their own terminal sessions.
+  with `keepTerminal`: tools like Cloupi manage their own terminal sessions. Chats of aOS's Remote Control server that
+  its end cut off (see "New chats from the Claude app") are kept like the Claude app's, right after the pinned ones,
+  also in aOS's folder, until `keepHours` after the later of the cut and the person's last activity.
 - **Order** (the keeper, the Mac's list and the iPhone's chats use the same, `ClaudeConversations.order`): pinned
   first, then by the person's last activity, newest first; the same moment by id. Until 2026-11-09 this was the
   transcript's modification time, and that moved for reasons other than the person: every
@@ -714,6 +716,33 @@ settings every 2 s and reports run/remote.json. Learned while testing it:
   show the question and a "Trust the Folder" button; only that click sends the yes.
 - Children started in a pseudo terminal inherit ignored signals across exec: aos-session ignores SIGTERM itself
   (it handles it through a dispatch source), so every child now starts with all signals at their default.
+- **Its chats end with it** (read in Claude Code 2.1.330): each chat is a child of the server (`claude --print
+  --sdk-url … --session-id … --input-format stream-json`, its stdin a pipe from the server for token refreshes, the
+  server's process group and terminal). On SIGTERM, SIGINT or SIGHUP the server sends every child SIGTERM, stops its
+  work and kills what is left after 30 s (only Claude Code's own background service, `claude daemon`, passes it a cause like "upgrade" that keeps them for the next run).
+  So aOS can't end or restart the server without ending its chats, and a killed server would leave children without
+  their pipe and the folder "already served" for minutes. Their transcripts say `sdk-cli` (with `clientPlatform`
+  `ios`, `promptSource` `sdk`) and have no `bridge-session` record: to the keeper they looked like automation, and
+  every restart of the server lost what they were doing (2026-11-22: a long build and a poster job, twice).
+- **What ended them** (2026-11-22): the update restart of aos-session, and "Restart" of the session (Mac or iPhone).
+  That command only ends the session's own process, but the app connects, sends and closes at once; when aos-session
+  accepted after the close, SO_NOSIGPIPE couldn't be set any more (EINVAL, also F_SETNOSIGPIPE, measured) and writing
+  the scrollback raised SIGPIPE: launchd logged "exited due to SIGPIPE" three times, and the server, its chats, the kept
+  conversations and the session went down uncleanly. aos-session ignores SIGPIPE now; "Restart" restarts the session
+  only. Changing the folder and turning new chats off still end the server, as they must.
+- **The chats it ran** (`RemoteConversations.swift`, `run/remote-conversations.json`): every 2 s the server's Claude
+  Code processes (process tree; conversation from the registry, else `--session-id`) per run of the server (pid and
+  start). When aOS ends the server (aos-session ends, another folder) or it ends by itself, the chats running then
+  are noted as cut off; at its start aos-session does the same for a server the previous one didn't end (it died).
+  Not when the person turned new chats off. The keeper continues the cut-off ones at once (no 60 s hand back, they
+  ended with the server) with `claude --resume <id> --remote-control <title>` in the permission mode the transcript
+  names last (`default` if none, never bypassing). A chat that ended while its server runs stays the server's (it
+  starts it again with the next message, or the person ended it); one the server runs again (the person wrote in the
+  old chat) isn't cut off any more and the keeper ends its copy; one ended or archived in the Claude app (its Remote
+  Control says so) is forgotten. The server's running children count as running processes for "never twice".
+- **An update waits for turns**: aos-session restarts for a new version only once none of its Claude Code processes
+  (session, kept conversations, the server's chats) is `busy` in the registry, at most 30 minutes after it noticed.
+  On aos-session's end the supervisor and the keeper no longer start anything again in the seconds before the exit.
 
 ## The workspace: programs and website sign-ins
 

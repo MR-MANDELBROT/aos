@@ -137,6 +137,7 @@ public final class SessionKeeper: @unchecked Sendable {
     private var settingsWatcher: DispatchSourceFileSystemObject?
     private var network = (ok: false, checked: Date.distantPast)
     private var evaluating = false
+    private var stopped = false
     public var log: (String) -> Void = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) }
     /// Where the settings come from (tests and aosctl override it).
     public var settings: (Paths) -> AgentSettings = { AgentSettings.load($0) }
@@ -184,9 +185,13 @@ public final class SessionKeeper: @unchecked Sendable {
         }
     }
 
-    /// Ends every kept conversation (see `terminate`).
+    /// Ends every kept conversation (see `terminate`) for good: aos-session is ending, and nothing starts again in this
+    /// process (before, the next evaluation started them again within seconds, just before the process exited).
     public func stopAll() {
         queue.sync {
+            stopped = true
+            timer?.cancel()
+            timer = nil
             for k in kept.values { terminate(k) }
         }
     }
@@ -239,42 +244,57 @@ public final class SessionKeeper: @unchecked Sendable {
 
     // MARK: Deciding
 
-    /// The conversations to keep now: pinned ones first, then the ones the person used last (the order of
+    /// The conversations to keep now: pinned ones first, then the chats from the Claude app the end of aOS's server cut
+    /// off (`interrupted`, RemoteConversations.swift), then the ones the person used last (the order of
     /// `ClaudeConversations.order`), at most `keepMax`.
     /// `exclude`: aOS's session folder; `ownConversation`: the conversation aOS's own session runs (`ownConversation(_:)`),
     /// wherever its folder is. Neither is ever kept here.
     public static func select(_ conversations: [ClaudeConversation], settings s: AgentSettings,
                               exclude folder: String, ownConversation own: String? = nil,
-                              now: Date = Date()) -> [(ClaudeConversation, pinned: Bool)] {
+                              interrupted: [String: Date] = [:], now: Date = Date()) -> [(ClaudeConversation, pinned: Bool)] {
         let pinned = Set(s.keptConversations)
         let wanted = ClaudeConversations.order(conversations, pinned: pinned)
-            .filter { blocker($0, settings: s, exclude: folder, ownConversation: own, now: now) == nil }
-        return wanted.prefix(s.keepMax).map { ($0, pinned.contains($0.id)) }
+            .filter { blocker($0, settings: s, exclude: folder, ownConversation: own, interrupted: interrupted, now: now) == nil }
+        // Cut off by aOS (an update, a restart): back first, they were in the middle of something.
+        let first = wanted.filter { pinned.contains($0.id) }
+        let cut = wanted.filter { !pinned.contains($0.id) && interrupted[$0.id] != nil }
+        let rest = wanted.filter { !pinned.contains($0.id) && interrupted[$0.id] == nil }
+        return (first + cut + rest).prefix(s.keepMax).map { ($0, pinned.contains($0.id)) }
     }
 
     /// Why a conversation isn't kept, given the ones the keeper keeps now (`kept`, their ids); nil if it is.
     public static func reason(_ c: ClaudeConversation, settings s: AgentSettings, exclude folder: String,
-                              ownConversation own: String? = nil, kept: Set<String>, now: Date = Date()) -> KeepReason? {
+                              ownConversation own: String? = nil, interrupted: [String: Date] = [:], kept: Set<String>,
+                              now: Date = Date()) -> KeepReason? {
         guard s.keepReachable else { return .off }
-        if let blocker = blocker(c, settings: s, exclude: folder, ownConversation: own, now: now) { return blocker }
+        if let blocker = blocker(c, settings: s, exclude: folder, ownConversation: own, interrupted: interrupted, now: now) {
+            return blocker
+        }
         return kept.contains(c.id) ? nil : .overLimit
     }
 
     /// What rules a conversation out, apart from the limit.
     static func blocker(_ c: ClaudeConversation, settings s: AgentSettings, exclude folder: String,
-                        ownConversation own: String?, now: Date) -> KeepReason? {
+                        ownConversation own: String?, interrupted: [String: Date] = [:], now: Date) -> KeepReason? {
         if s.skippedConversations.contains(c.id) { return .skipped }
         if let d = c.desktop {
             if d.archived { return .archived }
             if d.scheduled { return .scheduled }
             if d.remoteControlTurnedOff { return .remoteControlOff }
         }
-        // aOS's own session runs under the supervisor: in its folder, and by its id when it runs elsewhere (a folder
-        // the person chose, where their other conversations are too). Pinned or not.
-        if c.cwd == folder || c.cwd.hasPrefix(folder + "/") { return .ownSession }
+        // aOS's own session runs under the supervisor: by its id wherever it runs (a folder the person chose, where
+        // their other conversations are too), and in aOS's own folder, where its earlier conversations are. Pinned or
+        // not. A chat from the Claude app that aOS's server ran there is no conversation of the session.
         if let own, c.id == own { return .ownSession }
+        let cutOff = interrupted[c.id]
+        if cutOff == nil, c.cwd == folder || c.cwd.hasPrefix(folder + "/") { return .ownSession }
         if s.keptConversations.contains(c.id) { return nil }
         guard s.keepAutomatic else { return .onlyPinned }
+        // A chat from the Claude app that aOS's server ran and its end cut off: like one of the Claude app (its
+        // transcript says sdk-cli and has no Remote Control record: the server's children look like automation).
+        if let cutOff {
+            return max(cutOff, c.lastActivity) < now.addingTimeInterval(-Double(s.keepHours) * 3600) ? .inactive : nil
+        }
         // Automatically only conversations started in the Claude app (or, if wanted, in a terminal); never ones
         // started by automation (sdk) or by tools that manage their own sessions in a terminal.
         if c.startedIn == "sdk-cli" { return .automation }
@@ -287,7 +307,7 @@ public final class SessionKeeper: @unchecked Sendable {
     }
 
     private func evaluate() {
-        guard !evaluating else { return }
+        guard !evaluating, !stopped else { return }
         evaluating = true
         defer { evaluating = false }
         var s = settings(paths)
@@ -300,12 +320,18 @@ public final class SessionKeeper: @unchecked Sendable {
             writeStatus(enabled: false)
             return
         }
+        // The server's chats: the ones its end cut off are kept, the ones it runs count as running processes.
+        let remote = RemoteConversations.read(paths)
+        let interrupted = remote.interrupted
         let conversations = ClaudeConversations.list(within: Double(max(s.keepHours, 1)) * 3600,
-                                                     pinned: s.keptConversations, limit: 60, cache: cache)
+                                                     pinned: s.keptConversations, limit: 60,
+                                                     include: Set(interrupted.keys), cache: cache)
         let wanted = Self.select(conversations, settings: s, exclude: paths.session.standardizedFileURL.path,
-                                 ownConversation: Self.ownConversation(paths))
+                                 ownConversation: Self.ownConversation(paths), interrupted: interrupted)
         let wantedIds = Set(wanted.map(\.0.id))
-        let live = ClaudeConversations.live()
+        var live = ClaudeConversations.live()
+        let registered = Set(live.map(\.pid))
+        live += remote.running.filter { !registered.contains($0.pid) }
 
         // Not wanted any more: end them. One that ended already is forgotten; one that is ending stays until its exit
         // is read (`exited`), without being ended again.
@@ -338,10 +364,12 @@ public final class SessionKeeper: @unchecked Sendable {
                 } else if entries[c.id] == nil {
                     set(c, pinned, .running, "", pid: ours.pid)
                 }
-                watchRemoteControl(c, ours)
+                watchRemoteControl(c, ours, fromServer: interrupted[c.id] != nil)
                 continue
             }
-            if let seen = lastForeign[c.id], Date().timeIntervalSince(seen) < Self.handBackDelay {
+            // A chat the server's end cut off: the process seen last was the one that ended with it, nothing to wait for
+            // (when the server runs it again, it isn't cut off any more and not wanted here).
+            if interrupted[c.id] == nil, let seen = lastForeign[c.id], Date().timeIntervalSince(seen) < Self.handBackDelay {
                 set(c, pinned, .openElsewhere, KeeperStatus.Detail.justElsewhere)
                 continue
             }
@@ -354,16 +382,35 @@ public final class SessionKeeper: @unchecked Sendable {
                 set(c, pinned, .waitingForNetwork, "")
                 continue
             }
-            start(c, pinned: pinned, previous: ours)
+            start(c, pinned: pinned, previous: ours, permissionMode: Self.permissionMode(c, fromServer: interrupted[c.id] != nil))
         }
         writeStatus(enabled: true)
     }
 
+    /// The permission mode a kept conversation continues in: the desktop app's for its conversations; for a chat aOS's
+    /// server ran, the one its transcript last names (the person may have changed it in the Claude app), else the
+    /// server's (`default`). Bypassing permissions is never carried over to a remote session. Others: Claude Code's.
+    static func permissionMode(_ c: ClaudeConversation, fromServer: Bool) -> String? {
+        let allowed = ["default", "acceptEdits", "plan", "auto"]
+        if let mode = c.desktop?.permissionMode { return allowed.contains(mode) ? mode : nil }
+        guard fromServer else { return nil }
+        if let mode = c.permissionMode, allowed.contains(mode) { return mode }
+        return "default"
+    }
+
     /// Remote Control lost for good (RemoteControlWatch.swift): the process starts again with the same conversation.
-    private func watchRemoteControl(_ c: ClaudeConversation, _ k: Kept) {
+    /// A chat of aOS's server the person ended or archived in the Claude app (`fromServer`): no desktop record says so,
+    /// so it is forgotten here, ended, and never continued again.
+    private func watchRemoteControl(_ c: ClaudeConversation, _ k: Kept, fromServer: Bool = false) {
         guard !k.stopping, let tail = k.remoteControl else { return }
         let id = ClaudeRegistry.entry(pid: k.pid)?.sessionId.flatMap { UUID(uuidString: $0) != nil ? $0 : nil } ?? c.id
         let last = tail.poll(id: id)
+        if fromServer, case .lost(_, let reason)? = last, RemoteControlLoss(reason: reason) == .endedByPerson {
+            log("keeper: \"\(c.title)\" was ended or archived in the Claude app, not continuing it any more")
+            RemoteConversations.update(paths) { $0.dismiss(c.id) }
+            terminate(k)
+            return
+        }
         guard RemoteControlPolicy.shouldRestart(last: last, now: Date(), apiUp: { networkUp() },
                                                 health: &k.remoteControlHealth),
               case .lost(let at, let reason)? = last else { return }
@@ -377,6 +424,7 @@ public final class SessionKeeper: @unchecked Sendable {
         switch entrypoint {
         case "claude-desktop": return KeeperStatus.Detail.inClaudeApp
         case "cli": return KeeperStatus.Detail.inTerminal
+        case RemoteConversations.entrypoint: return KeeperStatus.Detail.remoteControlElsewhere
         default: return "open in \(entrypoint)"
         }
     }
@@ -390,16 +438,14 @@ public final class SessionKeeper: @unchecked Sendable {
 
     // MARK: Processes
 
-    private func start(_ c: ClaudeConversation, pinned: Bool, previous: Kept?) {
+    private func start(_ c: ClaudeConversation, pinned: Bool, previous: Kept?, permissionMode: String?) {
         guard let claude = ClaudeCode.executable() else {
             set(c, pinned, .failed, "Claude Code is not installed")
             return
         }
         var args = [claude.path, "--resume", c.id, "--remote-control", c.title]
-        // The mode the conversation ran in; bypassing permissions is never carried over to a remote session.
-        if let mode = c.desktop?.permissionMode, ["default", "acceptEdits", "plan", "auto"].contains(mode) {
-            args += ["--permission-mode", mode]
-        }
+        // The mode the conversation ran in (`permissionMode(_:fromServer:)`).
+        if let permissionMode { args += ["--permission-mode", permissionMode] }
         // Through the login shell, which then becomes Claude Code itself (exec): same pid, PATH like a new terminal.
         let shell = ClaudeCode.loginShell()
         let command = [shell, "-l", "-c", "exec \"$@\"", "aos-keeper"] + args

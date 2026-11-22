@@ -46,18 +46,19 @@ public enum ChatListing {
 
 public enum CompanionChats {
     /// The list as the phone gets it with every chats answer.
-    /// `exclude` and `ownConversation`: aOS's own session's folder and conversation (`SessionKeeper.select`).
+    /// `exclude` and `ownConversation`: aOS's own session's folder and conversation; `interrupted`: the chats of
+    /// aOS's server its end cut off (`SessionKeeper.select`).
     public static func json(_ conversations: [ClaudeConversation], keeper: KeeperStatus?, settings s: AgentSettings,
-                            exclude folder: String, ownConversation own: String? = nil, live: [LiveClaudeProcess] = [],
-                            now: Date = Date(),
+                            exclude folder: String, ownConversation own: String? = nil,
+                            interrupted: [String: Date] = [:], live: [LiveClaudeProcess] = [], now: Date = Date(),
                             home: String = FileManager.default.homeDirectoryForCurrentUser.path) -> [String: Any] {
         let iso = ISO8601DateFormatter()
         let running = keeper.map { $0.enabled && s.keepReachable } ?? false
         let entries = running ? (keeper?.entries ?? []) : []
         let byID = Dictionary(entries.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         // What the keeper keeps by the same rules (it may not have looked yet, or aos-session isn't running).
-        let wanted = Set(SessionKeeper.select(conversations, settings: s, exclude: folder, ownConversation: own, now: now)
-            .map(\.0.id))
+        let wanted = Set(SessionKeeper.select(conversations, settings: s, exclude: folder, ownConversation: own,
+                                              interrupted: interrupted, now: now).map(\.0.id))
         let skipped = Set(s.skippedConversations)
         let pinned = Set(s.keptConversations)
         var list: [[String: Any]] = []
@@ -78,7 +79,7 @@ public enum CompanionChats {
                 o["note"] = p.entrypoint == "claude-desktop" ? "app" : "terminal"
                 o["since"] = iso.string(from: now)
             } else if let reason = SessionKeeper.reason(c, settings: s, exclude: folder, ownConversation: own,
-                                                        kept: wanted, now: now) {
+                                                        interrupted: interrupted, kept: wanted, now: now) {
                 o["reason"] = reason.rawValue
             }
             list.append(o)
@@ -127,11 +128,14 @@ extension WorkspaceController {
         let sources = conversationSources
         let folder = paths.session.standardizedFileURL.path
         let keeper = KeeperStatus.read(paths)
+        let remote = RemoteConversations.read(paths)
+        let interrupted = remote.interrupted
         let conversations = await Task.detached(priority: .userInitiated) {
-            ClaudeConversations.shown(settings: s, cache: cache, sources: sources)
+            ClaudeConversations.shown(settings: s, include: Set(interrupted.keys), cache: cache, sources: sources)
         }.value
         return CompanionChats.json(conversations, keeper: keeper, settings: s, exclude: folder,
-                                   ownConversation: SessionKeeper.ownConversation(paths), live: ClaudeConversations.live())
+                                   ownConversation: SessionKeeper.ownConversation(paths), interrupted: interrupted,
+                                   live: ClaudeConversations.live() + remote.running)
     }
 
     /// The chats ops (after CompanionGate admitted them): the list, and one change per op.

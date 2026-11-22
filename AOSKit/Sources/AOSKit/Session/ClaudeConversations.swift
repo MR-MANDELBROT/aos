@@ -20,6 +20,8 @@ public struct ClaudeConversation: Codable, Sendable, Identifiable, Equatable {
     /// When the transcript last changed. That happens for many reasons besides the person (see `lastActivity`): it
     /// orders nothing.
     public var modified: Date?
+    /// The permission mode its transcript names last (the person's prompts carry it), if any.
+    public var permissionMode: String? = nil
 
     /// An older version of a conversation the Claude desktop app continues under another session id now: starting or
     /// keeping it would resume the old state, so lists leave it out (the current one is listed instead).
@@ -103,28 +105,28 @@ public enum ClaudeConversations {
     }
 
     /// The conversations as aOS keeps and lists them: the ones used within `within` seconds and the pinned ones (also
-    /// older ones), pinned first, then by the person's last activity; at most `limit` besides the pinned ones. Never
-    /// automation (`sdk-cli`).
-    public static func list(within: TimeInterval, pinned: [String], limit: Int, cache: ConversationCache? = nil,
-                            sources: Sources = .standard) -> [ClaudeConversation] {
+    /// older ones), pinned first, then by the person's last activity; at most `limit` besides the pinned ones and
+    /// `include`. Never automation (`sdk-cli`), except `include`: chats from the Claude app that aOS's Remote Control
+    /// server ran (their transcripts look like automation, RemoteConversations.swift), listed also when older.
+    public static func list(within: TimeInterval, pinned: [String], limit: Int, include: Set<String> = [],
+                            cache: ConversationCache? = nil, sources: Sources = .standard) -> [ClaudeConversation] {
         let desktopNow = desktopRecords(in: sources.desktop, cache: cache)
         // An older version of a conversation the desktop app continues in another session: only the current one.
         let pinned = pinned.map { currentID($0, desktop: desktopNow) }
-        var all = recent(within: within, limit: .max, cache: cache, sources: sources)
-            .filter { $0.startedIn != "sdk-cli" && !$0.isOlderVersion }
+        let allowed = { (c: ClaudeConversation) in (c.startedIn != "sdk-cli" || include.contains(c.id)) && !c.isOlderVersion }
+        var all = recent(within: within, limit: .max, cache: cache, sources: sources).filter(allowed)
         let have = Set(all.map(\.id))
-        let missing = pinned.filter { !have.contains($0) }
+        let missing = (pinned + include.sorted()).filter { !have.contains($0) }
         if !missing.isEmpty {
             let desktop = desktopRecords(in: sources.desktop, cache: cache)
-            for id in missing {
-                if let c = find(id, desktop: desktop, cache: cache, sources: sources), c.startedIn != "sdk-cli",
-                   !c.isOlderVersion { all.append(c) }
+            for id in Set(missing).sorted() {
+                if let c = find(id, desktop: desktop, cache: cache, sources: sources), allowed(c) { all.append(c) }
             }
         }
         let pinnedSet = Set(pinned)
         var others = 0
         return order(all, pinned: pinnedSet).filter { c in
-            if pinnedSet.contains(c.id) { return true }
+            if pinnedSet.contains(c.id) || include.contains(c.id) { return true }
             others += 1
             return others <= limit
         }
@@ -144,12 +146,12 @@ public enum ClaudeConversations {
         return out
     }
 
-    /// What the settings list, on the Mac and on the iPhone: the last week (or `keepHours`, if longer) and the pinned
-    /// ones.
-    public static func shown(settings s: AgentSettings, cache: ConversationCache? = nil,
+    /// What the settings list, on the Mac and on the iPhone: the last week (or `keepHours`, if longer), the pinned
+    /// ones and `include` (the chats of aOS's server its end cut off, `RemoteConversations.interrupted`).
+    public static func shown(settings s: AgentSettings, include: Set<String> = [], cache: ConversationCache? = nil,
                              sources: Sources = .standard) -> [ClaudeConversation] {
-        list(within: Double(max(s.keepHours, 168)) * 3600, pinned: s.keptConversations, limit: 40, cache: cache,
-             sources: sources)
+        list(within: Double(max(s.keepHours, 168)) * 3600, pinned: s.keptConversations, limit: 40, include: include,
+             cache: cache, sources: sources)
     }
 
     /// The one order for the keeper and every list: pinned ones first, then the person's last activity, newest first;
@@ -230,7 +232,7 @@ public enum ClaudeConversations {
         return ClaudeConversation(id: id, cwd: folder, title: title,
                                   lastActivity: scan.activity ?? desktop?.lastActivity ?? scan.earliest ?? modified,
                                   usedRemoteControl: scan.bridge, startedIn: scan.startedIn ?? "cli", desktop: desktop,
-                                  modified: modified)
+                                  modified: modified, permissionMode: scan.permissionMode)
     }
 
     /// The Claude desktop app's records of its local sessions, keyed by every Claude Code session id they used.
@@ -326,6 +328,8 @@ struct TranscriptScan: Sendable, Equatable {
     var agentName: String?
     var lastPrompt: String?
     var bridge = false
+    /// The permission mode the latest record read names.
+    var permissionMode: String?
     var activity: Date?
     var turn: Turn?
     /// The oldest time stamp read: without the person's activity, theirs is older than this (or there is none).
@@ -450,6 +454,7 @@ struct TranscriptScan: Sendable, Equatable {
         var agentName: String?
         var lastPrompt: String?
         var bridge = false
+        var permissionMode: String?
         var event: Event?
         var stamp: String?
     }
@@ -460,6 +465,7 @@ struct TranscriptScan: Sendable, Equatable {
         if let t = f.aiTitle { aiTitle = t }
         if let t = f.agentName { agentName = t }
         if f.bridge { bridge = true }
+        if let m = f.permissionMode { permissionMode = m }
         if lastPrompt == nil, let p = f.lastPrompt { lastPrompt = p }
         if let c = f.cwd {
             cwd = c
@@ -499,6 +505,7 @@ struct TranscriptScan: Sendable, Equatable {
         }
         f.cwd = obj["cwd"] as? String
         f.entrypoint = obj["entrypoint"] as? String
+        f.permissionMode = obj["permissionMode"] as? String
         f.event = event(obj)
         f.stamp = obj["timestamp"] as? String
         return f

@@ -53,6 +53,8 @@ final class AppModel: ObservableObject {
     @Published var remote: RemoteServerStatus?
     /// Recent Claude Code conversations, for the settings (filled while the settings show them).
     @Published var conversations: [ClaudeConversation] = []
+    /// Chats from the Claude app that aOS's server ran and its end cut off (the keeper continues them).
+    @Published var interruptedChats: [String: Date] = [:]
     /// Shared with the phone's chats (the workspace controller answers them).
     var conversationCache: ConversationCache { workspace.conversationCache }
 
@@ -466,15 +468,19 @@ final class AppModel: ObservableObject {
     func loadConversations() {
         let s = settings
         let cache = conversationCache
+        let paths = self.paths
         Task.detached(priority: .utility) {
-            let list = ClaudeConversations.shown(settings: s, cache: cache)
-            let live = Set(ClaudeConversations.live().map(\.sessionId))
+            let remote = RemoteConversations.read(paths)
+            let interrupted = remote.interrupted
+            let list = ClaudeConversations.shown(settings: s, include: Set(interrupted.keys), cache: cache)
+            let live = Set((ClaudeConversations.live() + remote.running).map(\.sessionId))
             // Pins and skips of an older version of a conversation go over to the version the desktop app continues.
             let kept = ClaudeConversations.currentIDs(s.keptConversations, cache: cache)
             let skipped = ClaudeConversations.currentIDs(s.skippedConversations, cache: cache)
             await MainActor.run {
                 let model = AppModel.shared
                 if model.conversations != list { model.conversations = list }
+                if model.interruptedChats != interrupted { model.interruptedChats = interrupted }
                 if model.liveConversations != live { model.liveConversations = live }
                 if kept != model.settings.keptConversations || skipped != model.settings.skippedConversations {
                     model.update { $0.keptConversations = kept; $0.skippedConversations = skipped }
