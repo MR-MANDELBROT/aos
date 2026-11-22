@@ -83,6 +83,19 @@ public enum MacState {
         return result
     }
 
+    /// The console sessions as WindowServer publishes them in the I/O Registry (`IOConsoleUsers` of its root, what
+    /// `ioreg -n Root -d1 -a` shows): one dictionary per logged-in user with its uid, account name, whether it is on
+    /// the console and, while its screen is locked, `CGSSessionScreenIsLocked`. Readable by any process of any user,
+    /// also over SSH. nil when absent.
+    public static func consoleSessions() -> [[String: Any]]? {
+        let root = IORegistryGetRootEntry(kIOMainPortDefault)
+        guard root != 0 else { return nil }
+        defer { IOObjectRelease(root) }
+        guard let value = IORegistryEntryCreateCFProperty(root, "IOConsoleUsers" as CFString, kCFAllocatorDefault, 0)
+        else { return nil }
+        return value.takeRetainedValue() as? [[String: Any]]
+    }
+
     /// The user's session is being watched through screen sharing (ScreensharingAgent of this user runs). Then the
     /// display isn't switched off (screen sharing wakes it, and switching it off disturbs the connection).
     public static func sessionShared(table: [Int32: ProcessEntry]? = ProcessTable.snapshot()) -> Bool {

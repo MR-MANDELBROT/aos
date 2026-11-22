@@ -198,6 +198,46 @@ public struct MacDisplayStatus: Codable, Equatable, Sendable {
     }
 }
 
+/// Whether this user's screen is locked, as the phone needs it before it types the Mac's password into the lock screen
+/// (Docs/COMPANION.md, `screen`): from this user's console session (`MacState.consoleSessions`). The phone types only
+/// on `locked`; a Mac that can't tell leaves the field out, and a key macOS stops publishing reads as `unlocked`, so
+/// every doubt ends in not typing.
+public struct MacScreenLockStatus: Codable, Equatable, Sendable {
+    /// locked: the lock screen is in front of this user's session; unlocked; away: the session isn't on the console
+    /// (another user's session, or the login window, is in front).
+    public var state: String
+    /// The session's account name, and its full name (the phone types only for the account its login is for).
+    public var user: String
+    public var name: String?
+
+    public init(state: String, user: String, name: String? = nil) {
+        self.state = state
+        self.user = user
+        self.name = name
+    }
+
+    public static func read(uid: uid_t = getuid()) -> MacScreenLockStatus? {
+        MacState.consoleSessions().flatMap { from($0, uid: uid) }
+    }
+
+    /// The state of the session of `uid` among the console sessions; nil when it has none, it is still logging in, or
+    /// the entry lacks what is needed to tell.
+    public static func from(_ sessions: [[String: Any]], uid: uid_t) -> MacScreenLockStatus? {
+        func flag(_ value: Any?) -> Bool? {
+            if let b = value as? Bool { return b }
+            return (value as? NSNumber)?.boolValue
+        }
+        let own = sessions.filter { ($0["kCGSSessionUserIDKey"] as? NSNumber)?.intValue == Int(uid) }
+        guard let session = own.first(where: { flag($0["kCGSSessionOnConsoleKey"]) == true }) ?? own.first,
+              let user = session["kCGSSessionUserNameKey"] as? String, !user.isEmpty,
+              let onConsole = flag(session["kCGSSessionOnConsoleKey"]) else { return nil }
+        if flag(session["kCGSessionLoginDoneKey"]) == false { return nil }
+        let locked = flag(session["CGSSessionScreenIsLocked"]) ?? false
+        let name = (session["kCGSessionLongUserNameKey"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        return MacScreenLockStatus(state: !onConsole ? "away" : locked ? "locked" : "unlocked", user: user, name: name)
+    }
+}
+
 public enum CompanionControl {
     /// The ops (as the app gets them from aos-companion: "companion." and the phone's op).
     public static let status = "companion.mac.status"
@@ -323,6 +363,11 @@ extension WorkspaceController {
         }
         if let display = try? JSONSerialization.jsonObject(with: JSONEncoder().encode(MacDisplayStatus.read())) {
             result["display"] = display
+        }
+        // Whether the screen is locked: the phone types the Mac's password into the lock screen only on "locked"
+        if let lock = MacScreenLockStatus.read(),
+           let object = try? JSONSerialization.jsonObject(with: JSONEncoder().encode(lock)) {
+            result["screen"] = object
         }
         if let awake = macControls?.awakeStatus(), let object = try? JSONSerialization.jsonObject(with: JSONEncoder().encode(awake)) {
             result["awake"] = object

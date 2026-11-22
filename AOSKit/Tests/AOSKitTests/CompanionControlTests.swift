@@ -116,6 +116,12 @@ final class CompanionControlTests: XCTestCase {
         XCTAssertNotNil(status["session"] as? [String: Any])
         XCTAssertNotNil(status["newChats"] as? [String: Any])
         XCTAssertNotNil((status["bitwarden"] as? [String: Any])?["state"] as? String)
+        // The screen's lock state, where this Mac has a console session for the user running the tests
+        if MacScreenLockStatus.read() != nil {
+            let screen = try XCTUnwrap(status["screen"] as? [String: Any])
+            XCTAssertTrue(["locked", "unlocked", "away"].contains(screen["state"] as? String ?? ""), "\(screen)")
+            XCTAssertEqual(screen["user"] as? String, MacScreenLockStatus.read()?.user)
+        }
         XCTAssertTrue(c.companion.phoneConnected, "a status counts as the phone being there")
     }
 
@@ -422,6 +428,46 @@ final class CompanionControlTests: XCTestCase {
         XCTAssertEqual(SleepPolicy.next(aosHolds: false, sleepDisabled: 1, otherService: false), .refuse(.sleepDisabled))
         XCTAssertEqual(SleepPolicy.next(aosHolds: false, sleepDisabled: 1, otherService: true), .refuse(.otherService))
         XCTAssertEqual(SleepPolicy.next(aosHolds: false, sleepDisabled: 0, otherService: true), .sleep)
+    }
+
+    /// The phone types the Mac's password only on "locked": the state of this user's own console session, and every
+    /// doubt (no session, still logging in, the keys missing) is no state at all.
+    func testTheScreenLockFromTheConsoleSessions() {
+        func session(uid: Int, name: String = "max", onConsole: Any? = true, locked: Any? = nil,
+                     loginDone: Any? = true) -> [String: Any] {
+            var s: [String: Any] = ["kCGSSessionUserIDKey": NSNumber(value: uid), "kCGSSessionUserNameKey": name,
+                                    "kCGSessionLongUserNameKey": "Max Marquart"]
+            if let onConsole { s["kCGSSessionOnConsoleKey"] = onConsole }
+            if let locked { s["CGSSessionScreenIsLocked"] = locked }
+            if let loginDone { s["kCGSessionLoginDoneKey"] = loginDone }
+            return s
+        }
+        XCTAssertEqual(MacScreenLockStatus.from([session(uid: 501, locked: true)], uid: 501),
+                       MacScreenLockStatus(state: "locked", user: "max", name: "Max Marquart"))
+        XCTAssertEqual(MacScreenLockStatus.from([session(uid: 501, locked: NSNumber(value: 1))], uid: 501)?.state, "locked")
+        XCTAssertEqual(MacScreenLockStatus.from([session(uid: 501, locked: false)], uid: 501)?.state, "unlocked")
+        // macOS leaves the key out while the screen is unlocked
+        XCTAssertEqual(MacScreenLockStatus.from([session(uid: 501)], uid: 501)?.state, "unlocked")
+        // Another user is in front (fast user switching): this session's lock screen isn't what the screen shows
+        XCTAssertEqual(MacScreenLockStatus.from([session(uid: 501, onConsole: false, locked: true),
+                                                 session(uid: 502, name: "anna", locked: true)], uid: 501)?.state, "away")
+        // Only the own session counts
+        XCTAssertNil(MacScreenLockStatus.from([session(uid: 502, name: "anna", locked: true)], uid: 501))
+        XCTAssertNil(MacScreenLockStatus.from([], uid: 501))
+        // Not enough to tell: no console flag, no name, still logging in
+        XCTAssertNil(MacScreenLockStatus.from([session(uid: 501, onConsole: nil, locked: true)], uid: 501))
+        XCTAssertNil(MacScreenLockStatus.from([session(uid: 501, name: "", locked: true)], uid: 501))
+        XCTAssertNil(MacScreenLockStatus.from([session(uid: 501, locked: true, loginDone: false)], uid: 501))
+        // As the phone reads it
+        let data = try? JSONEncoder().encode(MacScreenLockStatus(state: "locked", user: "max"))
+        let object = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+        XCTAssertEqual(object?["state"] as? String, "locked")
+        XCTAssertEqual(object?["user"] as? String, "max")
+        // This Mac's own session (the tests run in one): never locked while they run
+        if let own = MacScreenLockStatus.read() {
+            XCTAssertNotEqual(own.state, "locked")
+            XCTAssertFalse(own.user.isEmpty)
+        }
     }
 
     func testWorkspaceStatesForThePhone() {

@@ -253,6 +253,11 @@ with `error` (English) and `code`, which the phone says in its own words.
   - `display`: `{"state":"on|off|none","external":1}` (`CGDisplayIsAsleep` of every online screen, screen sharing's
     virtual one left out: `on` while one is lit, `off` while all sleep, `none` without a screen, the lid closed and no
     monitor; `external`: monitors besides the built-in screen)
+  - `screen` (since 2026-11-22): `{"state":"locked|unlocked|away","user":"max","name":"Max Marquart"}`, this user's
+    console session as WindowServer publishes it (`IOConsoleUsers` in the I/O Registry, `CGSSessionScreenIsLocked`;
+    `away`: another session or the login window is on the console). Left out when the Mac can't tell. The iPhone types
+    the Mac's saved password into the lock screen only on `locked` (iOS/NOTES.md, "Unlocking the Mac"); a missing key
+    reads as `unlocked`, so every doubt ends in not typing.
   - `awake`: `{"setting":"off|lidOpen|lidClosed","holding":true,"lidClosedMode":false,"blocker":"cloupi|nothingToKeep|helperNotReady|lowBattery|thermal","helper":"enabled|requiresApproval|notRegistered|notFound","otherService":false}`
     (Settings > General > Staying awake; `holding`: aOS's helper holds the Mac for a closed lid now)
   - `workspace`: `{"state":"stopped|starting|running|open|closing|failed","setupComplete":true,"purpose":"...","until":"<ISO>","error":"..."}`
